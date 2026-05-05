@@ -9,17 +9,18 @@ namespace Assets.Scripts.Enemies
     {
         [SerializeField] private Enemy _enemy;
         [SerializeField] private float _animationResponseSpeed = 0.05f;
-        public bool IsPlayingAttackAnimation { get; private set; }
+
         private Animator _animator;
+        private int _walkingLayerIndex = 0;
+        private int _crawlingLayerIndex = 1;
+
+        public bool IsPlayingAttackAnimation { get; private set; }
 
         public event EventHandler OnAttackAnimationStart;
 
         public event EventHandler OnAttackAnimationEnd;
 
         public event EventHandler OnAttackHitFrame;
-
-        private int _walingLayerIndex = 0;
-        private int _crawlingLayerIndex = 1;
 
         private void Awake()
         {
@@ -72,12 +73,12 @@ namespace Assets.Scripts.Enemies
             bool isMovingByCrawling = _enemy.Config.IsMovingByCrawling;
             if (isMovingByCrawling)
             {
-                _animator.SetLayerWeight(_walingLayerIndex, 0);
+                _animator.SetLayerWeight(_walkingLayerIndex, 0);
                 _animator.SetLayerWeight(_crawlingLayerIndex, 1);
             }
             else
             {
-                _animator.SetLayerWeight(_walingLayerIndex, 1);
+                _animator.SetLayerWeight(_walkingLayerIndex, 1);
                 _animator.SetLayerWeight(_crawlingLayerIndex, 0);
             }
 

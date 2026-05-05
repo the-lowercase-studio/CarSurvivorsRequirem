@@ -42,6 +42,7 @@ It is not responsible for:
   - `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
   - `Assets/Scripts/Editor/GUI/GridManagerEditor.cs`
 - Related docs:
+  - `.agents/docs/flow-field-system.md`
   - `.agents/docs/project-coding-standards.md`
   - `.agents/docs/ai-game-dev-best-practices.md`
   - `.agents/docs/technology-documentation.md`

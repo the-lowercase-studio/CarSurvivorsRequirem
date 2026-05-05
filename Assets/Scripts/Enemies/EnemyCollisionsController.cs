@@ -36,8 +36,9 @@ namespace Assets.Scripts.Enemies
 
         private void OnDrawGizmos()
         {
-            int numberOfSegments = 16;
-            new Debug().DrawCircle(transform.position, _collisionRadius, numberOfSegments, Color.yellow);
+            const int SEGMENTS = 16;
+
+            new Debug().DrawCircle(transform.position, _collisionRadius, SEGMENTS, Color.yellow);
         }
 
         private void SetAllColliders()

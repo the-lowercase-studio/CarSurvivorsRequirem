@@ -84,12 +84,15 @@ ITargetsProvider
 - Private fields: \_camelCase.
 - Serialized private fields: \_camelCase.
 - Boolean fields: prefer \_isX, \_hasX style.
+- Use `readonly` for non-serialized fields when the value is assigned once and should not be mutated after initialization.
+- Do not use `readonly` on `[SerializeField]` fields or `[field: SerializeField]` auto-property backing fields; Unity must be able to serialize and assign inspector values.
 
 Examples:
 
 ```csharp
 [SerializeField] private Camera _mainCamera;
 private bool _isParalysed;
+private readonly Dictionary<int, EnemyBase> _enemiesById = new();
 ```
 
 ### Properties, Methods, Types, and Events
@@ -137,7 +140,7 @@ Then keep methods in lifecycle and behavior order that reads clearly:
 
 ## 5) Unity and Inspector Conventions
 
-1. Prefer [SerializeField] private fields instead of public mutable fields.
+1. Prefer `[SerializeField] private` fields when inspector data does not need public access. When public read access is needed, prefer one-line serialized auto-properties: `[field: SerializeField] public Type Value { get; private set; }`. Use a private serialized field plus a public property when the accessor needs logic or existing serialized field names must be preserved. Avoid public mutable fields unless Unity/editor integration or serialized compatibility requires them.
 2. Keep inspector-facing names and tooltips clear when adding new designer-configurable values.
 3. Preserve existing inspector workflows and serialized data compatibility.
 4. For required `[SerializeField]` references, do not add defensive null checks in `Awake` just to throw custom errors. If a required reference is unassigned, rely on Unity's default missing-reference behavior; assigning required inspector references is user/setup responsibility.

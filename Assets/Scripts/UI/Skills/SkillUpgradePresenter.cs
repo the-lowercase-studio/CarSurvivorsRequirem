@@ -28,16 +28,17 @@ namespace Assets.Scripts.UI.Skills
         [SerializeField] private GameObject _upgradeSkillSection;
         [SerializeField] private Button _upgradeButtonPrefab;
         [SerializeField] private Transform _buttonsHolder;
-        private byte MAX_SKILLS_UPGRADE_BUTTONS = 3;
 
         [Header("New Skill")]
         [SerializeField] private GameObject _newSkillSection;
         [SerializeField] private TextMeshProUGUI _newSkillName;
         [SerializeField] private TextMeshProUGUI _newSkillDescription;
         [SerializeField] private Button _continueButton;
-        private const string SKILL_NAME_TEMPLATE = "New Skill: {0}";
 
         [SerializeField] private AudioClipPlayer _buttonsAudioPlayer;
+
+        private const byte MAX_SKILLS_UPGRADE_BUTTONS = 3;
+        private const string SKILL_NAME_TEMPLATE = "New Skill: {0}";
 
         private Queue<ISkillBase> _skillsQueuedForInitialization = new Queue<ISkillBase>();
         private Queue<IUpgradeableSkill> _skillsQueuedForUpgrade = new Queue<IUpgradeableSkill>();

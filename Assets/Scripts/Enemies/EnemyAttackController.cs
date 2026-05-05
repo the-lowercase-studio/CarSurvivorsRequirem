@@ -3,6 +3,7 @@ using Assets.Scripts.Collisions;
 using Assets.Scripts.Extensions;
 using Assets.Scripts.LayerMasks;
 using Assets.Scripts.StatusAffectables;
+using System;
 using System.Linq;
 using UnityEngine;
 
@@ -26,12 +27,13 @@ namespace Assets.Scripts.Enemies
         private void OnEnable()
         {
             _enemy.CollisionsController.OnCollisionWithPlayer += EnemyCollisions_OnCollisionWithPlayer;
-            _attackAnimationPlayer.OnAttackHitFrame += (s, e) => DamageCurrentlyAttackedTarget();
+            _attackAnimationPlayer.OnAttackHitFrame += AttackAnimationPlayer_OnAttackHitFrame;
         }
 
         private void OnDisable()
         {
             _enemy.CollisionsController.OnCollisionWithPlayer -= EnemyCollisions_OnCollisionWithPlayer;
+            _attackAnimationPlayer.OnAttackHitFrame -= AttackAnimationPlayer_OnAttackHitFrame;
         }
 
         private void EnemyCollisions_OnCollisionWithPlayer(object sender, CollisionEventArgs e)
@@ -47,6 +49,11 @@ namespace Assets.Scripts.Enemies
             {
                 _enemy.EnemyAnimator.PlayAttackAnimation();
             }
+        }
+
+        private void AttackAnimationPlayer_OnAttackHitFrame(object sender, EventArgs e)
+        {
+            DamageCurrentlyAttackedTarget();
         }
 
         private void DamageCurrentlyAttackedTarget()

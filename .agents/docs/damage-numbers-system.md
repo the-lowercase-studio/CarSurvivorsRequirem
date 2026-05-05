@@ -20,6 +20,7 @@ It does not calculate damage, change health values, choose combat targets, play 
   - `Assets/Scripts/Spawners/WorldSpace/IInWorldSpaceSpawner.cs`
   - `Assets/Scripts/ObjectLifeCycle/Actions/IEnableDisableFunctionalityTrigger.cs`
 - Related docs:
+  - `.agents/docs/settings-system.md`
   - `.agents/docs/project-coding-standards.md`
   - `.agents/docs/ai-game-dev-best-practices.md`
 - Related skills or instructions:

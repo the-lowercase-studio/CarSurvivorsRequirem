@@ -35,28 +35,30 @@ namespace Assets.Scripts.DamageNumbers
         [Serializable]
         private struct VisualApearanceByDamageTreshold
         {
-            [SerializeField] public float Treshold;
-            [SerializeField] public DamageNumberApearance DamagePopupApearance;
+            [SerializeField] private float _treshold;
+            [SerializeField] private DamageNumberApearance _damagePopupApearance;
+
+            public float Treshold => _treshold;
+            public DamageNumberApearance DamagePopupApearance => _damagePopupApearance;
 
             public VisualApearanceByDamageTreshold(float treshold, DamageNumberApearance damagePopupApearance)
             {
-                Treshold = treshold;
-                DamagePopupApearance = damagePopupApearance;
+                _treshold = treshold;
+                _damagePopupApearance = damagePopupApearance;
             }
         }
 
         [SerializeField] private float _damagePopupVisibilityDuration;
         [SerializeField] private DamageNumber _damagePopupPrefab;
-        [SerializeField] private VisualApearanceByDamageTreshold[] visualApearanceByDamageTresholds;
+        [SerializeField] private VisualApearanceByDamageTreshold[] _visualApearanceByDamageTresholds;
         [SerializeField] private FloatValueRange _popupsSpeedRange;
         [SerializeField] private float _popupsMovementRange = 1f;
         private bool _isPopupsEnabled = true;
+        private IObjectPool<DamageNumber> _damageNumberPool;
 
         public event EventHandler OnSpawnedEntityReleased;
 
         public uint CurrentlySpawnedObjectsCount { get; private set; }
-
-        private IObjectPool<DamageNumber> _damageNumberPool;
 
         private void Awake()
         {
@@ -88,9 +90,8 @@ namespace Assets.Scripts.DamageNumbers
                 return;
             }
 
-            if (visualApearanceByDamageTresholds.Length == 0)
+            if (_visualApearanceByDamageTresholds.Length == 0)
             {
-                Debug.Log("NOT SPAWNING POPUP");
                 Debug.LogError("There is 0 colors by damage tresholds entries in: " + transform.name);
                 return;
             }
@@ -149,11 +150,11 @@ namespace Assets.Scripts.DamageNumbers
 
         private VisualApearanceByDamageTreshold? FindCorrectVisualApearanceByTreshold(float damage)
         {
-            for (int i = visualApearanceByDamageTresholds.Length - 1; i >= 0; i--)
+            for (int i = _visualApearanceByDamageTresholds.Length - 1; i >= 0; i--)
             {
-                if (visualApearanceByDamageTresholds[i].Treshold <= damage)
+                if (_visualApearanceByDamageTresholds[i].Treshold <= damage)
                 {
-                    return visualApearanceByDamageTresholds[i];
+                    return _visualApearanceByDamageTresholds[i];
                 }
             }
 

@@ -23,7 +23,9 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - `Assets/Scripts/ScoreBoard/`
   - `Assets/Scripts/GameManipulators/`
 - Related docs:
+  - `.agents/docs/settings-system.md`
   - `.agents/docs/level-system.md`
+  - `.agents/docs/scoreboard-system.md`
   - `.agents/docs/health-system.md`
   - `.agents/docs/damage-numbers-system.md`
   - `.agents/docs/collectibles-system.md`
@@ -118,7 +120,7 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Changing collectible release timing can change skill initialization or upgrade prompts.
   - Changing `GameTime` pause/resume behavior can affect pause, death, and skill-choice panels.
   - Renaming skill visual GameObjects or `SkillInfoSO.Name` values can break `SkillsVisualPresenter` lookup.
-  - Changing timer behavior can affect scoreboard save values and death-screen text.
+  - Changing timer behavior can affect scoreboard save values, persisted score meaning, and death-screen text.
 
 ## Known Risks and Open Questions
 

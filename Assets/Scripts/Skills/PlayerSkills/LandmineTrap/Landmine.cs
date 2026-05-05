@@ -73,8 +73,8 @@ namespace Assets.Scripts.Skills.PlayerSkills.LandmineTrap
             {
                 EntityManipulationHelper.Damage(collider, _config.Damage.Value);
 
-                const float timeToArriveAtLocationMultiplier = 0.2f;
-                float timeToArriveAtLocation = _config.KnockbackRange.Value * timeToArriveAtLocationMultiplier;
+                const float TIME_TO_ARRIVE_AT_LOCATION_MULTIPLIER = 0.2f;
+                float timeToArriveAtLocation = _config.KnockbackRange.Value * TIME_TO_ARRIVE_AT_LOCATION_MULTIPLIER;
 
                 ApplyExplosionKnockbackOnKnockableEntity(collider, timeToArriveAtLocation);
 

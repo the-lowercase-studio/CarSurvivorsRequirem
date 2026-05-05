@@ -10,7 +10,6 @@ using Reflex.Attributes;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Assets.Scripts.LevelSystem.Exp
 {
@@ -29,9 +28,9 @@ namespace Assets.Scripts.LevelSystem.Exp
         [Serializable]
         private struct ExpParticleApearanceByTreshold
         {
-            [SerializeField, FormerlySerializedAs("Treshold")] private float _treshold;
-            [SerializeField, FormerlySerializedAs("Material")] private Material _material;
-            [SerializeField, FormerlySerializedAs("ScaleValueRange")] private FloatValueRange _scaleValueRange;
+            [SerializeField] private float _treshold;
+            [SerializeField] private Material _material;
+            [SerializeField] private FloatValueRange _scaleValueRange;
 
             public float Treshold => _treshold;
             public Material Material => _material;

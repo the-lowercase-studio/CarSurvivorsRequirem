@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -26,9 +26,15 @@ namespace Assets.Scripts.Car
         [Serializable]
         private struct Wheel
         {
-            public GameObject WheelModel;
-            public WheelCollider WheelCollider;
-            public Axel Axel;
+            [SerializeField] private GameObject _wheelModel;
+
+            [SerializeField] private WheelCollider _wheelCollider;
+
+            [SerializeField] private Axel _axel;
+
+            public GameObject WheelModel => _wheelModel;
+            public WheelCollider WheelCollider => _wheelCollider;
+            public Axel Axel => _axel;
         }
 
         [Header("BulletTimeToArriveAtRangeEnd")]
@@ -41,34 +47,38 @@ namespace Assets.Scripts.Car
 
         [Header("Physics")]
         [SerializeField] private Vector3 _centerOfMass;
-        private Rigidbody _rb;
 
         [SerializeField] private List<Wheel> _wheels;
+
+        private Rigidbody _rb;
+        private InputAction _moveAction;
+        private Vector2 _moveInput;
+        private InputAction _brakeAction;
+        private bool _brakeInput;
+        private float _brakeTorqueMultiplier = 1000f;
 
         public event EventHandler OnBrakePress;
 
         public event EventHandler OnBrakeRelease;
 
-        private InputAction _moveAction;
-        private Vector2 _moveInput;
-
-        private InputAction _brakeAction;
-        private bool _brakeInput;
-        private float _brakeTorqueMultiplier = 1000f;
-
         private void Awake()
         {
             _rb = GetComponent<Rigidbody>();
-        }
-
-        private void Start()
-        {
             _moveAction = InputSystem.actions.FindAction("Move");
             _brakeAction = InputSystem.actions.FindAction("Brake");
             _rb.centerOfMass = _centerOfMass;
+        }
 
-            _brakeAction.started += (ctx) => OnBrakePress.Invoke(this, EventArgs.Empty);
-            _brakeAction.canceled += (ctx) => OnBrakeRelease.Invoke(this, EventArgs.Empty);
+        private void OnEnable()
+        {
+            _brakeAction.started += BrakeAction_Started;
+            _brakeAction.canceled += BrakeAction_Canceled;
+        }
+
+        private void OnDisable()
+        {
+            _brakeAction.started -= BrakeAction_Started;
+            _brakeAction.canceled -= BrakeAction_Canceled;
         }
 
         private void Update()
@@ -126,6 +136,16 @@ namespace Assets.Scripts.Car
                 wheel.WheelCollider.GetWorldPose(out Vector3 pos, out Quaternion rot);
                 wheel.WheelModel.transform.SetPositionAndRotation(pos, rot);
             }
+        }
+
+        private void BrakeAction_Started(InputAction.CallbackContext context)
+        {
+            OnBrakePress?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void BrakeAction_Canceled(InputAction.CallbackContext context)
+        {
+            OnBrakeRelease?.Invoke(this, EventArgs.Empty);
         }
     }
 }

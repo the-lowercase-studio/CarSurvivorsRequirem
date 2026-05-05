@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Pool;
-using UnityEngine.Serialization;
 
 namespace Assets.Scripts.LevelSystem.Exp
 {
@@ -26,8 +25,8 @@ namespace Assets.Scripts.LevelSystem.Exp
         [Serializable]
         private struct ExpTresholdDevider
         {
-            [SerializeField, FormerlySerializedAs("Treshold")] private float _treshold;
-            [SerializeField, FormerlySerializedAs("Divider")] private float _divider;
+            [SerializeField] private float _treshold;
+            [SerializeField] private float _divider;
 
             public float Treshold => _treshold;
             public float Divider => _divider;

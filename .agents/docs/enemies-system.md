@@ -32,6 +32,7 @@ It does not own wave timing, grid generation, flow-field direction calculation, 
   - Experience particles: `Assets/Scripts/LevelSystem/Exp/`
   - DI installer: `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
 - Related docs:
+  - `.agents/docs/flow-field-system.md`
   - `.agents/docs/project-coding-standards.md`
   - `.agents/docs/ai-game-dev-best-practices.md`
 - Related agents or instructions:

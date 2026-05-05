@@ -7,9 +7,9 @@ namespace Assets.Scripts.Effects
 {
     public class XYZRotationLoop : MonoBehaviour
     {
-        [SerializeField] private bool rotateX;
-        [SerializeField] private bool rotateY;
-        [SerializeField] private bool rotateZ;
+        [SerializeField] private bool _rotateX;
+        [SerializeField] private bool _rotateY;
+        [SerializeField] private bool _rotateZ;
         [SerializeField, Range(0, 360f)] private float _maxRotationOnAxis;
         [SerializeField] private bool _useLocalRotation;
         [SerializeField] private float _tweenIterationTime = 2.5f;
@@ -45,7 +45,7 @@ namespace Assets.Scripts.Effects
 
         private void SetMaxRotationTween()
         {
-            Tuple<bool, bool, bool> rotate = new Tuple<bool, bool, bool>(rotateX, rotateY, rotateZ);
+            Tuple<bool, bool, bool> rotate = new Tuple<bool, bool, bool>(_rotateX, _rotateY, _rotateZ);
 
             _maxTweenRotation = rotate switch
             {
