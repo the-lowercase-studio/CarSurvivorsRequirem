@@ -10,6 +10,7 @@ using Reflex.Attributes;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Assets.Scripts.LevelSystem.Exp
 {
@@ -28,9 +29,13 @@ namespace Assets.Scripts.LevelSystem.Exp
         [Serializable]
         private struct ExpParticleApearanceByTreshold
         {
-            public float Treshold;
-            public Material Material;
-            public FloatValueRange ScaleValueRange;
+            [SerializeField, FormerlySerializedAs("Treshold")] private float _treshold;
+            [SerializeField, FormerlySerializedAs("Material")] private Material _material;
+            [SerializeField, FormerlySerializedAs("ScaleValueRange")] private FloatValueRange _scaleValueRange;
+
+            public float Treshold => _treshold;
+            public Material Material => _material;
+            public FloatValueRange ScaleValueRange => _scaleValueRange;
         }
 
         [Inject] private readonly IPlayerManager _playerManager;
@@ -54,12 +59,12 @@ namespace Assets.Scripts.LevelSystem.Exp
 
         private IFlowFieldMovementController _flowFieldMovementController;
 
-        private IAudioClipPlayer _audoClipPlayer;
+        private IAudioClipPlayer _audioClipPlayer;
 
         private void Awake()
         {
             _flowFieldMovementController = GetComponent<IFlowFieldMovementController>();
-            _audoClipPlayer = GetComponentInChildren<IAudioClipPlayer>();
+            _audioClipPlayer = GetComponentInChildren<IAudioClipPlayer>();
         }
 
         private void FixedUpdate()
@@ -125,9 +130,9 @@ namespace Assets.Scripts.LevelSystem.Exp
         public void CollectExp(Action callback = null)
         {
             bool audioClipPlayFinished = false;
-            _audoClipPlayer.Play("ExpCollected");
+            _audioClipPlayer.Play("ExpCollected");
 
-            _audoClipPlayer.OnAudioClipFinished += (s, e) => audioClipPlayFinished = true;
+            _audioClipPlayer.OnAudioClipFinished += (s, e) => audioClipPlayFinished = true;
 
             transform.LifeEndingShrinkToZeroTween(_disapearingDuration, () =>
             {
@@ -139,7 +144,7 @@ namespace Assets.Scripts.LevelSystem.Exp
                 }
                 else
                 {
-                    _audoClipPlayer.OnAudioClipFinished += (s, e) =>
+                    _audioClipPlayer.OnAudioClipFinished += (s, e) =>
                     {
                         OnCanBeReleased?.Invoke(this, EventArgs.Empty);
                         callback?.Invoke();

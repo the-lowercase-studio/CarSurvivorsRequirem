@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Pool;
+using UnityEngine.Serialization;
 
 namespace Assets.Scripts.LevelSystem.Exp
 {
@@ -25,8 +26,11 @@ namespace Assets.Scripts.LevelSystem.Exp
         [Serializable]
         private struct ExpTresholdDevider
         {
-            public float Treshold;
-            public float Divider;
+            [SerializeField, FormerlySerializedAs("Treshold")] private float _treshold;
+            [SerializeField, FormerlySerializedAs("Divider")] private float _divider;
+
+            public float Treshold => _treshold;
+            public float Divider => _divider;
         }
 
         [SerializeField] private Transform _expParticlesParent;
@@ -36,13 +40,13 @@ namespace Assets.Scripts.LevelSystem.Exp
         [SerializeField, Range(0, 30f)] private float _spawningCircleRadius;
 
         private const float CHECK_QUEUED_EXP_SPAWNS_DELAY = 0.2f;
+
         private Queue<ExpParticleSpawnData> _queuedExpSpawns = new();
+        private IObjectPool<ExpParticle> _expParticlePool;
 
         public event EventHandler OnSpawnedEntityReleased;
 
         public uint CurrentlySpawnedObjectsCount { get; private set; }
-
-        private IObjectPool<ExpParticle> _expParticlePool;
 
         private void Awake()
         {

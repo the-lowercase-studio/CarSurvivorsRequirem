@@ -6,6 +6,7 @@ using Assets.Scripts.GridSystem;
 using Assets.Scripts.Spawners.GridSpace;
 using Reflex.Attributes;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Assets.Scripts.Skills.ObjectsImpactingSkills.Crate
 {
@@ -15,14 +16,18 @@ namespace Assets.Scripts.Skills.ObjectsImpactingSkills.Crate
         [Serializable]
         private struct CollectibleItemSpawnData
         {
-            public GameObject Prefab;
-            public float SpawnYOffset;
-            public float SpawnChance;
+            [SerializeField, FormerlySerializedAs("Prefab")] private GameObject _prefab;
+            [SerializeField, FormerlySerializedAs("SpawnYOffset")] private float _spawnYOffset;
+            [SerializeField, FormerlySerializedAs("SpawnChance")] private float _spawnChance;
+
+            public GameObject Prefab => _prefab;
+            public float SpawnYOffset => _spawnYOffset;
+            public float SpawnChance => _spawnChance;
         }
 
         [Inject] private readonly IGridManager _gridManager;
 
-        [SerializeField] private byte maxSpawnedCollectiblesCount = 6;
+        [SerializeField, FormerlySerializedAs("maxSpawnedCollectiblesCount")] private byte _maxSpawnedCollectiblesCount = 6;
         [SerializeField] private Transform _collectibleItemsParent;
         [SerializeField] private float _spawnDelay = 8f;
         [SerializeField] private CollectibleItemSpawnData[] _collectibleItemsSpawnData;
@@ -34,13 +39,13 @@ namespace Assets.Scripts.Skills.ObjectsImpactingSkills.Crate
 
         private void Start()
         {
-            _spawnedCollectibleItems = new List<ICollectible>(maxSpawnedCollectiblesCount);
+            _spawnedCollectibleItems = new List<ICollectible>(_maxSpawnedCollectiblesCount);
             InvokeRepeating(nameof(SpawnSingleCollectible), _spawnDelay, _spawnDelay);
         }
 
         public void SpawnAtRandomGridPos(int count)
         {
-            for (int i = 0; i < count && _spawnedCollectibleItems.Count < maxSpawnedCollectiblesCount; i++)
+            for (int i = 0; i < count && _spawnedCollectibleItems.Count < _maxSpawnedCollectiblesCount; i++)
             {
                 Cell drawnCell = RandomWalkableCellsFinder
                     .FindCellWithoutCollectible(_gridManager.WorldGrid);

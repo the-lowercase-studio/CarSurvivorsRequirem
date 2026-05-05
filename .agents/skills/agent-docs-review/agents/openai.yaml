@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Docs Review"
+  short_description: "Review project docs for agent usefulness."
+  default_prompt: "Review this documentation file and make it accurate, concise, and agent-friendly."
