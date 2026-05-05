@@ -2,13 +2,13 @@ name: Unity Release Build
 
 on:
   workflow_dispatch:
-  
+
 permissions:
   contents: read
   checks: write
   pull-requests: write
   statuses: write
-  
+
 jobs:
   await-approval:
     name: Waiting for build approval
@@ -20,27 +20,27 @@ jobs:
 
   build:
     name: Release Build
-    needs: await-approval 
+    needs: await-approval
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         targetPlatform:
           - StandaloneWindows64
-          
+
     steps:
       - uses: actions/checkout@v4
         with:
           lfs: true
-          
+
       - name: Cache Library
         uses: actions/cache@v4
         with:
           path: Library
-          key: Library-6000.3.9f1-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          key: Library-6000.4.5f1-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
           restore-keys: |
-            Library-6000.3.9f1-
-            
+            Library-6000.4.5f1-
+
       - name: Build Project (Release)
         uses: game-ci/unity-builder@v4
         env:
@@ -49,13 +49,13 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           projectPath: .
-          unityVersion: 6000.3.9f1
+          unityVersion: 6000.4.5f1
           targetPlatform: ${{ matrix.targetPlatform }}
-          
+
       - name: Get Version
         id: version
         run: echo "version=$(date +'%Y.%m.%d')-${{ github.run_number }}" >> $GITHUB_OUTPUT
-        
+
       - name: Upload Build
         uses: actions/upload-artifact@v4
         with:
