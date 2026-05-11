@@ -1,7 +1,7 @@
 using Assets.ScriptableObjects;
 using Assets.Scripts.Audio;
-using Assets.Scripts.Helpers;
 using Assets.Scripts.LayerMasks;
+using Assets.Scripts.StatusEffects;
 using Assets.Scripts.VFX;
 using System.Collections;
 using UnityEngine;

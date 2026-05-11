@@ -1,9 +1,10 @@
 using Assets.Scripts.Extensions;
-using Assets.Scripts.GridSystem;
+using Assets.Scripts.Navigation.GridSystem;
 using Reflex.Attributes;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using NavigationGrid = Assets.Scripts.Navigation.GridSystem.Grid;
 
 namespace Assets.Scripts.Enemies
 {
@@ -57,7 +58,7 @@ namespace Assets.Scripts.Enemies
         {
             List<Enemy> enemies = new List<Enemy>();
 
-            GridSystem.Grid playerChunk = _gridManager.GridPlayerChunk;
+            NavigationGrid playerChunk = _gridManager.GridPlayerChunk;
             Cell centerCell = playerChunk.Cells[playerChunk.Width / 2, playerChunk.Height / 2];
             Vector3 center = centerCell.WorldPos;
 

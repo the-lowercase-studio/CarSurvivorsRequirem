@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
-using Assets.Scripts.CustomEventArgs;
-using Assets.Scripts.GameManipulators;
+using Assets.Scripts.Common.EventArgs;
+using Assets.Scripts.GameFlow;
 using Reflex.Attributes;
 using UnityEngine;
 

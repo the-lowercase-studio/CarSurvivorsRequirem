@@ -3,13 +3,17 @@ using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using UnityEngine;
 
 namespace Assets.Scripts.Storage
 {
     public static class AppStorage
     {
-        private static readonly string SettingsFilePath =
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "AppStorage.json");
+        private const string DATA_DIRECTORY_NAME = "Data";
+        private const string STORAGE_FILE_NAME = "AppStorage.json";
+        private const string EDITOR_STORAGE_FILE_NAME = "AppStorage.Editor.json";
+
+        private static readonly string SettingsFilePath = Path.Combine(GetDataDirectoryPath(), GetStorageFileName());
 
         private static Dictionary<string, JToken> _settingsCache;
 
@@ -38,7 +42,7 @@ namespace Assets.Scripts.Storage
 
         public static void SetValue<T>(string key, T value)
         {
-            string dataDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
+            string dataDirectory = GetDataDirectoryPath();
             if (!Directory.Exists(dataDirectory))
             {
                 Directory.CreateDirectory(dataDirectory);
@@ -61,6 +65,24 @@ namespace Assets.Scripts.Storage
             {
                 _settingsCache = new Dictionary<string, JToken>();
             }
+        }
+
+        private static string GetDataDirectoryPath()
+        {
+#if UNITY_EDITOR
+            return Path.Combine(Application.dataPath, DATA_DIRECTORY_NAME);
+#else
+            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, DATA_DIRECTORY_NAME);
+#endif
+        }
+
+        private static string GetStorageFileName()
+        {
+#if UNITY_EDITOR
+            return EDITOR_STORAGE_FILE_NAME;
+#else
+            return STORAGE_FILE_NAME;
+#endif
         }
     }
 }

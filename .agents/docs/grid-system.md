@@ -23,19 +23,19 @@ It is not responsible for:
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/GridSystem/GridManager.cs`
-  - `Assets/Scripts/GridSystem/Grid.cs`
-  - `Assets/Scripts/GridSystem/Cell.cs`
-  - `Assets/Scripts/GridSystem/GridDirection.cs`
-  - `Assets/Scripts/GridSystem/WorldPosToCellConverter.cs`
-  - `Assets/Scripts/GridSystem/GridCellsNotVisibleByMainCamera.cs`
-  - `Assets/Scripts/GridSystem/RandomWalkableCellsFinder.cs`
-  - `Assets/Scripts/GridSystem/GridEdgeHelper.cs`
-  - `Assets/Scripts/GridSystem/CellStatusDescriber.cs`
-  - `Assets/Scripts/GridSystem/GridDebug.cs`
+  - `Assets/Scripts/Navigation/GridSystem/GridManager.cs`
+  - `Assets/Scripts/Navigation/GridSystem/Grid.cs`
+  - `Assets/Scripts/Navigation/GridSystem/Cell.cs`
+  - `Assets/Scripts/Navigation/GridSystem/GridDirection.cs`
+  - `Assets/Scripts/Navigation/GridSystem/WorldPosToCellConverter.cs`
+  - `Assets/Scripts/Navigation/GridSystem/GridCellsNotVisibleByMainCamera.cs`
+  - `Assets/Scripts/Navigation/GridSystem/RandomWalkableCellsFinder.cs`
+  - `Assets/Scripts/Navigation/GridSystem/GridEdgeHelper.cs`
+  - `Assets/Scripts/Navigation/GridSystem/CellStatusDescriber.cs`
+  - `Assets/Scripts/Navigation/GridSystem/GridDebug.cs`
 - Related systems:
-  - `Assets/Scripts/FlowFieldSystem/FlowField.cs`
-  - `Assets/Scripts/FlowFieldSystem/FlowFieldMovementController.cs`
+  - `Assets/Scripts/Navigation/FlowFieldSystem/FlowField.cs`
+  - `Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldMovementController.cs`
   - `Assets/Scripts/Enemies/EnemiesSpawner.cs`
   - `Assets/Scripts/Enemies/EnemiesOutsidePlayerChunkTeleporter.cs`
   - `Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/CollectibleItemsSpawner.cs`
@@ -97,7 +97,7 @@ Preserve these constraints when editing:
 ## Extension Points
 
 - Add new grid consumers by injecting `IGridManager` through Reflex where DI is already active.
-- Add new cell query helpers as small static utilities in `Assets/Scripts/GridSystem/` when they are pure queries over `Grid` or `Cell`.
+- Add new cell query helpers as small static utilities in `Assets/Scripts/Navigation/GridSystem/` when they are pure queries over `Grid` or `Cell`.
 - Add new terrain cost behavior in `FlowField.CreateCostField` only after checking `Assets/Scripts/LayerMasks/` and all movement/spawn consumers.
 - Add debug-only visualization through `GridDebug` or `FlowFieldDebug` under the existing debug flow.
 - Extend the custom inspector in `GridManagerEditor` if new serialized `GridManager` settings need designer access.

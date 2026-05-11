@@ -1,5 +1,5 @@
-using Assets.Scripts.CustomTypes;
-using Assets.Scripts.GridSystem;
+using Assets.Scripts.Common.Types;
+using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.Pooling;
 using Assets.Scripts.Spawners.GridSpace;
 using Reflex.Attributes;

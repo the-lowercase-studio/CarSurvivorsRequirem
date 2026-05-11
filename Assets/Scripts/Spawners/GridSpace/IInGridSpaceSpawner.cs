@@ -1,4 +1,4 @@
-using Assets.Scripts.GridSystem;
+using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.Pooling;
 
 namespace Assets.Scripts.Spawners.GridSpace

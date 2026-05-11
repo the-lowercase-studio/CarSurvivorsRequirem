@@ -1,12 +1,13 @@
-﻿using Assets.Scripts.Enemies;
-using Assets.Scripts.GridSystem;
+using Assets.Scripts.Enemies;
+using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.LevelSystem.Exp;
 using Assets.Scripts.Player;
 using Assets.Scripts.Skills.ObjectsImpactingSkills.Crate;
+using Assets.Scripts.Skills.UpgradeFlow;
 using Assets.Scripts.Spawners.GridSpace;
 using Assets.Scripts.Spawners.WorldSpace;
-using Assets.Scripts.UI;
 using Assets.Scripts.UI.Death;
+using Assets.Scripts.UI.HUD;
 using Assets.Scripts.UI.Level;
 using Reflex.Core;
 using UnityEngine;
@@ -36,6 +37,9 @@ namespace Assets.Scripts.ReflexDI
 
             //Grid System
             builder.AddSingleton(_gridManager, typeof(IGridManager));
+
+            //Skill Upgrade Flow
+            builder.AddSingleton(typeof(SkillUpgradeFlow), typeof(ISkillUpgradeFlow));
 
             //Spawners
             builder.AddSingleton(_enemiesSpawner, typeof(IOnRandomGridPosSpawner<EnemiesSpawner>));

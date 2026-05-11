@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace Assets.Scripts.ObjectLifeCycle.Actions
+namespace Assets.Scripts.ObjectLifecycle.Actions
 {
     public interface INeedToCompleteBeforeDisable
     {

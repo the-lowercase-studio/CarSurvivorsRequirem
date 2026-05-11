@@ -45,9 +45,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b8a1f55baf35762458b2cfc127f37352, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rotateX: 0
-  rotateY: 1
-  rotateZ: 0
+  _rotateX: 0
+  _rotateY: 1
+  _rotateZ: 0
   _maxRotationOnAxis: 360
   _useLocalRotation: 1
   _tweenIterationTime: 2.5

@@ -1,8 +1,8 @@
 using Assets.ScriptableObjects.Skills.PlayerSkills.LandmineSkill;
 using Assets.Scripts.Audio;
-using Assets.Scripts.Helpers;
 using Assets.Scripts.Initializers;
 using Assets.Scripts.LayerMasks;
+using Assets.Scripts.StatusEffects;
 using Assets.Scripts.VFX;
 using UnityEngine;
 

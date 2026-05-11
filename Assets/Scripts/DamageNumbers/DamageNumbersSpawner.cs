@@ -1,5 +1,5 @@
-using Assets.Scripts.CustomTypes;
-using Assets.Scripts.ObjectLifeCycle.Actions;
+using Assets.Scripts.Common.Types;
+using Assets.Scripts.ObjectLifecycle.Actions;
 using Assets.Scripts.Shapes;
 using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.Utils;

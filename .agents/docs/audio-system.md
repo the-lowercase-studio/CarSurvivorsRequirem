@@ -16,7 +16,7 @@ The audio system is not responsible for gameplay decisions, UI flow, settings pe
 - Common consumers:
   - `Assets/Scripts/UI/Death/PlayerDeathPresenter.cs`
   - `Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs`
-  - `Assets/Scripts/UI/ButtonsAudioClipPlayer.cs`
+  - `Assets/Scripts/UI/Common/ButtonsAudioClipPlayer.cs`
   - `Assets/Scripts/Player/PlayerManager.cs`
   - `Assets/Scripts/Player/PlayerDamagedHandler.cs`
   - `Assets/Scripts/Enemies/Enemy.cs`

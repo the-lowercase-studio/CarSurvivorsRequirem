@@ -1,4 +1,4 @@
-﻿using Assets.Scripts.StatusAffectables;
+﻿using Assets.Scripts.StatusEffects;
 using Assets.Scripts.VFX;
 using DG.Tweening;
 using Reflex.Attributes;

@@ -18,7 +18,7 @@ It does not calculate damage, change health values, choose combat targets, play 
   - `Assets/Scripts/Settings/DamageNumbersSetting.cs`
   - `Assets/Scripts/UI/Settings/DamageNumbersOption.cs`
   - `Assets/Scripts/Spawners/WorldSpace/IInWorldSpaceSpawner.cs`
-  - `Assets/Scripts/ObjectLifeCycle/Actions/IEnableDisableFunctionalityTrigger.cs`
+  - `Assets/Scripts/ObjectLifecycle/Actions/IEnableDisableFunctionalityTrigger.cs`
 - Related docs:
   - `.agents/docs/settings-system.md`
   - `.agents/docs/project-coding-standards.md`

@@ -1,7 +1,7 @@
-﻿using Assets.Scripts.Audio;
-using Assets.Scripts.CustomTypes;
+using Assets.Scripts.Audio;
+using Assets.Scripts.Common.Types;
 using Assets.Scripts.Extensions;
-using Assets.Scripts.FlowFieldSystem;
+using Assets.Scripts.Navigation.FlowFieldSystem;
 using Assets.Scripts.LayerMasks;
 using Assets.Scripts.Player;
 using Assets.Scripts.Pooling;

@@ -32,7 +32,7 @@ It is not responsible for applying settings to Unity systems, deciding scoreboar
 ## Architecture and Data Flow
 
 - Core components:
-  - `AppStorage` is a static key/value store backed by `Data/AppStorage.json` under `AppDomain.CurrentDomain.BaseDirectory`.
+  - `AppStorage` is a static key/value store backed by `Assets/Data/AppStorage.Editor.json` in the Unity Editor and `Data/AppStorage.json` under `AppDomain.CurrentDomain.BaseDirectory` in builds.
   - `AppStorage` keeps an in-memory `Dictionary<string, JToken>` cache initialized by its static constructor.
   - `IAppStorageValue<T>` defines the contract for domain-owned persisted values: `DefaultValue`, `GetKey()`, `GetValueOrStoredDefault()`, and `SaveValue(T value)`.
   - Settings extend the storage contract through `ISetting<TSelf, TRepresentedBy>`, which combines `IAppStorageValue<TRepresentedBy>` with `ISettingLoader`.
@@ -46,11 +46,11 @@ It is not responsible for applying settings to Unity systems, deciding scoreboar
   - `"ScoreBoard"` stores saved scoreboard values.
 - Runtime flow:
   1. The first reference to `AppStorage` runs the static constructor and calls `Load()`.
-  2. `Load()` reads `Data/AppStorage.json` when present, deserializes it into `Dictionary<string, JToken>`, and falls back to an empty dictionary when the file is missing or the JSON root deserializes to null.
+  2. `Load()` reads the active target's storage JSON when present, deserializes it into `Dictionary<string, JToken>`, and falls back to an empty dictionary when the file is missing or the JSON root deserializes to null.
   3. Consumers call `TryGetValue<T>(key, out value)` through their own `GetValueOrStoredDefault()` method.
   4. If a key is missing or conversion to `T` throws, the consumer returns its domain-owned `DefaultValue`.
   5. Consumers call `SetValue<T>(key, value)` through `SaveValue(T value)`.
-  6. `SetValue` creates the `Data` directory when needed, updates the cache, serializes the full dictionary with indented JSON, and overwrites `AppStorage.json`.
+  6. `SetValue` creates the active `Data` directory when needed, updates the cache, serializes the full dictionary with indented JSON, and overwrites the active storage JSON.
   7. `UserSettingsLoader.Awake` iterates injected `ISettingLoader` instances so settings can load stored/default values and apply them to Unity systems.
   8. Scoreboard services read and write `StoredScoreBoard` from project-level services and menu presenters.
 
@@ -59,7 +59,7 @@ It is not responsible for applying settings to Unity systems, deciding scoreboar
 - Critical behavior rules:
   - Keep `AppStorage` generic and domain-neutral. Domain keys, defaults, validation, and apply behavior belong to the owning setting or scoreboard class.
   - Keep persisted values accessed through `IAppStorageValue<T>` or a more specific setting/scoreboard service instead of scattering raw `AppStorage` calls across UI and gameplay classes.
-  - Preserve the current storage file location unless the user explicitly approves a migration plan. Existing persisted data is tied to `Data/AppStorage.json` under the application base directory.
+  - Preserve the current storage file locations unless the user explicitly approves a migration plan. Existing build persisted data is tied to `Data/AppStorage.json` under the application base directory, while Editor persisted data is tied to `Assets/Data/AppStorage.Editor.json`.
   - Preserve the fallback behavior where missing or non-convertible values return domain defaults instead of failing callers.
   - Keep settings binding in `MainMenuInstaller` when adding a new `ISetting<TSelf, TRepresentedBy>` implementation.
 - Ordering or sequencing guarantees:
@@ -69,7 +69,7 @@ It is not responsible for applying settings to Unity systems, deciding scoreboar
 - Constraints contributors must preserve:
   - Do not move setting application logic into `AppStorage`; it should only persist and retrieve values.
   - Do not change key strings casually. A renamed key is a persisted-data breaking change unless a migration path reads the previous key.
-  - Do not directly edit generated local storage files as project source. `Data/AppStorage.json` is runtime output, not an authoritative project asset.
+  - Do not directly edit generated local storage files as project source. `Data/AppStorage.json` and `Assets/Data/AppStorage.Editor.json` are runtime output, not authoritative project assets.
   - Do not edit `.prefab`, `.unity`, `.asset`, or `.meta` files directly for storage integration unless the user explicitly requests it and the change is safe to review as text.
 
 ## Extension Points
@@ -92,7 +92,7 @@ It is not responsible for applying settings to Unity systems, deciding scoreboar
 ## Integration Notes
 
 - Upstream dependencies:
-  - `AppStorage` depends on `System.IO`, `AppDomain.CurrentDomain.BaseDirectory`, Newtonsoft `JsonConvert`, and `JToken`.
+  - `AppStorage` depends on `System.IO`, `AppDomain.CurrentDomain.BaseDirectory`, Unity `Application.dataPath`, Newtonsoft `JsonConvert`, and `JToken`.
   - Settings depend on storage for persisted values and on their runtime systems for apply behavior.
   - `ResolutionSetting` depends on `FullScreenSetting` and available Unity screen resolutions when applying stored resolution data.
   - Scoreboard services depend on `StoredScoreBoard` for persisted score lists.
@@ -114,7 +114,7 @@ It is not responsible for applying settings to Unity systems, deciding scoreboar
   - `TryGetValue<T>` swallows conversion exceptions without logging, so invalid stored values silently fall back to defaults.
   - `AppStorage` writes the full JSON file on every `SetValue` call and has no batching or concurrency protection.
   - Storage is static and not DI-bound, which keeps usage simple but makes isolated tests harder.
-  - `SettingsFilePath` uses `AppDomain.CurrentDomain.BaseDirectory`, which may differ between Unity Editor, builds, and tests.
+  - `SettingsFilePath` is selected with `UNITY_EDITOR`, so Editor and build runs do not share the same JSON file.
   - `StoredScoreBoard.MAX_SAVED_SCORES_COUNT` is a mutable public field even though it behaves like a constant.
 - Open design questions:
   - Should storage move behind an injectable interface to support tests, alternate backends, or platform-specific persistence?

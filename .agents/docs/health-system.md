@@ -18,7 +18,7 @@ It does not own damage calculation, target selection, enemy/player death present
   - `Assets/Scripts/Player/PlayerManager.cs`
   - `Assets/Scripts/Player/PlayerDamagedHandler.cs`
   - `Assets/Scripts/Player/PlayerDeathHandler.cs`
-  - `Assets/Scripts/StatusAffectables/IDamageable.cs`
+  - `Assets/Scripts/StatusEffects/IDamageable.cs`
 - Related systems:
   - Damage numbers: `Assets/Scripts/DamageNumbers/`
   - VFX: `Assets/Scripts/VFX/`

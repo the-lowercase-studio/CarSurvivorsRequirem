@@ -1,6 +1,6 @@
-﻿using UnityEngine;
+using UnityEngine;
 
-namespace Assets.Scripts.ObjectLifeCycle
+namespace Assets.Scripts.ObjectLifecycle
 {
     public class DontDestroyOnSceneLoad : MonoBehaviour
     {

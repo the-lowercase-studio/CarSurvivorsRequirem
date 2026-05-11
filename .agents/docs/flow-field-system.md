@@ -24,14 +24,14 @@ It is not responsible for:
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/FlowFieldSystem/FlowField.cs`
-  - `Assets/Scripts/FlowFieldSystem/FlowFieldMovementController.cs`
-  - `Assets/Scripts/FlowFieldSystem/FlowFieldDebug.cs`
+  - `Assets/Scripts/Navigation/FlowFieldSystem/FlowField.cs`
+  - `Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldMovementController.cs`
+  - `Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldDebug.cs`
 - Related systems:
-  - `Assets/Scripts/GridSystem/GridManager.cs`
-  - `Assets/Scripts/GridSystem/Cell.cs`
-  - `Assets/Scripts/GridSystem/GridDirection.cs`
-  - `Assets/Scripts/GridSystem/WorldPosToCellConverter.cs`
+  - `Assets/Scripts/Navigation/GridSystem/GridManager.cs`
+  - `Assets/Scripts/Navigation/GridSystem/Cell.cs`
+  - `Assets/Scripts/Navigation/GridSystem/GridDirection.cs`
+  - `Assets/Scripts/Navigation/GridSystem/WorldPosToCellConverter.cs`
   - `Assets/Scripts/Enemies/EnemyMovementController.cs`
   - `Assets/Scripts/LevelSystem/Exp/ExpParticle.cs`
   - `Assets/Scripts/LayerMasks/TerrainLayers.cs`

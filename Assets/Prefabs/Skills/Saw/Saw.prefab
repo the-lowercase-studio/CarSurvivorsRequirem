@@ -143,20 +143,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _audioClipPlayerConfigs:
-  - Name: Attack
-    ClipVariants:
-    - AudioClip: {fileID: 8300000, guid: 6dfb70745bfffc34abea7d883a298a3d, type: 3}
-      Volume: 0.25
-      Pitch: 1
-      Loop: 0
-    - AudioClip: {fileID: 8300000, guid: ea2e4926f7956554bb7a2c67bd4ffe24, type: 3}
-      Volume: 0.25
-      Pitch: 1
-      Loop: 0
-    - AudioClip: {fileID: 8300000, guid: fe1794013810d7742b6143f27133e154, type: 3}
-      Volume: 0.25
-      Pitch: 1
-      Loop: 0
+  - _name: Attack
+    _clipVariants:
+    - _audioClip: {fileID: 8300000, guid: 6dfb70745bfffc34abea7d883a298a3d, type: 3}
+      _volume: 0.25
+      _pitch: 1
+      _loop: 0
+    - _audioClip: {fileID: 8300000, guid: ea2e4926f7956554bb7a2c67bd4ffe24, type: 3}
+      _volume: 0.25
+      _pitch: 1
+      _loop: 0
+    - _audioClip: {fileID: 8300000, guid: fe1794013810d7742b6143f27133e154, type: 3}
+      _volume: 0.25
+      _pitch: 1
+      _loop: 0
 --- !u!1 &5376425430299358150
 GameObject:
   m_ObjectHideFlags: 0

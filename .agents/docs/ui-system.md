@@ -21,7 +21,7 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - `Assets/Scripts/Player/PlayerDeathHandler.cs`
   - `Assets/Scripts/Settings/`
   - `Assets/Scripts/ScoreBoard/`
-  - `Assets/Scripts/GameManipulators/`
+  - `Assets/Scripts/GameFlow/`
 - Related docs:
   - `.agents/docs/settings-system.md`
   - `.agents/docs/level-system.md`

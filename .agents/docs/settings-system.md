@@ -16,7 +16,7 @@ The Settings system is not responsible for owning UI layout, audio mixer impleme
 - Related runtime code:
   - `Assets/Scripts/Storage/AppStorage.cs`
   - `Assets/Scripts/Storage/IAppStorageValue.cs`
-  - `Assets/Scripts/Helpers/ScreenSerializableResolutionHelper.cs`
+  - `Assets/Scripts/Settings/Resolution/ScreenSerializableResolutionHelper.cs`
   - `Assets/Scripts/Audio/AudioMixersManager.cs`
   - `Assets/Scripts/DamageNumbers/DamageNumbersSpawner.cs`
   - `Assets/Scripts/ReflexDI/BootLoader.cs`
@@ -42,7 +42,7 @@ The Settings system is not responsible for owning UI layout, audio mixer impleme
   - `FullScreenSetting` stores `"FullScreenMode"` as a Unity `FullScreenMode` and applies it to `Screen.fullScreenMode`.
   - `ResolutionSetting` stores `"Resolution"` as `SerializableResolution`, validates it against available screen resolutions, and applies it through `ScreenSerializableResolutionHelper.SetResolution`.
   - `DamageNumbersSetting` stores `"DamageNumbersEnabled"` as a `bool` and applies it through `IEnableDisableFunctionalityTrigger<DamageNumbersSpawner>`.
-  - `AppStorage` serializes values into `Data/AppStorage.json` under `AppDomain.CurrentDomain.BaseDirectory`.
+  - `AppStorage` serializes values into `Assets/Data/AppStorage.Editor.json` in the Unity Editor and `Data/AppStorage.json` under `AppDomain.CurrentDomain.BaseDirectory` in builds.
   - Settings option UI components under `Assets/Scripts/UI/Settings/` bind Unity controls to typed `ISetting<TSelf, TRepresentedBy>` instances.
 - Key interfaces:
   - `IAppStorageValue<T>` defines `DefaultValue`, `GetKey`, `GetValueOrStoredDefault`, and `SaveValue`.

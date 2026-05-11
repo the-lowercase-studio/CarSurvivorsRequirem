@@ -24,10 +24,10 @@ It does not own wave timing, grid generation, flow-field direction calculation, 
   - Enemy prefabs referenced by `EnemiesSpawner._poolEnemiesInfo`
 - Related systems:
   - Wave timing: `Assets/Scripts/Waves/WaveManager.cs`
-  - Grid and off-camera spawn cells: `Assets/Scripts/GridSystem/`
-  - Flow-field movement: `Assets/Scripts/FlowFieldSystem/FlowFieldMovementController.cs`
+  - Grid and off-camera spawn cells: `Assets/Scripts/Navigation/GridSystem/`
+  - Flow-field movement: `Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldMovementController.cs`
   - Health: `Assets/Scripts/HealthSystem/Health.cs`
-  - Status effects: `Assets/Scripts/StatusAffectables/StunController.cs`
+  - Status effects: `Assets/Scripts/StatusEffects/StunController.cs`
   - Damage numbers and VFX: `Assets/Scripts/DamageNumbers/`, `Assets/Scripts/VFX/`
   - Experience particles: `Assets/Scripts/LevelSystem/Exp/`
   - DI installer: `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`

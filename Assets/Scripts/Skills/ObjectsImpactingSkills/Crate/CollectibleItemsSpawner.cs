@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Assets.Scripts.Collectibles;
-using Assets.Scripts.GridSystem;
+using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.Spawners.GridSpace;
 using Reflex.Attributes;
 using UnityEngine;

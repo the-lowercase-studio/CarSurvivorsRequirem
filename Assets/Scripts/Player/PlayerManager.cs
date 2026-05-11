@@ -1,5 +1,5 @@
 using Assets.Scripts.Audio;
-using Assets.Scripts.Car;
+using Assets.Scripts.Player.Car;
 using Assets.Scripts.HealthSystem;
 using Assets.Scripts.LevelSystem;
 using Assets.Scripts.Providers;

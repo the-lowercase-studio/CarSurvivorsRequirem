@@ -20,15 +20,15 @@ This map describes what each scripts folder should own and where code should be 
 
 ### `Activators/`
 
-Use for components that enable, activate, or initialize groups of scene or prefab items based on configuration.
+Retired. Do not add new scripts here.
 
-Extract here when logic coordinates activation of configured objects but does not own the objects' domain behavior.
+Keep activation helpers in the owning domain folder. Skill item activation belongs under `Skills/`; UI activation belongs under `UI/`.
 
 ### `AnimationPlayers/`
 
-Use for animation playback contracts or adapters that wrap animator/tween playback behind a small API.
+Retired. Do not add new scripts here.
 
-Extract here when multiple systems need a shared animation player contract. Keep animation behavior that is specific to one domain inside that domain folder.
+Keep animation playback contracts or adapters in the owning domain folder unless multiple unrelated systems need a shared contract.
 
 ### `Audio/`
 
@@ -36,17 +36,17 @@ Use for audio clip configuration, playback services, mixer management, and backg
 
 Extract here when code controls sound playback, volume routing, mixer values, or audio settings integration. UI controls for audio options belong under `UI/Settings/`; persisted setting models belong under `Settings/`.
 
-### `Car/`
-
-Use for the controllable car entity, car-specific input/movement coordination, and car visual effects.
-
-Extract here when behavior is owned by the player car as a vehicle. Generic player lifecycle logic belongs under `Player/`; generic movement interfaces belong under `Movement/`.
-
 ### `Collectibles/`
 
-Use for collectible item contracts and behavior.
+Retired. Do not add new scripts here.
 
-Extract here when code describes pickup interaction, collection eligibility, or collectible item behavior independent of a specific reward system. Skill crates and skill-specific rewards should stay under `Skills/ObjectsImpactingSkills/` unless they become generic collectibles.
+Keep pickup interaction, collection eligibility, and collectible item behavior under the owning reward system. Skill crates and skill-specific rewards stay under `Skills/ObjectsImpactingSkills/` unless they become generic collectibles.
+
+### `Common/`
+
+Use for small shared contracts, event args, and value types that are reused across unrelated gameplay domains.
+
+Extract here only when ownership is genuinely shared and no domain folder is a better owner. Prefer `Common/EventArgs/` for reusable event argument types and `Common/Types/` for generic value types.
 
 ### `Collisions/`
 
@@ -56,15 +56,15 @@ Extract here when collision reporting is reusable across enemies, projectiles, p
 
 ### `CustomEventArgs/`
 
-Use for reusable event argument types that are not owned by one domain.
+Retired. Do not add new scripts here.
 
-Extract here only when event args are shared across unrelated systems. If event args are owned by one feature, colocate them in that feature folder.
+Move reusable event args to `Common/EventArgs/`. If event args are owned by one feature, colocate them in that feature folder.
 
 ### `CustomTypes/`
 
-Use for small reusable value types that model generic data shapes.
+Retired. Do not add new scripts here.
 
-Extract here when a type is not Unity-specific and is reused across unrelated domains, such as ranges or simple typed values.
+Move reusable generic value types to `Common/Types/`. If a type is owned by one feature, colocate it in that feature folder.
 
 ### `DamageNumbers/`
 
@@ -82,19 +82,19 @@ Extract here when code references `UnityEditor` or should not be compiled into r
 
 Use for visual effect MonoBehaviours that are generic enough to attach to many objects.
 
-Extract here when behavior is presentation-only, such as rotation loops, face-camera helpers, scale animations, or UI element effects. Domain-specific effects should remain with their owner, for example car VFX in `Car/`.
+Extract here when behavior is presentation-only, such as rotation loops, face-camera helpers, scale animations, or UI element effects. Domain-specific effects should remain with their owner, for example car VFX in `Player/Car/`.
 
 ### `Enemies/`
 
 Use for enemy entity behavior, enemy spawning policy, enemy movement, attacks, death handling, collisions, and enemy-specific animation.
 
-Extract here when behavior is enemy-owned or depends on enemy lifecycle. Generic spawn interfaces belong under `Spawners/`; shared health or status behavior belongs under `HealthSystem/` or `StatusAffectables/`.
+Extract here when behavior is enemy-owned or depends on enemy lifecycle. Generic spawn interfaces belong under `Spawners/`; shared health or status behavior belongs under `HealthSystem/` or `StatusEffects/`.
 
 ### `EventHandlers/`
 
-Use for small reusable Unity event bridge components.
+Retired. Do not add new scripts here.
 
-Extract here when a component adapts Unity events into C# events or callbacks and is not owned by a specific UI or gameplay domain.
+Keep Unity event bridge components in the owning domain folder. Skill UI event adapters belong under `UI/Skills/` unless they become shared across unrelated UI screens.
 
 ### `Extensions/`
 
@@ -104,15 +104,21 @@ Extract here when the primary purpose is extending an existing C#, Unity, DOTwee
 
 ### `FlowFieldSystem/`
 
-Use for flow field generation, debug visualization, and movement controllers that consume flow field data.
+Moved. Do not add new scripts here.
 
-Extract here when code calculates or follows flow fields. Grid storage and cell state belong under `GridSystem/`; enemy-specific use of flow fields belongs in `Enemies/` unless it is reusable movement infrastructure.
+Use `Navigation/FlowFieldSystem/` for flow field generation, debug visualization, and reusable movement controllers that consume flow field data.
+
+### `GameFlow/`
+
+Use for global game flow services such as time control and scene loading.
+
+Extract here when code changes broad game state or scene flow. Register service dependencies through `ReflexDI/` when the service is injected.
 
 ### `GameManipulators/`
 
-Use for global game manipulation services such as time control and scene loading.
+Retired. Do not add new scripts here.
 
-Extract here when code changes broad game state or scene flow. Register service dependencies through `ReflexDI/` when the service is injected.
+Use `GameFlow/` for time control, scene loading, and broad runtime flow services.
 
 ### `GameWindow/`
 
@@ -122,21 +128,21 @@ Extract here when code manages resolution/window placement or platform display q
 
 ### `GridSystem/`
 
-Use for grid data structures, cells, grid queries, grid debug tools, camera visibility checks, and coordinate conversion.
+Moved. Do not add new scripts here.
 
-Extract here when code owns grid state, cell lookup, walkability, edges, or grid-space queries. Spawning contracts that use grid positions belong under `Spawners/GridSpace/`; flow field pathing belongs under `FlowFieldSystem/`.
+Use `Navigation/GridSystem/` for grid data structures, cells, grid queries, grid debug tools, camera visibility checks, and coordinate conversion.
 
 ### `HealthSystem/`
 
 Use for health values, health bars, regeneration, and health presentation that is shared across entities.
 
-Extract here when code changes hit points, regeneration, health bar display, or health events. Damage application interfaces may belong under `StatusAffectables/` when they represent entity capability rather than health storage.
+Extract here when code changes hit points, regeneration, health bar display, or health events. Damage application interfaces may belong under `StatusEffects/` when they represent entity capability rather than health storage.
 
 ### `Helpers/`
 
-Use for narrow static helpers that simplify Unity or project operations.
+Retired. Do not add new scripts here.
 
-Extract here only when the helper has a clear reusable purpose and does not fit a stronger domain folder. Prefer `Extensions/` for extension methods and `Utils/` for domain-neutral pure utilities.
+Prefer the owning domain folder first. Use `Extensions/` for extension methods and `Utils/` only for domain-neutral pure utilities that are reused across unrelated systems.
 
 ### `Initializers/`
 
@@ -158,21 +164,27 @@ Extract here when code manages experience, level thresholds, level-up events, or
 
 ### `Movement/`
 
-Use for movement contracts shared by multiple moving entities.
+Retired. Do not add new scripts here.
 
-Extract here when an interface or reusable movement abstraction has more than one unrelated owner. Keep concrete movement controllers in the owning domain folder unless they are truly generic.
+Keep movement contracts and controllers in the owning domain folder unless a reusable movement abstraction has more than one unrelated owner.
 
-### `ObjectLifeCycle/`
+### `ObjectLifecycle/`
 
 Use for object enable/disable lifecycle helpers and persistence behavior.
 
 Extract here when code coordinates pooled object lifecycle, disable prerequisites, or scene persistence. Pool ownership and pool contracts belong under `Pooling/`.
 
+### `Navigation/`
+
+Use for runtime navigation boundaries that combine grid data and flow-field pathing.
+
+Extract grid-owned code to `Navigation/GridSystem/` when it owns grid state, cell lookup, walkability, edges, camera visibility, or grid-space queries. Extract flow-field code to `Navigation/FlowFieldSystem/` when it calculates or follows flow fields. Spawning contracts that use grid positions remain under `Spawners/GridSpace/`; enemy-specific movement behavior remains under `Enemies/`.
+
 ### `Player/`
 
 Use for player lifecycle, damage/death handling, player manager behavior, and player-owned game-state transitions.
 
-Extract here when behavior is about the player as a gameplay actor rather than the car vehicle. Car physics and car visuals belong under `Car/`; player UI belongs under `UI/`.
+Extract here when behavior is about the player as a gameplay actor. Player-owned car physics and car visuals belong under `Player/Car/`; player UI belongs under `UI/`.
 
 ### `Pooling/`
 
@@ -218,7 +230,7 @@ Extract here when code describes reusable geometric or targeting shapes. Skill-s
 
 ### `Skills/`
 
-Use for skill definitions, skill registry logic, upgradeable skills, skill stats units, player skills, turrets, and objects that affect skills.
+Use for skill definitions, skill registry logic, upgradeable skills, skill stats units, skill-owned activation helpers, player skills, turrets, and objects that affect skills.
 
 Extract here when behavior belongs to unlockable/upgradable player abilities or skill-impacting world objects. Put each player skill in `Skills/PlayerSkills/<SkillName>/`. Put skill-affecting world objects in `Skills/ObjectsImpactingSkills/<ObjectName>/`.
 
@@ -234,11 +246,17 @@ Use for generic upgradeable stat types.
 
 Extract here when code models reusable stat values, stat upgrade rules, or stat value types used by multiple gameplay systems. Skill-only stat behavior can stay under `Skills/` until reused elsewhere.
 
-### `StatusAffectables/`
+### `StatusEffects/`
 
 Use for entity capability interfaces and controllers for status or combat effects, such as damage, stun, and knockback.
 
 Extract here when code describes what effects an entity can receive or shared effect controllers. Health storage belongs under `HealthSystem/`; effect application owned by a skill stays under the skill folder.
+
+### `StatusAffectables/`
+
+Retired. Do not add new scripts here.
+
+Use `StatusEffects/` for entity effect capability interfaces and shared status/combat effect controllers.
 
 ### `Storage/`
 
@@ -256,13 +274,13 @@ Extract here when code owns Unity UI, player-facing presentation, or UI event ha
 
 Use for domain-neutral pure utility functions.
 
-Extract here when code performs generic operations such as random selection, deep copy, time conversion, or easing lookup without Unity scene ownership. Prefer `Helpers/` for Unity-oriented helper operations and `Extensions/` for extension methods.
+Extract here when code performs generic operations such as random selection, deep copy, time conversion, or easing lookup without Unity scene ownership. Prefer owning domain folders for Unity-oriented helper operations and `Extensions/` for extension methods.
 
 ### `VFX/`
 
 Use for reusable Visual Effect Graph playback or visual effect controllers.
 
-Extract here when code controls VFX playback generically. Entity-specific VFX orchestration should stay under the owning domain, such as `Car/` or `Enemies/`.
+Extract here when code controls VFX playback generically. Entity-specific VFX orchestration should stay under the owning domain, such as `Player/Car/` or `Enemies/`.
 
 ### `Volumes/`
 
@@ -280,15 +298,23 @@ Extract here when code controls enemy wave schedules, wave transitions, or wave-
 
 - `Editor/GUI/`: custom inspectors and editor UI.
 - `Editor/Tools/`: editor utilities and menu tools.
+- `Common/EventArgs/`: reusable event argument types shared across unrelated domains.
+- `Common/Types/`: reusable generic value types shared across unrelated domains.
 - `LevelSystem/Exp/`: experience particles and experience pickup/spawn behavior.
-- `ObjectLifeCycle/Actions/`: contracts or actions that must complete before disabling pooled or lifecycle-managed objects.
+- `Navigation/GridSystem/`: grid state, cells, grid queries, coordinate conversion, and grid debug helpers.
+- `Navigation/FlowFieldSystem/`: flow-field generation, debug visualization, and reusable flow-field movement controllers.
+- `ObjectLifecycle/Actions/`: contracts or actions that must complete before disabling pooled or lifecycle-managed objects.
+- `Player/Car/`: player-owned car control, vehicle physics coordination, and car visual effects.
 - `Settings/Resolution/`: resolution data and resolution setting behavior.
 - `Skills/ObjectsImpactingSkills/<ObjectName>/`: world objects that modify, grant, or interact with skills.
 - `Skills/PlayerSkills/<SkillName>/`: concrete player skill implementation, related spawned objects, and skill-specific helpers.
 - `Spawners/GridSpace/`: spawning abstractions that place objects using grid positions.
 - `Spawners/WorldSpace/`: spawning abstractions that place objects in world coordinates.
 - `UI/Death/`: player death screen presentation.
+- `UI/HUD/`: runtime HUD presentation such as the gameplay timer.
 - `UI/Level/`: level and experience UI presentation.
+- `UI/Pause/`: pause screen presentation.
+- `UI/Common/`: reusable UI components and menu button behavior shared by multiple screens.
 - `UI/Settings/`: option components and settings screen UI.
 - `UI/Skills/`: skill upgrade and skill visual presentation.
 
@@ -311,4 +337,3 @@ Ask before:
 3. Renaming public types, serialized fields, assets, prefabs, scenes, or folders.
 4. Introducing a new top-level `Assets/Scripts/` folder.
 5. Collapsing existing folders into a new architecture.
-

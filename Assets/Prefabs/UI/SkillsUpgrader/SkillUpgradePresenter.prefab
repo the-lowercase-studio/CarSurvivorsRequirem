@@ -112,6 +112,7 @@ MonoBehaviour:
   _newSkillDescription: {fileID: 8895234451780847018}
   _continueButton: {fileID: 7302551736729319313}
   _buttonsAudioPlayer: {fileID: 0}
+  _skillsVisualPresenter: {fileID: 0}
 --- !u!1 &1505607836898705480
 GameObject:
   m_ObjectHideFlags: 0
@@ -983,6 +984,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -1163,12 +1165,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _audioClipPlayerConfigs:
-  - Name: Show
-    ClipVariants:
-    - AudioClip: {fileID: 8300000, guid: b73571102afd61a4ab4b4f9596c4be4e, type: 3}
-      Volume: 0.3
-      Pitch: 1
-      Loop: 0
+  - _name: Show
+    _clipVariants:
+    - _audioClip: {fileID: 8300000, guid: b73571102afd61a4ab4b4f9596c4be4e, type: 3}
+      _volume: 0.3
+      _pitch: 1
+      _loop: 0
 --- !u!1 &5997174396483538776
 GameObject:
   m_ObjectHideFlags: 0
@@ -1430,6 +1432,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
