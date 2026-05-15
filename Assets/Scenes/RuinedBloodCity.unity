@@ -2751,7 +2751,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _rotateX: 0
-  _rotateY: 0
+  _rotateY: 1
   _rotateZ: 0
   _maxRotationOnAxis: 360
   _useLocalRotation: 1
