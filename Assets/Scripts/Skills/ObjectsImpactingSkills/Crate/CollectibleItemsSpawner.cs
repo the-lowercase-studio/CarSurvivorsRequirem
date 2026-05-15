@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Assets.Scripts.Collectibles;
-using Assets.Scripts.GridSystem;
+using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.Spawners.GridSpace;
 using Reflex.Attributes;
 using UnityEngine;
@@ -16,9 +15,9 @@ namespace Assets.Scripts.Skills.ObjectsImpactingSkills.Crate
         [Serializable]
         private struct CollectibleItemSpawnData
         {
-            [SerializeField, FormerlySerializedAs("Prefab")] private GameObject _prefab;
-            [SerializeField, FormerlySerializedAs("SpawnYOffset")] private float _spawnYOffset;
-            [SerializeField, FormerlySerializedAs("SpawnChance")] private float _spawnChance;
+            [SerializeField] private GameObject _prefab;
+            [SerializeField] private float _spawnYOffset;
+            [SerializeField] private float _spawnChance;
 
             public GameObject Prefab => _prefab;
             public float SpawnYOffset => _spawnYOffset;
@@ -27,7 +26,7 @@ namespace Assets.Scripts.Skills.ObjectsImpactingSkills.Crate
 
         [Inject] private readonly IGridManager _gridManager;
 
-        [SerializeField, FormerlySerializedAs("maxSpawnedCollectiblesCount")] private byte _maxSpawnedCollectiblesCount = 6;
+        [SerializeField] private byte _maxSpawnedCollectiblesCount = 6;
         [SerializeField] private Transform _collectibleItemsParent;
         [SerializeField] private float _spawnDelay = 8f;
         [SerializeField] private CollectibleItemSpawnData[] _collectibleItemsSpawnData;

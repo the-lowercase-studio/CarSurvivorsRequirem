@@ -9,8 +9,8 @@ It does not own player health, leveling, skills, spawning, camera behavior, enem
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/Car/CarController.cs`
-  - `Assets/Scripts/Car/CarVfxEffectsController.cs`
+  - `Assets/Scripts/Player/Car/CarController.cs`
+  - `Assets/Scripts/Player/Car/CarVfxEffectsController.cs`
 - Related systems:
   - `Assets/Scripts/Player/PlayerManager.cs`
   - `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`

@@ -15,7 +15,7 @@ It does not own enemy prefab selection, spawn chance redistribution, off-camera 
   - Spawn contract: `Assets/Scripts/Spawners/GridSpace/IOnRandomGridPosSpawner.cs`
   - Active spawned object count contract: `Assets/Scripts/Spawners/ISpawnedObjectsCounter.cs`
   - Gameplay scene DI binding: `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
-  - Grid-based spawn placement: `Assets/Scripts/GridSystem/`
+  - Grid-based spawn placement: `Assets/Scripts/Navigation/GridSystem/`
 - Related docs:
   - `.agents/docs/enemies-system.md`
   - `.agents/docs/grid-system.md`

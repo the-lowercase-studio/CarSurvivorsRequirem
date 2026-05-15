@@ -1,4 +1,4 @@
-﻿using Assets.Scripts.CustomTypes;
+﻿using Assets.Scripts.Common.Types;
 using System;
 using UnityEngine;
 

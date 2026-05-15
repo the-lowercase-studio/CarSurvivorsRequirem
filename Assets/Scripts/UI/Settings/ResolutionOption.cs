@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using Assets.Scripts.Helpers;
 using Assets.Scripts.Settings;
 using Assets.Scripts.Settings.Resolution;
 using Reflex.Attributes;

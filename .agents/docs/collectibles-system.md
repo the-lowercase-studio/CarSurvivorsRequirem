@@ -21,12 +21,12 @@ It is not responsible for:
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/Collectibles/ICollectible.cs`
+  - `Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/ICollectible.cs`
   - `Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/SkillCrate.cs`
   - `Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/CollectibleItemsSpawner.cs`
 - Related code:
-  - `Assets/Scripts/GridSystem/RandomWalkableCellsFinder.cs`
-  - `Assets/Scripts/GridSystem/Cell.cs`
+  - `Assets/Scripts/Navigation/GridSystem/RandomWalkableCellsFinder.cs`
+  - `Assets/Scripts/Navigation/GridSystem/Cell.cs`
   - `Assets/Scripts/Spawners/GridSpace/IOnRandomGridPosSpawner.cs`
   - `Assets/Scripts/Providers/IGameObjectProvider.cs`
   - `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
@@ -118,7 +118,7 @@ It is not responsible for:
   - The current collectible contract has no method for collection, ownership, or release; it only exposes an event and GameObject.
   - `SkillCrate.GameObject` is assigned in `Start`, so collection before `Start` would leave the provider unset.
 - Open design questions:
-  - Should generic collectible logic remain under `Skills/ObjectsImpactingSkills/Crate`, or should spawner implementation move under `Assets/Scripts/Collectibles` if more collectible types are added?
+  - Should generic collectible logic remain under `Skills/ObjectsImpactingSkills/Crate`, or should a dedicated collectible domain be reintroduced if more collectible types are added?
   - Should collectible spawn occupancy store the claimed `Cell` directly instead of resolving by world position on release?
   - Should collectibles be pooled rather than instantiated and destroyed if spawn frequency increases?
 - Suggested follow-up tasks:

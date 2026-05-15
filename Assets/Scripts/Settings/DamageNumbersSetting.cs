@@ -1,5 +1,5 @@
 ﻿using Assets.Scripts.DamageNumbers;
-using Assets.Scripts.ObjectLifeCycle.Actions;
+using Assets.Scripts.ObjectLifecycle.Actions;
 using Assets.Scripts.Storage;
 
 namespace Assets.Scripts.Settings

@@ -6,9 +6,17 @@ namespace Assets.Scripts.Audio
     [Serializable]
     public class AudioClipConfig
     {
-        public AudioClip AudioClip;
-        public float Volume = 0.5f;
-        public float Pitch = 1f;
-        public bool Loop = true;
+        [SerializeField] private AudioClip _audioClip;
+
+        [SerializeField] private float _volume = 0.5f;
+
+        [SerializeField] private float _pitch = 1f;
+
+        [SerializeField] private bool _loop = true;
+
+        public AudioClip AudioClip => _audioClip;
+        public float Volume => _volume;
+        public float Pitch => _pitch;
+        public bool Loop => _loop;
     }
 }

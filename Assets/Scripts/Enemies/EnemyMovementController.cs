@@ -1,6 +1,5 @@
-using Assets.Scripts.FlowFieldSystem;
+using Assets.Scripts.Navigation.FlowFieldSystem;
 using Assets.Scripts.LayerMasks;
-using Assets.Scripts.Movement;
 using DG.Tweening;
 using System.Runtime.CompilerServices;
 using UnityEngine;
@@ -19,7 +18,7 @@ namespace Assets.Scripts.Enemies
 
         private float _verticalPosOffset;
 
-        private bool _isStunable;
+        private bool _isStunnable = false;
 
         private bool _isMovingToPositionUnrelatedToGrid;
         private Vector3 _currentMovementPositionUnrelatedToGrid;
@@ -117,7 +116,7 @@ namespace Assets.Scripts.Enemies
                 return;
             }
 
-            bool isStunned = _isStunable && _enemy.StunController.IsStunned;
+            bool isStunned = _isStunnable && _enemy.StunController.IsStunned;
 
             bool canMoveOnGrid = _movementUnrelatedToSpeedTween is null
                 && !isStunned

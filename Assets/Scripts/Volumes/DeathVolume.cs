@@ -1,5 +1,5 @@
 ﻿using Assets.Scripts.Pooling;
-using Assets.Scripts.StatusAffectables;
+using Assets.Scripts.StatusEffects;
 using UnityEngine;
 
 namespace Assets.Scripts.Volumes

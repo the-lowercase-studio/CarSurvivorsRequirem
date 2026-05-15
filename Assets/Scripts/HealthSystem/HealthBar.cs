@@ -48,16 +48,19 @@ namespace Assets.Scripts.HealthSystem
 
         private void Health_OnHealthDecreased(object sender, System.EventArgs e)
         {
-            const float duration = 0.1f, strength = 0.14f, randomness = 90f;
-            const int vibratio = 3;
-            const bool snapping = false, fadeOut = true;
+            const float DURATION = 0.1f;
+            const float STRENGTH = 0.14f;
+            const float RANDOMNESS = 90f;
+            const int VIBRATO = 3;
+            const bool SNAPPING = false;
+            const bool FADE_OUT = true;
 
-            transform.DOShakePosition(duration,
-                                      strength,
-                                      vibratio,
-                                      randomness,
-                                      snapping,
-                                      fadeOut,
+            transform.DOShakePosition(DURATION,
+                                      STRENGTH,
+                                      VIBRATO,
+                                      RANDOMNESS,
+                                      SNAPPING,
+                                      FADE_OUT,
                                       ShakeRandomnessMode.Harmonic);
         }
     }

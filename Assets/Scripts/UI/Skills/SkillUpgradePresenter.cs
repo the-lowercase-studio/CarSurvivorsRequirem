@@ -1,18 +1,14 @@
 ﻿using Assets.Scripts.Audio;
-using Assets.Scripts.EventHandlers;
-using Assets.Scripts.Extensions;
-using Assets.Scripts.GameManipulators;
+using Assets.Scripts.GameFlow;
 using Assets.Scripts.Player;
 using Assets.Scripts.Skills;
 using Assets.Scripts.Skills.ObjectsImpactingSkills.Crate;
+using Assets.Scripts.Skills.UpgradeFlow;
 using Assets.Scripts.Spawners.GridSpace;
-using Assets.Scripts.Stats;
 using Assets.Scripts.UI.Level;
 using Reflex.Attributes;
 using System.Collections.Generic;
-using System.Linq;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -23,26 +19,23 @@ namespace Assets.Scripts.UI.Skills
         [Inject] private readonly IPlayerManager _playerManager;
         [Inject] private readonly IPlayerLevelPresenter _playerLevelPresenter;
         [Inject] private readonly IOnRandomGridPosSpawner<CollectibleItemsSpawner> _collectibleItemsSpawner;
+        [Inject] private readonly ISkillUpgradeFlow _skillUpgradeFlow;
 
         [Header("Upgrade Skill")]
         [SerializeField] private GameObject _upgradeSkillSection;
         [SerializeField] private Button _upgradeButtonPrefab;
         [SerializeField] private Transform _buttonsHolder;
-        private byte MAX_SKILLS_UPGRADE_BUTTONS = 3;
 
         [Header("New Skill")]
         [SerializeField] private GameObject _newSkillSection;
         [SerializeField] private TextMeshProUGUI _newSkillName;
         [SerializeField] private TextMeshProUGUI _newSkillDescription;
         [SerializeField] private Button _continueButton;
-        private const string SKILL_NAME_TEMPLATE = "New Skill: {0}";
 
         [SerializeField] private AudioClipPlayer _buttonsAudioPlayer;
+        [SerializeField] private SkillsVisualPresenter _skillsVisualPresenter;
 
-        private Queue<ISkillBase> _skillsQueuedForInitialization = new Queue<ISkillBase>();
-        private Queue<IUpgradeableSkill> _skillsQueuedForUpgrade = new Queue<IUpgradeableSkill>();
-
-        private SkillsVisualPresenter _skillsVisualPresenter;
+        private const string SKILL_NAME_TEMPLATE = "New Skill: {0}";
 
         private bool _isShowingAnySection;
 
@@ -55,10 +48,6 @@ namespace Assets.Scripts.UI.Skills
 
         private void Start()
         {
-            _skillsVisualPresenter = GameObject
-                .FindGameObjectWithTag(typeof(SkillsVisualPresenter).Name)
-                .GetComponent<SkillsVisualPresenter>();
-
             _collectibleItemsSpawner.OnSpawnedEntityReleased += ShowRandomSkillInInitializationOrUpgradeSection_OnEvent;
             _playerLevelPresenter.OnExpSliderVisualEndValueReached += ShowRandomSkillInInitializationOrUpgradeSection_OnEvent;
             _continueButton.onClick.AddListener(() => HandleUpgradeableOrInitializableSkillsShowing());
@@ -66,23 +55,7 @@ namespace Assets.Scripts.UI.Skills
 
         private void ShowRandomSkillInInitializationOrUpgradeSection_OnEvent(object sender, System.EventArgs e)
         {
-            ISkillsRegistry skillsRegistry = _playerManager.SkillsRegistry;
-            if (_skillsQueuedForInitialization.Count < skillsRegistry.UninitializedSkillsCount)
-            {
-                ISkillBase skill = RandomUninitializedSkillsInitializator.Initialize(skillsRegistry);
-                if (skill is not null)
-                {
-                    _skillsQueuedForInitialization.Enqueue(skill);
-                }
-            }
-            else
-            {
-                IUpgradeableSkill upgradeableSkill = RandomUpgradeableSkillFinder.Find(skillsRegistry);
-                if (upgradeableSkill is not null)
-                {
-                    _skillsQueuedForUpgrade.Enqueue(RandomUpgradeableSkillFinder.Find(skillsRegistry));
-                }
-            }
+            _skillUpgradeFlow.QueueRandomRequest(_playerManager.SkillsRegistry);
 
             if (!_isShowingAnySection)
             {
@@ -97,24 +70,19 @@ namespace Assets.Scripts.UI.Skills
 
             GameTime.Resume();
 
-            if (_skillsQueuedForInitialization.Count > 0)
+            if (_skillUpgradeFlow.TryGetNextRequest(_playerManager.SkillsRegistry, out SkillUpgradeRequest request))
             {
-                ISkillBase skill = _skillsQueuedForInitialization.Dequeue();
-                _playerManager.SkillsRegistry.InitializeSkill(skill);
-                ShowNewSkillSection(skill);
+                if (request.RequestType == SkillUpgradeRequestType.NewSkill)
+                {
+                    ShowNewSkillSection(request.NewSkill);
+                }
+                else
+                {
+                    ShowStatsUpgradeSection(request);
+                }
+
                 _audioClipPlayer.Play("Show");
                 GameTime.Pause();
-            }
-            else if (_skillsQueuedForUpgrade.Count > 0)
-            {
-                IUpgradeableSkill skill = GetQueuedUpgradeableSkillThatIsStillReadyForUpgrade();
-
-                if (skill is not null)
-                {
-                    ShowStatsUpgradeSection(skill);
-                    _audioClipPlayer.Play("Show");
-                    GameTime.Pause();
-                }
             }
             else
             {
@@ -134,54 +102,27 @@ namespace Assets.Scripts.UI.Skills
             _newSkillSection.SetActive(true);
         }
 
-        private IUpgradeableSkill GetQueuedUpgradeableSkillThatIsStillReadyForUpgrade()
+        private void ShowStatsUpgradeSection(SkillUpgradeRequest request)
         {
-            IUpgradeableSkill skill = null;
+            List<ClickableButtonData> skillStatsUpgradeButtonsData = new();
 
-            while (_skillsQueuedForUpgrade.Count > 0)
+            foreach (SkillUpgradeOption option in request.UpgradeOptions)
             {
-                skill = _skillsQueuedForUpgrade.Dequeue();
-                if (skill.CanBeUgraded())
-                {
-                    break;
-                }
-            }
-
-            return skill;
-        }
-
-        private void ShowStatsUpgradeSection(IUpgradeableSkill upgradeableStats)
-        {
-            List<ClickableButtonData> skillStatsUpgradeButtonsData = new List<ClickableButtonData>();
-
-            foreach (var nameUpgradeableStatPair in upgradeableStats.Config.GetUpgradeableStatsThatCanBeUpgraded())
-            {
-                float upgradeValue = nameUpgradeableStatPair.UpgradeableStat.GetUpgradeValueBasedOnUpdateRange();
-                IUpgradeableStat upgradeableStat = nameUpgradeableStatPair.UpgradeableStat;
-
-                string changeInfo = upgradeableStat.IsSubstractModeOn ? "Decrease" : "Increase";
-                string statName = nameUpgradeableStatPair.Name.PascalCaseToWords();
-                string statUnit = upgradeableStat.Unit.ToDisplayString();
-                float statValue = upgradeableStat.Unit == StatsUnits.Percentage
-                    ? upgradeableStat.GetWhatPercentOfValueIsUpgradeValue(upgradeValue)
-                    : upgradeValue;
-
                 skillStatsUpgradeButtonsData.Add(new ClickableButtonData
                 {
-                    Text = $"{changeInfo} <b>{statName}</b> by <Color=#F8D61C>{statValue}{statUnit}</Color>",
-
+                    Text = option.Text,
                     OnClick = () =>
                     {
-                        nameUpgradeableStatPair.UpgradeableStat.Upgrade(upgradeValue);
+                        option.Apply();
                         HandleUpgradeableOrInitializableSkillsShowing();
                         _buttonsAudioPlayer.Play("Click");
                     }
                 });
             }
 
-            DisplayNewButtons(skillStatsUpgradeButtonsData.Shuffle().Take(MAX_SKILLS_UPGRADE_BUTTONS));
+            DisplayNewButtons(skillStatsUpgradeButtonsData);
 
-            _skillsVisualPresenter.ShowSkillVisualBasedOnSkillInfo(upgradeableStats.SkillInfo);
+            _skillsVisualPresenter.ShowSkillVisualBasedOnSkillInfo(request.UpgradeableSkill.SkillInfo);
 
             _upgradeSkillSection.SetActive(true);
         }
@@ -208,7 +149,7 @@ namespace Assets.Scripts.UI.Skills
 
                 button.onClick.AddListener(() => clickableButtonData.OnClick?.Invoke());
 
-                button.AddComponent<PointerEnterHandler>().OnPointerEnterAction += () =>
+                button.gameObject.AddComponent<PointerEnterHandler>().OnPointerEnterAction += () =>
                 {
                     _buttonsAudioPlayer.Play("Hover");
                 };

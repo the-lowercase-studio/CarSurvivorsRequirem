@@ -197,7 +197,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 2.8094, y: 4.7404}
+  m_AnchoredPosition: {x: 2.8093262, y: 4.7404785}
   m_SizeDelta: {x: 106.3175, y: 59.8036}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &55641198
@@ -546,18 +546,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _clipConfigInScenes:
-  - ClipConfig:
-      AudioClip: {fileID: 8300000, guid: c761d44b6a35a9342b0df60f2f88a9af, type: 3}
-      Volume: 0.061
-      Pitch: 1
-      Loop: 1
-    Scene: 1
-  - ClipConfig:
-      AudioClip: {fileID: 8300000, guid: a5462f9177ff91f46a0a774efa1c0e24, type: 3}
-      Volume: 0.092
-      Pitch: 1
-      Loop: 1
-    Scene: 2
+  - _clipConfig:
+      _audioClip: {fileID: 8300000, guid: c761d44b6a35a9342b0df60f2f88a9af, type: 3}
+      _volume: 0.061
+      _pitch: 1
+      _loop: 1
+    _scene: 1
+  - _clipConfig:
+      _audioClip: {fileID: 8300000, guid: a5462f9177ff91f46a0a774efa1c0e24, type: 3}
+      _volume: 0.092
+      _pitch: 1
+      _loop: 1
+    _scene: 2
 --- !u!1 &732296424
 GameObject:
   m_ObjectHideFlags: 0
@@ -700,6 +700,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -982,6 +983,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
+  m_UseReflectionProbes: 0
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -1296,7 +1298,6 @@ MonoBehaviour:
   m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
   m_RequiresDepthTexture: 0
   m_RequiresColorTexture: 0
-  m_Version: 2
   m_TaaSettings:
     m_Quality: 3
     m_FrameInfluence: 0.1
@@ -1304,6 +1305,7 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+  m_Version: 2
 --- !u!81 &1692617707
 AudioListener:
   m_ObjectHideFlags: 0
@@ -1443,24 +1445,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _damagePopupVisibilityDuration: 0.6
   _damagePopupPrefab: {fileID: 7497925829226097017, guid: 575dc7fec0ebc45438aa1bd12267a8d6, type: 3}
-  visualApearanceByDamageTresholds:
-  - Treshold: 0
-    DamagePopupApearance:
+  _visualApearanceByDamageTresholds:
+  - _treshold: 0
+    _damagePopupApearance:
       FontSize: 1.5
       GrowFontSizeAnimationScaleMultiplier: 1.4
       Color: {r: 1, g: 1, b: 1, a: 1}
-  - Treshold: 11
-    DamagePopupApearance:
+  - _treshold: 11
+    _damagePopupApearance:
       FontSize: 2
       GrowFontSizeAnimationScaleMultiplier: 1.4
       Color: {r: 1, g: 0.717804, b: 0.3726415, a: 1}
-  - Treshold: 22
-    DamagePopupApearance:
+  - _treshold: 22
+    _damagePopupApearance:
       FontSize: 2.4
       GrowFontSizeAnimationScaleMultiplier: 1.4
       Color: {r: 0.8962264, g: 0.3520763, b: 0.1986917, a: 1}
-  - Treshold: 30
-    DamagePopupApearance:
+  - _treshold: 30
+    _damagePopupApearance:
       FontSize: 2.7
       GrowFontSizeAnimationScaleMultiplier: 1.4
       Color: {r: 0.7490196, g: 0.16470589, b: 0, a: 1}

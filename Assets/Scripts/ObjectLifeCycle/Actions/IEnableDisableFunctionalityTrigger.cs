@@ -1,4 +1,4 @@
-namespace Assets.Scripts.ObjectLifeCycle.Actions
+namespace Assets.Scripts.ObjectLifecycle.Actions
 {
     public interface IEnableDisableFunctionalityTrigger<T>
         where T : IEnableDisableFunctionalityTrigger<T>

@@ -10,7 +10,7 @@ namespace Assets.Scripts.Audio
 
     public class AudioMixersManager : MonoBehaviour, IAudioMixersManager
     {
-        [field: SerializeField] private AudioMixer _mainAudioMixer;
+        [SerializeField] private AudioMixer _mainAudioMixer;
 
         public void SetMixerVolume(string mixerName = "Main", float volume = 0.5f)
         {
