@@ -5,6 +5,7 @@ using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.Spawners.GridSpace;
 using Reflex.Attributes;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Assets.Scripts.Skills.ObjectsImpactingSkills.Crate
 {
