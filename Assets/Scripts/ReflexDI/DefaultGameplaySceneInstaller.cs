@@ -9,6 +9,7 @@ using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.UI.Death;
 using Assets.Scripts.UI.HUD;
 using Assets.Scripts.UI.Level;
+using Assets.Scripts.UI.Skills;
 using Reflex.Core;
 using UnityEngine;
 
@@ -19,6 +20,7 @@ namespace Assets.Scripts.ReflexDI
         [SerializeField] private PlayerManager _playerManager;
         [SerializeField] private PlayerDeathPresenter _playerDeathPresenter;
         [SerializeField] private PlayerLevelPresenter _playerLevelPresenter;
+        [SerializeField] private SkillsVisualPresenter _skillsVisualPresenter;
         [SerializeField] private GridManager _gridManager;
         [SerializeField] private EnemiesSpawner _enemiesSpawner;
         [SerializeField] private TimerPresenter _timerPresenter;
@@ -33,6 +35,7 @@ namespace Assets.Scripts.ReflexDI
             //UI Presenters
             builder.AddSingleton(_playerDeathPresenter, typeof(IPlayerDeathPresenter));
             builder.AddSingleton(_playerLevelPresenter, typeof(IPlayerLevelPresenter));
+            builder.AddSingleton(_skillsVisualPresenter, typeof(ISkillsVisualPresenter));
             builder.AddSingleton(_timerPresenter, typeof(ITimerPresenter));
 
             //Grid System

@@ -1,8 +1,7 @@
-using System.Collections.Generic;
-using System.Linq;
 using Assets.Scripts.Extensions;
 using Assets.Scripts.Stats;
-using Unity.VisualScripting;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Assets.Scripts.Skills.UpgradeFlow
 {
@@ -23,7 +22,7 @@ namespace Assets.Scripts.Skills.UpgradeFlow
         {
             if (_skillsQueuedForInitialization.Count < skillsRegistry.UninitializedSkillsCount)
             {
-                ISkillBase skill = RandomUninitializedSkillsInitializator.Initialize(skillsRegistry);
+                ISkillBase skill = skillsRegistry.GetUninitializedSkills().Shuffle().FirstOrDefault();
                 if (skill is not null)
                 {
                     _skillsQueuedForInitialization.Enqueue(skill);
@@ -35,7 +34,7 @@ namespace Assets.Scripts.Skills.UpgradeFlow
             IUpgradeableSkill upgradeableSkill = RandomUpgradeableSkillFinder.Find(skillsRegistry);
             if (upgradeableSkill is not null)
             {
-                _skillsQueuedForUpgrade.Enqueue(RandomUpgradeableSkillFinder.Find(skillsRegistry));
+                _skillsQueuedForUpgrade.Enqueue(upgradeableSkill);
             }
         }
 

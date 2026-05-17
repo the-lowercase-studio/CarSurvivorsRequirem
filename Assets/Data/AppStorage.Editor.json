@@ -1,5 +1,8 @@
 {
   "Volume": -8.805612,
   "FullScreenMode": 3,
-  "DamageNumbersEnabled": true
+  "DamageNumbersEnabled": true,
+  "ScoreBoard": [
+    70
+  ]
 }

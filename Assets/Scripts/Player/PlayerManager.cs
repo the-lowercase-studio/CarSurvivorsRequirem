@@ -5,6 +5,7 @@ using Assets.Scripts.LevelSystem;
 using Assets.Scripts.Providers;
 using Assets.Scripts.Skills;
 using UnityEngine;
+using System.Runtime.CompilerServices;
 
 namespace Assets.Scripts.Player
 {
@@ -24,6 +25,7 @@ namespace Assets.Scripts.Player
         public ISkillsRegistry SkillsRegistry { get; private set; }
         public ICarController CarController { get; private set; }
         public IAudioClipPlayer AudioClipPlayer { get; private set; }
+        [SerializeField] private AudioClipPlayer _audioClipPlayer;
 
         public GameObject GameObject => gameObject;
 
@@ -33,7 +35,7 @@ namespace Assets.Scripts.Player
             LevelController = GetComponent<ILevelController>();
             SkillsRegistry = GetComponentInChildren<ISkillsRegistry>();
             CarController = GetComponent<ICarController>();
-            AudioClipPlayer = GetComponentInChildren<IAudioClipPlayer>();
+            AudioClipPlayer = _audioClipPlayer;
         }
     }
 }

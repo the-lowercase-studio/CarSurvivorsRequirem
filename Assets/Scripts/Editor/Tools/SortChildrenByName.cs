@@ -51,7 +51,6 @@ public class SortChildrenByName : EditorWindow
             children[i].SetSiblingIndex(i);
         }
 
-        Debug.Log($"Sorted {children.Count} children under {parent.name}");
     }
 
     private (string baseName, int number) GetSortKey(string name)
