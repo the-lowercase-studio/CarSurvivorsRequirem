@@ -4,13 +4,26 @@ using UnityEngine;
 
 namespace Assets.Scripts.UI.Skills
 {
-    public class SkillsVisualPresenter : MonoBehaviour
+    public interface ISkillsVisualPresenter
+    {
+        void ShowSkillVisualBasedOnSkillInfo(SkillInfoSO skillInfoSO);
+        void HideAll();
+    }
+
+    public class SkillsVisualPresenter : MonoBehaviour, ISkillsVisualPresenter
     {
         [SerializeField] private GameObject[] _skillsVisuals;
 
         public void ShowSkillVisualBasedOnSkillInfo(SkillInfoSO skillInfoSO)
         {
-            _skillsVisuals.First(s => s.name == skillInfoSO.Name)?.SetActive(true);
+            GameObject skillVisual = _skillsVisuals.FirstOrDefault(s => s.name == skillInfoSO.Name);
+            if (skillVisual == null)
+            {
+                Debug.LogWarning($"Skill visual for {skillInfoSO.Name} was not found.", this);
+                return;
+            }
+
+            skillVisual.SetActive(true);
         }
 
         public void HideAll()

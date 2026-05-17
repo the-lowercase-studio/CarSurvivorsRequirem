@@ -1,5 +1,4 @@
 ﻿using Assets.Scripts.Audio;
-using Assets.Scripts.GameFlow;
 using Assets.Scripts.Player;
 using Assets.Scripts.Skills;
 using Assets.Scripts.Skills.ObjectsImpactingSkills.Crate;
@@ -10,6 +9,7 @@ using Reflex.Attributes;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace Assets.Scripts.UI.Skills
@@ -20,10 +20,11 @@ namespace Assets.Scripts.UI.Skills
         [Inject] private readonly IPlayerLevelPresenter _playerLevelPresenter;
         [Inject] private readonly IOnRandomGridPosSpawner<CollectibleItemsSpawner> _collectibleItemsSpawner;
         [Inject] private readonly ISkillUpgradeFlow _skillUpgradeFlow;
+        [Inject] private readonly ISkillsVisualPresenter _skillsVisualPresenter;
 
         [Header("Upgrade Skill")]
         [SerializeField] private GameObject _upgradeSkillSection;
-        [SerializeField] private Button _upgradeButtonPrefab;
+        [SerializeField] private GameObject _upgradeButtonPrefab;
         [SerializeField] private Transform _buttonsHolder;
 
         [Header("New Skill")]
@@ -33,13 +34,14 @@ namespace Assets.Scripts.UI.Skills
         [SerializeField] private Button _continueButton;
 
         [SerializeField] private AudioClipPlayer _buttonsAudioPlayer;
-        [SerializeField] private SkillsVisualPresenter _skillsVisualPresenter;
 
         private const string SKILL_NAME_TEMPLATE = "New Skill: {0}";
 
         private bool _isShowingAnySection;
 
         private IAudioClipPlayer _audioClipPlayer;
+        private readonly List<SkillUpgradeButton> _upgradeButtons = new();
+        private int _lastHandledInputFrame = -1;
 
         private void Awake()
         {
@@ -50,7 +52,33 @@ namespace Assets.Scripts.UI.Skills
         {
             _collectibleItemsSpawner.OnSpawnedEntityReleased += ShowRandomSkillInInitializationOrUpgradeSection_OnEvent;
             _playerLevelPresenter.OnExpSliderVisualEndValueReached += ShowRandomSkillInInitializationOrUpgradeSection_OnEvent;
-            _continueButton.onClick.AddListener(() => HandleUpgradeableOrInitializableSkillsShowing());
+            _continueButton.onClick.AddListener(HandleContinueButtonClicked);
+        }
+
+        private void Update()
+        {
+            if (!_isShowingAnySection || Keyboard.current == null || _lastHandledInputFrame == Time.frameCount)
+            {
+                return;
+            }
+
+            if (_newSkillSection.activeSelf && Keyboard.current.enterKey.wasPressedThisFrame)
+            {
+                HandleContinueButtonClicked();
+                return;
+            }
+
+            if (_upgradeSkillSection.activeSelf)
+            {
+                TryHandleUpgradeButtonHotkey();
+            }
+        }
+
+        private void OnDestroy()
+        {
+            _collectibleItemsSpawner.OnSpawnedEntityReleased -= ShowRandomSkillInInitializationOrUpgradeSection_OnEvent;
+            _playerLevelPresenter.OnExpSliderVisualEndValueReached -= ShowRandomSkillInInitializationOrUpgradeSection_OnEvent;
+            _continueButton.onClick.RemoveListener(HandleContinueButtonClicked);
         }
 
         private void ShowRandomSkillInInitializationOrUpgradeSection_OnEvent(object sender, System.EventArgs e)
@@ -68,10 +96,11 @@ namespace Assets.Scripts.UI.Skills
         {
             _skillsVisualPresenter.HideAll();
 
-            GameTime.Resume();
-
             if (_skillUpgradeFlow.TryGetNextRequest(_playerManager.SkillsRegistry, out SkillUpgradeRequest request))
             {
+                _newSkillSection.SetActive(false);
+                _upgradeSkillSection.SetActive(false);
+
                 if (request.RequestType == SkillUpgradeRequestType.NewSkill)
                 {
                     ShowNewSkillSection(request.NewSkill);
@@ -82,7 +111,6 @@ namespace Assets.Scripts.UI.Skills
                 }
 
                 _audioClipPlayer.Play("Show");
-                GameTime.Pause();
             }
             else
             {
@@ -111,12 +139,7 @@ namespace Assets.Scripts.UI.Skills
                 skillStatsUpgradeButtonsData.Add(new ClickableButtonData
                 {
                     Text = option.Text,
-                    OnClick = () =>
-                    {
-                        option.Apply();
-                        HandleUpgradeableOrInitializableSkillsShowing();
-                        _buttonsAudioPlayer.Play("Click");
-                    }
+                    OnClick = () => HandleSkillUpgradeOptionSelected(option)
                 });
             }
 
@@ -135,7 +158,9 @@ namespace Assets.Scripts.UI.Skills
 
         private void DestroyAllButtons()
         {
-            foreach (Button child in _buttonsHolder.GetComponentsInChildren<Button>())
+            _upgradeButtons.Clear();
+
+            foreach (Transform child in _buttonsHolder)
             {
                 Destroy(child.gameObject);
             }
@@ -143,23 +168,83 @@ namespace Assets.Scripts.UI.Skills
 
         private void CreateUpgradeButtons(IEnumerable<ClickableButtonData> clickableButtonsData)
         {
+            int buttonNumber = 1;
+
             foreach (var clickableButtonData in clickableButtonsData)
             {
-                Button button = Instantiate(_upgradeButtonPrefab, _buttonsHolder);
-
-                button.onClick.AddListener(() => clickableButtonData.OnClick?.Invoke());
-
-                button.gameObject.AddComponent<PointerEnterHandler>().OnPointerEnterAction += () =>
+                GameObject buttonObject = Instantiate(_upgradeButtonPrefab, _buttonsHolder);
+                SkillUpgradeButton button = buttonObject.GetComponent<SkillUpgradeButton>();
+                if (button == null)
                 {
-                    _buttonsAudioPlayer.Play("Hover");
-                };
-
-                TextMeshProUGUI buttonText = button.GetComponentInChildren<TextMeshProUGUI>();
-                if (button != null)
-                {
-                    buttonText.text = clickableButtonData.Text;
+                    button = buttonObject.AddComponent<SkillUpgradeButton>();
                 }
+
+                button.Initialize(
+                    clickableButtonData.Text,
+                    buttonNumber,
+                    clickableButtonData.OnClick,
+                    () => _buttonsAudioPlayer.Play("Hover"));
+
+                _upgradeButtons.Add(button);
+                buttonNumber++;
             }
+        }
+
+        private void TryHandleUpgradeButtonHotkey()
+        {
+            if (IsButtonHotkeyPressed(0))
+            {
+                InvokeUpgradeButton(0);
+            }
+            else if (IsButtonHotkeyPressed(1))
+            {
+                InvokeUpgradeButton(1);
+            }
+            else if (IsButtonHotkeyPressed(2))
+            {
+                InvokeUpgradeButton(2);
+            }
+        }
+
+        private bool IsButtonHotkeyPressed(int buttonIndex)
+        {
+            return buttonIndex switch
+            {
+                0 => Keyboard.current.digit1Key.wasPressedThisFrame || Keyboard.current.numpad1Key.wasPressedThisFrame,
+                1 => Keyboard.current.digit2Key.wasPressedThisFrame || Keyboard.current.numpad2Key.wasPressedThisFrame,
+                2 => Keyboard.current.digit3Key.wasPressedThisFrame || Keyboard.current.numpad3Key.wasPressedThisFrame,
+                _ => false
+            };
+        }
+
+        private void InvokeUpgradeButton(int buttonIndex)
+        {
+            if (buttonIndex >= _upgradeButtons.Count)
+            {
+                return;
+            }
+
+            _lastHandledInputFrame = Time.frameCount;
+            _upgradeButtons[buttonIndex].Invoke();
+        }
+
+        private void HandleSkillUpgradeOptionSelected(SkillUpgradeOption option)
+        {
+            _lastHandledInputFrame = Time.frameCount;
+            option.Apply();
+            HandleUpgradeableOrInitializableSkillsShowing();
+            _buttonsAudioPlayer.Play("Click");
+        }
+
+        private void HandleContinueButtonClicked()
+        {
+            if (_lastHandledInputFrame == Time.frameCount)
+            {
+                return;
+            }
+
+            _lastHandledInputFrame = Time.frameCount;
+            HandleUpgradeableOrInitializableSkillsShowing();
         }
     }
 }

@@ -174,7 +174,6 @@ namespace Assets.Scripts.Editor.Tools
             }
 
             EditorUtility.SetDirty(_targetObject);
-            Debug.Log($"Applied first frame pose of '{clip.name}' to '{_targetObject.name}'");
         }
 
         private void CollectTransforms(Transform root, string path, Dictionary<string, Transform> dict)

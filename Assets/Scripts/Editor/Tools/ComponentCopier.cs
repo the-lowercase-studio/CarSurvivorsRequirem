@@ -41,7 +41,6 @@ namespace Assets.Scripts.Editor.Tools
                 Undo.RegisterFullObjectHierarchyUndo(_target, "Smart Copy Components");
 
                 CopyComponentsRecursive(_source, _target, _includeChildren);
-                Debug.Log("Components copied with prefab variant support.");
             }
         }
 
