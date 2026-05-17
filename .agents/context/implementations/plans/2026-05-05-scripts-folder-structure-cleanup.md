@@ -10,10 +10,10 @@ This is a structure cleanup plan only. It should not introduce gameplay, balance
 
 - `AGENTS.md`
 - `.agents/README.md`
-- `.agents/docs/project-coding-standards.md`
-- `.agents/docs/project-scripts-folder-map.md`
-- `.agents/docs/ai-game-dev-best-practices.md`
-- `.agents/docs/technology-documentation.md`
+- `.agents/context/project-coding-standards.md`
+- `.agents/context/project-scripts-folder-map.md`
+- `.agents/context/ai-game-dev-best-practices.md`
+- `.agents/context/technology-documentation.md`
 
 ## Current Problem
 
@@ -81,7 +81,7 @@ Status: ready.
 
 Actions:
 
-1. Treat `.agents/docs/project-scripts-folder-map.md` as the placement source of truth.
+1. Treat `.agents/context/project-scripts-folder-map.md` as the placement source of truth.
 2. When adding new scripts, prefer the owning domain folder over `Helpers/`, `Utils/`, `Providers/`, or similar generic folders.
 3. Add new `Constants/` folders only under the owning system root when constants are introduced.
 
@@ -223,7 +223,7 @@ After each small batch:
 2. Check Unity Console after opening the project.
 3. Check moved MonoBehaviours for missing script references.
 4. Test any affected scene, prefab, UI screen, or gameplay flow manually.
-5. Update `.agents/docs/project-scripts-folder-map.md` if the folder map changes.
+5. Update `.agents/context/project-scripts-folder-map.md` if the folder map changes.
 
 ## Open Questions
 

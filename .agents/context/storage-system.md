@@ -20,10 +20,10 @@ It is not responsible for applying settings to Unity systems, deciding scoreboar
   - `Assets/Scripts/ReflexDI/MainMenuInstaller.cs`
   - `Assets/Scripts/ReflexDI/ProjectInstaller.cs`
 - Related docs:
-  - `.agents/docs/ui-system.md`
-  - `.agents/docs/audio-system.md`
-  - `.agents/docs/project-scripts-folder-map.md`
-  - `.agents/docs/project-coding-standards.md`
+  - `.agents/context/ui-system.md`
+  - `.agents/context/audio-system.md`
+  - `.agents/context/project-scripts-folder-map.md`
+  - `.agents/context/project-coding-standards.md`
 - Related skills:
   - `.agents/skills/di-integration/SKILL.md` for adding or reviewing Reflex-bound persisted setting services.
   - `.agents/skills/preserve-coding-standards/SKILL.md` for cleanup in touched storage, settings, or scoreboard files.

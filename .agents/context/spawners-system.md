@@ -25,15 +25,15 @@ It does not own the complete behavior of every spawned object. Enemy behavior, c
   - `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
   - `Assets/Scripts/ReflexDI/BootLoader.cs`
 - Related docs:
-  - `.agents/docs/enemies-system.md`
-  - `.agents/docs/collectibles-system.md`
-  - `.agents/docs/damage-numbers-system.md`
-  - `.agents/docs/level-system.md`
-  - `.agents/docs/grid-system.md`
+  - `.agents/context/enemies-system.md`
+  - `.agents/context/collectibles-system.md`
+  - `.agents/context/damage-numbers-system.md`
+  - `.agents/context/level-system.md`
+  - `.agents/context/grid-system.md`
 - Related agents or instructions:
   - `.agents/skills/document-system/SKILL.md`
   - `.agents/skills/di-integration/SKILL.md`
-  - `.agents/docs/project-coding-standards.md`
+  - `.agents/context/project-coding-standards.md`
 
 ## Architecture and Data Flow
 
@@ -102,7 +102,7 @@ It does not own the complete behavior of every spawned object. Enemy behavior, c
   - Unity `ObjectPool<T>` is used by enemies, damage numbers, exp particles, and minigun projectiles.
 - Downstream consumers:
   - `WaveManager` drives enemy waves through `IOnRandomGridPosSpawner<EnemiesSpawner>`.
-  - `SkillUpgradePresenter` listens to collectible release through `IOnRandomGridPosSpawner<CollectibleItemsSpawner>`.
+  - `SkillUpgradePresenter` listens to collectible release through `IOnRandomGridPosSpawner<CollectibleItemsSpawner>` and delegates reward selection to `ISkillUpgradeFlow`.
   - `Enemy` spawns damage numbers through `IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig>`.
   - `EnemyDeathHandler` spawns exp particles through `IInWorldSpaceSpawner<ExpParticleSpawner, float>`.
   - Turret/projectile skill code can use world-space spawner semantics for projectile spawning.

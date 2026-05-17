@@ -23,12 +23,13 @@ Read agent guidance in this order:
 
 1. `AGENTS.md` for the project entry point and workflow.
 2. `.agents/README.md` for operational file layout.
-3. `.agents/docs/project-coding-standards.md` for code style and architectural constraints.
-4. `.agents/docs/technology-documentation.md` for official documentation links.
-5. `.agents/docs/ai-game-dev-best-practices.md` for gameplay and review guardrails.
+3. `.agents/context/project-coding-standards.md` for code style and architectural constraints.
+4. `.agents/context/technology-documentation.md` for official documentation links.
+5. `.agents/context/ai-game-dev-best-practices.md` for gameplay and review guardrails.
 6. Relevant `.agents/skills/*/SKILL.md` files when the task matches a skill trigger.
 
-Use `.agents/docs/` as the current documentation location for agent-facing project guidance.
+Use `.agents/context/` as the current documentation location for agent-facing project guidance.
+Store implementation plans under `.agents/context/implementations/plans/` and implementation summaries under `.agents/context/implementations/summaries/`.
 
 ## Technology Baseline
 
@@ -37,7 +38,7 @@ Use `.agents/docs/` as the current documentation location for agent-facing proje
 - DOTween is used for animation/tween flows. Reuse existing tween helpers such as `Assets/Scripts/Extensions/TransformTweenExtensions.cs` when appropriate.
 - Universal Render Pipeline, Input System, Cinemachine, Visual Effect Graph, ProBuilder, Unity Test Framework, and NuGetForUnity are listed in `Packages/manifest.json`.
 
-When behavior depends on Unity, Reflex, DOTween, or package-specific APIs, consult official documentation through `.agents/docs/technology-documentation.md` before relying on memory.
+When behavior depends on Unity, Reflex, DOTween, or package-specific APIs, consult official documentation through `.agents/context/technology-documentation.md` before relying on memory.
 
 ## Core Architecture Rules
 
@@ -51,7 +52,7 @@ When behavior depends on Unity, Reflex, DOTween, or package-specific APIs, consu
 
 ## Coding Standards
 
-Follow `.agents/docs/project-coding-standards.md` for detailed rules. The highest-impact rules are:
+Follow `.agents/context/project-coding-standards.md` for detailed rules. The highest-impact rules are:
 
 - Private and serialized fields use `_camelCase`.
 - Constants use `UPPER_SNAKE_CASE` and belong in a `Constants` folder under the owning system when new constants are introduced.
@@ -73,14 +74,14 @@ Follow `.agents/docs/project-coding-standards.md` for detailed rules. The highes
 ## Common System Areas
 
 - DI and boot flow: `Assets/Scripts/ReflexDI/`.
-- Player: `Assets/Scripts/Player/`, `Assets/Scripts/Car/`.
+- Player: `Assets/Scripts/Player/`, including player-owned car code under `Assets/Scripts/Player/Car/`.
 - Enemies and waves: `Assets/Scripts/Enemies/`, `Assets/Scripts/Waves/`.
-- Grid and flow field: `Assets/Scripts/GridSystem/`, `Assets/Scripts/FlowFieldSystem/`.
+- Grid and flow field: `Assets/Scripts/Navigation/GridSystem/`, `Assets/Scripts/Navigation/FlowFieldSystem/`.
 - Skills and projectiles: `Assets/Scripts/Skills/`, `Assets/Scripts/Projectiles/`.
-- Health, status, damage feedback: `Assets/Scripts/HealthSystem/`, `Assets/Scripts/StatusAffectables/`, `Assets/Scripts/DamageNumbers/`.
+- Health, status, damage feedback: `Assets/Scripts/HealthSystem/`, `Assets/Scripts/StatusEffects/`, `Assets/Scripts/DamageNumbers/`.
 - UI and settings: `Assets/Scripts/UI/`, `Assets/Scripts/Settings/`, `Assets/Scripts/ScoreBoard/`.
 - Audio: `Assets/Scripts/Audio/`.
-- Pooling, lifecycle, spawners: `Assets/Scripts/Pooling/`, `Assets/Scripts/ObjectLifeCycle/`, `Assets/Scripts/Spawners/`.
+- Pooling, lifecycle, spawners: `Assets/Scripts/Pooling/`, `Assets/Scripts/ObjectLifecycle/`, `Assets/Scripts/Spawners/`.
 - Editor tooling: `Assets/Scripts/Editor/`.
 
 Verify exact behavior in code before making behavioral claims; this guide is a map, not a replacement for source inspection.
@@ -111,7 +112,7 @@ Treat these YAML files as optional UI/default-prompt metadata for compatible too
 ## Work Workflow
 
 1. Identify the requested scope and the smallest relevant files.
-2. Read this guide, `.agents/README.md`, the relevant `.agents/docs/*` file, and any triggered skill.
+2. Read this guide, `.agents/README.md`, the relevant `.agents/context/*` file, and any triggered skill.
 3. Inspect source files before changing behavior or documenting concrete implementation details.
 4. Keep edits scoped; do not mix broad cleanup with gameplay, DI, or UI changes.
 5. Prefer existing project patterns over new abstractions.
@@ -132,7 +133,9 @@ For documentation-only changes, review links and paths for accuracy. A Unity Edi
 ## Documentation Maintenance
 
 - Keep agent operational guidance under `.agents/`.
-- Keep this root `AGENTS.md` as a short entry point, not a full replacement for `.agents/docs/*`.
+- Keep this root `AGENTS.md` as a short entry point, not a full replacement for `.agents/context/*`.
+- Keep implementation plans in `.agents/context/implementations/plans/`.
+- Keep implementation summaries in `.agents/context/implementations/summaries/`.
 - When adding a new specialist domain, add or update the matching skill or agent file under `.agents/`.
 - Keep skill descriptions explicit with `Use when:` trigger language.
 - Update cross-references when docs move or filenames change.

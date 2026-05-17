@@ -32,9 +32,9 @@ It is not responsible for:
   - `Assets/ScriptableObjects/Skills/PlayerSkills/`
   - `Assets/Scripts/Skills/PlayerSkills/`
 - Related docs:
-  - `.agents/docs/skills-system.md`
-  - `.agents/docs/projectiles-system.md`
-  - `.agents/docs/project-coding-standards.md`
+  - `.agents/context/skills-system.md`
+  - `.agents/context/projectiles-system.md`
+  - `.agents/context/project-coding-standards.md`
 - Related agents or instructions:
   - `.agents/skills/document-system/SKILL.md`
 

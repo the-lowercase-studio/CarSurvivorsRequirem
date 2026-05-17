@@ -2,7 +2,7 @@
 
 ## Scope
 
-Started implementation of `.agents/docs/implementation-plans/2026-05-11-navigation-and-skill-upgrade-structure.md`.
+Started implementation of `.agents/context/implementations/plans/2026-05-11-navigation-and-skill-upgrade-structure.md`.
 
 Completed:
 
@@ -119,12 +119,12 @@ Resolved the `UnityEngine.Grid` name collision in moved consumers with local ali
 
 Updated:
 
-- `.agents/docs/project-scripts-folder-map.md`
-- `.agents/docs/grid-system.md`
-- `.agents/docs/flow-field-system.md`
-- `.agents/docs/enemies-system.md`
-- `.agents/docs/collectibles-system.md`
-- `.agents/docs/waves-system.md`
+- `.agents/context/project-scripts-folder-map.md`
+- `.agents/context/grid-system.md`
+- `.agents/context/flow-field-system.md`
+- `.agents/context/enemies-system.md`
+- `.agents/context/collectibles-system.md`
+- `.agents/context/waves-system.md`
 
 ## Behavior Preservation Notes
 

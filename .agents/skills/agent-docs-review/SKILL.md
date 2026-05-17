@@ -1,6 +1,6 @@
 ---
 name: agent-docs-review
-description: "Use when: reviewing, trimming, restructuring, or updating a pointed ProjectLizard documentation file so it becomes accurate, current, and useful for AI agents. Trigger for requests to make docs agent-friendly, reduce documentation noise, verify docs against code, or keep only operationally important guidance in markdown files under .agents/docs/ or other .agents/ operational files."
+description: "Use when: reviewing, trimming, restructuring, or updating a pointed ProjectLizard documentation file so it becomes accurate, current, and useful for AI agents. Trigger for requests to make docs agent-friendly, reduce documentation noise, verify docs against code, or keep only operationally important guidance in markdown files under .agents/context/ or other .agents/ operational files."
 ---
 
 # Agent Docs Review
@@ -19,8 +19,8 @@ Use this skill to turn an existing documentation file into concise, implementati
 2. Read project source-of-truth docs before editing:
    - `AGENTS.md`
    - `.agents/README.md`
-   - `.agents/docs/technology-documentation.md` when framework or package behavior is mentioned.
-   - `.agents/docs/project-coding-standards.md` when conventions or coding rules are mentioned.
+   - `.agents/context/technology-documentation.md` when framework or package behavior is mentioned.
+   - `.agents/context/project-coding-standards.md` when conventions or coding rules are mentioned.
 3. If the document describes a concrete system, inspect the relevant source files before changing behavioral claims.
 4. Separate content into three groups:
    - Keep: invariants, architecture boundaries, file maps, workflow steps, validation checks, extension points, failure modes, and open questions.
@@ -31,7 +31,7 @@ Use this skill to turn an existing documentation file into concise, implementati
    - Prefer checklists, constraints, file references, and decision rules over prose.
    - Include "verify in code" notes where behavior may drift.
    - Preserve exact relative paths and update broken or renamed links.
-   - Keep markdown filenames kebab-case under `.agents/docs/` unless the file is a reserved operational name.
+   - Keep markdown filenames kebab-case under `.agents/context/` unless the file is a reserved operational name.
 6. For changed behavior claims, make them traceable to code or mark them as assumptions/open questions.
 7. Run a final pass for brevity, consistency, and agent trigger usefulness.
 

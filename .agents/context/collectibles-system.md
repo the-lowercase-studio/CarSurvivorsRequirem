@@ -31,9 +31,10 @@ It is not responsible for:
   - `Assets/Scripts/Providers/IGameObjectProvider.cs`
   - `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
   - `Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs`
+  - `Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeFlow.cs`
 - Related docs:
-  - `.agents/docs/project-coding-standards.md`
-  - `.agents/docs/ai-game-dev-best-practices.md`
+  - `.agents/context/project-coding-standards.md`
+  - `.agents/context/ai-game-dev-best-practices.md`
 - Related agents or instructions:
   - `.agents/skills/document-system/SKILL.md`
   - `.agents/skills/di-integration/SKILL.md` for DI binding changes.
@@ -61,7 +62,7 @@ It is not responsible for:
   - Each spawn request selects a free walkable grid cell, picks a prefab using weighted spawn chance data, instantiates it under `_collectibleItemsParent`, subscribes to `ICollectible.OnCollected`, tracks it, and marks the selected cell as occupied.
   - `SkillCrate.OnTriggerEnter` checks the entering collider's layer against `EntityLayers.Player`, raises `OnCollected`, and destroys the crate object.
   - `CollectibleItemsSpawner.Collectible_OnCollected` receives the event, converts the collected object's world position back to a grid cell, clears that cell's collectible occupancy flag, removes the collectible from tracking, raises `OnSpawnedEntityReleased`, and decrements `CurrentlySpawnedObjectsCount`.
-  - `SkillUpgradePresenter` listens to `OnSpawnedEntityReleased` and uses that event as one trigger for showing skill initialization or upgrade UI.
+  - `SkillUpgradePresenter` listens to `OnSpawnedEntityReleased`, asks `ISkillUpgradeFlow` to queue a reward request, and uses the returned request to show skill initialization or upgrade UI.
 
 ## Rules and Invariants
 
@@ -103,7 +104,7 @@ It is not responsible for:
   - `RandomWalkableCellsFinder` and `CellStatusDescriber` determine which cells are valid spawn targets.
   - Serialized scene references define the spawner parent, spawn cadence, maximum active count, and weighted prefab list.
 - Downstream consumers:
-  - `SkillUpgradePresenter` listens for collectible release and queues skill initialization or upgrade choices.
+  - `SkillUpgradePresenter` listens for collectible release and triggers skill reward queueing through `ISkillUpgradeFlow`.
   - Any future systems can observe `OnSpawnedEntityReleased` through the DI-bound `IOnRandomGridPosSpawner<CollectibleItemsSpawner>`.
 - Cross-system coupling risks:
   - Collection currently has player-facing skill progression consequences through `SkillUpgradePresenter`.

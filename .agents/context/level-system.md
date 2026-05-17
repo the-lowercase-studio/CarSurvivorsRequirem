@@ -17,13 +17,14 @@ It is not responsible for enemy balance, choosing skill upgrades, score saving, 
   - `Assets/Scripts/Enemies/EnemyDeathHandler.cs`
   - `Assets/Scripts/UI/Level/PlayerLevelPresenter.cs`
   - `Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs`
+  - `Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeFlow.cs`
   - `Assets/Scripts/UI/Death/PlayerDeathPresenter.cs`
   - `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
 - Editor tooling:
   - `Assets/Scripts/Editor/GUI/LevelControllerEditor.cs`
 - Related docs:
-  - `.agents/docs/project-coding-standards.md`
-  - `.agents/docs/ai-game-dev-best-practices.md`
+  - `.agents/context/project-coding-standards.md`
+  - `.agents/context/ai-game-dev-best-practices.md`
 - Related skills:
   - `.agents/skills/di-integration/SKILL.md` for Reflex binding changes.
   - `.agents/skills/check-optimalization/SKILL.md` for exp particle pooling or allocation review.
@@ -51,7 +52,7 @@ It is not responsible for enemy balance, choosing skill upgrades, score saving, 
   6. `ExpParticle.CollectExp` plays collection audio, shrinks the visual, and calls `_playerManager.LevelController.AddExp(_expAmount)`.
   7. `LevelController.AddExp` applies exp, emits one `OnLvlUp` per crossed level, then emits `OnExpChange` for the final level data.
   8. `PlayerLevelPresenter` queues level-up visuals and latest same-level exp changes. When the slider reaches a level-up endpoint, it raises `OnExpSliderVisualEndValueReached`.
-  9. `SkillUpgradePresenter` listens to `IPlayerLevelPresenter.OnExpSliderVisualEndValueReached` and decides whether to show new-skill or upgrade UI.
+  9. `SkillUpgradePresenter` listens to `IPlayerLevelPresenter.OnExpSliderVisualEndValueReached`, asks `ISkillUpgradeFlow` to queue a skill reward request, and renders the returned new-skill or upgrade UI.
 
 ## Rules and Invariants
 
@@ -95,12 +96,12 @@ It is not responsible for enemy balance, choosing skill upgrades, score saving, 
   - Collection uses `TransformTweenExtensions.LifeEndingShrinkToZeroTween` and `IAudioClipPlayer`.
 - Downstream consumers:
   - `PlayerLevelPresenter` consumes level events for slider and level text animation.
-  - `SkillUpgradePresenter` consumes `IPlayerLevelPresenter.OnExpSliderVisualEndValueReached` to queue skill initialization or upgrade choices.
+  - `SkillUpgradePresenter` consumes `IPlayerLevelPresenter.OnExpSliderVisualEndValueReached` to trigger skill reward queueing through `ISkillUpgradeFlow`.
   - `PlayerDeathPresenter` reads final `LevelData.Lvl` for death-screen text.
   - `LevelControllerEditor` calls `AddExp` through editor debug buttons.
 - Cross-system coupling risks:
   - Level state is exposed through `IPlayerManager`, so player composition changes can break level access.
-  - The upgrade UI is coupled to level UI animation completion. Changing slider behavior can change gameplay pause timing.
+  - The upgrade UI is coupled to level UI animation completion. Changing slider behavior can change when skill reward UI is shown.
   - Particle release waits on tween/audio callback paths, so callback ordering bugs can leak pooled particles or delay release.
 
 ## Known Risks and Open Questions

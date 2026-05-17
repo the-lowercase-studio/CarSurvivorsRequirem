@@ -24,15 +24,15 @@ The audio system is not responsible for gameplay decisions, UI flow, settings pe
   - `Assets/Scripts/LevelSystem/Exp/ExpParticle.cs`
   - `Assets/Scripts/Skills/PlayerSkills/`
 - Related docs:
-  - `.agents/docs/settings-system.md`
-  - `.agents/docs/ui-system.md`
-  - `.agents/docs/level-system.md`
-  - `.agents/docs/enemies-system.md`
-  - `.agents/docs/skills-system.md`
-  - `.agents/docs/technology-documentation.md`
+  - `.agents/context/settings-system.md`
+  - `.agents/context/ui-system.md`
+  - `.agents/context/level-system.md`
+  - `.agents/context/enemies-system.md`
+  - `.agents/context/skills-system.md`
+  - `.agents/context/technology-documentation.md`
 - Related agents or instructions:
   - Root `AGENTS.md`
-  - `.agents/docs/project-coding-standards.md`
+  - `.agents/context/project-coding-standards.md`
   - `.agents/skills/document-system/SKILL.md`
   - `.agents/skills/di-integration/SKILL.md` when adding injected audio dependencies or bindings
 

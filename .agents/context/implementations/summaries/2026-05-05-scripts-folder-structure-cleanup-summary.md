@@ -2,7 +2,7 @@
 
 ## Scope
 
-Implemented the completed portions of `.agents/docs/implementation-plans/2026-05-05-scripts-folder-structure-cleanup.md`.
+Implemented the completed portions of `.agents/context/implementations/plans/2026-05-05-scripts-folder-structure-cleanup.md`.
 
 The work is structure-focused. It avoids gameplay, balance, UI behavior, audio, VFX, prefab, scene, and asset changes except for one source compatibility fix in `CarController` described below.
 
@@ -91,20 +91,20 @@ Removed the now-empty `Assets/Scripts/Car/` folder and `.meta`.
   - `Assets.Scripts.Common.EventArgs`
 - Updated car namespace and references from `Assets.Scripts.Car` to `Assets.Scripts.Player.Car`.
 - Updated `Assembly-CSharp.csproj` compile includes for moved files.
-- Updated folder guidance in `.agents/docs/project-scripts-folder-map.md`.
+- Updated folder guidance in `.agents/context/project-scripts-folder-map.md`.
 - Updated stale paths in:
-  - `.agents/docs/audio-system.md`
-  - `.agents/docs/collectibles-system.md`
-  - `.agents/docs/damage-numbers-system.md`
-  - `.agents/docs/di-and-boot-flow-system.md`
-  - `.agents/docs/enemies-system.md`
-  - `.agents/docs/health-system.md`
-  - `.agents/docs/pooling-and-object-lifecycle-system.md`
-  - `.agents/docs/projectiles-system.md`
-  - `.agents/docs/scoreboard-system.md`
-  - `.agents/docs/settings-system.md`
-  - `.agents/docs/status-effects-system.md`
-  - `.agents/docs/ui-system.md`
+  - `.agents/context/audio-system.md`
+  - `.agents/context/collectibles-system.md`
+  - `.agents/context/damage-numbers-system.md`
+  - `.agents/context/di-and-boot-flow-system.md`
+  - `.agents/context/enemies-system.md`
+  - `.agents/context/health-system.md`
+  - `.agents/context/pooling-and-object-lifecycle-system.md`
+  - `.agents/context/projectiles-system.md`
+  - `.agents/context/scoreboard-system.md`
+  - `.agents/context/settings-system.md`
+  - `.agents/context/status-effects-system.md`
+  - `.agents/context/ui-system.md`
 - Updated progress and decisions in the implementation plan.
 
 ## Compatibility Fixes

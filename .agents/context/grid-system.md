@@ -42,10 +42,10 @@ It is not responsible for:
   - `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
   - `Assets/Scripts/Editor/GUI/GridManagerEditor.cs`
 - Related docs:
-  - `.agents/docs/flow-field-system.md`
-  - `.agents/docs/project-coding-standards.md`
-  - `.agents/docs/ai-game-dev-best-practices.md`
-  - `.agents/docs/technology-documentation.md`
+  - `.agents/context/flow-field-system.md`
+  - `.agents/context/project-coding-standards.md`
+  - `.agents/context/ai-game-dev-best-practices.md`
+  - `.agents/context/technology-documentation.md`
 - Related skills:
   - `.agents/skills/di-integration/SKILL.md` when changing grid bindings or injected consumers.
   - `.agents/skills/check-optimalization/SKILL.md` when changing update cadence, physics queries, or cell scan behavior.

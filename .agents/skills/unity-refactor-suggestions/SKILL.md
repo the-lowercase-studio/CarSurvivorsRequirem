@@ -24,9 +24,9 @@ Always ground suggestions in:
 
 - AGENTS.md
 - .agents/README.md
-- .agents/docs/project-coding-standards.md
-- .agents/docs/ai-game-dev-best-practices.md
-- .agents/docs/technology-documentation.md
+- .agents/context/project-coding-standards.md
+- .agents/context/ai-game-dev-best-practices.md
+- .agents/context/technology-documentation.md
 
 Use official Unity and Reflex documentation first when API behavior is uncertain.
 
@@ -102,6 +102,6 @@ A good output must:
 
 ## Output
 
-Produce a filled report in `.agents/docs/refactor-suggestions/<report-name>.md` using:
+Produce a filled report in `.agents/context/refactor-suggestions/<report-name>.md` using:
 
 - `.agents/skills/unity-refactor-suggestions/templates/refactor-suggestion-report.md`

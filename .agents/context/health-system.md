@@ -25,10 +25,10 @@ It does not own damage calculation, target selection, enemy/player death present
   - Experience payout: `Assets/Scripts/LevelSystem/Exp/`
   - Player death UI: `Assets/Scripts/UI/Death/`
 - Related docs:
-  - `.agents/docs/project-coding-standards.md`
-  - `.agents/docs/ai-game-dev-best-practices.md`
-  - `.agents/docs/enemies-system.md`
-  - `.agents/docs/damage-numbers-system.md`
+  - `.agents/context/project-coding-standards.md`
+  - `.agents/context/ai-game-dev-best-practices.md`
+  - `.agents/context/enemies-system.md`
+  - `.agents/context/damage-numbers-system.md`
 - Related agents or instructions:
   - `.agents/skills/document-system/SKILL.md`
   - `.agents/skills/architecture-review/SKILL.md`

@@ -21,11 +21,11 @@ The Settings system is not responsible for owning UI layout, audio mixer impleme
   - `Assets/Scripts/DamageNumbers/DamageNumbersSpawner.cs`
   - `Assets/Scripts/ReflexDI/BootLoader.cs`
 - Related docs:
-  - `.agents/docs/ui-system.md`
-  - `.agents/docs/audio-system.md`
-  - `.agents/docs/damage-numbers-system.md`
-  - `.agents/docs/project-coding-standards.md`
-  - `.agents/docs/technology-documentation.md`
+  - `.agents/context/ui-system.md`
+  - `.agents/context/audio-system.md`
+  - `.agents/context/damage-numbers-system.md`
+  - `.agents/context/project-coding-standards.md`
+  - `.agents/context/technology-documentation.md`
 - Related agents or instructions:
   - Root `AGENTS.md`
   - `.agents/skills/document-system/SKILL.md`

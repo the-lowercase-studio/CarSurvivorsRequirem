@@ -20,9 +20,9 @@ It is not responsible for measuring elapsed gameplay time, deciding when the pla
   - `Assets/Scripts/UI/HUD/TimerPresenter.cs`
   - `Assets/Scripts/Storage/AppStorage.cs`
 - Related docs:
-  - `.agents/docs/ui-system.md`
-  - `.agents/docs/level-system.md`
-  - `.agents/docs/project-coding-standards.md`
+  - `.agents/context/ui-system.md`
+  - `.agents/context/level-system.md`
+  - `.agents/context/project-coding-standards.md`
 - Related agents or instructions:
   - Root `AGENTS.md`
   - `.agents/skills/document-system/SKILL.md`

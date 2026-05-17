@@ -37,11 +37,11 @@ It is not responsible for:
   - `Assets/Scripts/LayerMasks/TerrainLayers.cs`
   - `Assets/Scripts/LayerMasks/EntityLayers.cs`
 - Related docs:
-  - `.agents/docs/grid-system.md`
-  - `.agents/docs/enemies-system.md`
-  - `.agents/docs/level-system.md`
-  - `.agents/docs/project-coding-standards.md`
-  - `.agents/docs/ai-game-dev-best-practices.md`
+  - `.agents/context/grid-system.md`
+  - `.agents/context/enemies-system.md`
+  - `.agents/context/level-system.md`
+  - `.agents/context/project-coding-standards.md`
+  - `.agents/context/ai-game-dev-best-practices.md`
 - Related skills:
   - `.agents/skills/check-optimalization/SKILL.md` when changing field update cadence, physics queries, grid size, or per-entity separation.
   - `.agents/skills/di-integration/SKILL.md` when changing `IGridManager` or injected movement dependencies.
