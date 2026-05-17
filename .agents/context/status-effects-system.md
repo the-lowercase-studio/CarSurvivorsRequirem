@@ -35,11 +35,11 @@ It is not responsible for:
   - `Assets/Scripts/Skills/PlayerSkills/LandmineTrap/Landmine.cs`
   - `Assets/Scripts/Projectiles/Projectile.cs`
 - Related docs:
-  - `.agents/docs/health-system.md`
-  - `.agents/docs/enemies-system.md`
-  - `.agents/docs/skills-system.md`
-  - `.agents/docs/projectiles-system.md`
-  - `.agents/docs/project-coding-standards.md`
+  - `.agents/context/health-system.md`
+  - `.agents/context/enemies-system.md`
+  - `.agents/context/skills-system.md`
+  - `.agents/context/projectiles-system.md`
+  - `.agents/context/project-coding-standards.md`
 - Related agents or instructions:
   - `.agents/skills/document-system/SKILL.md`
   - `.agents/skills/architecture-review/SKILL.md`

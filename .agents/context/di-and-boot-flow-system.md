@@ -28,12 +28,12 @@ It is not responsible for:
   - `Assets/Scripts/GameFlow/GameScenesLoader.cs`
   - `Assets/Scripts/GameFlow/GameTime.cs`
 - Related docs:
-  - `.agents/docs/audio-system.md`
-  - `.agents/docs/settings-system.md`
-  - `.agents/docs/spawners-system.md`
-  - `.agents/docs/ui-system.md`
-  - `.agents/docs/project-coding-standards.md`
-  - `.agents/docs/technology-documentation.md`
+  - `.agents/context/audio-system.md`
+  - `.agents/context/settings-system.md`
+  - `.agents/context/spawners-system.md`
+  - `.agents/context/ui-system.md`
+  - `.agents/context/project-coding-standards.md`
+  - `.agents/context/technology-documentation.md`
 - Related agents or instructions:
   - `.agents/skills/di-integration/SKILL.md`
   - `.agents/skills/architecture-review/SKILL.md`

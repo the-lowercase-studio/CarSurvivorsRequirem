@@ -34,11 +34,11 @@ It is not responsible for:
   - `Assets/Scripts/LayerMasks/TerrainLayers.cs`
   - `Assets/Scripts/Extensions/TransformTweenExtensions.cs`
 - Related docs:
-  - `.agents/docs/skills-system.md`
-  - `.agents/docs/pooling-and-object-lifecycle-system.md`
-  - `.agents/docs/status-effects-system.md`
-  - `.agents/docs/spawners-system.md`
-  - `.agents/docs/project-coding-standards.md`
+  - `.agents/context/skills-system.md`
+  - `.agents/context/pooling-and-object-lifecycle-system.md`
+  - `.agents/context/status-effects-system.md`
+  - `.agents/context/spawners-system.md`
+  - `.agents/context/project-coding-standards.md`
 - Related agents or instructions:
   - `.agents/skills/document-system/SKILL.md`
   - `.agents/skills/check-optimalization/SKILL.md`

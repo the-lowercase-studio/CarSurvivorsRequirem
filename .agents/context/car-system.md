@@ -17,8 +17,8 @@ It does not own player health, leveling, skills, spawning, camera behavior, enem
   - `Assets/Scripts/Skills/PlayerSkills/Saw/SawBlade.cs`
   - `Assets/InputSystem/InputSystem_Actions.inputactions`
 - Related docs:
-  - `.agents/docs/project-coding-standards.md`
-  - `.agents/docs/ai-game-dev-best-practices.md`
+  - `.agents/context/project-coding-standards.md`
+  - `.agents/context/ai-game-dev-best-practices.md`
 
 ## Architecture and Data Flow
 

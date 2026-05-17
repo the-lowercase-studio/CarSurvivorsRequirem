@@ -13,12 +13,12 @@ Before reviewing code, ground the work in:
 
 - AGENTS.md
 - .agents/README.md
-- .agents/docs/project-coding-standards.md
-- .agents/docs/technology-documentation.md
-- Relevant system summary under .agents/docs/, if one exists.
+- .agents/context/project-coding-standards.md
+- .agents/context/technology-documentation.md
+- Relevant system summary under .agents/context/, if one exists.
 - The exact target files, systems, or code excerpts named by the user.
 
-Use official Unity, Reflex, and DOTween documentation from `.agents/docs/technology-documentation.md` when performance behavior depends on engine or package details.
+Use official Unity, Reflex, and DOTween documentation from `.agents/context/technology-documentation.md` when performance behavior depends on engine or package details.
 
 ## Inputs
 

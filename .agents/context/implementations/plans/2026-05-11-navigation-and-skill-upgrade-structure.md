@@ -15,10 +15,10 @@ This plan is structure-focused. Preserve current gameplay behavior, balance, ser
 
 - `AGENTS.md`
 - `.agents/README.md`
-- `.agents/docs/project-coding-standards.md`
-- `.agents/docs/project-scripts-folder-map.md`
-- `.agents/docs/ai-game-dev-best-practices.md`
-- `.agents/docs/technology-documentation.md`
+- `.agents/context/project-coding-standards.md`
+- `.agents/context/project-scripts-folder-map.md`
+- `.agents/context/ai-game-dev-best-practices.md`
+- `.agents/context/technology-documentation.md`
 
 ## Current Pressure Points
 
@@ -220,7 +220,7 @@ Status: completed.
 
 Update after source changes are implemented:
 
-- `.agents/docs/project-scripts-folder-map.md`
+- `.agents/context/project-scripts-folder-map.md`
 - Related system docs that mention `GridSystem`, `FlowFieldSystem`, `UI/Common`, `UI/HUD`, `UI/Pause`, or `UI/Skills`
 - The implementation summary for this plan
 
@@ -283,4 +283,4 @@ dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
    - crate-triggered skill flow;
    - pause/resume behavior;
    - menu, pause, death, HUD, settings, and skill UI interactions.
-4. Create an implementation summary under `.agents/docs/implementation-summaries/`.
+4. Create an implementation summary under `.agents/context/implementations/summaries/`.

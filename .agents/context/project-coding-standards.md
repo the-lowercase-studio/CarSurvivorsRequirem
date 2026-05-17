@@ -44,7 +44,7 @@ public class TurnManager : MonoBehaviour, ITurnManager
 ### Constants
 
 - Use UPPER_SNAKE_CASE for all const fields.
-- Constants must live in a `Constants` folder under the owning system root (for example `Assets/Cards/Constants/`, `Assets/DamageNumbers/Constants/`, `Assets/Editor/Constants/`).
+- Constants must live in a `Constants` folder under the owning system root (for example `Assets/Scripts/Skills/Constants/`, `Assets/Scripts/DamageNumbers/Constants/`, `Assets/Scripts/Editor/Constants/`).
 - Avoid a single global constants root folder; keep constants close to the domain that owns them.
 - Do not keep reusable constants inside gameplay classes like `EnemyBase` or `PlayerParty`; reference constants classes instead.
 - Use `*Constants` naming for constants containers (for example `PositionConstants`, `DamageNumberConstants`).
@@ -111,10 +111,10 @@ public event EventHandler OnEnemyTurnEnd;
 
 ### Markdown Documents
 
-- AI-facing project documentation under `.agents/docs/` uses kebab-case filenames.
-- Date-prefixed implementation plans and summaries use `yyyy-mm-dd-description.md`.
+- AI-facing project documentation under `.agents/context/` uses kebab-case filenames.
+- Date-prefixed implementation plans under `.agents/context/implementations/plans/` and summaries under `.agents/context/implementations/summaries/` use `yyyy-mm-dd-description.md`.
 - Reserved operational filenames keep their established uppercase or conventional names, including `AGENTS.md`, `README.md`, and `SKILL.md`.
-- When renaming documentation, update all relative links and references in `.agents/docs/`, `.agents/skills/`, and root agent entry-point files.
+- When renaming documentation, update all relative links and references in `.agents/context/`, `.agents/skills/`, and root agent entry-point files.
 
 ## 3) Member Ordering in Classes
 

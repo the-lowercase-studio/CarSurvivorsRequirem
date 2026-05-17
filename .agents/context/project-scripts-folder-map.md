@@ -232,7 +232,7 @@ Extract here when code describes reusable geometric or targeting shapes. Skill-s
 
 Use for skill definitions, skill registry logic, upgradeable skills, skill stats units, skill-owned activation helpers, player skills, turrets, and objects that affect skills.
 
-Extract here when behavior belongs to unlockable/upgradable player abilities or skill-impacting world objects. Put each player skill in `Skills/PlayerSkills/<SkillName>/`. Put skill-affecting world objects in `Skills/ObjectsImpactingSkills/<ObjectName>/`.
+Extract here when behavior belongs to unlockable/upgradable player abilities or skill-impacting world objects. Put each player skill in `Skills/PlayerSkills/<SkillName>/`. Put skill reward queueing and upgrade request construction in `Skills/UpgradeFlow/`. Put skill-affecting world objects in `Skills/ObjectsImpactingSkills/<ObjectName>/`.
 
 ### `Spawners/`
 
@@ -308,6 +308,7 @@ Extract here when code controls enemy wave schedules, wave transitions, or wave-
 - `Settings/Resolution/`: resolution data and resolution setting behavior.
 - `Skills/ObjectsImpactingSkills/<ObjectName>/`: world objects that modify, grant, or interact with skills.
 - `Skills/PlayerSkills/<SkillName>/`: concrete player skill implementation, related spawned objects, and skill-specific helpers.
+- `Skills/UpgradeFlow/`: skill reward queueing, new-skill or upgrade request selection, and upgrade option construction.
 - `Spawners/GridSpace/`: spawning abstractions that place objects using grid positions.
 - `Spawners/WorldSpace/`: spawning abstractions that place objects in world coordinates.
 - `UI/Death/`: player death screen presentation.
