@@ -1,5 +1,5 @@
 ﻿using Assets.Scripts.LevelSystem.Exp;
-using Assets.Scripts.ObjectLifeCycle.Actions;
+using Assets.Scripts.ObjectLifecycle.Actions;
 using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.VFX;
 using Reflex.Attributes;

@@ -1,8 +1,8 @@
 using Assets.ScriptableObjects.Skills.PlayerSkills.LandmineSkill;
 using Assets.Scripts.Audio;
-using Assets.Scripts.Helpers;
 using Assets.Scripts.Initializers;
 using Assets.Scripts.LayerMasks;
+using Assets.Scripts.StatusEffects;
 using Assets.Scripts.VFX;
 using UnityEngine;
 
@@ -73,8 +73,8 @@ namespace Assets.Scripts.Skills.PlayerSkills.LandmineTrap
             {
                 EntityManipulationHelper.Damage(collider, _config.Damage.Value);
 
-                const float timeToArriveAtLocationMultiplier = 0.2f;
-                float timeToArriveAtLocation = _config.KnockbackRange.Value * timeToArriveAtLocationMultiplier;
+                const float TIME_TO_ARRIVE_AT_LOCATION_MULTIPLIER = 0.2f;
+                float timeToArriveAtLocation = _config.KnockbackRange.Value * TIME_TO_ARRIVE_AT_LOCATION_MULTIPLIER;
 
                 ApplyExplosionKnockbackOnKnockableEntity(collider, timeToArriveAtLocation);
 

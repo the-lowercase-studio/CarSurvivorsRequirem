@@ -6,8 +6,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using Assets.Scripts.Utils;
-using Assets.Scripts.CustomEventArgs;
+using Assets.Scripts.Common.EventArgs;
 using Reflex.Attributes;
 
 namespace Assets.Scripts.UI.Level

@@ -1,7 +1,7 @@
-﻿using Assets.Scripts.Audio;
-using Assets.Scripts.CustomTypes;
+using Assets.Scripts.Audio;
+using Assets.Scripts.Common.Types;
 using Assets.Scripts.Extensions;
-using Assets.Scripts.FlowFieldSystem;
+using Assets.Scripts.Navigation.FlowFieldSystem;
 using Assets.Scripts.LayerMasks;
 using Assets.Scripts.Player;
 using Assets.Scripts.Pooling;
@@ -29,9 +29,9 @@ namespace Assets.Scripts.LevelSystem.Exp
         [Serializable]
         private struct ExpParticleApearanceByTreshold
         {
-            [SerializeField, FormerlySerializedAs("Treshold")] private float _treshold;
-            [SerializeField, FormerlySerializedAs("Material")] private Material _material;
-            [SerializeField, FormerlySerializedAs("ScaleValueRange")] private FloatValueRange _scaleValueRange;
+            [SerializeField] private float _treshold;
+            [SerializeField] private Material _material;
+            [SerializeField] private FloatValueRange _scaleValueRange;
 
             public float Treshold => _treshold;
             public Material Material => _material;

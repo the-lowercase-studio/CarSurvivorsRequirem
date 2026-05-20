@@ -1,7 +1,7 @@
 ﻿using Assets.Scripts.Audio;
 using Assets.Scripts.DamageNumbers;
-using Assets.Scripts.GameManipulators;
-using Assets.Scripts.ObjectLifeCycle.Actions;
+using Assets.Scripts.GameFlow;
+using Assets.Scripts.ObjectLifecycle.Actions;
 using Assets.Scripts.Spawners.WorldSpace;
 using Reflex.Attributes;
 using Reflex.Core;

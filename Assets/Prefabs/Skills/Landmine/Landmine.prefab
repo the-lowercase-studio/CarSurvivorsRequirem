@@ -215,20 +215,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _audioClipPlayerConfigs:
-  - Name: Explosion
-    ClipVariants:
-    - AudioClip: {fileID: 8300000, guid: 5b8f4fdf02bb20144a2ef959e5e3a86e, type: 3}
-      Volume: 0.7
-      Pitch: 1
-      Loop: 0
-    - AudioClip: {fileID: 8300000, guid: d34d1de4ecd38c5459c2ae4a0f85f53d, type: 3}
-      Volume: 0.7
-      Pitch: 1
-      Loop: 0
-    - AudioClip: {fileID: 8300000, guid: 465793c5bac0b8144b4ad6b362201467, type: 3}
-      Volume: 0.7
-      Pitch: 1
-      Loop: 0
+  - _name: Explosion
+    _clipVariants:
+    - _audioClip: {fileID: 8300000, guid: 5b8f4fdf02bb20144a2ef959e5e3a86e, type: 3}
+      _volume: 0.7
+      _pitch: 1
+      _loop: 0
+    - _audioClip: {fileID: 8300000, guid: d34d1de4ecd38c5459c2ae4a0f85f53d, type: 3}
+      _volume: 0.7
+      _pitch: 1
+      _loop: 0
+    - _audioClip: {fileID: 8300000, guid: 465793c5bac0b8144b4ad6b362201467, type: 3}
+      _volume: 0.7
+      _pitch: 1
+      _loop: 0
 --- !u!1001 &5659953211131969914
 PrefabInstance:
   m_ObjectHideFlags: 0

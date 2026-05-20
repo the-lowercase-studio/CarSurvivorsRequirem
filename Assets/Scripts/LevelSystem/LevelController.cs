@@ -1,5 +1,5 @@
 using System;
-using Assets.Scripts.CustomEventArgs;
+using Assets.Scripts.Common.EventArgs;
 using UnityEngine;
 using UnityEngine.InputSystem;
 

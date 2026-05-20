@@ -195,10 +195,10 @@ Rigidbody:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3261852426992956232}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Mass: 80
-  m_Drag: 0
-  m_AngularDrag: 0
+  m_LinearDamping: 0
+  m_AngularDamping: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -407,6 +407,50 @@ PrefabInstance:
       propertyPath: m_Name
       value: ZombieAudioClipPlayer
       objectReference: {fileID: 0}
+    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
+      propertyPath: _audioClipPlayerConfigs.Array.data[0]._name
+      value: Death
+      objectReference: {fileID: 0}
+    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
+      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
+      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.data[0]._pitch
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
+      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.data[1]._pitch
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
+      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.data[2]._pitch
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
+      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.data[0]._volume
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
+      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.data[1]._volume
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
+      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.data[2]._volume
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
+      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.data[0]._audioClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 6de5df03f6d4bf5469db9c9606f60dea, type: 3}
+    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
+      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.data[1]._audioClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 3db15ea06383fce4e91a0fc0f80401e3, type: 3}
+    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
+      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.data[2]._audioClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 4b67786007147e348a6e4bf6465ad71d, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

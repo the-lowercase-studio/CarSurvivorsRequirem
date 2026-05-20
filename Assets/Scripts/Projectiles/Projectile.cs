@@ -4,7 +4,7 @@ using Assets.Scripts.Initializers;
 using Assets.Scripts.LayerMasks;
 using UnityEngine;
 using System;
-using Assets.Scripts.Helpers;
+using Assets.Scripts.StatusEffects;
 using DG.Tweening;
 using Assets.Scripts.Pooling;
 

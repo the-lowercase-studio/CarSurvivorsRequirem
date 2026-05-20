@@ -1,4 +1,4 @@
-﻿using Assets.Scripts.GridSystem;
+using Assets.Scripts.Navigation.GridSystem;
 using UnityEditor;
 
 namespace Assets.Scripts.Editor.GUI

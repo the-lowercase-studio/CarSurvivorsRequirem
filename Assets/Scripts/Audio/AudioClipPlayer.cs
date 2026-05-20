@@ -19,8 +19,12 @@ namespace Assets.Scripts.Audio
         [Serializable]
         public class AudioClipPlayerConfig
         {
-            public string Name;
-            public AudioClipConfig[] ClipVariants;
+            [SerializeField] private string _name;
+
+            [SerializeField] private AudioClipConfig[] _clipVariants;
+
+            public string Name => _name;
+            public AudioClipConfig[] ClipVariants => _clipVariants;
         }
 
         [SerializeField] private AudioClipPlayerConfig[] _audioClipPlayerConfigs;
@@ -75,7 +79,7 @@ namespace Assets.Scripts.Audio
         {
             AudioClipPlayerConfig config = _audioClipPlayerConfigs.FirstOrDefault(c => c.Name == name);
 
-            if (config is null && config.ClipVariants.Length == 0)
+            if (config is null || config.ClipVariants.Length == 0)
             {
                 Debug.LogError($"AudioClipPlayer: No audio clip found for name '{name}'");
                 return null;

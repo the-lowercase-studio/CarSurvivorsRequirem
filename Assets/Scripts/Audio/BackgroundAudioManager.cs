@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
-using Assets.Scripts.CustomEventArgs;
-using Assets.Scripts.GameManipulators;
+using Assets.Scripts.Common.EventArgs;
+using Assets.Scripts.GameFlow;
 using Reflex.Attributes;
 using UnityEngine;
 
@@ -20,8 +20,12 @@ namespace Assets.Scripts.Audio
         [Serializable]
         public class AudioClipInSceneConfig
         {
-            public AudioClipConfig ClipConfig;
-            public GameScene Scene;
+            [SerializeField] private AudioClipConfig _clipConfig;
+
+            [SerializeField] private GameScene _scene;
+
+            public AudioClipConfig ClipConfig => _clipConfig;
+            public GameScene Scene => _scene;
         }
 
         [Inject] private readonly IGameSceneLoader _gameSceneLoader;

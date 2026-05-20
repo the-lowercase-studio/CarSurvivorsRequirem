@@ -266,18 +266,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _audioClipPlayerConfigs:
-  - Name: Click
-    ClipVariants:
-    - AudioClip: {fileID: 8300000, guid: f11a1a2209030d64389585d592cf35cc, type: 3}
-      Volume: 1
-      Pitch: 1
-      Loop: 0
-  - Name: Hover
-    ClipVariants:
-    - AudioClip: {fileID: 8300000, guid: e349bb624ec75624ebc9e91b14e7e837, type: 3}
-      Volume: 1
-      Pitch: 1
-      Loop: 0
+  - _name: Click
+    _clipVariants:
+    - _audioClip: {fileID: 8300000, guid: f11a1a2209030d64389585d592cf35cc, type: 3}
+      _volume: 1
+      _pitch: 1
+      _loop: 0
+  - _name: Hover
+    _clipVariants:
+    - _audioClip: {fileID: 8300000, guid: e349bb624ec75624ebc9e91b14e7e837, type: 3}
+      _volume: 1
+      _pitch: 1
+      _loop: 0
 --- !u!1001 &1270548056813975137
 PrefabInstance:
   m_ObjectHideFlags: 0

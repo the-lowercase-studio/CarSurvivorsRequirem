@@ -13,11 +13,11 @@ Before changing DI-related code, ground the work in:
 
 - AGENTS.md
 - .agents/README.md
-- .agents/docs/project-coding-standards.md
-- .agents/docs/technology-documentation.md
+- .agents/context/project-coding-standards.md
+- .agents/context/technology-documentation.md
 - Assets/Scripts/ReflexDI/
 
-Use official Reflex documentation from `.agents/docs/technology-documentation.md` when binding or injection behavior is uncertain.
+Use official Reflex documentation from `.agents/context/technology-documentation.md` when binding or injection behavior is uncertain.
 
 ## Inputs
 

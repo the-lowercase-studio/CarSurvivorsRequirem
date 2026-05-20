@@ -258,28 +258,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _audioClipPlayerConfigs:
-  - Name: Shoot
-    ClipVariants:
-    - AudioClip: {fileID: 8300000, guid: 64fe1028db3e39d489990aa337610bf1, type: 3}
-      Volume: 0.2
-      Pitch: 1
-      Loop: 0
-    - AudioClip: {fileID: 8300000, guid: a8b94df198c1387439f7332481d1c7a3, type: 3}
-      Volume: 0.2
-      Pitch: 1
-      Loop: 0
-    - AudioClip: {fileID: 8300000, guid: f0a12dff7d8ced54bb9828ffd85608b2, type: 3}
-      Volume: 0.2
-      Pitch: 1
-      Loop: 0
-    - AudioClip: {fileID: 8300000, guid: 2713c7923aa47c44180cd1f50a2099ed, type: 3}
-      Volume: 0.2
-      Pitch: 1
-      Loop: 0
-    - AudioClip: {fileID: 8300000, guid: 4b254872ebada9c409a255a1df1e6014, type: 3}
-      Volume: 0.2
-      Pitch: 1
-      Loop: 0
+  - _name: Shoot
+    _clipVariants:
+    - _audioClip: {fileID: 8300000, guid: 64fe1028db3e39d489990aa337610bf1, type: 3}
+      _volume: 0.2
+      _pitch: 1
+      _loop: 0
+    - _audioClip: {fileID: 8300000, guid: a8b94df198c1387439f7332481d1c7a3, type: 3}
+      _volume: 0.2
+      _pitch: 1
+      _loop: 0
+    - _audioClip: {fileID: 8300000, guid: f0a12dff7d8ced54bb9828ffd85608b2, type: 3}
+      _volume: 0.2
+      _pitch: 1
+      _loop: 0
+    - _audioClip: {fileID: 8300000, guid: 2713c7923aa47c44180cd1f50a2099ed, type: 3}
+      _volume: 0.2
+      _pitch: 1
+      _loop: 0
+    - _audioClip: {fileID: 8300000, guid: 4b254872ebada9c409a255a1df1e6014, type: 3}
+      _volume: 0.2
+      _pitch: 1
+      _loop: 0
 --- !u!1001 &3206591696216870455
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -556,9 +556,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b8a1f55baf35762458b2cfc127f37352, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rotateX: 0
-  rotateY: 0
-  rotateZ: 1
+  _rotateX: 0
+  _rotateY: 0
+  _rotateZ: 1
   _maxRotationOnAxis: 360
   _useLocalRotation: 1
   _tweenIterationTime: 0.3

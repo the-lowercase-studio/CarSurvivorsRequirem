@@ -1,6 +1,5 @@
 using Assets.ScriptableObjects.Skills;
 using Assets.ScriptableObjects.Skills.PlayerSkills.SawSkill;
-using Assets.Scripts.Activators;
 using UnityEngine;
 
 namespace Assets.Scripts.Skills.PlayerSkills.Saw
