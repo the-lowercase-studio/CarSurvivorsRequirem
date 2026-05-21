@@ -2,6 +2,7 @@ using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.LayerMasks;
 using Reflex.Attributes;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Assets.Scripts.Navigation.FlowFieldSystem
 {
@@ -12,11 +13,17 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
 
     public class FlowFieldMovementController : MonoBehaviour, IFlowFieldMovementController
     {
+        private const int SEPARATION_COLLIDER_BUFFER_SIZE = 32;
+
         [Inject] private readonly IGridManager _gridManager;
 
         [Header("Separating moving entities")]
-        [SerializeField] private float separationRadius = 1.2f;
-        [SerializeField] private float separationStrength = 0.5f;
+        [FormerlySerializedAs("separationRadius")]
+        [SerializeField] private float _separationRadius = 1.2f;
+        [FormerlySerializedAs("separationStrength")]
+        [SerializeField] private float _separationStrength = 0.5f;
+
+        private readonly Collider[] _separationColliderBuffer = new Collider[SEPARATION_COLLIDER_BUFFER_SIZE];
         private Vector3 _separationVector;
 
         private Collider _selfCollider;
@@ -61,10 +68,19 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
             Vector3 separation = Vector3.zero;
             int neighborCount = 0;
 
-            Collider[] hits = Physics.OverlapSphere(transform.position, separationRadius, EntityLayers.Enemy);
-            foreach (var hit in hits)
+            int hitCount = Physics.OverlapSphereNonAlloc(
+                transform.position,
+                _separationRadius,
+                _separationColliderBuffer,
+                EntityLayers.Enemy);
+
+            for (int hitIndex = 0; hitIndex < hitCount; hitIndex++)
             {
-                if (hit == _selfCollider) continue;
+                Collider hit = _separationColliderBuffer[hitIndex];
+                if (hit == _selfCollider)
+                {
+                    continue;
+                }
 
                 Vector3 away = transform.position - hit.transform.position;
                 away.y = 0f;
@@ -80,7 +96,7 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
             if (neighborCount > 0)
             {
                 separation /= neighborCount;
-                separation = separation.normalized * separationStrength;
+                separation = separation.normalized * _separationStrength;
             }
             else
             {

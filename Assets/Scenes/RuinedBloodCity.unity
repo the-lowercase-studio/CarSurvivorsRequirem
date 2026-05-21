@@ -1051,6 +1051,7 @@ MonoBehaviour:
   _timerPresenter: {fileID: 2407471052203165078}
   _expParticleSpawner: {fileID: 375309169}
   _collectibleItemsSpawner: {fileID: 36651507}
+  _mainCamera: {fileID: 2001922875}
 --- !u!1 &549734345
 GameObject:
   m_ObjectHideFlags: 0
@@ -2910,6 +2911,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 550934127}
     m_Modifications:
+    - target: {fileID: 653629325135610590, guid: cb84583e0c2818e42b12a0baeb2f6f1b, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1549669939771682502, guid: cb84583e0c2818e42b12a0baeb2f6f1b, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0

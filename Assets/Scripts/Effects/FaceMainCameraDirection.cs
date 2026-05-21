@@ -1,10 +1,13 @@
 using DG.Tweening;
+using Reflex.Attributes;
 using UnityEngine;
 
 namespace Assets.Scripts.Effects
 {
     public class FaceMainCameraDirection : MonoBehaviour
     {
+        [Inject] private Camera _mainCamera = null;
+
         [Tooltip("When enabled, the transform's -Z axis faces the main camera instead of +Z.")]
         [SerializeField] private bool _isDirectionFlipped;
         [Tooltip("Rotation tween duration. Use 0 for instant LookAt behavior.")]
@@ -19,14 +22,12 @@ namespace Assets.Scripts.Effects
         [Tooltip("Local-space vertical position offset applied from the starting local position.")]
         [SerializeField] private float _localYOffset;
 
-        private Camera _mainCamera;
         private Tween _rotationTween;
         private Quaternion _targetRotation;
         private Vector3 _startLocalPosition;
 
         private void Start()
         {
-            _mainCamera = Camera.main;
             _startLocalPosition = transform.localPosition;
             transform.localPosition = _startLocalPosition + Vector3.up * _localYOffset;
         }
@@ -37,8 +38,18 @@ namespace Assets.Scripts.Effects
             _rotationTween = null;
         }
 
+        public void Initialize(Camera mainCamera)
+        {
+            _mainCamera = mainCamera;
+        }
+
         private void FixedUpdate()
         {
+            if (_mainCamera == null)
+            {
+                return;
+            }
+
             Vector3 desiredDirection = _mainCamera.transform.position - transform.position;
 
             if (_isDirectionFlipped)
