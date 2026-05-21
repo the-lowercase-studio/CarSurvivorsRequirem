@@ -7,21 +7,20 @@ namespace Assets.Scripts.Navigation.GridSystem
 {
     public static class GridCellsNotVisibleByMainCamera
     {
-        public static IEnumerable<Cell> GetRandomWalkableCells(Grid grid)
+        public static IEnumerable<Cell> GetRandomWalkableCells(Grid grid, Camera camera)
         {
-            return GetWalkableCells(grid).Shuffle();
+            return GetWalkableCells(grid, camera).Shuffle();
         }
 
-        public static IEnumerable<Cell> GetRandomWalkableCells(Grid grid, int count)
+        public static IEnumerable<Cell> GetRandomWalkableCells(Grid grid, Camera camera, int count)
         {
-            return GetRandomWalkableCells(grid).Take(count);
+            return GetRandomWalkableCells(grid, camera).Take(count);
         }
 
-        public static IEnumerable<Cell> GetWalkableCells(Grid grid)
+        public static IEnumerable<Cell> GetWalkableCells(Grid grid, Camera camera)
         {
             List<Cell> notVisibleCells = new List<Cell>();
             Cell[,] cells = grid.Cells;
-            Camera camera = Camera.main;
 
             for (int x = 0; x < grid.Width; x++)
             {

@@ -15,6 +15,7 @@ namespace Assets.Scripts.Enemies
         IOnRandomGridPosSpawner<EnemiesSpawner>, IObjectReleaseNotifier
     {
         [Inject] private readonly IGridManager _gridManager;
+        [Inject] private readonly Camera _mainCamera = null;
 
         [Header("SpawnExpParticle Chance Settings")]
         [SerializeField] private FloatValueRange _spawnChanceDecreaseFactor;
@@ -62,7 +63,7 @@ namespace Assets.Scripts.Enemies
         private void OnEnemyGet(Enemy enemy)
         {
             Cell cell = GridCellsNotVisibleByMainCamera
-                .GetRandomWalkableCells(_gridManager.GridPlayerChunk, 1)
+                .GetRandomWalkableCells(_gridManager.GridPlayerChunk, _mainCamera, 1)
                 .FirstOrDefault();
 
             if (cell == null)

@@ -11,6 +11,7 @@ namespace Assets.Scripts.Enemies
     public class EnemiesOutsidePlayerChunkTeleporter : MonoBehaviour
     {
         [Inject] private readonly IGridManager _gridManager;
+        [Inject] private readonly Camera _mainCamera = null;
 
         [SerializeField] private Transform _enemiesHolder;
         [SerializeField] private float _checkForEnemiesOutsidePlayerChunkDelay = 2f;
@@ -33,7 +34,7 @@ namespace Assets.Scripts.Enemies
             }
 
             List<Cell> cells = GridCellsNotVisibleByMainCamera
-                .GetWalkableCells(_gridManager.GridPlayerChunk)
+                .GetWalkableCells(_gridManager.GridPlayerChunk, _mainCamera)
                 .Shuffle()
                 .ToList();
 

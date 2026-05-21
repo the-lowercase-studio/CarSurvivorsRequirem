@@ -74,8 +74,9 @@ Updated `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`:
 
 - Added `using Assets.Scripts.Skills.UpgradeFlow`.
 - Registered `SkillUpgradeFlow` as `ISkillUpgradeFlow`.
+- Registered the serialized `SkillsVisualPresenter _skillsVisualPresenter` scene reference as `ISkillsVisualPresenter`.
 
-`SkillUpgradePresenter` now injects `ISkillUpgradeFlow`.
+`SkillUpgradePresenter` now injects `ISkillUpgradeFlow` and `ISkillsVisualPresenter`.
 
 ### Runtime Lookup Removal
 
@@ -85,11 +86,11 @@ Removed the runtime lookup:
 GameObject.FindGameObjectWithTag(typeof(SkillsVisualPresenter).Name)
 ```
 
-`SkillUpgradePresenter` now has a serialized `SkillsVisualPresenter _skillsVisualPresenter` reference.
+`SkillUpgradePresenter` now receives `ISkillsVisualPresenter` through Reflex injection.
 
 Unity setup required:
 
-- Assign `_skillsVisualPresenter` on the scene or prefab instance that owns `SkillUpgradePresenter`.
+- Assign `_skillsVisualPresenter` on the scene instance that owns `DefaultGameplaySceneInstaller`.
 - Verify the existing `SkillsVisualPresenter` scene object remains wired to its skill visuals.
 
 ### Navigation Boundary
@@ -129,7 +130,7 @@ Updated:
 ## Behavior Preservation Notes
 
 - Public type names were preserved.
-- Existing serialized field names were preserved except for the new `_skillsVisualPresenter` field.
+- Existing serialized field names were preserved except for the new `_skillsVisualPresenter` field on `DefaultGameplaySceneInstaller`.
 - Upgrade option count remains three.
 - Button text format remains unchanged.
 - Skill initialization still routes through `ISkillsRegistry.InitializeSkill`.
@@ -142,6 +143,7 @@ Updated:
 Ran:
 
 ```powershell
+dotnet build Assembly-CSharp-firstpass.csproj -p:BuildProjectReferences=false
 dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
 ```
 
@@ -150,12 +152,13 @@ Result:
 - Build succeeded.
 - Existing `CS0649` warnings remain for injected and serialized fields.
 - No new compile errors after the completed phases.
+- Current re-validation on 2026-05-21 required building `Assembly-CSharp-firstpass.csproj` first because `Assembly-CSharp.csproj` expected `Temp/bin/Debug/Assembly-CSharp-firstpass.dll`.
 
 ## Remaining Manual Checks
 
 Run these in Unity before treating these phases as complete:
 
-- Assign the new `_skillsVisualPresenter` reference on `SkillUpgradePresenter`.
+- Assign the new `_skillsVisualPresenter` reference on `DefaultGameplaySceneInstaller`.
 - Trigger an exp level-up and confirm the new skill section appears as before.
 - Confirm skill upgrade buttons still show up to three options.
 - Confirm upgrade clicks apply the stat change once.
