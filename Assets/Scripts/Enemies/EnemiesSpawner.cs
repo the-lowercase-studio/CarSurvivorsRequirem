@@ -5,7 +5,6 @@ using Assets.Scripts.Spawners.GridSpace;
 using Reflex.Attributes;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -62,9 +61,7 @@ namespace Assets.Scripts.Enemies
 
         private void OnEnemyGet(Enemy enemy)
         {
-            Cell cell = GridCellsNotVisibleByMainCamera
-                .GetRandomWalkableCells(_gridManager.GridPlayerChunk, _mainCamera, 1)
-                .FirstOrDefault();
+            Cell cell = GridCellsNotVisibleByMainCamera.GetRandomWalkableCell(_gridManager.GridPlayerChunk, _mainCamera);
 
             if (cell == null)
             {
@@ -138,7 +135,12 @@ namespace Assets.Scripts.Enemies
 
         private EnemySpawnInfo RandomEnemyInfoBasedOnSpawnChance()
         {
-            float totalChance = _poolEnemiesInfo.Sum(info => info.SpawnChanceInfo.SpawnChance);
+            float totalChance = 0;
+            foreach (EnemySpawnInfo enemySpawnInfo in _poolEnemiesInfo)
+            {
+                totalChance += enemySpawnInfo.SpawnChanceInfo.SpawnChance;
+            }
+
             float randomPoint = UnityEngine.Random.value * totalChance;
 
             float currentSum = 0;

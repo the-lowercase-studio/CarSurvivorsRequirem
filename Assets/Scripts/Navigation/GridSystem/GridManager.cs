@@ -37,12 +37,15 @@ namespace Assets.Scripts.Navigation.GridSystem
         private float _playerChunkDrawYOffset = 0.2f;
 #endif
         private FlowField _flowField;
+        private Cell[,] _playerChunkCells;
 
         public Cell DestinationCell { get; private set; }
 
         private void Awake()
         {
             WorldGrid = new Grid(_worldGridConfiguration);
+            _playerChunkCells = new Cell[_playerGridConfiguration.Width, _playerGridConfiguration.Height];
+            GridPlayerChunk = new Grid(_playerGridConfiguration, _playerChunkCells);
             _flowField = new FlowField();
 
 #if DEBUG
@@ -94,15 +97,15 @@ namespace Assets.Scripts.Navigation.GridSystem
 
         private void UpdateFlowFieldWithNewPlayerChunkGrid()
         {
-            GridPlayerChunk = CreatePlayerChunkBasedOnPlayerPositionInWorldGrid();
+            UpdatePlayerChunkBasedOnPlayerPositionInWorldGrid();
             UpdateFlowField(GridPlayerChunk, _playerManager.GameObject.transform.position);
         }
 
-        private Grid CreatePlayerChunkBasedOnPlayerPositionInWorldGrid()
+        private void UpdatePlayerChunkBasedOnPlayerPositionInWorldGrid()
         {
             int chunkWidth = _playerGridConfiguration.Width;
             int chunkHeight = _playerGridConfiguration.Height;
-            Cell[,] chunkCells = new Cell[chunkWidth, chunkHeight];
+            ClearPlayerChunkCells();
 
             Cell cellClosestToPlayer = WorldPosToCellConverter.GetCellFromGridByWorldPos(
                 WorldGrid,
@@ -121,16 +124,16 @@ namespace Assets.Scripts.Navigation.GridSystem
             int chunkX = 0;
             while (x <= maxGridX && x < WorldGrid.Cells.GetLength(0))
             {
-                if (x >= 0 && chunkX < chunkCells.GetLength(0))
+                if (x >= 0 && chunkX < _playerChunkCells.GetLength(0))
                 {
                     int y = minGridY;
                     int chunkY = 0;
                     while (y <= maxGridY && y < WorldGrid.Cells.GetLength(1))
                     {
-                        if (y >= 0 && chunkY < chunkCells.GetLength(1))
+                        if (y >= 0 && chunkY < _playerChunkCells.GetLength(1))
                         {
-                            chunkCells[chunkX, chunkY] = WorldGrid.Cells[x, y];
-                            chunkCells[chunkX, chunkY].ChunkGridPos = new Vector2Int(chunkX, chunkY);
+                            _playerChunkCells[chunkX, chunkY] = WorldGrid.Cells[x, y];
+                            _playerChunkCells[chunkX, chunkY].ChunkGridPos = new Vector2Int(chunkX, chunkY);
                             chunkY++;
                         }
                         y++;
@@ -140,8 +143,17 @@ namespace Assets.Scripts.Navigation.GridSystem
                 }
                 x++;
             }
+        }
 
-            return new Grid(_playerGridConfiguration, chunkCells);
+        private void ClearPlayerChunkCells()
+        {
+            for (int x = 0; x < _playerChunkCells.GetLength(0); x++)
+            {
+                for (int y = 0; y < _playerChunkCells.GetLength(1); y++)
+                {
+                    _playerChunkCells[x, y] = null;
+                }
+            }
         }
 
         private void UpdateFlowField(Grid gridPerformingUpdate, Vector3 destination)

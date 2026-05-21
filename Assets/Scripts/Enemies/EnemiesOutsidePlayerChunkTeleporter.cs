@@ -1,8 +1,6 @@
-using Assets.Scripts.Extensions;
 using Assets.Scripts.Navigation.GridSystem;
 using Reflex.Attributes;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using NavigationGrid = Assets.Scripts.Navigation.GridSystem.Grid;
 
@@ -16,6 +14,9 @@ namespace Assets.Scripts.Enemies
         [SerializeField] private Transform _enemiesHolder;
         [SerializeField] private float _checkForEnemiesOutsidePlayerChunkDelay = 2f;
 
+        private readonly List<Enemy> _enemiesOutsidePlayerChunk = new();
+        private readonly List<Cell> _hiddenWalkableCells = new();
+
         private void Start()
         {
             InvokeRepeating(
@@ -26,38 +27,36 @@ namespace Assets.Scripts.Enemies
 
         public void TeleportEnemiesFromOutsideToInsidePlayerChunk()
         {
-            Enemy[] enemiesOutsidePlayerChunk = GetEnemiesOutsidePlayerChunk();
+            FillEnemiesOutsidePlayerChunk(_enemiesOutsidePlayerChunk);
 
-            if (enemiesOutsidePlayerChunk.Length == 0)
+            if (_enemiesOutsidePlayerChunk.Count == 0)
             {
                 return;
             }
 
-            List<Cell> cells = GridCellsNotVisibleByMainCamera
-                .GetWalkableCells(_gridManager.GridPlayerChunk, _mainCamera)
-                .Shuffle()
-                .ToList();
+            GridCellsNotVisibleByMainCamera.FillWalkableCells(_gridManager.GridPlayerChunk, _mainCamera, _hiddenWalkableCells);
+            ShuffleCells(_hiddenWalkableCells);
 
-            if (cells.Count == 0)
+            if (_hiddenWalkableCells.Count == 0)
             {
                 return;
             }
 
             int cellIndex = 0;
 
-            foreach (Enemy enemy in enemiesOutsidePlayerChunk)
+            foreach (Enemy enemy in _enemiesOutsidePlayerChunk)
             {
-                Cell randomCell = cells[cellIndex];
+                Cell randomCell = _hiddenWalkableCells[cellIndex];
 
                 enemy.transform.position = randomCell.WorldPos;
 
-                cellIndex = (cellIndex + 1) % cells.Count;
+                cellIndex = (cellIndex + 1) % _hiddenWalkableCells.Count;
             }
         }
 
-        private Enemy[] GetEnemiesOutsidePlayerChunk()
+        private void FillEnemiesOutsidePlayerChunk(List<Enemy> enemies)
         {
-            List<Enemy> enemies = new List<Enemy>();
+            enemies.Clear();
 
             NavigationGrid playerChunk = _gridManager.GridPlayerChunk;
             Cell centerCell = playerChunk.Cells[playerChunk.Width / 2, playerChunk.Height / 2];
@@ -77,8 +76,15 @@ namespace Assets.Scripts.Enemies
                     }
                 }
             }
+        }
 
-            return enemies.ToArray();
+        private void ShuffleCells(List<Cell> cells)
+        {
+            for (int i = cells.Count - 1; i > 0; i--)
+            {
+                int randomIndex = Random.Range(0, i + 1);
+                (cells[i], cells[randomIndex]) = (cells[randomIndex], cells[i]);
+            }
         }
     }
 }
