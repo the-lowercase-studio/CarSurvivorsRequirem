@@ -33,6 +33,8 @@ namespace Assets.Scripts.ReflexDI
 
         private void InstallExtra(Scene scene, ContainerBuilder builder)
         {
+            InitializeSceneCameraDependencies(scene);
+
             builder.AddSingleton(_audioMixersManager, typeof(IAudioMixersManager));
             builder.AddSingleton(_backgroundAudioManager, typeof(IBackgroundAudioManager));
             builder.AddSingleton(
@@ -40,6 +42,21 @@ namespace Assets.Scripts.ReflexDI
                 typeof(IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig>),
                 typeof(IEnableDisableFunctionalityTrigger<DamageNumbersSpawner>)
             );
+        }
+
+        private void InitializeSceneCameraDependencies(Scene scene)
+        {
+            foreach (GameObject rootGameObject in scene.GetRootGameObjects())
+            {
+                DefaultGameplaySceneInstaller gameplaySceneInstaller =
+                    rootGameObject.GetComponentInChildren<DefaultGameplaySceneInstaller>();
+
+                if (gameplaySceneInstaller != null)
+                {
+                    _damageNumbersSpawner.Initialize(gameplaySceneInstaller.MainCamera);
+                    return;
+                }
+            }
         }
 
         private IEnumerator LoadNewSceneAsyncWithOneFrameDelay()

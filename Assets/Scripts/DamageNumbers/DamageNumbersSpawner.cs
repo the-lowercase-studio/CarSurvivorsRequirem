@@ -1,5 +1,6 @@
 using Assets.Scripts.Common.Types;
 using Assets.Scripts.ObjectLifecycle.Actions;
+using Assets.Scripts.Effects;
 using Assets.Scripts.Shapes;
 using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.Utils;
@@ -53,6 +54,7 @@ namespace Assets.Scripts.DamageNumbers
         [SerializeField] private VisualApearanceByDamageTreshold[] _visualApearanceByDamageTresholds;
         [SerializeField] private FloatValueRange _popupsSpeedRange;
         [SerializeField] private float _popupsMovementRange = 1f;
+        private Camera _mainCamera;
         private bool _isPopupsEnabled = true;
         private IObjectPool<DamageNumber> _damageNumberPool;
 
@@ -63,7 +65,7 @@ namespace Assets.Scripts.DamageNumbers
         private void Awake()
         {
             _damageNumberPool = new ObjectPool<DamageNumber>(
-                createFunc: () => Instantiate(_damagePopupPrefab, transform),
+                createFunc: CreateDamageNumber,
                 actionOnGet: (obj) => obj.gameObject.SetActive(true),
                 actionOnRelease: (obj) => obj.gameObject.SetActive(false),
                 actionOnDestroy: (obj) => Destroy(obj.gameObject),
@@ -83,6 +85,11 @@ namespace Assets.Scripts.DamageNumbers
             _isPopupsEnabled = false;
         }
 
+        public void Initialize(Camera mainCamera)
+        {
+            _mainCamera = mainCamera;
+        }
+
         public void Spawn(Vector3 pos, DamageNubmersSpawnerConfig specificConfig, int count = 1)
         {
             if (!_isPopupsEnabled)
@@ -99,6 +106,7 @@ namespace Assets.Scripts.DamageNumbers
             for (int i = 0; i < count; i++)
             {
                 DamageNumber damageNumber = _damageNumberPool.Get();
+                InitializeCameraFacingEffects(damageNumber);
                 damageNumber.transform.position = pos;
                 damageNumber.transform.rotation = Quaternion.identity;
 
@@ -124,6 +132,30 @@ namespace Assets.Scripts.DamageNumbers
                     .SetEase(Ease.InOutSine);
 
                 CurrentlySpawnedObjectsCount++;
+            }
+        }
+
+        private DamageNumber CreateDamageNumber()
+        {
+            DamageNumber damageNumber = Instantiate(_damagePopupPrefab, transform);
+            InitializeCameraFacingEffects(damageNumber);
+
+            return damageNumber;
+        }
+
+        private void InitializeCameraFacingEffects(DamageNumber damageNumber)
+        {
+            if (_mainCamera == null)
+            {
+                return;
+            }
+
+            FaceMainCameraDirection[] cameraFacingEffects =
+                damageNumber.GetComponentsInChildren<FaceMainCameraDirection>(true);
+
+            foreach (FaceMainCameraDirection cameraFacingEffect in cameraFacingEffects)
+            {
+                cameraFacingEffect.Initialize(_mainCamera);
             }
         }
 

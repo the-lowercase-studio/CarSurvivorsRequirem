@@ -28,6 +28,8 @@ namespace Assets.Scripts.ReflexDI
         [SerializeField] private CollectibleItemsSpawner _collectibleItemsSpawner;
         [SerializeField] private Camera _mainCamera;
 
+        public Camera MainCamera => _mainCamera;
+
         public void InstallBindings(ContainerBuilder builder)
         {
             //Camera

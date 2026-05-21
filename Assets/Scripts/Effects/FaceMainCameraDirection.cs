@@ -6,7 +6,7 @@ namespace Assets.Scripts.Effects
 {
     public class FaceMainCameraDirection : MonoBehaviour
     {
-        [Inject] private readonly Camera _mainCamera = null;
+        [Inject] private Camera _mainCamera = null;
 
         [Tooltip("When enabled, the transform's -Z axis faces the main camera instead of +Z.")]
         [SerializeField] private bool _isDirectionFlipped;
@@ -38,8 +38,18 @@ namespace Assets.Scripts.Effects
             _rotationTween = null;
         }
 
+        public void Initialize(Camera mainCamera)
+        {
+            _mainCamera = mainCamera;
+        }
+
         private void FixedUpdate()
         {
+            if (_mainCamera == null)
+            {
+                return;
+            }
+
             Vector3 desiredDirection = _mainCamera.transform.position - transform.position;
 
             if (_isDirectionFlipped)
