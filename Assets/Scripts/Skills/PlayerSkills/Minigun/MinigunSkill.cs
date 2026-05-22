@@ -20,10 +20,10 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
             _turretsActivator =
                 new ItemsWithScriptableConfigsActivator<MinigunTurret, TurretConfigSO>(_turrets);
 
-            _turretsActivator.InitializeRandom(_config.TurretConfig);
+            InitializeTurretsToConfiguredCount();
 
             _config.NumberOfTurrets.OnUpgrade += (s, e) =>
-                _turretsActivator.InitializeRandom(_config.TurretConfig);
+                InitializeTurretsToConfiguredCount();
 
             StartCoroutine(SpawnProjectilesProcess());
         }
@@ -39,6 +39,11 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
 
                 yield return new WaitForSeconds(_config.DelayBetweenShoots.Value);
             }
+        }
+
+        private void InitializeTurretsToConfiguredCount()
+        {
+            _turretsActivator.InitializeUntilCount(_config.TurretConfig, _config.NumberOfTurrets.Value);
         }
     }
 }

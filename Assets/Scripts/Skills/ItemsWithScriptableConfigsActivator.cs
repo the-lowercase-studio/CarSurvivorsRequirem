@@ -1,7 +1,5 @@
-﻿using Assets.Scripts.Extensions;
 using Assets.Scripts.Initializers;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Assets.Scripts.Skills
@@ -13,6 +11,8 @@ namespace Assets.Scripts.Skills
         public TItem InitializeRandom(TScriptableConfig config);
 
         public TItem InitializeFirst(TScriptableConfig config);
+
+        public void InitializeUntilCount(TScriptableConfig config, int count);
 
         public IEnumerable<TItem> GetUninitialized();
 
@@ -32,13 +32,30 @@ namespace Assets.Scripts.Skills
 
         public TItem InitializeRandom(TScriptableConfig config)
         {
-            var inactive = GetUninitialized().ToList();
+            int uninitializedCount = CountUninitialized();
 
-            if (inactive.Any())
+            if (uninitializedCount == 0)
             {
-                TItem item = inactive.Shuffle().First();
-                item.Initialize(config);
-                return item;
+                return null;
+            }
+
+            int selectedIndex = Random.Range(0, uninitializedCount);
+            int currentIndex = 0;
+
+            foreach (TItem item in _items)
+            {
+                if (item.IsInitialized())
+                {
+                    continue;
+                }
+
+                if (currentIndex == selectedIndex)
+                {
+                    item.Initialize(config);
+                    return item;
+                }
+
+                currentIndex++;
             }
 
             return null;
@@ -59,14 +76,71 @@ namespace Assets.Scripts.Skills
             return _items[0];
         }
 
+        public void InitializeUntilCount(TScriptableConfig config, int count)
+        {
+            int initializedCount = CountInitialized();
+
+            while (initializedCount < count)
+            {
+                if (InitializeRandom(config) is null)
+                {
+                    return;
+                }
+
+                initializedCount++;
+            }
+        }
+
         public IEnumerable<TItem> GetUninitialized()
         {
-            return _items.Where(t => !t.IsInitialized());
+            foreach (TItem item in _items)
+            {
+                if (!item.IsInitialized())
+                {
+                    yield return item;
+                }
+            }
         }
 
         public IEnumerable<TItem> GetInitialized()
         {
-            return _items.Where(t => t.IsInitialized());
+            foreach (TItem item in _items)
+            {
+                if (item.IsInitialized())
+                {
+                    yield return item;
+                }
+            }
+        }
+
+        private int CountUninitialized()
+        {
+            int count = 0;
+
+            foreach (TItem item in _items)
+            {
+                if (!item.IsInitialized())
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private int CountInitialized()
+        {
+            int count = 0;
+
+            foreach (TItem item in _items)
+            {
+                if (item.IsInitialized())
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
     }
 }
