@@ -46,6 +46,27 @@ namespace Assets.Scripts.UI.Common
             ToogleActivityOfObjectDisableOthers((UnityEngine.Object)gameObject);
         }
 
+        public void DiasbleAllOtherObjects(UnityEngine.Object targetObject)
+        {
+            if (!TryGetGameObject(targetObject, out GameObject gameObject))
+            {
+                return;
+            }
+
+            foreach (var panel in _enabledDisabledObjects)
+            {
+                if (panel != gameObject)
+                {
+                    panel.SetActive(false);
+                }
+            }
+        }
+
+        public void DiasbleAllOtherObjects(GameObject gameObject)
+        {
+            DiasbleAllOtherObjects((UnityEngine.Object)gameObject);
+        }
+
         public void ToogleActivityOfObject(UnityEngine.Object targetObject)
         {
             if (!TryGetGameObject(targetObject, out GameObject gameObject))

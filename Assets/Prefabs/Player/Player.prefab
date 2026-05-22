@@ -1535,7 +1535,7 @@ AudioSource:
   m_GameObject: {fileID: 6265135913564545756}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 24300002, guid: 82a68bf67d126cb49861e14145b93681, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
@@ -3536,50 +3536,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: SkillUpgradePresenter
       objectReference: {fileID: 0}
-    - target: {fileID: 513106478262250365, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 513106478262250365, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 513106478262250365, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 2.754
-      objectReference: {fileID: 0}
-    - target: {fileID: 513106478262250365, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0.14459991
-      objectReference: {fileID: 0}
-    - target: {fileID: 513106478262250365, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: -1.377
-      objectReference: {fileID: 0}
-    - target: {fileID: 1762228030553163483, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1762228030553163483, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1762228030553163483, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 2.754
-      objectReference: {fileID: 0}
-    - target: {fileID: 1762228030553163483, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 4.45535
-      objectReference: {fileID: 0}
-    - target: {fileID: 1762228030553163483, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: -1.377
-      objectReference: {fileID: 0}
-    - target: {fileID: 5819731451302872381, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 7070066028080118878, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -3658,22 +3614,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7070066028080118878, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8013070718681076995, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8013070718681076995, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8013070718681076995, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8013070718681076995, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
-      propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

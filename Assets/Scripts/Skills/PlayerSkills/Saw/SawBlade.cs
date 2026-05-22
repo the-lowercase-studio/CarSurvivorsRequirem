@@ -15,7 +15,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
 
         private SawSkillUpgradeableConfigSO _config;
         private bool _isInitialized;
-        private const float _defaultCollisionKnockback = 2f;
+        private const float DEFAULT_COLLISION_KNOCKBACK = 2f;
         private IAudioClipPlayer _audioClipPlayer;
 
         private void Awake()
@@ -49,20 +49,30 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
         {
             _audioClipPlayer.Play("Attack");
 
-            EntityManipulationHelper.Damage(other, _config.Damage.Value);
+            if (other.TryGetComponent(out IDamageable damageable))
+            {
+                damageable.TakeDamage(_config.Damage.Value);
+            }
 
             float knockback = Mathf.Max(
-                _defaultCollisionKnockback,
+                DEFAULT_COLLISION_KNOCKBACK,
                 _config.KnockbackRange.Value * _playerManager.CarController.GetMovementSpeed()
             );
 
-            EntityManipulationHelper.Knockback(
-                other,
-                transform.forward,
-                knockback,
-                _config.TimeToArriveAtKnockbackLocation);
+            if (other.TryGetComponent(out IKnockable knockable))
+            {
+                Vector3 knockbackDirection = transform.forward;
+                knockbackDirection.y = 0;
+                knockable.ApplyKnockBack(
+                    knockbackDirection,
+                    knockback,
+                    _config.TimeToArriveAtKnockbackLocation);
+            }
 
-            EntityManipulationHelper.Stun(other, _config.TimeToArriveAtKnockbackLocation);
+            if (other.TryGetComponent(out IStunnable stunnable))
+            {
+                stunnable.ApplyStun(_config.TimeToArriveAtKnockbackLocation);
+            }
         }
     }
 }

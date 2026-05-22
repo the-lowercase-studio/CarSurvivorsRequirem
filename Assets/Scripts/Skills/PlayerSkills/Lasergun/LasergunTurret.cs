@@ -10,19 +10,21 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
 {
     public class LasergunTurret : Turret<TurretConfigSO>
     {
+        // Unity truncates NonAlloc query results when this buffer is full; keep it high enough for dense local enemy clusters.
+        private const int TARGET_BUFFER_SIZE = 64;
+        private const float SMALLEST_ANGLE_QUALIFYING_AS_LOOKING_AT_TARGET = 4f;
+
         [SerializeField] private LineRenderer _laserLineRenderer;
         [SerializeField] private float _startShowLaserShootDuration = 0.1f;
         [SerializeField] private VFXPlayer _laserCumulatingVFX;
+
         private float _currentShowLaserShootDuration;
         private bool _isShowingLaser;
-
         private Collider _currentTarget;
         private Vector3 _lastTargetClosestPoint;
-
-        private const float SMALLEST_ANGLE_QUALIFIING_AS_LOOKING_AT_TARGET = 4f;
         private bool _isLookingAtTarget;
-
         private IAudioClipPlayer _audioClipPlayer;
+        private readonly Collider[] _targetBuffer = new Collider[TARGET_BUFFER_SIZE];
 
         protected override void Awake()
         {
@@ -85,6 +87,12 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
 
         private void FireLaserBeam()
         {
+            if (!IsCurrentTargetInRange())
+            {
+                AssignNewTarget();
+                return;
+            }
+
             StartCoroutine(ShootingLaserEffect());
 
             _audioClipPlayer.Play("Shoot");
@@ -98,6 +106,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
         private IEnumerator ShootingLaserEffect()
         {
             _isShowingLaser = true;
+            _laserLineRenderer.positionCount = 2;
 
             while (_currentShowLaserShootDuration > 0)
             {
@@ -106,7 +115,6 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
                     _lastTargetClosestPoint = _currentTarget.ClosestPoint(_gunTip.position);
                 }
 
-                _laserLineRenderer.positionCount = 2;
                 _laserLineRenderer.SetPosition(0, _gunTip.position);
                 _laserLineRenderer.SetPosition(1, _lastTargetClosestPoint);
 
@@ -122,51 +130,59 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
 
         private void AssignNewTarget()
         {
-            Collider[] potentialTargets = Physics.OverlapSphere(transform.position, _config.Range, EntityLayers.Enemy);
+            Vector3 turretPosition = transform.position;
+            float rangeSqr = _config.Range * _config.Range;
+            int targetsCount = Physics.OverlapSphereNonAlloc(
+                turretPosition,
+                _config.Range,
+                _targetBuffer,
+                EntityLayers.Enemy
+            );
 
-            if (potentialTargets.Length > 0)
+            Collider closestTarget = null;
+            float closestDistanceSqr = float.PositiveInfinity;
+
+            for (int i = 0; i < targetsCount; i++)
             {
-                bool anyFound = false;
-                Collider closestTarget = potentialTargets[0];
-                float closestDistance = Vector3.Distance(transform.position, closestTarget.transform.position);
+                Collider target = _targetBuffer[i];
 
-                foreach (Collider target in potentialTargets)
+                if (target is null)
                 {
-                    bool isBehindObstacle = Physics.Linecast(
-                        _gunTip.position,
-                        target.ClosestPoint(_gunTip.transform.position),
-                        TerrainLayers.All
-                    );
-
-                    if (isBehindObstacle)
-                    {
-                        continue;
-                    }
-
-                    float currentDistance = Vector3.Distance(transform.position, target.transform.position);
-                    if (currentDistance <= _config.Range
-                        && currentDistance <= closestDistance)
-                    {
-                        closestDistance = currentDistance;
-                        closestTarget = target;
-                        anyFound = true;
-                    }
+                    continue;
                 }
 
-                if (anyFound)
+                float currentDistanceSqr = (turretPosition - target.transform.position).sqrMagnitude;
+
+                if (currentDistanceSqr > rangeSqr
+                    || currentDistanceSqr > closestDistanceSqr)
                 {
-                    _currentTarget = closestTarget;
-                    return;
+                    continue;
                 }
+
+                bool isBehindObstacle = Physics.Linecast(
+                    _gunTip.position,
+                    target.ClosestPoint(_gunTip.transform.position),
+                    TerrainLayers.All
+                );
+
+                if (isBehindObstacle)
+                {
+                    continue;
+                }
+
+                closestDistanceSqr = currentDistanceSqr;
+                closestTarget = target;
             }
 
-            _currentTarget = null;
+            _currentTarget = closestTarget;
         }
 
         private bool IsCurrentTargetInRange()
         {
+            float rangeSqr = _config.Range * _config.Range;
+
             return _currentTarget is not null
-                   && Vector3.Distance(transform.position, _currentTarget.transform.position) <= _config.Range;
+                   && (transform.position - _currentTarget.transform.position).sqrMagnitude <= rangeSqr;
         }
 
         private void HandleRotation()
@@ -193,7 +209,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
 
             float angle = Quaternion.Angle(transform.rotation, targetRotation);
 
-            _isLookingAtTarget = angle <= SMALLEST_ANGLE_QUALIFIING_AS_LOOKING_AT_TARGET;
+            _isLookingAtTarget = angle <= SMALLEST_ANGLE_QUALIFYING_AS_LOOKING_AT_TARGET;
 
             float angleThisFrame = _config.RotationSpeed * Time.fixedDeltaTime;
 
