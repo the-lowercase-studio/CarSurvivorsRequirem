@@ -298,15 +298,20 @@ MonoBehaviour:
   _visual: {fileID: 2497718662250730421}
   _particleApearanceByTreshold:
   - _treshold: 0
-    _material: {fileID: 0}
+    _material: {fileID: 2100000, guid: 49d2cf214f7e3054daa75616a85d09cb, type: 2}
     _scaleValueRange:
-      <Min>k__BackingField: 0
-      <Max>k__BackingField: 0
-  - _treshold: 0
-    _material: {fileID: 0}
+      <Min>k__BackingField: 1
+      <Max>k__BackingField: 1
+  - _treshold: 100
+    _material: {fileID: 2100000, guid: 65a49faba9cfa824dad86f90280df537, type: 2}
     _scaleValueRange:
-      <Min>k__BackingField: 0
-      <Max>k__BackingField: 0
+      <Min>k__BackingField: 1.2
+      <Max>k__BackingField: 1.2
+  - _treshold: 120
+    _material: {fileID: 2100000, guid: 4e8b1a02391449a448426a1f5f179709, type: 2}
+    _scaleValueRange:
+      <Min>k__BackingField: 1.4
+      <Max>k__BackingField: 1.4
 --- !u!114 &3206386065100887514
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -319,8 +324,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00e6a945254f7014a8a9a2f6700ad6b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  separationRadius: 1.2
-  separationStrength: 0.5
+  _separationRadius: 1.2
+  _separationStrength: 0.5
 --- !u!114 &173282884818906446
 MonoBehaviour:
   m_ObjectHideFlags: 0

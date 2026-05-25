@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 076a553c77658ca4d909724cdba5d9dd, type: 3}
-  m_Name: Crawling_Zombie_Level1
+  m_Name: CrawlingZombieLevel1Config
   m_EditorClassIdentifier: 
   MaxHealth: 80
   MovementSpeed: 1

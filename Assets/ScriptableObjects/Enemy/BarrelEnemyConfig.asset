@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 076a553c77658ca4d909724cdba5d9dd, type: 3}
-  m_Name: Standing_Zombie_1_Config
+  m_Name: BarrelEnemyConfig
   m_EditorClassIdentifier: 
-  MaxHealth: 8
-  MovementSpeed: 2.4
-  RotationSpeed: 2
-  Damage: 7
-  DangerLevel: 1
-  ExpForKill: 20
+  MaxHealth: 110
+  MovementSpeed: 5
+  RotationSpeed: 5
+  Damage: 24
+  DangerLevel: 4
+  ExpForKill: 120
   IsMovingByCrawling: 0

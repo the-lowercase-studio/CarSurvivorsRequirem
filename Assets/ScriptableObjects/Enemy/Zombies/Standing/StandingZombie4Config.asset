@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 076a553c77658ca4d909724cdba5d9dd, type: 3}
-  m_Name: Standing_Zombie_4_Config
+  m_Name: StandingZombie4Config
   m_EditorClassIdentifier: 
   MaxHealth: 500
   MovementSpeed: 3

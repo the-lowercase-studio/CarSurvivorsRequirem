@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6328406324992528637}
   - component: {fileID: 1918256940533491483}
   - component: {fileID: 7481038905382849792}
-  m_Layer: 0
+  m_Layer: 14
   m_Name: CellsFragments
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4902,8 +4902,8 @@ GameObject:
   m_Component:
   - component: {fileID: 3817838671216868024}
   - component: {fileID: 1633092592158408719}
-  m_Layer: 0
-  m_Name: Vfx_ZombieCellsExplosion
+  m_Layer: 14
+  m_Name: Vfx_CellsExplosion
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4937,7 +4937,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48afc82f05876db4b943d6f0503cc3a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _delayBetweenParticlesFinishedPlayingChecks: 0.1
 --- !u!1 &7521385165113127965
 GameObject:
   m_ObjectHideFlags: 0
@@ -4949,7 +4948,7 @@ GameObject:
   - component: {fileID: 4730411325027076592}
   - component: {fileID: 8008910082231667116}
   - component: {fileID: 458457933553724157}
-  m_Layer: 0
+  m_Layer: 14
   m_Name: BloodTrails
   m_TagString: Untagged
   m_Icon: {fileID: 0}

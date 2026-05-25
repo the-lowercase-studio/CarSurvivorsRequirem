@@ -902,8 +902,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _spawnChanceDecreaseFactor:
-    <Min>k__BackingField: 1.72
-    <Max>k__BackingField: 2.8
+    <Min>k__BackingField: 28
+    <Max>k__BackingField: 32
   _enemiesParent: {fileID: 361168572}
   _poolEnemiesInfo:
   - EnemyPrefab: {fileID: 8544650596686725407, guid: 08b441f56ebe2754ab1e7d5eefb63ac5, type: 3}
@@ -917,7 +917,14 @@ MonoBehaviour:
     MaxAmount: 90
     SpawnChanceInfo:
       SpawnChance: 0
-      TresholdToStartAddingSpawnChanceToOtherInfos: 40
+      TresholdToStartAddingSpawnChanceToOtherInfos: 30
+      SpawnChanceWillNotChange: 0
+      HasEverReachedThreshold: 0
+  - EnemyPrefab: {fileID: 2460934273244476936, guid: 1f7f36cb9467b6b4b84a4ad278f05987, type: 3}
+    MaxAmount: 80
+    SpawnChanceInfo:
+      SpawnChance: 0
+      TresholdToStartAddingSpawnChanceToOtherInfos: 36
       SpawnChanceWillNotChange: 0
       HasEverReachedThreshold: 0
   - EnemyPrefab: {fileID: 8544650596686725407, guid: d5bb0f9692c21d340823d0058bfb4042, type: 3}
@@ -931,14 +938,14 @@ MonoBehaviour:
     MaxAmount: 80
     SpawnChanceInfo:
       SpawnChance: 0
-      TresholdToStartAddingSpawnChanceToOtherInfos: 25
+      TresholdToStartAddingSpawnChanceToOtherInfos: 26
       SpawnChanceWillNotChange: 0
       HasEverReachedThreshold: 0
   - EnemyPrefab: {fileID: 8544650596686725407, guid: 1c9bc84443d90504a814661fde7ad2df, type: 3}
     MaxAmount: 80
     SpawnChanceInfo:
       SpawnChance: 0
-      TresholdToStartAddingSpawnChanceToOtherInfos: 14
+      TresholdToStartAddingSpawnChanceToOtherInfos: 20
       SpawnChanceWillNotChange: 0
       HasEverReachedThreshold: 0
   - EnemyPrefab: {fileID: 8544650596686725407, guid: ae3b807fbe809ea4c8c6fe09bd085225, type: 3}
