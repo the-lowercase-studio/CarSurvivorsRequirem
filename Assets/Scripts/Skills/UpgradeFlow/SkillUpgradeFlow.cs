@@ -7,7 +7,8 @@ namespace Assets.Scripts.Skills.UpgradeFlow
 {
     public interface ISkillUpgradeFlow
     {
-        void QueueRandomRequest(ISkillsRegistry skillsRegistry);
+        void QueueRandomNewSkillRequest(ISkillsRegistry skillsRegistry);
+        void QueueRandomSkillUpgradeRequest(ISkillsRegistry skillsRegistry);
         bool TryGetNextRequest(ISkillsRegistry skillsRegistry, out SkillUpgradeRequest request);
     }
 
@@ -18,7 +19,7 @@ namespace Assets.Scripts.Skills.UpgradeFlow
         private readonly Queue<ISkillBase> _skillsQueuedForInitialization = new();
         private readonly Queue<IUpgradeableSkill> _skillsQueuedForUpgrade = new();
 
-        public void QueueRandomRequest(ISkillsRegistry skillsRegistry)
+        public void QueueRandomNewSkillRequest(ISkillsRegistry skillsRegistry)
         {
             if (_skillsQueuedForInitialization.Count < skillsRegistry.UninitializedSkillsCount)
             {
@@ -27,10 +28,11 @@ namespace Assets.Scripts.Skills.UpgradeFlow
                 {
                     _skillsQueuedForInitialization.Enqueue(skill);
                 }
-
-                return;
             }
+        }
 
+        public void QueueRandomSkillUpgradeRequest(ISkillsRegistry skillsRegistry)
+        {
             IUpgradeableSkill upgradeableSkill = RandomUpgradeableSkillFinder.Find(skillsRegistry);
             if (upgradeableSkill is not null)
             {

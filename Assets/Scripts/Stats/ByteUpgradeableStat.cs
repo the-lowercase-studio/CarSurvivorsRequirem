@@ -26,10 +26,10 @@ namespace Assets.Scripts.Stats
 
         public override void OnAfterDeserialize()
         {
-            base.OnAfterDeserialize();
-
             MinMaxRange = _byteMinMaxRange;
             _rangeOfPossibleValuesForUpgrade = _byteRangeOfPossibleValuesForUpgrade;
+
+            base.OnAfterDeserialize();
         }
     }
 }

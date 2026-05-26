@@ -8,17 +8,19 @@ namespace Assets.Scripts.Skills
         {
             var upgradeableSkills = skillsRegistry
                 .Skills
-                .Select(skill => skill as IUpgradeableSkill)
-                .Where(skill => skill.CanBeUgraded());
+                .OfType<IUpgradeableSkill>()
+                .Where(skill => skill.IsInitialized())
+                .Where(skill => skill.CanBeUgraded())
+                .ToArray();
 
-            if (upgradeableSkills.Count() == 0)
+            if (upgradeableSkills.Length == 0)
             {
                 return null;
             }
 
-            int randomSkillIndex = UnityEngine.Random.Range(0, upgradeableSkills.Count());
+            int randomSkillIndex = UnityEngine.Random.Range(0, upgradeableSkills.Length);
 
-            return upgradeableSkills.ElementAtOrDefault(randomSkillIndex);
+            return upgradeableSkills[randomSkillIndex];
         }
     }
 }
