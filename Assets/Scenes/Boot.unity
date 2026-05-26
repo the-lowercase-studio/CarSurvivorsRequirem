@@ -1448,22 +1448,22 @@ MonoBehaviour:
   _visualApearanceByDamageTresholds:
   - _treshold: 0
     _damagePopupApearance:
-      FontSize: 1.5
+      FontSize: 2.1
       GrowFontSizeAnimationScaleMultiplier: 1.4
       Color: {r: 1, g: 1, b: 1, a: 1}
-  - _treshold: 11
+  - _treshold: 28
     _damagePopupApearance:
-      FontSize: 2
+      FontSize: 2.5
       GrowFontSizeAnimationScaleMultiplier: 1.4
       Color: {r: 1, g: 0.717804, b: 0.3726415, a: 1}
-  - _treshold: 22
+  - _treshold: 60
     _damagePopupApearance:
-      FontSize: 2.4
+      FontSize: 2.8
       GrowFontSizeAnimationScaleMultiplier: 1.4
       Color: {r: 0.8962264, g: 0.3520763, b: 0.1986917, a: 1}
-  - _treshold: 30
+  - _treshold: 80
     _damagePopupApearance:
-      FontSize: 2.7
+      FontSize: 3
       GrowFontSizeAnimationScaleMultiplier: 1.4
       Color: {r: 0.7490196, g: 0.16470589, b: 0, a: 1}
   _popupsSpeedRange:
