@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: ExpHigh1
+  m_Name: ExpHigh
   m_Shader: {fileID: -6465566751694194690, guid: 1fc8573c4aad31847830530d2b230b01, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -135,12 +135,12 @@ Material:
     - _WorkflowMode: 1
     - _ZWrite: 0
     m_Colors:
-    - _BaseColor: {r: 0.9725491, g: 0.83921576, b: 0.10980393, a: 1}
+    - _BaseColor: {r: 0.972549, g: 0.4577136, b: 0.10980393, a: 1}
     - _BaseColorAddSubDiff: {r: 0, g: 0, b: 0, a: 0}
     - _CameraFadeParams: {r: 0, g: Infinity, b: 0, a: 0}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 2.1673558, g: 0.9441903, b: 0.15335062, a: 1}
-    - _GlowingColor: {r: 0.74901956, g: 0.14808483, b: 0, a: 1}
+    - _GlowingColor: {r: 0.61006284, g: 0.028776472, b: 0.05850142, a: 1}
     - _SoftParticleFadeParams: {r: 0, g: 0, b: 0, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []

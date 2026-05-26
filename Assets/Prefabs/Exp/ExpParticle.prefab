@@ -219,7 +219,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a4d8d66ba61208a43b2ca2d38a43b042, type: 2}
+  - {fileID: 2100000, guid: 51d97dc8c0d9f3e438bf7e456384d929, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -298,20 +298,20 @@ MonoBehaviour:
   _visual: {fileID: 2497718662250730421}
   _particleApearanceByTreshold:
   - _treshold: 0
-    _material: {fileID: 2100000, guid: 49d2cf214f7e3054daa75616a85d09cb, type: 2}
+    _material: {fileID: 2100000, guid: a4d8d66ba61208a43b2ca2d38a43b042, type: 2}
     _scaleValueRange:
-      <Min>k__BackingField: 1
-      <Max>k__BackingField: 1
+      <Min>k__BackingField: 0.6
+      <Max>k__BackingField: 0.7
   - _treshold: 100
-    _material: {fileID: 2100000, guid: 65a49faba9cfa824dad86f90280df537, type: 2}
+    _material: {fileID: 2100000, guid: df2e32090d5b80a489de2919c5c83932, type: 2}
     _scaleValueRange:
-      <Min>k__BackingField: 1.2
-      <Max>k__BackingField: 1.2
-  - _treshold: 120
-    _material: {fileID: 2100000, guid: 4e8b1a02391449a448426a1f5f179709, type: 2}
+      <Min>k__BackingField: 0.9
+      <Max>k__BackingField: 1
+  - _treshold: 250
+    _material: {fileID: 2100000, guid: 51d97dc8c0d9f3e438bf7e456384d929, type: 2}
     _scaleValueRange:
-      <Min>k__BackingField: 1.4
-      <Max>k__BackingField: 1.4
+      <Min>k__BackingField: 1.14
+      <Max>k__BackingField: 1.24
 --- !u!114 &3206386065100887514
 MonoBehaviour:
   m_ObjectHideFlags: 0
