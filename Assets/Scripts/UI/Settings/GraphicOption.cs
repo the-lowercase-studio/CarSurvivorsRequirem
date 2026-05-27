@@ -24,6 +24,11 @@ namespace Assets.Scripts.UI.Settings
             }
         );
 
+        private void Awake()
+        {
+            SetDropdownOptions();
+        }
+
         private void OnEnable()
         {
             LoadComponent();
@@ -56,6 +61,18 @@ namespace Assets.Scripts.UI.Settings
             string qualityLevel = _graphicSetting.GetValueOrStoredDefault();
 
             _dropDown.SetValueWithoutNotify(_qualityLevels[qualityLevel]);
+        }
+
+        private void SetDropdownOptions()
+        {
+            _dropDown.ClearOptions();
+
+            var options = _qualityLevels
+                .OrderBy(x => x.Value)
+                .Select(x => x.Key)
+                .ToList();
+
+            _dropDown.AddOptions(options);
         }
     }
 }
