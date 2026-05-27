@@ -16,7 +16,7 @@ namespace Assets.Scripts.UI.Skills
             string text,
             int keyboardNumber,
             Action onClick,
-            Action onPointerEnter)
+            Action onPointerEnter = null)
         {
             ResolveMissingReferences();
 
@@ -36,7 +36,11 @@ namespace Assets.Scripts.UI.Skills
             _button.onClick.AddListener(() => onClick?.Invoke());
 
             PointerEnterHandler pointerEnterHandler = _button.gameObject.AddComponent<PointerEnterHandler>();
-            pointerEnterHandler.OnPointerEnterAction += () => onPointerEnter?.Invoke();
+
+            if (onPointerEnter != null)
+            {
+                pointerEnterHandler.OnPointerEnterAction += () => onPointerEnter?.Invoke();
+            }
         }
 
         public void Invoke()
