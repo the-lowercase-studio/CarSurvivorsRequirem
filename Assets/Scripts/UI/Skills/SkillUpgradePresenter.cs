@@ -179,10 +179,10 @@ namespace Assets.Scripts.UI.Skills
                 button.Initialize(
                     clickableButtonData.Text,
                     buttonNumber,
-                    clickableButtonData.OnClick,
-                    () => _buttonsAudioPlayer.Play("Hover"));
+                    clickableButtonData.OnClick);
 
                 _upgradeButtons.Add(button);
+
                 buttonNumber++;
             }
         }
