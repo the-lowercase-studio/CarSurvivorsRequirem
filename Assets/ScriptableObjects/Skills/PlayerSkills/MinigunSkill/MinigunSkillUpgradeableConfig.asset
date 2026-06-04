@@ -46,10 +46,10 @@ MonoBehaviour:
     _hasUnlimitedMaxValue: 0
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 1
-    _byteMinMaxRange:
+    _intMinMaxRange:
       <Min>k__BackingField: 1
       <Max>k__BackingField: 4
-    _byteRangeOfPossibleValuesForUpgrade:
+    _intRangeOfPossibleValuesForUpgrade:
       <Min>k__BackingField: 1
       <Max>k__BackingField: 1
   _startBulletSpeed:
@@ -85,10 +85,10 @@ MonoBehaviour:
     _hasUnlimitedMaxValue: 1
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 5
-    _byteMinMaxRange:
+    _intMinMaxRange:
       <Min>k__BackingField: 5
       <Max>k__BackingField: 18
-    _byteRangeOfPossibleValuesForUpgrade:
+    _intRangeOfPossibleValuesForUpgrade:
       <Min>k__BackingField: 4
       <Max>k__BackingField: 7
   _startBulletMaxPiercing:
@@ -98,9 +98,9 @@ MonoBehaviour:
     _hasUnlimitedMaxValue: 0
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 0
-    _byteMinMaxRange:
+    _intMinMaxRange:
       <Min>k__BackingField: 0
       <Max>k__BackingField: 16
-    _byteRangeOfPossibleValuesForUpgrade:
+    _intRangeOfPossibleValuesForUpgrade:
       <Min>k__BackingField: 1
       <Max>k__BackingField: 4

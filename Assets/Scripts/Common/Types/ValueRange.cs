@@ -32,10 +32,6 @@ namespace Assets.Scripts.Common.Types
             {
                 return (T)(object)UnityEngine.Random.Range((int)(object)Min, (int)(object)Max);
             }
-            else if (typeof(T) == typeof(byte))
-            {
-                return (T)(object)(byte)UnityEngine.Random.Range(Convert.ToByte(Min), Convert.ToByte(Max));
-            }
             else
             {
                 throw new InvalidOperationException("Unsupported type for random value generation.");
@@ -54,9 +50,9 @@ namespace Assets.Scripts.Common.Types
     }
 
     [Serializable]
-    public class ByteValueRange : ValueRange<byte>
+    public class IntValueRange : ValueRange<int>
     {
-        public ByteValueRange(byte min, byte max) : base(min, max)
+        public IntValueRange(int min, int max) : base(min, max)
         {
         }
     }

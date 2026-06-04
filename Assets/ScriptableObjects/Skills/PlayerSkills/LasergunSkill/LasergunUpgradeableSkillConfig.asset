@@ -33,10 +33,10 @@ MonoBehaviour:
     _hasUnlimitedMaxValue: 0
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 1
-    _byteMinMaxRange:
+    _intMinMaxRange:
       <Min>k__BackingField: 1
       <Max>k__BackingField: 3
-    _byteRangeOfPossibleValuesForUpgrade:
+    _intRangeOfPossibleValuesForUpgrade:
       <Min>k__BackingField: 1
       <Max>k__BackingField: 1
   _projectileConfig: {fileID: 11400000, guid: 0f507d3152e570f49b1726235df06312, type: 2}
@@ -60,9 +60,9 @@ MonoBehaviour:
     _hasUnlimitedMaxValue: 1
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 5
-    _byteMinMaxRange:
+    _intMinMaxRange:
       <Min>k__BackingField: 5
       <Max>k__BackingField: 25
-    _byteRangeOfPossibleValuesForUpgrade:
+    _intRangeOfPossibleValuesForUpgrade:
       <Min>k__BackingField: 5
       <Max>k__BackingField: 8

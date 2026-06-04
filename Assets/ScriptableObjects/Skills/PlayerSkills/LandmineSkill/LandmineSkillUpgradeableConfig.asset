@@ -71,9 +71,9 @@ MonoBehaviour:
     _hasUnlimitedMaxValue: 1
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 5
-    _byteMinMaxRange:
+    _intMinMaxRange:
       <Min>k__BackingField: 5
       <Max>k__BackingField: 18
-    _byteRangeOfPossibleValuesForUpgrade:
+    _intRangeOfPossibleValuesForUpgrade:
       <Min>k__BackingField: 4
       <Max>k__BackingField: 6

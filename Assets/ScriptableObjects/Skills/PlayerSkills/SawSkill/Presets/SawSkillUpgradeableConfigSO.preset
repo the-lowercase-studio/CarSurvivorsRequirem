@@ -89,19 +89,19 @@ Preset:
     value: 10
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _damage._byteMinMaxRange.<Min>k__BackingField
+    propertyPath: _damage._intMinMaxRange.<Min>k__BackingField
     value: 10
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _damage._byteMinMaxRange.<Max>k__BackingField
+    propertyPath: _damage._intMinMaxRange.<Max>k__BackingField
     value: 35
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _damage._byteRangeOfPossibleValuesForUpgrade.<Min>k__BackingField
+    propertyPath: _damage._intRangeOfPossibleValuesForUpgrade.<Min>k__BackingField
     value: 7
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _damage._byteRangeOfPossibleValuesForUpgrade.<Max>k__BackingField
+    propertyPath: _damage._intRangeOfPossibleValuesForUpgrade.<Max>k__BackingField
     value: 11
     objectReference: {fileID: 0}
   - target: {fileID: 0}
@@ -125,19 +125,19 @@ Preset:
     value: 1
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _numberOfSaws._byteMinMaxRange.<Min>k__BackingField
+    propertyPath: _numberOfSaws._intMinMaxRange.<Min>k__BackingField
     value: 1
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _numberOfSaws._byteMinMaxRange.<Max>k__BackingField
+    propertyPath: _numberOfSaws._intMinMaxRange.<Max>k__BackingField
     value: 2
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _numberOfSaws._byteRangeOfPossibleValuesForUpgrade.<Min>k__BackingField
+    propertyPath: _numberOfSaws._intRangeOfPossibleValuesForUpgrade.<Min>k__BackingField
     value: 1
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _numberOfSaws._byteRangeOfPossibleValuesForUpgrade.<Max>k__BackingField
+    propertyPath: _numberOfSaws._intRangeOfPossibleValuesForUpgrade.<Max>k__BackingField
     value: 1
     objectReference: {fileID: 0}
   m_ExcludedProperties: []

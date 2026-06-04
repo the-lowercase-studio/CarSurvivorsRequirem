@@ -111,7 +111,7 @@ namespace Assets.Scripts.UI.Skills
             }
         }
 
-        private bool ShouldQueueNewSkillReward(byte level)
+        private bool ShouldQueueNewSkillReward(int level)
         {
             return _newSkillLevelInterval > 0
                 && level > 1

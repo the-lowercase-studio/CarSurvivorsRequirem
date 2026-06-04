@@ -11,12 +11,12 @@ namespace Assets.ScriptableObjects.Skills.PlayerSkills.SawSkill
         [field: SerializeField] public float TimeToArriveAtKnockbackLocation { get; private set; }
         [field: SerializeField] public float AttackCooldown { get; private set; } = 0.05f;
         [SerializeField] private FloatUpgradeableStat _knockbackRange;
-        [SerializeField] private ByteUpgradeableStat _damage;
-        [SerializeField] private ByteUpgradeableStat _numberOfSaws;
+        [SerializeField] private IntUpgradeableStat _damage;
+        [SerializeField] private IntUpgradeableStat _numberOfSaws;
 
         public FloatUpgradeableStat KnockbackRange { get; private set; }
-        public ByteUpgradeableStat Damage { get; private set; }
-        public ByteUpgradeableStat NuberOfSaws { get; private set; }
+        public IntUpgradeableStat Damage { get; private set; }
+        public IntUpgradeableStat NuberOfSaws { get; private set; }
 
         private void OnEnable()
         {

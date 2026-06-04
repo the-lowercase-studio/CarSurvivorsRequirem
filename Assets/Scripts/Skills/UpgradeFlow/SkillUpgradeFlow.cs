@@ -14,7 +14,7 @@ namespace Assets.Scripts.Skills.UpgradeFlow
 
     public class SkillUpgradeFlow : ISkillUpgradeFlow
     {
-        private const byte MAX_SKILL_UPGRADE_OPTIONS = 3;
+        private const int MAX_SKILL_UPGRADE_OPTIONS = 3;
 
         private readonly Queue<QueuedSkillRewardRequest> _queuedRequests = new();
         private readonly HashSet<ISkillBase> _skillsQueuedForInitialization = new();
