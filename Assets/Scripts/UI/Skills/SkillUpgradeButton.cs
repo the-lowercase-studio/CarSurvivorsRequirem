@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Assets.ScriptableObjects.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,7 +11,8 @@ namespace Assets.Scripts.UI.Skills
     {
         [SerializeField] private Button _button;
         [SerializeField] private TextMeshProUGUI _text;
-        [SerializeField] private TextMeshProUGUI _selectKeyText;
+        [SerializeField] private Image _selectKeyImage;
+        [SerializeField] private SkillUpgradeKeyboardIconMapping _keyboardIconMapping;
 
         public void Initialize(
             string text,
@@ -28,10 +30,7 @@ namespace Assets.Scripts.UI.Skills
 
             _text.text = text;
 
-            if (_selectKeyText != null)
-            {
-                _selectKeyText.text = keyboardNumber.ToString();
-            }
+            UpdateKeyboardIcon(keyboardNumber);
 
             _button.onClick.AddListener(() => onClick?.Invoke());
 
@@ -56,7 +55,28 @@ namespace Assets.Scripts.UI.Skills
         private void ResolveMissingReferences()
         {
             _button ??= GetComponentInChildren<Button>();
-            _text ??= GetComponentsInChildren<TextMeshProUGUI>().FirstOrDefault(text => text != _selectKeyText);
+            _text ??= GetComponentsInChildren<TextMeshProUGUI>()
+                .FirstOrDefault(text => text.gameObject.name != "SelectKeyText");
+            _selectKeyImage ??= GetComponentsInChildren<Image>(true)
+                .FirstOrDefault(image => image.gameObject.name == "SelectKey");
+        }
+
+        private void UpdateKeyboardIcon(int keyboardNumber)
+        {
+            if (_selectKeyImage == null)
+            {
+                return;
+            }
+
+            if (_keyboardIconMapping != null && _keyboardIconMapping.TryGetIcon(keyboardNumber, out Sprite icon))
+            {
+                _selectKeyImage.sprite = icon;
+                _selectKeyImage.enabled = true;
+                return;
+            }
+
+            _selectKeyImage.sprite = null;
+            _selectKeyImage.enabled = false;
         }
     }
 }
