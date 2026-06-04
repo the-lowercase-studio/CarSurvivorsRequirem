@@ -59,6 +59,7 @@ namespace Assets.Scripts.Player.Car
         [SerializeField] private float _minForwardInputToDrift = 0.5f;
         [SerializeField] private float _minSteerInputToDrift = 0.4f;
         [SerializeField] private float _driftRearSidewaysStiffnessMultiplier = 0.55f;
+        [SerializeField] private float _driftBrakeTorqueMultiplier = 50f;
 
         private Rigidbody _rb;
         private InputAction _moveAction;
@@ -105,8 +106,8 @@ namespace Assets.Scripts.Player.Car
         {
             HandleMove();
             HandleSteer();
-            HandleBrake();
             HandleDrift();
+            HandleBrake();
             AnimateWheels();
         }
 
@@ -137,7 +138,9 @@ namespace Assets.Scripts.Player.Car
 
         private void HandleBrake()
         {
-            float brakeTorque = _brakeInput ? _maxAcceleration * _brakeTorqueMultiplier : 0f;
+            float brakeTorqueMultiplier = _isDrifting ? _driftBrakeTorqueMultiplier : _brakeTorqueMultiplier;
+            float brakeTorque = _brakeInput ? _maxAcceleration * brakeTorqueMultiplier : 0f;
+
             foreach (var wheel in _wheels)
             {
                 wheel.WheelCollider.brakeTorque = brakeTorque;
