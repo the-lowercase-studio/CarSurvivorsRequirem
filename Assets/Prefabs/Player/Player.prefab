@@ -1337,6 +1337,10 @@ MonoBehaviour:
   - _wheelModel: {fileID: 3255664546788292463}
     _wheelCollider: {fileID: 3897780278463981742}
     _axel: 1
+  _minSpeedToDrift: 8
+  _minForwardInputToDrift: 0.5
+  _minSteerInputToDrift: 0.4
+  _driftRearSidewaysStiffnessMultiplier: 0.55
 --- !u!114 &8489968326519551025
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2258,6 +2262,10 @@ PrefabInstance:
     - target: {fileID: 7070066028080118878, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7419117134307897359, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
+      propertyPath: m_PresetInfoIsWorld
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7755087595175952205, guid: 96da8d9a83b3ecf448b5cce982ff0752, type: 3}
       propertyPath: _upgradeButtonPrefab
