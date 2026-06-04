@@ -54,12 +54,21 @@ namespace Assets.Scripts.Player.Car
 
         [SerializeField] private List<Wheel> _wheels;
 
+        [Header("Drift")]
+        [SerializeField] private float _minSpeedToDrift = 8f;
+        [SerializeField] private float _minForwardInputToDrift = 0.5f;
+        [SerializeField] private float _minSteerInputToDrift = 0.4f;
+        [SerializeField] private float _driftRearSidewaysStiffnessMultiplier = 0.55f;
+        [SerializeField] private float _driftBrakeTorqueMultiplier = 50f;
+
         private Rigidbody _rb;
         private InputAction _moveAction;
         private Vector2 _moveInput;
         private InputAction _brakeAction;
         private bool _brakeInput;
         private float _brakeTorqueMultiplier = 1000f;
+        private bool _isDrifting;
+        private readonly Dictionary<WheelCollider, WheelFrictionCurve> _rearSidewaysFrictionByWheel = new();
 
         public event EventHandler OnBrakePress;
 
@@ -71,6 +80,7 @@ namespace Assets.Scripts.Player.Car
             _moveAction = InputSystem.actions.FindAction("Move");
             _brakeAction = InputSystem.actions.FindAction("Brake");
             _rb.centerOfMass = _centerOfMass;
+            CacheRearWheelSidewaysFriction();
         }
 
         private void OnEnable()
@@ -83,6 +93,7 @@ namespace Assets.Scripts.Player.Car
         {
             _brakeAction.started -= BrakeAction_Started;
             _brakeAction.canceled -= BrakeAction_Canceled;
+            RestoreDriftState();
         }
 
         private void Update()
@@ -95,6 +106,7 @@ namespace Assets.Scripts.Player.Car
         {
             HandleMove();
             HandleSteer();
+            HandleDrift();
             HandleBrake();
             AnimateWheels();
         }
@@ -126,11 +138,83 @@ namespace Assets.Scripts.Player.Car
 
         private void HandleBrake()
         {
-            float brakeTorque = _brakeInput ? _maxAcceleration * _brakeTorqueMultiplier : 0f;
+            float brakeTorqueMultiplier = _isDrifting ? _driftBrakeTorqueMultiplier : _brakeTorqueMultiplier;
+            float brakeTorque = _brakeInput ? _maxAcceleration * brakeTorqueMultiplier : 0f;
+
             foreach (var wheel in _wheels)
             {
                 wheel.WheelCollider.brakeTorque = brakeTorque;
             }
+        }
+
+        private void HandleDrift()
+        {
+            bool shouldDrift = CanDrift();
+
+            if (shouldDrift == _isDrifting)
+            {
+                return;
+            }
+
+            _isDrifting = shouldDrift;
+
+            if (_isDrifting)
+            {
+                ApplyDriftFriction();
+                return;
+            }
+
+            RestoreRearSidewaysFriction();
+        }
+
+        private bool CanDrift()
+        {
+            return _brakeInput
+                && GetMovementSpeed() >= _minSpeedToDrift
+                && _moveInput.y >= _minForwardInputToDrift
+                && Mathf.Abs(_moveInput.x) >= _minSteerInputToDrift;
+        }
+
+        private void CacheRearWheelSidewaysFriction()
+        {
+            _rearSidewaysFrictionByWheel.Clear();
+
+            foreach (var wheel in _wheels)
+            {
+                if (wheel.Axel == Axel.Rear)
+                {
+                    _rearSidewaysFrictionByWheel[wheel.WheelCollider] = wheel.WheelCollider.sidewaysFriction;
+                }
+            }
+        }
+
+        private void ApplyDriftFriction()
+        {
+            foreach (var rearWheelFriction in _rearSidewaysFrictionByWheel)
+            {
+                WheelFrictionCurve sidewaysFriction = rearWheelFriction.Value;
+                sidewaysFriction.stiffness *= _driftRearSidewaysStiffnessMultiplier;
+                rearWheelFriction.Key.sidewaysFriction = sidewaysFriction;
+            }
+        }
+
+        private void RestoreRearSidewaysFriction()
+        {
+            foreach (var rearWheelFriction in _rearSidewaysFrictionByWheel)
+            {
+                rearWheelFriction.Key.sidewaysFriction = rearWheelFriction.Value;
+            }
+        }
+
+        private void RestoreDriftState()
+        {
+            if (!_isDrifting)
+            {
+                return;
+            }
+
+            _isDrifting = false;
+            RestoreRearSidewaysFriction();
         }
 
         private void AnimateWheels()
