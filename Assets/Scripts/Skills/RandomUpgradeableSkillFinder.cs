@@ -1,15 +1,19 @@
-﻿using System.Linq;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Assets.Scripts.Skills
 {
     public static class RandomUpgradeableSkillFinder
     {
         public static IUpgradeableSkill Find(ISkillsRegistry skillsRegistry)
-        {
-            var upgradeableSkills = skillsRegistry
+            => Find(skillsRegistry
                 .Skills
                 .OfType<IUpgradeableSkill>()
-                .Where(skill => skill.IsInitialized())
+                .Where(skill => skill.IsInitialized()));
+
+        public static IUpgradeableSkill Find(IEnumerable<IUpgradeableSkill> skills)
+        {
+            var upgradeableSkills = skills
                 .Where(skill => skill.CanBeUgraded())
                 .ToArray();
 

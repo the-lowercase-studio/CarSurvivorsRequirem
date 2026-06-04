@@ -1,4 +1,6 @@
 ﻿using Assets.Scripts.Audio;
+using Assets.Scripts.Common.EventArgs;
+using Assets.Scripts.LevelSystem;
 using Assets.Scripts.Player;
 using Assets.Scripts.Skills;
 using Assets.Scripts.Skills.ObjectsImpactingSkills.Crate;
@@ -33,7 +35,7 @@ namespace Assets.Scripts.UI.Skills
         [SerializeField] private TextMeshProUGUI _newSkillDescription;
 
         [Header("New Skill Rewards")]
-        [SerializeField] private int _newSkillLevelInterval = 6;
+        [SerializeField] private int _newSkillLevelInterval = 3;
 
         [SerializeField] private AudioClipPlayer _buttonsAudioPlayer;
 
@@ -87,13 +89,12 @@ namespace Assets.Scripts.UI.Skills
             TryShowQueuedRewardSection();
         }
 
-        private void HandleLevelRewardRequest(object sender, System.EventArgs e)
+        private void HandleLevelRewardRequest(object sender, ValueEventArgs<LevelData> e)
         {
-            if (ShouldQueueNewSkillReward())
-            {
-                _skillUpgradeFlow.QueueRandomNewSkillRequest(_playerManager.SkillsRegistry);
-            }
-            else
+            bool isNewSkillQueued = ShouldQueueNewSkillReward(e.Value.Lvl)
+                && _skillUpgradeFlow.QueueRandomNewSkillRequest(_playerManager.SkillsRegistry);
+
+            if (!isNewSkillQueued)
             {
                 _skillUpgradeFlow.QueueRandomSkillUpgradeRequest(_playerManager.SkillsRegistry);
             }
@@ -110,10 +111,8 @@ namespace Assets.Scripts.UI.Skills
             }
         }
 
-        private bool ShouldQueueNewSkillReward()
+        private bool ShouldQueueNewSkillReward(byte level)
         {
-            byte level = _playerManager.LevelController.LevelData.Lvl;
-
             return _newSkillLevelInterval > 0
                 && level > 1
                 && (level - 1) % _newSkillLevelInterval == 0

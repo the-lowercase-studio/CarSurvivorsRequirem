@@ -17,6 +17,7 @@ MonoBehaviour:
     <IsSubstractModeOn>k__BackingField: 1
     <Unit>k__BackingField: 2
     _alwaysUseMinValueForUpgrade: 0
+    _hasUnlimitedMaxValue: 0
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 1.2
     _floatMinMaxRange:
@@ -29,6 +30,7 @@ MonoBehaviour:
     <IsSubstractModeOn>k__BackingField: 0
     <Unit>k__BackingField: 3
     _alwaysUseMinValueForUpgrade: 0
+    _hasUnlimitedMaxValue: 0
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 6
     _floatMinMaxRange:
@@ -41,6 +43,7 @@ MonoBehaviour:
     <IsSubstractModeOn>k__BackingField: 0
     <Unit>k__BackingField: 0
     _alwaysUseMinValueForUpgrade: 1
+    _hasUnlimitedMaxValue: 0
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 1
     _byteMinMaxRange:
@@ -49,11 +52,11 @@ MonoBehaviour:
     _byteRangeOfPossibleValuesForUpgrade:
       <Min>k__BackingField: 1
       <Max>k__BackingField: 1
-  _projectileConfig: {fileID: 11400000, guid: b196fd0c1c6051341865604dd4fa9534, type: 2}
   _startBulletSpeed:
     <IsSubstractModeOn>k__BackingField: 0
     <Unit>k__BackingField: 1
     _alwaysUseMinValueForUpgrade: 0
+    _hasUnlimitedMaxValue: 0
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 5
     _floatMinMaxRange:
@@ -66,6 +69,7 @@ MonoBehaviour:
     <IsSubstractModeOn>k__BackingField: 0
     <Unit>k__BackingField: 1
     _alwaysUseMinValueForUpgrade: 0
+    _hasUnlimitedMaxValue: 1
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 1
     _floatMinMaxRange:
@@ -78,6 +82,7 @@ MonoBehaviour:
     <IsSubstractModeOn>k__BackingField: 0
     <Unit>k__BackingField: 0
     _alwaysUseMinValueForUpgrade: 0
+    _hasUnlimitedMaxValue: 1
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 5
     _byteMinMaxRange:
@@ -90,11 +95,12 @@ MonoBehaviour:
     <IsSubstractModeOn>k__BackingField: 0
     <Unit>k__BackingField: 0
     _alwaysUseMinValueForUpgrade: 0
+    _hasUnlimitedMaxValue: 0
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 0
     _byteMinMaxRange:
       <Min>k__BackingField: 0
-      <Max>k__BackingField: 10
+      <Max>k__BackingField: 16
     _byteRangeOfPossibleValuesForUpgrade:
       <Min>k__BackingField: 1
       <Max>k__BackingField: 4

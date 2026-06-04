@@ -13,7 +13,7 @@ namespace Assets.Scripts.UI.Level
 {
     public interface IPlayerLevelPresenter
     {
-        event EventHandler OnExpSliderVisualEndValueReached;
+        event EventHandler<ValueEventArgs<LevelData>> OnExpSliderVisualEndValueReached;
     }
 
     public class PlayerLevelPresenter : MonoBehaviour, IPlayerLevelPresenter
@@ -27,7 +27,7 @@ namespace Assets.Scripts.UI.Level
         [SerializeField] private TextMeshProUGUI _levelText;
         [SerializeField] private Slider _expSlider;
 
-        public event EventHandler OnExpSliderVisualEndValueReached;
+        public event EventHandler<ValueEventArgs<LevelData>> OnExpSliderVisualEndValueReached;
 
         private ILevelController _playerLevelController;
 
@@ -137,7 +137,7 @@ namespace Assets.Scripts.UI.Level
 
             UpdateLevelText();
 
-            OnExpSliderVisualEndValueReached?.Invoke(this, EventArgs.Empty);
+            OnExpSliderVisualEndValueReached?.Invoke(this, new ValueEventArgs<LevelData>(nextLevelData));
 
             if (_expVisualQueue.Count > 0 && _expVisualQueue.Peek().IsLevelUp)
             {
