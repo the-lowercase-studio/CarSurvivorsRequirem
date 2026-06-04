@@ -7,53 +7,64 @@ namespace Assets.Scripts.Skills.UpgradeFlow
 {
     public interface ISkillUpgradeFlow
     {
-        void QueueRandomRequest(ISkillsRegistry skillsRegistry);
+        bool QueueRandomNewSkillRequest(ISkillsRegistry skillsRegistry);
+        void QueueRandomSkillUpgradeRequest(ISkillsRegistry skillsRegistry);
         bool TryGetNextRequest(ISkillsRegistry skillsRegistry, out SkillUpgradeRequest request);
     }
 
     public class SkillUpgradeFlow : ISkillUpgradeFlow
     {
-        private static readonly byte _maxSkillUpgradeOptions = 3;
+        private const int MAX_SKILL_UPGRADE_OPTIONS = 3;
 
-        private readonly Queue<ISkillBase> _skillsQueuedForInitialization = new();
-        private readonly Queue<IUpgradeableSkill> _skillsQueuedForUpgrade = new();
+        private readonly Queue<QueuedSkillRewardRequest> _queuedRequests = new();
+        private readonly HashSet<ISkillBase> _skillsQueuedForInitialization = new();
 
-        public void QueueRandomRequest(ISkillsRegistry skillsRegistry)
+        public bool QueueRandomNewSkillRequest(ISkillsRegistry skillsRegistry)
         {
-            if (_skillsQueuedForInitialization.Count < skillsRegistry.UninitializedSkillsCount)
-            {
-                ISkillBase skill = skillsRegistry.GetUninitializedSkills().Shuffle().FirstOrDefault();
-                if (skill is not null)
-                {
-                    _skillsQueuedForInitialization.Enqueue(skill);
-                }
+            ISkillBase skill = skillsRegistry
+                .GetUninitializedSkills()
+                .Where(skill => !_skillsQueuedForInitialization.Contains(skill))
+                .Shuffle()
+                .FirstOrDefault();
 
-                return;
+            if (skill is null)
+            {
+                return false;
             }
 
-            IUpgradeableSkill upgradeableSkill = RandomUpgradeableSkillFinder.Find(skillsRegistry);
+            _skillsQueuedForInitialization.Add(skill);
+            _queuedRequests.Enqueue(QueuedSkillRewardRequest.ForNewSkill(skill));
+
+            return true;
+        }
+
+        public void QueueRandomSkillUpgradeRequest(ISkillsRegistry skillsRegistry)
+        {
+            IUpgradeableSkill upgradeableSkill = RandomUpgradeableSkillFinder.Find(GetUpgradeableSkillCandidates(skillsRegistry));
             if (upgradeableSkill is not null)
             {
-                _skillsQueuedForUpgrade.Enqueue(upgradeableSkill);
+                _queuedRequests.Enqueue(QueuedSkillRewardRequest.ForUpgradeSkill(upgradeableSkill));
             }
         }
 
         public bool TryGetNextRequest(ISkillsRegistry skillsRegistry, out SkillUpgradeRequest request)
         {
-            if (_skillsQueuedForInitialization.Count > 0)
+            while (_queuedRequests.Count > 0)
             {
-                ISkillBase skill = _skillsQueuedForInitialization.Dequeue();
-                skillsRegistry.InitializeSkill(skill);
-                request = SkillUpgradeRequest.ForNewSkill(skill);
-                return true;
-            }
+                QueuedSkillRewardRequest queuedRequest = _queuedRequests.Dequeue();
 
-            while (_skillsQueuedForUpgrade.Count > 0)
-            {
-                IUpgradeableSkill skill = _skillsQueuedForUpgrade.Dequeue();
-                if (skill.CanBeUgraded())
+                if (queuedRequest.RequestType == SkillUpgradeRequestType.NewSkill)
                 {
-                    request = SkillUpgradeRequest.ForUpgradeSkill(skill, CreateUpgradeOptions(skill));
+                    _skillsQueuedForInitialization.Remove(queuedRequest.NewSkill);
+                    ISkillBase skill = skillsRegistry.InitializeSkill(queuedRequest.NewSkill) ?? queuedRequest.NewSkill;
+                    request = SkillUpgradeRequest.ForNewSkill(skill);
+                    return true;
+                }
+
+                IUpgradeableSkill upgradeableSkill = queuedRequest.UpgradeableSkill;
+                if (upgradeableSkill.CanBeUgraded())
+                {
+                    request = SkillUpgradeRequest.ForUpgradeSkill(upgradeableSkill, CreateUpgradeOptions(upgradeableSkill));
                     return true;
                 }
             }
@@ -61,6 +72,12 @@ namespace Assets.Scripts.Skills.UpgradeFlow
             request = default;
             return false;
         }
+
+        private IEnumerable<IUpgradeableSkill> GetUpgradeableSkillCandidates(ISkillsRegistry skillsRegistry)
+            => skillsRegistry
+                .Skills
+                .OfType<IUpgradeableSkill>()
+                .Where(skill => skill.IsInitialized() || _skillsQueuedForInitialization.Contains(skill));
 
         private static IReadOnlyList<SkillUpgradeOption> CreateUpgradeOptions(IUpgradeableSkill upgradeableSkill)
         {
@@ -85,8 +102,31 @@ namespace Assets.Scripts.Skills.UpgradeFlow
 
             return options
                 .Shuffle()
-                .Take(_maxSkillUpgradeOptions)
+                .Take(MAX_SKILL_UPGRADE_OPTIONS)
                 .ToArray();
+        }
+
+        private readonly struct QueuedSkillRewardRequest
+        {
+            private QueuedSkillRewardRequest(
+                SkillUpgradeRequestType requestType,
+                ISkillBase newSkill,
+                IUpgradeableSkill upgradeableSkill)
+            {
+                RequestType = requestType;
+                NewSkill = newSkill;
+                UpgradeableSkill = upgradeableSkill;
+            }
+
+            public SkillUpgradeRequestType RequestType { get; }
+            public ISkillBase NewSkill { get; }
+            public IUpgradeableSkill UpgradeableSkill { get; }
+
+            public static QueuedSkillRewardRequest ForNewSkill(ISkillBase skill)
+                => new(SkillUpgradeRequestType.NewSkill, skill, null);
+
+            public static QueuedSkillRewardRequest ForUpgradeSkill(IUpgradeableSkill skill)
+                => new(SkillUpgradeRequestType.UpgradeSkill, null, skill);
         }
     }
 }

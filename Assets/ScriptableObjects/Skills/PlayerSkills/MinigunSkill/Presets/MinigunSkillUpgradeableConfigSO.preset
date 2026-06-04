@@ -121,19 +121,19 @@ Preset:
     value: 1
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _numberOfTurrets._byteMinMaxRange.<Min>k__BackingField
+    propertyPath: _numberOfTurrets._intMinMaxRange.<Min>k__BackingField
     value: 1
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _numberOfTurrets._byteMinMaxRange.<Max>k__BackingField
+    propertyPath: _numberOfTurrets._intMinMaxRange.<Max>k__BackingField
     value: 4
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _numberOfTurrets._byteRangeOfPossibleValuesForUpgrade.<Min>k__BackingField
+    propertyPath: _numberOfTurrets._intRangeOfPossibleValuesForUpgrade.<Min>k__BackingField
     value: 1
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _numberOfTurrets._byteRangeOfPossibleValuesForUpgrade.<Max>k__BackingField
+    propertyPath: _numberOfTurrets._intRangeOfPossibleValuesForUpgrade.<Max>k__BackingField
     value: 1
     objectReference: {fileID: 0}
   - target: {fileID: 0}
@@ -233,19 +233,19 @@ Preset:
     value: 5
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _startBulletDamage._byteMinMaxRange.<Min>k__BackingField
+    propertyPath: _startBulletDamage._intMinMaxRange.<Min>k__BackingField
     value: 5
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _startBulletDamage._byteMinMaxRange.<Max>k__BackingField
+    propertyPath: _startBulletDamage._intMinMaxRange.<Max>k__BackingField
     value: 18
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _startBulletDamage._byteRangeOfPossibleValuesForUpgrade.<Min>k__BackingField
+    propertyPath: _startBulletDamage._intRangeOfPossibleValuesForUpgrade.<Min>k__BackingField
     value: 4
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _startBulletDamage._byteRangeOfPossibleValuesForUpgrade.<Max>k__BackingField
+    propertyPath: _startBulletDamage._intRangeOfPossibleValuesForUpgrade.<Max>k__BackingField
     value: 7
     objectReference: {fileID: 0}
   - target: {fileID: 0}
@@ -269,19 +269,19 @@ Preset:
     value: 0
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _startBulletMaxPiercing._byteMinMaxRange.<Min>k__BackingField
+    propertyPath: _startBulletMaxPiercing._intMinMaxRange.<Min>k__BackingField
     value: 0
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _startBulletMaxPiercing._byteMinMaxRange.<Max>k__BackingField
+    propertyPath: _startBulletMaxPiercing._intMinMaxRange.<Max>k__BackingField
     value: 10
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _startBulletMaxPiercing._byteRangeOfPossibleValuesForUpgrade.<Min>k__BackingField
+    propertyPath: _startBulletMaxPiercing._intRangeOfPossibleValuesForUpgrade.<Min>k__BackingField
     value: 1
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _startBulletMaxPiercing._byteRangeOfPossibleValuesForUpgrade.<Max>k__BackingField
+    propertyPath: _startBulletMaxPiercing._intRangeOfPossibleValuesForUpgrade.<Max>k__BackingField
     value: 4
     objectReference: {fileID: 0}
   m_ExcludedProperties: []

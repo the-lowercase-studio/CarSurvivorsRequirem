@@ -12,21 +12,21 @@ namespace Assets.ScriptableObjects.Skills.PlayerSkills.MinigunSkill
         [SerializeField] private TurretConfigSO _turretConfig;
         [SerializeField] private FloatUpgradeableStat _delayBetweenShootingBullets;
         [SerializeField] private FloatUpgradeableStat _range;
-        [SerializeField] private ByteUpgradeableStat _numberOfTurrets;
+        [SerializeField] private IntUpgradeableStat _numberOfTurrets;
         public TurretConfigSO TurretConfig => _turretConfig;
         public FloatUpgradeableStat DelayBetweenShoots { get; private set; }
         public FloatUpgradeableStat Range { get; private set; }
-        public ByteUpgradeableStat NumberOfTurrets { get; private set; }
+        public IntUpgradeableStat NumberOfTurrets { get; private set; }
 
         [Header("Bullets Stats")]
         [SerializeField] private FloatUpgradeableStat _startBulletSpeed;
         [SerializeField] private FloatUpgradeableStat _startBulletSize;
-        [SerializeField] private ByteUpgradeableStat _startBulletDamage;
-        [SerializeField] private ByteUpgradeableStat _startBulletMaxPiercing;
+        [SerializeField] private IntUpgradeableStat _startBulletDamage;
+        [SerializeField] private IntUpgradeableStat _startBulletMaxPiercing;
         public FloatUpgradeableStat BulletSize { get; private set; }
         public FloatUpgradeableStat BulletSpeed { get; private set; }
-        public ByteUpgradeableStat BulletDamage { get; private set; }
-        public ByteUpgradeableStat BulletMaxPiercing { get; private set; }
+        public IntUpgradeableStat BulletDamage { get; private set; }
+        public IntUpgradeableStat BulletMaxPiercing { get; private set; }
 
         private ProjectileConfigSO _projectileConfig;
 

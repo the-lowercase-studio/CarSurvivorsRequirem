@@ -14,7 +14,7 @@ namespace Assets.Scripts.Projectiles
     {
         [SerializeField] private ProjectileConfigSO _config;
         [SerializeField] private SphereCollider _sphereCollider;
-        private byte _piercedCounter;
+        private int _piercedCounter;
         private bool _isInitialized;
         private bool _isAlive = true;
 

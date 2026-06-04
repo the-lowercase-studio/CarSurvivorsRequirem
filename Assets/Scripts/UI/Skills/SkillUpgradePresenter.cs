@@ -1,4 +1,6 @@
 ﻿using Assets.Scripts.Audio;
+using Assets.Scripts.Common.EventArgs;
+using Assets.Scripts.LevelSystem;
 using Assets.Scripts.Player;
 using Assets.Scripts.Skills;
 using Assets.Scripts.Skills.ObjectsImpactingSkills.Crate;
@@ -32,6 +34,9 @@ namespace Assets.Scripts.UI.Skills
         [SerializeField] private TextMeshProUGUI _newSkillName;
         [SerializeField] private TextMeshProUGUI _newSkillDescription;
 
+        [Header("New Skill Rewards")]
+        [SerializeField] private int _newSkillLevelInterval = 3;
+
         [SerializeField] private AudioClipPlayer _buttonsAudioPlayer;
 
         private const string SKILL_NAME_TEMPLATE = "New Skill: {0}";
@@ -49,8 +54,8 @@ namespace Assets.Scripts.UI.Skills
 
         private void Start()
         {
-            _collectibleItemsSpawner.OnSpawnedEntityReleased += ShowRandomSkillInInitializationOrUpgradeSection_OnEvent;
-            _playerLevelPresenter.OnExpSliderVisualEndValueReached += ShowRandomSkillInInitializationOrUpgradeSection_OnEvent;
+            _collectibleItemsSpawner.OnSpawnedEntityReleased += HandleCrateRewardRequest;
+            _playerLevelPresenter.OnExpSliderVisualEndValueReached += HandleLevelRewardRequest;
         }
 
         private void Update()
@@ -74,19 +79,44 @@ namespace Assets.Scripts.UI.Skills
 
         private void OnDestroy()
         {
-            _collectibleItemsSpawner.OnSpawnedEntityReleased -= ShowRandomSkillInInitializationOrUpgradeSection_OnEvent;
-            _playerLevelPresenter.OnExpSliderVisualEndValueReached -= ShowRandomSkillInInitializationOrUpgradeSection_OnEvent;
+            _collectibleItemsSpawner.OnSpawnedEntityReleased -= HandleCrateRewardRequest;
+            _playerLevelPresenter.OnExpSliderVisualEndValueReached -= HandleLevelRewardRequest;
         }
 
-        private void ShowRandomSkillInInitializationOrUpgradeSection_OnEvent(object sender, System.EventArgs e)
+        private void HandleCrateRewardRequest(object sender, System.EventArgs e)
         {
-            _skillUpgradeFlow.QueueRandomRequest(_playerManager.SkillsRegistry);
+            _skillUpgradeFlow.QueueRandomSkillUpgradeRequest(_playerManager.SkillsRegistry);
+            TryShowQueuedRewardSection();
+        }
 
+        private void HandleLevelRewardRequest(object sender, ValueEventArgs<LevelData> e)
+        {
+            bool isNewSkillQueued = ShouldQueueNewSkillReward(e.Value.Lvl)
+                && _skillUpgradeFlow.QueueRandomNewSkillRequest(_playerManager.SkillsRegistry);
+
+            if (!isNewSkillQueued)
+            {
+                _skillUpgradeFlow.QueueRandomSkillUpgradeRequest(_playerManager.SkillsRegistry);
+            }
+
+            TryShowQueuedRewardSection();
+        }
+
+        private void TryShowQueuedRewardSection()
+        {
             if (!_isShowingAnySection)
             {
                 _isShowingAnySection = true;
                 HandleUpgradeableOrInitializableSkillsShowing();
             }
+        }
+
+        private bool ShouldQueueNewSkillReward(int level)
+        {
+            return _newSkillLevelInterval > 0
+                && level > 1
+                && (level - 1) % _newSkillLevelInterval == 0
+                && _playerManager.SkillsRegistry.UninitializedSkillsCount > 0;
         }
 
         private void HandleUpgradeableOrInitializableSkillsShowing()
