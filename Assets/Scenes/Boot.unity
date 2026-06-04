@@ -671,8 +671,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4284722636
-  m_fontColor: {r: 0.8, g: 0.6784314, b: 0.3882353, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1003,27 +1003,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 11400000, guid: f8e3f70e78d5db742a0993fef5bf384f, type: 3}
       propertyPath: m_Color.b
-      value: 0.3882353
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 11400000, guid: f8e3f70e78d5db742a0993fef5bf384f, type: 3}
       propertyPath: m_Color.g
-      value: 0.6784314
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 11400000, guid: f8e3f70e78d5db742a0993fef5bf384f, type: 3}
       propertyPath: m_Color.r
-      value: 0.8
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 11400002, guid: f8e3f70e78d5db742a0993fef5bf384f, type: 3}
       propertyPath: m_Color.b
-      value: 0.3882353
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 11400002, guid: f8e3f70e78d5db742a0993fef5bf384f, type: 3}
       propertyPath: m_Color.g
-      value: 0.6784314
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 11400002, guid: f8e3f70e78d5db742a0993fef5bf384f, type: 3}
       propertyPath: m_Color.r
-      value: 0.8
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 22400000, guid: f8e3f70e78d5db742a0993fef5bf384f, type: 3}
       propertyPath: m_SizeDelta.x
@@ -1448,22 +1448,22 @@ MonoBehaviour:
   _visualApearanceByDamageTresholds:
   - _treshold: 0
     _damagePopupApearance:
-      FontSize: 1.5
+      FontSize: 2.1
       GrowFontSizeAnimationScaleMultiplier: 1.4
       Color: {r: 1, g: 1, b: 1, a: 1}
-  - _treshold: 11
+  - _treshold: 28
     _damagePopupApearance:
-      FontSize: 2
+      FontSize: 2.5
       GrowFontSizeAnimationScaleMultiplier: 1.4
       Color: {r: 1, g: 0.717804, b: 0.3726415, a: 1}
-  - _treshold: 22
+  - _treshold: 60
     _damagePopupApearance:
-      FontSize: 2.4
+      FontSize: 2.8
       GrowFontSizeAnimationScaleMultiplier: 1.4
       Color: {r: 0.8962264, g: 0.3520763, b: 0.1986917, a: 1}
-  - _treshold: 30
+  - _treshold: 80
     _damagePopupApearance:
-      FontSize: 2.7
+      FontSize: 3
       GrowFontSizeAnimationScaleMultiplier: 1.4
       Color: {r: 0.7490196, g: 0.16470589, b: 0, a: 1}
   _popupsSpeedRange:

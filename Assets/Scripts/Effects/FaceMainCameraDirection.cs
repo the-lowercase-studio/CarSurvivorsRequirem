@@ -1,4 +1,3 @@
-using DG.Tweening;
 using Reflex.Attributes;
 using UnityEngine;
 
@@ -10,11 +9,8 @@ namespace Assets.Scripts.Effects
 
         [Tooltip("When enabled, the transform's -Z axis faces the main camera instead of +Z.")]
         [SerializeField] private bool _isDirectionFlipped;
-        [Tooltip("Rotation tween duration. Use 0 for instant LookAt behavior.")]
-        [SerializeField] private float _rotationTransitionDuration;
-        [SerializeField] private Ease _rotationEase = Ease.OutSine;
-        [Tooltip("Minimum target angle change needed to restart the rotation tween.")]
-        [SerializeField] private float _rotationRetargetAngle = 1f;
+        [Tooltip("Higher values follow the camera faster. Use 0 for instant LookAt behavior.")]
+        [SerializeField] private float _rotationSmoothSpeed = 12f;
         [Tooltip("Maximum absolute X rotation in degrees. Use 180 for unrestricted pitch.")]
         [SerializeField] private float _maxXRotation = 180f;
         [Tooltip("Maximum absolute Y rotation in degrees. Use 180 for unrestricted yaw.")]
@@ -22,8 +18,6 @@ namespace Assets.Scripts.Effects
         [Tooltip("Local-space vertical position offset applied from the starting local position.")]
         [SerializeField] private float _localYOffset;
 
-        private Tween _rotationTween;
-        private Quaternion _targetRotation;
         private Vector3 _startLocalPosition;
 
         private void Start()
@@ -32,18 +26,12 @@ namespace Assets.Scripts.Effects
             transform.localPosition = _startLocalPosition + Vector3.up * _localYOffset;
         }
 
-        private void OnDisable()
-        {
-            _rotationTween?.Kill();
-            _rotationTween = null;
-        }
-
         public void Initialize(Camera mainCamera)
         {
             _mainCamera = mainCamera;
         }
 
-        private void FixedUpdate()
+        private void LateUpdate()
         {
             if (_mainCamera == null)
             {
@@ -57,39 +45,21 @@ namespace Assets.Scripts.Effects
                 desiredDirection = -desiredDirection;
             }
 
-            if (desiredDirection == Vector3.zero)
+            if (desiredDirection.sqrMagnitude <= Mathf.Epsilon)
             {
                 return;
             }
 
             Quaternion desiredRotation = ClampRotation(Quaternion.LookRotation(desiredDirection));
 
-            if (_rotationTransitionDuration <= 0)
+            if (_rotationSmoothSpeed <= 0f)
             {
-                _rotationTween?.Kill();
-                _rotationTween = null;
                 transform.rotation = desiredRotation;
-                _targetRotation = desiredRotation;
                 return;
             }
 
-            if (_rotationTween != null && _rotationTween.IsActive() && _rotationTween.IsPlaying()
-                && Quaternion.Angle(_targetRotation, desiredRotation) < _rotationRetargetAngle)
-            {
-                return;
-            }
-
-            if (Quaternion.Angle(transform.rotation, desiredRotation) < _rotationRetargetAngle)
-            {
-                return;
-            }
-
-            _rotationTween?.Kill();
-            _targetRotation = desiredRotation;
-            _rotationTween = transform
-                .DORotateQuaternion(desiredRotation, _rotationTransitionDuration)
-                .SetEase(_rotationEase)
-                .OnKill(() => _rotationTween = null);
+            float interpolation = 1f - Mathf.Exp(-_rotationSmoothSpeed * Time.unscaledDeltaTime);
+            transform.rotation = Quaternion.Slerp(transform.rotation, desiredRotation, interpolation);
         }
 
         private Quaternion ClampRotation(Quaternion rotation)

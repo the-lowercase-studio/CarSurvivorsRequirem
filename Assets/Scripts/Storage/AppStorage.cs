@@ -72,8 +72,20 @@ namespace Assets.Scripts.Storage
 #if UNITY_EDITOR
             return Path.Combine(Application.dataPath, DATA_DIRECTORY_NAME);
 #else
-            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, DATA_DIRECTORY_NAME);
+            return Path.Combine(GetBuildRootDirectoryPath(), DATA_DIRECTORY_NAME);
 #endif
+        }
+
+        private static string GetBuildRootDirectoryPath()
+        {
+            var dataDirectoryInfo = Directory.GetParent(Application.dataPath);
+
+            if (dataDirectoryInfo != null)
+            {
+                return dataDirectoryInfo.FullName;
+            }
+
+            return AppDomain.CurrentDomain.BaseDirectory;
         }
 
         private static string GetStorageFileName()

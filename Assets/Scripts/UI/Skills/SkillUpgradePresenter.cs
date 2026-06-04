@@ -31,7 +31,6 @@ namespace Assets.Scripts.UI.Skills
         [SerializeField] private GameObject _newSkillSection;
         [SerializeField] private TextMeshProUGUI _newSkillName;
         [SerializeField] private TextMeshProUGUI _newSkillDescription;
-        [SerializeField] private Button _continueButton;
 
         [Header("New Skill Rewards")]
         [SerializeField] private int _newSkillLevelInterval = 6;
@@ -55,7 +54,6 @@ namespace Assets.Scripts.UI.Skills
         {
             _collectibleItemsSpawner.OnSpawnedEntityReleased += HandleCrateRewardRequest;
             _playerLevelPresenter.OnExpSliderVisualEndValueReached += HandleLevelRewardRequest;
-            _continueButton.onClick.AddListener(HandleContinueButtonClicked);
         }
 
         private void Update()
@@ -81,7 +79,6 @@ namespace Assets.Scripts.UI.Skills
         {
             _collectibleItemsSpawner.OnSpawnedEntityReleased -= HandleCrateRewardRequest;
             _playerLevelPresenter.OnExpSliderVisualEndValueReached -= HandleLevelRewardRequest;
-            _continueButton.onClick.RemoveListener(HandleContinueButtonClicked);
         }
 
         private void HandleCrateRewardRequest(object sender, System.EventArgs e)
@@ -213,10 +210,10 @@ namespace Assets.Scripts.UI.Skills
                 button.Initialize(
                     clickableButtonData.Text,
                     buttonNumber,
-                    clickableButtonData.OnClick,
-                    () => _buttonsAudioPlayer.Play("Hover"));
+                    clickableButtonData.OnClick);
 
                 _upgradeButtons.Add(button);
+
                 buttonNumber++;
             }
         }
