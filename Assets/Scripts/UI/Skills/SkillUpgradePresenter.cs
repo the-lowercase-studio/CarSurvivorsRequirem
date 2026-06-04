@@ -31,7 +31,6 @@ namespace Assets.Scripts.UI.Skills
         [SerializeField] private GameObject _newSkillSection;
         [SerializeField] private TextMeshProUGUI _newSkillName;
         [SerializeField] private TextMeshProUGUI _newSkillDescription;
-        [SerializeField] private Button _continueButton;
 
         [SerializeField] private AudioClipPlayer _buttonsAudioPlayer;
 
@@ -52,7 +51,6 @@ namespace Assets.Scripts.UI.Skills
         {
             _collectibleItemsSpawner.OnSpawnedEntityReleased += ShowRandomSkillInInitializationOrUpgradeSection_OnEvent;
             _playerLevelPresenter.OnExpSliderVisualEndValueReached += ShowRandomSkillInInitializationOrUpgradeSection_OnEvent;
-            _continueButton.onClick.AddListener(HandleContinueButtonClicked);
         }
 
         private void Update()
@@ -78,7 +76,6 @@ namespace Assets.Scripts.UI.Skills
         {
             _collectibleItemsSpawner.OnSpawnedEntityReleased -= ShowRandomSkillInInitializationOrUpgradeSection_OnEvent;
             _playerLevelPresenter.OnExpSliderVisualEndValueReached -= ShowRandomSkillInInitializationOrUpgradeSection_OnEvent;
-            _continueButton.onClick.RemoveListener(HandleContinueButtonClicked);
         }
 
         private void ShowRandomSkillInInitializationOrUpgradeSection_OnEvent(object sender, System.EventArgs e)
@@ -182,10 +179,10 @@ namespace Assets.Scripts.UI.Skills
                 button.Initialize(
                     clickableButtonData.Text,
                     buttonNumber,
-                    clickableButtonData.OnClick,
-                    () => _buttonsAudioPlayer.Play("Hover"));
+                    clickableButtonData.OnClick);
 
                 _upgradeButtons.Add(button);
+
                 buttonNumber++;
             }
         }

@@ -26,9 +26,15 @@ namespace Assets.Scripts.ReflexDI
         [SerializeField] private TimerPresenter _timerPresenter;
         [SerializeField] private ExpParticleSpawner _expParticleSpawner;
         [SerializeField] private CollectibleItemsSpawner _collectibleItemsSpawner;
+        [SerializeField] private Camera _mainCamera;
+
+        public Camera MainCamera => _mainCamera;
 
         public void InstallBindings(ContainerBuilder builder)
         {
+            //Camera
+            builder.AddSingleton(_mainCamera);
+
             //Player
             builder.AddSingleton(_playerManager, typeof(IPlayerManager));
 

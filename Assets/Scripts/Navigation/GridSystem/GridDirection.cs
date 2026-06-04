@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Assets.Scripts.Navigation.GridSystem
@@ -30,7 +29,40 @@ namespace Assets.Scripts.Navigation.GridSystem
 
         public static GridDirection GetDirectionFromV2I(Vector2Int vector)
         {
-            return CardinalAndIntercardinalDirections.DefaultIfEmpty(None).FirstOrDefault(direction => direction == vector);
+            if (vector == North.Vector)
+            {
+                return North;
+            }
+            if (vector == NorthEast.Vector)
+            {
+                return NorthEast;
+            }
+            if (vector == East.Vector)
+            {
+                return East;
+            }
+            if (vector == SouthEast.Vector)
+            {
+                return SouthEast;
+            }
+            if (vector == South.Vector)
+            {
+                return South;
+            }
+            if (vector == SouthWest.Vector)
+            {
+                return SouthWest;
+            }
+            if (vector == West.Vector)
+            {
+                return West;
+            }
+            if (vector == NorthWest.Vector)
+            {
+                return NorthWest;
+            }
+
+            return None;
         }
 
         public static readonly List<GridDirection> CardinalDirections = new List<GridDirection>

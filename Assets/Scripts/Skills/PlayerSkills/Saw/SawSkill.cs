@@ -1,5 +1,6 @@
 using Assets.ScriptableObjects.Skills;
 using Assets.ScriptableObjects.Skills.PlayerSkills.SawSkill;
+using System;
 using UnityEngine;
 
 namespace Assets.Scripts.Skills.PlayerSkills.Saw
@@ -18,10 +19,29 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
             _sawBladesActivator =
                 new ItemsWithScriptableConfigsActivator<SawBlade, SawSkillUpgradeableConfigSO>(_sawBlades);
 
-            _sawBladesActivator.InitializeFirst(_config);
+            InitializeSawBladesToConfiguredCount();
 
-            _config.NuberOfSaws.OnUpgrade += (s, e) =>
-                _sawBladesActivator.InitializeRandom(_config);
+            _config.NuberOfSaws.OnUpgrade -= NuberOfSaws_OnUpgrade;
+            _config.NuberOfSaws.OnUpgrade += NuberOfSaws_OnUpgrade;
+        }
+
+        private void OnDestroy()
+        {
+            if (_config?.NuberOfSaws is not null)
+            {
+                _config.NuberOfSaws.OnUpgrade -= NuberOfSaws_OnUpgrade;
+            }
+        }
+
+        private void InitializeSawBladesToConfiguredCount()
+        {
+            _sawBladesActivator.InitializeFirst(_config);
+            _sawBladesActivator.InitializeUntilCount(_config, _config.NuberOfSaws.Value);
+        }
+
+        private void NuberOfSaws_OnUpgrade(object sender, EventArgs e)
+        {
+            InitializeSawBladesToConfiguredCount();
         }
     }
 }

@@ -210,6 +210,6 @@ namespace Assets.Scripts.UI.Level
         }
 
         private void UpdateLevelText()
-            => _levelText.text = $"{_currentlyVisibleLevelData.Lvl} Lvl";
+            => _levelText.text = _currentlyVisibleLevelData.Lvl.ToString();
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Assets.Scripts.Audio
@@ -32,10 +32,12 @@ namespace Assets.Scripts.Audio
         public event EventHandler OnAudioClipFinished;
 
         private AudioSource _audioSource;
+        private readonly Dictionary<string, AudioClipPlayerConfig> _configsByName = new();
 
         private void Awake()
         {
             _audioSource = GetComponent<AudioSource>();
+            CacheConfigsByName();
         }
 
         public void Play(string name)
@@ -77,15 +79,27 @@ namespace Assets.Scripts.Audio
 
         private AudioClipConfig GetRandomAudioClipVariantFromConfigByName(string name)
         {
-            AudioClipPlayerConfig config = _audioClipPlayerConfigs.FirstOrDefault(c => c.Name == name);
-
-            if (config is null || config.ClipVariants.Length == 0)
+            if (!_configsByName.TryGetValue(name, out AudioClipPlayerConfig config)
+                || config.ClipVariants.Length == 0)
             {
                 Debug.LogError($"AudioClipPlayer: No audio clip found for name '{name}'");
                 return null;
             }
 
             return config.ClipVariants[UnityEngine.Random.Range(0, config.ClipVariants.Length)];
+        }
+
+        private void CacheConfigsByName()
+        {
+            foreach (AudioClipPlayerConfig config in _audioClipPlayerConfigs)
+            {
+                if (config is null || _configsByName.ContainsKey(config.Name))
+                {
+                    continue;
+                }
+
+                _configsByName.Add(config.Name, config);
+            }
         }
 
         private void OnAudioClipPlayFinished()
