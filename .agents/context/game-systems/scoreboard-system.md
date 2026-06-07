@@ -74,7 +74,7 @@ It is not responsible for measuring elapsed gameplay time, deciding when the pla
   - Runtime consumers that save scores should depend on `IScoreBoardNewScoreSaver`, not `StoredScoreBoard`.
   - Runtime consumers that only need the best score should depend on `IScoreBoardBestScoreGetter`.
   - Scoreboard UI requires a `ScoreBoardEntry` prefab, an entries parent transform, and Reflex injection for `StoredScoreBoard`.
-  - Storage depends on `AppStorage`, which persists JSON under `Assets/Data/AppStorage.Editor.json` in the Unity Editor and the application's `Data/AppStorage.json` path in builds.
+  - Storage depends on `AppStorage`, which persists JSON under `Assets/Data/AppStorage.Editor.json` in the Unity Editor and `Data/AppStorage.json` under the build root resolved from `Directory.GetParent(Application.dataPath)` in builds.
 - Testing implications:
   - Focused edit-mode tests for `ScoreBoardNewScoreSaver` should cover empty storage, duplicate scores, full storage, lower-than-minimum rejection, higher-than-current-best insertion, and max-count enforcement.
   - Play-mode or manual UI validation is needed for scoreboard row instantiation, repeated panel enable/disable cycles, and death-screen "New Best!" messaging.
