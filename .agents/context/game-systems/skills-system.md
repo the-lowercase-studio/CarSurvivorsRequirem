@@ -37,8 +37,8 @@ It is not responsible for:
   - `Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/CollectibleItemsSpawner.cs`
   - `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
 - Related docs:
-  - `.agents/context/collectibles-system.md`
-  - `.agents/context/level-system.md`
+  - `.agents/context/game-systems/collectibles-system.md`
+  - `.agents/context/game-systems/level-system.md`
   - `.agents/context/project-coding-standards.md`
   - `.agents/context/ai-game-dev-best-practices.md`
 - Related agents or instructions:
@@ -53,12 +53,13 @@ It is not responsible for:
   - `ISkillBase` is the common player skill contract. It extends `IInitializable` and exposes `SkillInfoSO`.
   - `IUpgradeableSkill` extends `ISkillBase` and exposes `CanBeUgraded()` plus an `ISkillUpgradeableStatsConfig` config.
   - `UpgradeableSkill<TUpgradeableConfig>` is the base `MonoBehaviour` for skills backed by a ScriptableObject upgrade config. It activates the skill GameObject during initialization when config exists.
-  - `SkillsRegistry` discovers child components implementing `ISkillBase` in `Awake`, caches them in `Skills`, counts uninitialized skills in `Start`, and initializes `Skills[0]` as the starting skill.
+  - `SkillsRegistry` discovers direct child components implementing `ISkillBase` in `Awake`, caches them in `Skills`, counts uninitialized skills as an `int` in `Start`, and initializes `Skills[0]` as the starting skill.
   - `RandomUninitializedSkillsInitializator` picks and initializes a random uninitialized skill through the registry.
-  - `RandomUpgradeableSkillFinder` picks a random initialized skill with at least one upgradeable stat still available.
-  - `SkillUpgradeFlow` owns skill reward queueing. It queues uninitialized skills before upgrades, initializes queued new skills when dequeued, and builds up to three randomized upgrade options.
+  - `RandomUpgradeableSkillFinder` filters to `IUpgradeableSkill`, then picks a random candidate with at least one upgradeable stat still available. Its registry overload only considers initialized skills; `SkillUpgradeFlow` can pass a broader candidate set.
+  - `SkillUpgradeFlow` owns skill reward queueing. It has separate APIs for new-skill rewards and stat-upgrade rewards, prevents the same locked skill from being queued twice for initialization, initializes queued new skills when dequeued, and builds up to three randomized upgrade options.
   - `SkillUpgradeRequest` and `SkillUpgradeOption` carry the UI-facing request type, target skill, button text, and upgrade action.
   - `SkillUpgradeableStatsConfig` uses reflection over public instance properties assignable to `IUpgradeableStat` to expose upgrade choices.
+  - Current concrete upgrade configs use `IntUpgradeableStat` for discrete damage, piercing, saw-count, turret-count, and landmine damage values, and `FloatUpgradeableStat` for cooldown, size, range, speed, radius, and knockback values.
   - `SkillInfoSO` provides UI name and description text for unlock and upgrade presentation.
 - Concrete player skills:
   - `SawSkill` initializes saw blades from its serialized blade list. The first blade is initialized immediately; upgrading `NuberOfSaws` initializes more random inactive blades.
@@ -75,7 +76,7 @@ It is not responsible for:
   - `SkillsRegistry.Awake` registers all direct child skills implementing `ISkillBase`.
   - `SkillsRegistry.Start` counts uninitialized skills and initializes the first registered skill as the starting skill.
   - `SkillUpgradePresenter` listens to `IPlayerLevelPresenter.OnExpSliderVisualEndValueReached` and collectible spawner `OnSpawnedEntityReleased`.
-  - When triggered, `SkillUpgradePresenter` asks `ISkillUpgradeFlow` to queue a random new-skill or upgrade request.
+  - Skill crates queue random stat-upgrade requests. Level rewards queue a random new-skill request every `_newSkillLevelInterval` levels after level 1 when locked skills remain; if no new skill is queued, the presenter queues a random stat-upgrade request instead.
   - While showing UI, the presenter hides all skill visuals, displays either a new-skill section or stat-upgrade buttons, and advances through queued requests as the player continues or selects an option.
   - Upgrade buttons call `IUpgradeableStat.Upgrade`, which updates the copied runtime stat value and raises `OnUpgrade`; skill configs and skill components subscribe to those events to update derived configs or activate more child items.
 
@@ -91,7 +92,8 @@ It is not responsible for:
   - Upgrade UI selection and queueing belong in `ISkillUpgradeFlow`; UI rendering and hotkey handling belong in `SkillUpgradePresenter`.
 - Ordering or sequencing guarantees:
   - Registry discovery happens in `Awake`; initial skill activation and uninitialized count setup happen in `Start`.
-  - New skills are queued without initialization, then `SkillUpgradeFlow.TryGetNextRequest` initializes the skill immediately before returning a new-skill request to the presenter.
+  - New skills are queued without initialization, tracked in `_skillsQueuedForInitialization`, then `SkillUpgradeFlow.TryGetNextRequest` removes the queued marker and initializes the skill immediately before returning a new-skill request to the presenter.
+  - Upgrade requests can target initialized skills or skills already queued for initialization, but cannot target locked skills that are not already queued.
   - Queued upgrade requests are rechecked with `CanBeUgraded()` when dequeued, so stale maxed-out upgrade requests are skipped.
   - Skill stat upgrade events fire synchronously from `IUpgradeableStat.Upgrade`.
   - Turret and child-item activation is event-driven from stat upgrades such as `NumberOfTurrets` and `NuberOfSaws`.
@@ -126,7 +128,7 @@ It is not responsible for:
 - Upstream dependencies:
   - Reflex injects `IPlayerManager`, `IPlayerLevelPresenter`, `IOnRandomGridPosSpawner<CollectibleItemsSpawner>`, and `IGridManager` into skill-adjacent components.
   - `PlayerManager` provides the registry to UI through `IPlayerManager.SkillsRegistry`.
-  - `SkillUpgradeFlow` depends on `ISkillsRegistry`, `RandomUpgradeableSkillFinder`, and `SkillUpgradeableStatsConfig` to choose and construct requests.
+  - `SkillUpgradeFlow` depends on `ISkillsRegistry`, `RandomUpgradeableSkillFinder`, queued reward request state, and `SkillUpgradeableStatsConfig` to choose and construct requests.
   - `UpgradeableStat<T>` owns upgrade range, current value, max detection, subtract-mode behavior, unit display, and `OnUpgrade` events.
   - `DeepCopyUtility` protects ScriptableObject-authored starting values from direct runtime mutation.
   - Unity layers in `EntityLayers` and `TerrainLayers` gate collision, target acquisition, and landmine placement.
@@ -145,8 +147,7 @@ It is not responsible for:
 - Known limitations:
   - `IUpgradeableSkill.CanBeUgraded` and `SawSkillUpgradeableConfigSO.NuberOfSaws` contain spelling errors that are now part of the code contract.
   - `SkillsRegistry.Start` initializes `Skills[0]`, so starting skill depends on direct child order and fails if no skills are registered.
-  - `RandomUpgradeableSkillFinder` casts skills to `IUpgradeableSkill` and then calls `CanBeUgraded()` without filtering nulls, so non-upgradeable registered skills would throw.
-  - `SkillUpgradeFlow.QueueRandomRequest` relies on `RandomUpgradeableSkillFinder`, so non-upgradeable registered skills can still break upgrade queueing through that finder.
+  - `SkillUpgradeFlow.QueueRandomSkillUpgradeRequest` does nothing when no candidate upgradeable skill is found, so reward triggers can silently produce no visible section if every available stat is maxed or no upgradeable skills are eligible.
   - `Landmine.Initialize` does not set `_isInitialized`, so `Landmine.IsInitialized()` remains false after initialization.
   - `LandmineSkill` has a serialized `_cooldown` field that is not used; active spawn cadence comes from `_config.SpawnCooldown.Value`.
   - `LasergunSkill` iterates all serialized turrets when shooting, so uninitialized inactive turrets are asked to shoot unless their inactive GameObjects prevent invocation side effects in the current setup.
@@ -157,7 +158,7 @@ It is not responsible for:
   - Should generic collectible spawning remain under `Skills/ObjectsImpactingSkills/Crate` as more pickups are added?
   - Should skill configs be reset per run through a central run-state service instead of relying on ScriptableObject `OnEnable` cloning?
 - Suggested follow-up tasks:
-  - Add guardrails in `SkillsRegistry` and `RandomUpgradeableSkillFinder` for empty registries and non-upgradeable skills.
+  - Add guardrails in `SkillsRegistry` for empty registries before `Skills[0]` is initialized.
   - Fix the landmine initialization flag and remove or wire the unused cooldown field in a focused behavior-preserving cleanup.
-  - Review `SkillUpgradeFlow` queueing for duplicate queued skills and stale requests after stats reach max values.
+  - Review `SkillUpgradeFlow` queueing for repeated upgrade requests against the same skill and stale requests after stats reach max values.
   - Consider a dedicated skill progression service if more systems need to trigger, observe, save, or restore skill state.

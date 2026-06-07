@@ -34,10 +34,10 @@ It is not responsible for:
   - `Assets/Scripts/LayerMasks/TerrainLayers.cs`
   - `Assets/Scripts/Extensions/TransformTweenExtensions.cs`
 - Related docs:
-  - `.agents/context/skills-system.md`
-  - `.agents/context/pooling-and-object-lifecycle-system.md`
-  - `.agents/context/status-effects-system.md`
-  - `.agents/context/spawners-system.md`
+  - `.agents/context/game-systems/skills-system.md`
+  - `.agents/context/game-systems/pooling-and-object-lifecycle-system.md`
+  - `.agents/context/game-systems/status-effects-system.md`
+  - `.agents/context/game-systems/spawners-system.md`
   - `.agents/context/project-coding-standards.md`
 - Related agents or instructions:
   - `.agents/skills/document-system/SKILL.md`
@@ -46,7 +46,7 @@ It is not responsible for:
 ## Architecture and Data Flow
 
 - Core components:
-  - `ProjectileConfigSO` stores serialized starting damage, size, speed, range, max piercing, and disappearance duration. `OnEnable` copies starting values into mutable runtime properties.
+  - `ProjectileConfigSO` stores serialized starting damage, size, speed, range, max piercing, and disappearance duration. Damage and max piercing are `int` values. `OnEnable` copies starting values into mutable runtime properties.
   - `ProjectileSpawnConfig` carries world position, rotation, movement direction, and projectile config for spawner-style projectile creation.
   - `Projectile` is a `MonoBehaviour` implementing `IInitializableWithScriptableConfig<ProjectileConfigSO>` and `IPoolable`.
 - Runtime flow:
@@ -69,6 +69,7 @@ It is not responsible for:
   - `ReturnToPool` calls `OnRelease` and raises `OnCanBeReleased`.
   - Collision damage uses capability lookup through `IDamageable`; projectile code should not directly depend on concrete enemy types.
   - Projectile size, speed, range, damage, and piercing are player-facing balance values.
+  - Damage and max piercing are no longer byte-limited in code; validate asset values and UI assumptions before relying on byte-size bounds.
 - Ordering or sequencing guarantees:
   - `_startScale` is captured in `Start`; pooled prefabs should have their expected starting scale before first release.
   - `OnLifeEnd` is raised before the current pool owner releases the projectile.
@@ -105,7 +106,7 @@ It is not responsible for:
   - Pool owners consume `OnLifeEnd` and `OnCanBeReleased`.
   - Spawner docs treat turret/projectile creation as world-space spawning semantics, but projectiles are not currently scene-level DI spawners.
 - Cross-system coupling risks:
-  - Projectile config runtime properties are mutable and can be changed by skill upgrade configs.
+  - Projectile config runtime properties are mutable and can be changed by skill upgrade configs; damage and piercing upgrades now use int-backed stats/config values.
   - Current projectile collision scans all overlapping enemy and impassable colliders on trigger entry, so collider/layer setup directly changes damage behavior.
   - Pool count stability depends on owners not releasing the same projectile twice from both `OnLifeEnd` and `OnCanBeReleased`.
 

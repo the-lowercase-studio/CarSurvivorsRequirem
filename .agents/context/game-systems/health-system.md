@@ -27,8 +27,8 @@ It does not own damage calculation, target selection, enemy/player death present
 - Related docs:
   - `.agents/context/project-coding-standards.md`
   - `.agents/context/ai-game-dev-best-practices.md`
-  - `.agents/context/enemies-system.md`
-  - `.agents/context/damage-numbers-system.md`
+  - `.agents/context/game-systems/enemies-system.md`
+  - `.agents/context/game-systems/damage-numbers-system.md`
 - Related agents or instructions:
   - `.agents/skills/document-system/SKILL.md`
   - `.agents/skills/architecture-review/SKILL.md`

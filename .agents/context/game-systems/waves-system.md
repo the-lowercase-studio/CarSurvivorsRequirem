@@ -17,8 +17,8 @@ It does not own enemy prefab selection, spawn chance redistribution, off-camera 
   - Gameplay scene DI binding: `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
   - Grid-based spawn placement: `Assets/Scripts/Navigation/GridSystem/`
 - Related docs:
-  - `.agents/context/enemies-system.md`
-  - `.agents/context/grid-system.md`
+  - `.agents/context/game-systems/enemies-system.md`
+  - `.agents/context/game-systems/grid-system.md`
   - `.agents/context/project-coding-standards.md`
   - `.agents/context/ai-game-dev-best-practices.md`
 - Related agents or instructions:

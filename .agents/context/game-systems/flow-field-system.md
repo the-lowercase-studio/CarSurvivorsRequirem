@@ -37,9 +37,9 @@ It is not responsible for:
   - `Assets/Scripts/LayerMasks/TerrainLayers.cs`
   - `Assets/Scripts/LayerMasks/EntityLayers.cs`
 - Related docs:
-  - `.agents/context/grid-system.md`
-  - `.agents/context/enemies-system.md`
-  - `.agents/context/level-system.md`
+  - `.agents/context/game-systems/grid-system.md`
+  - `.agents/context/game-systems/enemies-system.md`
+  - `.agents/context/game-systems/level-system.md`
   - `.agents/context/project-coding-standards.md`
   - `.agents/context/ai-game-dev-best-practices.md`
 - Related skills:

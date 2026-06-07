@@ -38,12 +38,12 @@ It is not responsible for:
   - `Assets/Scripts/Volumes/DeathVolume.cs`
   - `Assets/Scripts/Settings/DamageNumbersSetting.cs`
 - Related docs:
-  - `.agents/context/spawners-system.md`
-  - `.agents/context/enemies-system.md`
-  - `.agents/context/projectiles-system.md`
-  - `.agents/context/level-system.md`
-  - `.agents/context/damage-numbers-system.md`
-  - `.agents/context/settings-system.md`
+  - `.agents/context/game-systems/spawners-system.md`
+  - `.agents/context/game-systems/enemies-system.md`
+  - `.agents/context/game-systems/projectiles-system.md`
+  - `.agents/context/game-systems/level-system.md`
+  - `.agents/context/game-systems/damage-numbers-system.md`
+  - `.agents/context/game-systems/settings-system.md`
   - `.agents/context/project-coding-standards.md`
 - Related agents or instructions:
   - `.agents/skills/document-system/SKILL.md`

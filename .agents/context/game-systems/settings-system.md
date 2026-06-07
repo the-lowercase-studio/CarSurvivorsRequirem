@@ -21,9 +21,9 @@ The Settings system is not responsible for owning UI layout, audio mixer impleme
   - `Assets/Scripts/DamageNumbers/DamageNumbersSpawner.cs`
   - `Assets/Scripts/ReflexDI/BootLoader.cs`
 - Related docs:
-  - `.agents/context/ui-system.md`
-  - `.agents/context/audio-system.md`
-  - `.agents/context/damage-numbers-system.md`
+  - `.agents/context/game-systems/ui-system.md`
+  - `.agents/context/game-systems/audio-system.md`
+  - `.agents/context/game-systems/damage-numbers-system.md`
   - `.agents/context/project-coding-standards.md`
   - `.agents/context/technology-documentation.md`
 - Related agents or instructions:
@@ -42,8 +42,8 @@ The Settings system is not responsible for owning UI layout, audio mixer impleme
   - `FullScreenSetting` stores `"FullScreenMode"` as a Unity `FullScreenMode` and applies it to `Screen.fullScreenMode`.
   - `ResolutionSetting` stores `"Resolution"` as `SerializableResolution`, validates it against available screen resolutions, and applies it through `ScreenSerializableResolutionHelper.SetResolution`.
   - `DamageNumbersSetting` stores `"DamageNumbersEnabled"` as a `bool` and applies it through `IEnableDisableFunctionalityTrigger<DamageNumbersSpawner>`.
-  - `AppStorage` serializes values into `Assets/Data/AppStorage.Editor.json` in the Unity Editor and `Data/AppStorage.json` under `AppDomain.CurrentDomain.BaseDirectory` in builds.
-  - Settings option UI components under `Assets/Scripts/UI/Settings/` bind Unity controls to typed `ISetting<TSelf, TRepresentedBy>` instances.
+  - `AppStorage` serializes values into `Assets/Data/AppStorage.Editor.json` in the Unity Editor and `Data/AppStorage.json` under the build root resolved from `Directory.GetParent(Application.dataPath)`, falling back to `AppDomain.CurrentDomain.BaseDirectory` only if that parent is unavailable.
+  - Settings option UI components under `Assets/Scripts/UI/Settings/` bind Unity controls to typed `ISetting<TSelf, TRepresentedBy>` instances. `GraphicOption` rebuilds the graphics dropdown options from its hard-coded quality map in `Awake`.
 - Key interfaces:
   - `IAppStorageValue<T>` defines `DefaultValue`, `GetKey`, `GetValueOrStoredDefault`, and `SaveValue`.
   - `ISetting<TSelf, TRepresentedBy>` is the main typed setting contract injected into UI components.
@@ -73,6 +73,7 @@ The Settings system is not responsible for owning UI layout, audio mixer impleme
   - Do not edit scene, prefab, asset, or meta files directly for settings wiring unless explicitly requested and the text change is safe to review.
   - Do not change setting default values as incidental cleanup; defaults are player-facing behavior.
   - Do not rename graphics quality labels without aligning Unity quality settings and `GraphicOption`'s lookup.
+  - Keep `GraphicOption`'s dropdown option setup aligned with its quality map; `LoadComponent` indexes the same map by stored/default quality name.
   - Treat audio volume values as mixer decibel values after slider conversion, not normalized slider values.
 
 ## Extension Points
@@ -115,7 +116,7 @@ The Settings system is not responsible for owning UI layout, audio mixer impleme
   - `AppStorage.TryGetValue` swallows deserialization exceptions and falls back to default values without diagnostics.
   - `AppStorage` caches values statically and does not support external file changes after its static load.
   - `GraphicSetting.Load` throws when the stored/default quality name is not present in `QualitySettings.names`.
-  - `GraphicOption` hard-codes `Low`, `Medium`, `High`, and `Ultra`; Unity quality settings must match those names and indices.
+  - `GraphicOption` hard-codes `Low`, `Medium`, `High`, and `Ultra`, rebuilds dropdown options from that map in `Awake`, and still requires stored/default names to exist in the map and Unity quality settings.
   - `AudioVolumeOption` uses `Mathf.Log10(_slider.value)`, so the slider minimum must stay above zero.
   - `ResolutionOption.LoadComponent` can set `-1` if the stored/default resolution is not in the current available-resolution list, while `ResolutionSetting.Load` has its own fallback path.
   - `ScreenSerializableResolutionHelper` caches available resolutions for the process lifetime.

@@ -112,6 +112,7 @@ public event EventHandler OnEnemyTurnEnd;
 ### Markdown Documents
 
 - AI-facing project documentation under `.agents/context/` uses kebab-case filenames.
+- Game-system documentation belongs under `.agents/context/game-systems/` and uses kebab-case filenames ending in `-system.md`.
 - Date-prefixed implementation plans under `.agents/context/implementations/plans/` and summaries under `.agents/context/implementations/summaries/` use `yyyy-mm-dd-description.md`.
 - Reserved operational filenames keep their established uppercase or conventional names, including `AGENTS.md`, `README.md`, and `SKILL.md`.
 - When renaming documentation, update all relative links and references in `.agents/context/`, `.agents/skills/`, and root agent entry-point files.

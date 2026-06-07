@@ -38,7 +38,7 @@ It is not responsible for enemy balance, choosing skill upgrades, score saving, 
   - `LevelController` is a player-attached `MonoBehaviour` that owns level state and reads max exp from `_expCurve`.
   - `ExpParticleSpawner` queues world-space exp spawns, splits them by configured threshold/divider data, and uses a Unity `ObjectPool<ExpParticle>`.
   - `ExpParticle` moves along the flow field, detects the player trigger layer, plays collection audio and shrink tween, then awards exp through `IPlayerManager.LevelController`.
-  - `PlayerLevelPresenter` animates exp slider and level text changes, then raises `OnExpSliderVisualEndValueReached`.
+  - `PlayerLevelPresenter` animates exp slider and level text changes, then raises `OnExpSliderVisualEndValueReached` with the reached `LevelData`.
 - Key interfaces:
   - `ILevelController` is owned by `LevelController` and reached through `IPlayerManager`.
   - `IInWorldSpaceSpawner<ExpParticleSpawner, float>` is bound in `DefaultGameplaySceneInstaller` for enemy death exp spawning.
@@ -51,8 +51,8 @@ It is not responsible for enemy balance, choosing skill upgrades, score saving, 
   5. Each spawned `ExpParticle` moves on the flow-field grid until it enters the player layer trigger.
   6. `ExpParticle.CollectExp` plays collection audio, shrinks the visual, and calls `_playerManager.LevelController.AddExp(_expAmount)`.
   7. `LevelController.AddExp` applies exp, emits one `OnLvlUp` per crossed level, then emits `OnExpChange` for the final level data.
-  8. `PlayerLevelPresenter` queues level-up visuals and latest same-level exp changes. When the slider reaches a level-up endpoint, it raises `OnExpSliderVisualEndValueReached`.
-  9. `SkillUpgradePresenter` listens to `IPlayerLevelPresenter.OnExpSliderVisualEndValueReached`, asks `ISkillUpgradeFlow` to queue a skill reward request, and renders the returned new-skill or upgrade UI.
+  8. `PlayerLevelPresenter` queues level-up visuals and latest same-level exp changes. When the slider reaches a level-up endpoint, it raises `OnExpSliderVisualEndValueReached` with that level's `LevelData`.
+  9. `SkillUpgradePresenter` listens to `IPlayerLevelPresenter.OnExpSliderVisualEndValueReached`, uses the reached level to queue a new-skill reward every configured interval when possible, otherwise queues an upgrade reward, and renders the returned new-skill or upgrade UI.
 
 ## Rules and Invariants
 
@@ -63,7 +63,7 @@ It is not responsible for enemy balance, choosing skill upgrades, score saving, 
   - A single `AddExp` call can trigger multiple `OnLvlUp` events before the final `OnExpChange`.
   - `OnExpChange` is emitted after level-up processing even if one or more `OnLvlUp` events were emitted first.
 - Ordering or sequencing guarantees:
-  - Skill upgrade UI timing is tied to the visual slider reaching the level-up endpoint, not directly to `LevelController.OnLvlUp`.
+  - Skill upgrade UI timing is tied to the visual slider reaching the level-up endpoint, not directly to `LevelController.OnLvlUp`; the raised event payload is the reached `LevelData`.
   - `PlayerLevelPresenter` only keeps the latest same-level exp event while level-up animations are pending.
   - Exp particle release is event-driven through `IPoolable.OnCanBeReleased` and `ObjectPool<ExpParticle>.Release`.
 - Constraints contributors must preserve:
@@ -96,7 +96,7 @@ It is not responsible for enemy balance, choosing skill upgrades, score saving, 
   - Collection uses `TransformTweenExtensions.LifeEndingShrinkToZeroTween` and `IAudioClipPlayer`.
 - Downstream consumers:
   - `PlayerLevelPresenter` consumes level events for slider and level text animation.
-  - `SkillUpgradePresenter` consumes `IPlayerLevelPresenter.OnExpSliderVisualEndValueReached` to trigger skill reward queueing through `ISkillUpgradeFlow`.
+  - `SkillUpgradePresenter` consumes `IPlayerLevelPresenter.OnExpSliderVisualEndValueReached` to trigger level-based skill reward queueing through `ISkillUpgradeFlow`.
   - `PlayerDeathPresenter` reads final `LevelData.Lvl` for death-screen text.
   - `LevelControllerEditor` calls `AddExp` through editor debug buttons.
 - Cross-system coupling risks:
@@ -113,7 +113,7 @@ It is not responsible for enemy balance, choosing skill upgrades, score saving, 
   - `PlayerLevelPresenter` subscribes to level events in `Start` but does not currently unsubscribe in `OnDisable` or `OnDestroy`.
 - Open design questions:
   - Should exp particle divider data split a kill's exp across particles, or should every particle intentionally carry the full enemy exp value?
-  - Should skill-upgrade selection remain tied to the slider animation endpoint, or should a separate level-up gameplay event drive upgrades?
+  - Should skill-upgrade selection remain tied to the slider animation endpoint and `_newSkillLevelInterval`, or should a separate level-up gameplay event drive rewards?
   - Should the required exp curve support non-integer or non-monotonic values, or should validation enforce safer progression data?
 - Suggested follow-up tasks:
   - Add focused tests for `LevelController.AddExp` event ordering and carryover.

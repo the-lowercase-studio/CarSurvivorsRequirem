@@ -20,8 +20,8 @@ It is not responsible for applying settings to Unity systems, deciding scoreboar
   - `Assets/Scripts/ReflexDI/MainMenuInstaller.cs`
   - `Assets/Scripts/ReflexDI/ProjectInstaller.cs`
 - Related docs:
-  - `.agents/context/ui-system.md`
-  - `.agents/context/audio-system.md`
+  - `.agents/context/game-systems/ui-system.md`
+  - `.agents/context/game-systems/audio-system.md`
   - `.agents/context/project-scripts-folder-map.md`
   - `.agents/context/project-coding-standards.md`
 - Related skills:
@@ -32,7 +32,7 @@ It is not responsible for applying settings to Unity systems, deciding scoreboar
 ## Architecture and Data Flow
 
 - Core components:
-  - `AppStorage` is a static key/value store backed by `Assets/Data/AppStorage.Editor.json` in the Unity Editor and `Data/AppStorage.json` under `AppDomain.CurrentDomain.BaseDirectory` in builds.
+  - `AppStorage` is a static key/value store backed by `Assets/Data/AppStorage.Editor.json` in the Unity Editor and `Data/AppStorage.json` under the build root resolved from `Directory.GetParent(Application.dataPath)` in builds, with `AppDomain.CurrentDomain.BaseDirectory` only as a fallback when that parent is unavailable.
   - `AppStorage` keeps an in-memory `Dictionary<string, JToken>` cache initialized by its static constructor.
   - `IAppStorageValue<T>` defines the contract for domain-owned persisted values: `DefaultValue`, `GetKey()`, `GetValueOrStoredDefault()`, and `SaveValue(T value)`.
   - Settings extend the storage contract through `ISetting<TSelf, TRepresentedBy>`, which combines `IAppStorageValue<TRepresentedBy>` with `ISettingLoader`.
@@ -59,7 +59,7 @@ It is not responsible for applying settings to Unity systems, deciding scoreboar
 - Critical behavior rules:
   - Keep `AppStorage` generic and domain-neutral. Domain keys, defaults, validation, and apply behavior belong to the owning setting or scoreboard class.
   - Keep persisted values accessed through `IAppStorageValue<T>` or a more specific setting/scoreboard service instead of scattering raw `AppStorage` calls across UI and gameplay classes.
-  - Preserve the current storage file locations unless the user explicitly approves a migration plan. Existing build persisted data is tied to `Data/AppStorage.json` under the application base directory, while Editor persisted data is tied to `Assets/Data/AppStorage.Editor.json`.
+  - Preserve the current storage file locations unless the user explicitly approves a migration plan. Existing build persisted data is tied to `Data/AppStorage.json` under the build root adjacent to the player data folder, while Editor persisted data is tied to `Assets/Data/AppStorage.Editor.json`.
   - Preserve the fallback behavior where missing or non-convertible values return domain defaults instead of failing callers.
   - Keep settings binding in `MainMenuInstaller` when adding a new `ISetting<TSelf, TRepresentedBy>` implementation.
 - Ordering or sequencing guarantees:
@@ -92,7 +92,7 @@ It is not responsible for applying settings to Unity systems, deciding scoreboar
 ## Integration Notes
 
 - Upstream dependencies:
-  - `AppStorage` depends on `System.IO`, `AppDomain.CurrentDomain.BaseDirectory`, Unity `Application.dataPath`, Newtonsoft `JsonConvert`, and `JToken`.
+  - `AppStorage` depends on `System.IO`, `Directory.GetParent(Application.dataPath)`, fallback `AppDomain.CurrentDomain.BaseDirectory`, Newtonsoft `JsonConvert`, and `JToken`.
   - Settings depend on storage for persisted values and on their runtime systems for apply behavior.
   - `ResolutionSetting` depends on `FullScreenSetting` and available Unity screen resolutions when applying stored resolution data.
   - Scoreboard services depend on `StoredScoreBoard` for persisted score lists.

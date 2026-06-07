@@ -25,11 +25,11 @@ It does not own the complete behavior of every spawned object. Enemy behavior, c
   - `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
   - `Assets/Scripts/ReflexDI/BootLoader.cs`
 - Related docs:
-  - `.agents/context/enemies-system.md`
-  - `.agents/context/collectibles-system.md`
-  - `.agents/context/damage-numbers-system.md`
-  - `.agents/context/level-system.md`
-  - `.agents/context/grid-system.md`
+  - `.agents/context/game-systems/enemies-system.md`
+  - `.agents/context/game-systems/collectibles-system.md`
+  - `.agents/context/game-systems/damage-numbers-system.md`
+  - `.agents/context/game-systems/level-system.md`
+  - `.agents/context/game-systems/grid-system.md`
 - Related agents or instructions:
   - `.agents/skills/document-system/SKILL.md`
   - `.agents/skills/di-integration/SKILL.md`
