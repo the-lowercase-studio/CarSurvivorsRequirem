@@ -13,6 +13,14 @@ namespace Assets.Scripts.Stats
 
         public bool IsSubstractModeOn { get; }
 
+        public bool AlwaysUseMinValueForUpgrade { get; }
+
+        public bool IsIntegerUpgradeRange { get; }
+
+        public float UpgradeRangeMin { get; }
+
+        public float UpgradeRangeMax { get; }
+
         public StatsUnits Unit { get; }
 
         public void Upgrade(float upgradeValue);
@@ -38,6 +46,14 @@ namespace Assets.Scripts.Stats
         protected ValueRange<T> _rangeOfPossibleValuesForUpgrade;
 
         public bool HasUnlimitedMaxValue => _hasUnlimitedMaxValue;
+        public bool AlwaysUseMinValueForUpgrade => _alwaysUseMinValueForUpgrade;
+        public bool IsIntegerUpgradeRange => typeof(T) == typeof(int);
+        public float UpgradeRangeMin => _rangeOfPossibleValuesForUpgrade is null
+            ? 0f
+            : Convert.ToSingle(_rangeOfPossibleValuesForUpgrade.Min);
+        public float UpgradeRangeMax => _rangeOfPossibleValuesForUpgrade is null
+            ? 0f
+            : Convert.ToSingle(_rangeOfPossibleValuesForUpgrade.Max);
 
         public event EventHandler OnUpgrade;
 

@@ -166,6 +166,7 @@ namespace Assets.Scripts.UI.Skills
                 skillStatsUpgradeButtonsData.Add(new ClickableButtonData
                 {
                     Text = option.Text,
+                    Rarity = option.Rarity,
                     OnClick = () => HandleSkillUpgradeOptionSelected(option)
                 });
             }
@@ -209,6 +210,7 @@ namespace Assets.Scripts.UI.Skills
                 button.Initialize(
                     clickableButtonData.Text,
                     buttonNumber,
+                    clickableButtonData.Rarity,
                     clickableButtonData.OnClick);
 
                 _upgradeButtons.Add(button);

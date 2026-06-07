@@ -54,6 +54,8 @@ MonoBehaviour:
   _text: {fileID: 3648753915158046390}
   _selectKeyImage: {fileID: 1087451972146598719}
   _keyboardIconMapping: {fileID: 11400000, guid: c8b8a674d76ae3446b3b9331178b7862, type: 2}
+  _rarityBackgroundImage: {fileID: 5759960872139994085}
+  _raritySpriteMapping: {fileID: 11400000, guid: c3c0344b9075b3c41b3f07cf082960c6, type: 2}
 --- !u!1 &4956672815345637843
 GameObject:
   m_ObjectHideFlags: 0

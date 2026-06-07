@@ -94,10 +94,13 @@ namespace Assets.Scripts.Skills.UpgradeFlow
                 float statValue = upgradeableStat.Unit == StatsUnits.Percentage
                     ? upgradeableStat.GetWhatPercentOfValueIsUpgradeValue(upgradeValue)
                     : upgradeValue;
+                SkillUpgradeRarity rarity = nameUpgradeableStatPair.RarityOverride
+                    ?? SkillUpgradeRarityCalculator.Calculate(upgradeableStat, upgradeValue);
 
                 options.Add(new SkillUpgradeOption(
                     $"{changeInfo} <b>{statName}</b> by <Color=#F8D61C>{statValue}{statUnit}</Color>",
-                    () => upgradeableStat.Upgrade(upgradeValue)));
+                    () => upgradeableStat.Upgrade(upgradeValue),
+                    rarity));
             }
 
             return options
