@@ -26,9 +26,11 @@ Read agent guidance in this order:
 3. `.agents/context/project-coding-standards.md` for code style and architectural constraints.
 4. `.agents/context/technology-documentation.md` for official documentation links.
 5. `.agents/context/ai-game-dev-best-practices.md` for gameplay and review guardrails.
-6. Relevant `.agents/skills/*/SKILL.md` files when the task matches a skill trigger.
+6. Relevant `.agents/context/game-systems/*-system.md` files when the task touches a documented game system.
+7. Relevant `.agents/skills/*/SKILL.md` files when the task matches a skill trigger.
 
 Use `.agents/context/` as the current documentation location for agent-facing project guidance.
+Use `.agents/context/game-systems/` for game-system documentation.
 Store implementation plans under `.agents/context/implementations/plans/` and implementation summaries under `.agents/context/implementations/summaries/`.
 
 ## Technology Baseline
@@ -113,6 +115,7 @@ Treat these YAML files as optional UI/default-prompt metadata for compatible too
 
 1. Identify the requested scope and the smallest relevant files.
 2. Read this guide, `.agents/README.md`, the relevant `.agents/context/*` file, and any triggered skill.
+   For game systems, read the relevant `.agents/context/game-systems/*-system.md` file.
 3. Inspect source files before changing behavior or documenting concrete implementation details.
 4. Keep edits scoped; do not mix broad cleanup with gameplay, DI, or UI changes.
 5. Prefer existing project patterns over new abstractions.
@@ -134,6 +137,7 @@ For documentation-only changes, review links and paths for accuracy. A Unity Edi
 
 - Keep agent operational guidance under `.agents/`.
 - Keep this root `AGENTS.md` as a short entry point, not a full replacement for `.agents/context/*`.
+- Keep game-system documentation in `.agents/context/game-systems/`.
 - Keep implementation plans in `.agents/context/implementations/plans/`.
 - Keep implementation summaries in `.agents/context/implementations/summaries/`.
 - When adding a new specialist domain, add or update the matching skill or agent file under `.agents/`.
