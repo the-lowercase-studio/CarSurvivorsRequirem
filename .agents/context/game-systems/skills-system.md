@@ -59,15 +59,15 @@ It is not responsible for:
   - `SkillUpgradeFlow` owns skill reward queueing. It has separate APIs for new-skill rewards and stat-upgrade rewards, prevents the same locked skill from being queued twice for initialization, initializes queued new skills when dequeued, and builds up to three randomized upgrade options.
   - `SkillUpgradeRequest` and `SkillUpgradeOption` carry the UI-facing request type, target skill, button text, and upgrade action.
   - `SkillUpgradeableStatsConfig` uses reflection over public instance properties assignable to `IUpgradeableStat` to expose upgrade choices.
-  - Current concrete upgrade configs use `IntUpgradeableStat` for discrete damage, piercing, saw-count, turret-count, and landmine damage values, and `FloatUpgradeableStat` for cooldown, size, range, speed, radius, and knockback values.
+  - Current concrete upgrade configs use `IntUpgradeableStat` for discrete damage, piercing, saw-count, turret-count, lasergun target-count, and landmine damage values, and `FloatUpgradeableStat` for cooldown, size, range, speed, radius, and knockback values.
   - `SkillInfoSO` provides UI name and description text for unlock and upgrade presentation.
 - Concrete player skills:
   - `SawSkill` initializes saw blades from its serialized blade list. The first blade is initialized immediately; upgrading `NuberOfSaws` initializes more random inactive blades.
   - `SawBlade` damages enemies on trigger contact, applies knockback scaled by player movement speed, stuns enemies for the knockback duration, and plays attack audio.
   - `MinigunSkill` initializes random minigun turrets, initializes more turrets when `NumberOfTurrets` upgrades, and runs a coroutine that repeatedly tells initialized turrets to shoot.
   - `MinigunTurret` rotates its visual with DOTween, pools `Projectile` instances, initializes projectiles from `TurretConfigSO.ProjectileStatsSO`, plays muzzle VFX and shoot audio, and releases projectiles on life-end events.
-  - `LasergunSkill` initializes laser turrets, initializes more turrets when `NumberOfTurrets` upgrades, and invokes repeated shooting based on `DelayBetweenShoots`.
-  - `LasergunTurret` acquires visible enemy targets within range, rotates toward the current target, plays charge VFX, fires a line-renderer beam, and applies configured damage.
+  - `LasergunSkill` initializes laser turrets, initializes more turrets when `NumberOfTurrets` upgrades, applies `NumberOfTargets` to each initialized turret, and invokes repeated shooting based on `DelayBetweenShoots`.
+  - `LasergunTurret` acquires the closest visible enemy targets within range up to its configured target count, rotates toward the closest primary target, plays charge VFX, fires one line-renderer beam per captured hit target, and applies configured damage once to each captured target.
   - `LandmineSkill` periodically spawns landmine instances at the player position when a downward raycast confirms ground below.
   - `Landmine` explodes on enemy trigger contact, applies area damage, knockback, stun, explosion VFX, and destroys itself after death VFX completes.
 - Runtime flow:
@@ -97,9 +97,12 @@ It is not responsible for:
   - Queued upgrade requests are rechecked with `CanBeUgraded()` when dequeued, so stale maxed-out upgrade requests are skipped.
   - Skill stat upgrade events fire synchronously from `IUpgradeableStat.Upgrade`.
   - Turret and child-item activation is event-driven from stat upgrades such as `NumberOfTurrets` and `NuberOfSaws`.
+  - Lasergun target-count changes are event-driven from `NumberOfTargets.OnUpgrade`; existing initialized turrets receive the new target capacity, and newly initialized turrets receive the current capacity after activation.
 - Constraints contributors must preserve:
   - Preserve inspector-assigned skill info, config, child turret/blade lists, VFX, audio, projectile, and parent references.
   - Treat changes to skill stat ranges, cooldowns, damage, range, projectile stats, target selection, spawn cadence, and activation counts as player-facing balance changes.
+  - Preserve lasergun target selection as closest visible enemies in range unless a design change explicitly approves different targeting.
+  - Preserve one lasergun shoot sound per turret shot, even when multiple targets are hit.
   - Keep DI-facing dependencies explicit where already established. For example, `SawBlade` depends on `IPlayerManager`, and skill UI receives player and collectible dependencies through Reflex.
   - Avoid replacing registry, UI, or turret dependencies with singleton access or broad scene searches.
   - Do not edit `.prefab`, `.unity`, `.asset`, or `.meta` files directly unless the user explicitly asks and the text change is safe to review.
@@ -122,6 +125,7 @@ It is not responsible for:
   - In Unity, validate initial skill activation, skill-crate unlock flow, level-up upgrade flow, upgrade button clicks/hotkeys, continue input, and visual matching by skill name.
   - For a new skill, test first initialization, repeated upgrade choices, max-stat behavior, scene reload/runtime reset behavior, audio/VFX references, and enemy interaction layers.
   - For physics skills, validate enemy layer filtering, terrain obstruction checks, collider trigger setup, and knockback/stun interactions.
+  - For lasergun target-count changes, validate `NumberOfTargets = 1` against the previous single-target behavior, values `2..5` against closest-visible-enemy selection, terrain occlusion, one beam per hit target, beam cleanup after the laser effect, and multiple turret shots stacking as separate hits.
 
 ## Integration Notes
 
@@ -132,6 +136,7 @@ It is not responsible for:
   - `UpgradeableStat<T>` owns upgrade range, current value, max detection, subtract-mode behavior, unit display, and `OnUpgrade` events.
   - `DeepCopyUtility` protects ScriptableObject-authored starting values from direct runtime mutation.
   - Unity layers in `EntityLayers` and `TerrainLayers` gate collision, target acquisition, and landmine placement.
+  - Lasergun target selection uses non-allocating physics overlap buffers, enemy layer filtering, and terrain line-of-sight checks before targets are accepted.
 - Downstream consumers:
   - `SkillUpgradePresenter` consumes `ISkillUpgradeFlow`, `SkillUpgradeRequest`, `SkillUpgradeOption`, `ISkillsRegistry`, `ISkillBase`, `IUpgradeableSkill`, `SkillInfoSO`, and `IUpgradeableStat`.
   - `SkillsVisualPresenter` consumes `SkillInfoSO.Name` for visual lookup.
@@ -150,7 +155,7 @@ It is not responsible for:
   - `SkillUpgradeFlow.QueueRandomSkillUpgradeRequest` does nothing when no candidate upgradeable skill is found, so reward triggers can silently produce no visible section if every available stat is maxed or no upgradeable skills are eligible.
   - `Landmine.Initialize` does not set `_isInitialized`, so `Landmine.IsInitialized()` remains false after initialization.
   - `LandmineSkill` has a serialized `_cooldown` field that is not used; active spawn cadence comes from `_config.SpawnCooldown.Value`.
-  - `LasergunSkill` iterates all serialized turrets when shooting, so uninitialized inactive turrets are asked to shoot unless their inactive GameObjects prevent invocation side effects in the current setup.
+  - `LasergunTurret` creates additional line-renderer instances at runtime when `NumberOfTargets` grows above one; those clones depend on the serialized first `LineRenderer` being a valid beam template.
   - Some current skill code uses direct scene/tag lookup patterns that do not match the preferred DI direction for new code.
 - Open design questions:
   - Should starting skill be explicitly configured instead of relying on registry child order?
