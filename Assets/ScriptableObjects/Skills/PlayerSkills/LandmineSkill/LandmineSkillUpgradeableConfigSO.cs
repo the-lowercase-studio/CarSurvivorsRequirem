@@ -12,13 +12,13 @@ namespace Assets.ScriptableObjects.Skills.PlayerSkills.LandmineSkill
         [SerializeField] private FloatUpgradeableStat _explosionRadius;
         [SerializeField] private FloatUpgradeableStat _size;
         [SerializeField] private FloatUpgradeableStat _knockbackRange;
-        [SerializeField] private ByteUpgradeableStat _damage;
+        [SerializeField] private IntUpgradeableStat _damage;
 
         public FloatUpgradeableStat SpawnCooldown { get; private set; }
         public FloatUpgradeableStat ExplosionRadius { get; private set; }
         public FloatUpgradeableStat Size { get; private set; }
         public FloatUpgradeableStat KnockbackRange { get; private set; }
-        public ByteUpgradeableStat Damage { get; private set; }
+        public IntUpgradeableStat Damage { get; private set; }
 
         private void OnEnable()
         {

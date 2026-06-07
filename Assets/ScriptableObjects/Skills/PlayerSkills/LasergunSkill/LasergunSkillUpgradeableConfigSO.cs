@@ -12,17 +12,17 @@ public class LasergunSkillSO : SkillUpgradeableStatsConfig
 
     [SerializeField] private TurretConfigSO _turretConfig;
     [SerializeField] private FloatUpgradeableStat _delayBetweenShoots;
-    [SerializeField] private ByteUpgradeableStat _numberOfTurrets;
+    [SerializeField] private IntUpgradeableStat _numberOfTurrets;
     public TurretConfigSO TurretConfig => _turretConfig;
     public FloatUpgradeableStat DelayBetweenShoots { get; private set; }
-    public ByteUpgradeableStat NumberOfTurrets { get; private set; }
+    public IntUpgradeableStat NumberOfTurrets { get; private set; }
 
     [Header("Laser Stats")]
     [SerializeField] private ProjectileConfigSO _projectileConfig;
     [SerializeField] private FloatUpgradeableStat _startRange;
-    [SerializeField] private ByteUpgradeableStat _startDamage;
+    [SerializeField] private IntUpgradeableStat _startDamage;
     public FloatUpgradeableStat Range { get; private set; }
-    public ByteUpgradeableStat Damage { get; private set; }
+    public IntUpgradeableStat Damage { get; private set; }
 
     private void OnEnable()
     {

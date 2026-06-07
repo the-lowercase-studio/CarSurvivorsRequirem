@@ -8,7 +8,7 @@ namespace Assets.Scripts.Skills
     public interface ISkillsRegistry
     {
         public IReadOnlyList<ISkillBase> Skills { get; }
-        public byte UninitializedSkillsCount { get; }
+        public int UninitializedSkillsCount { get; }
 
         public IEnumerable<ISkillBase> GetUninitializedSkills();
 
@@ -18,7 +18,7 @@ namespace Assets.Scripts.Skills
     public class SkillsRegistry : MonoBehaviour, ISkillsRegistry
     {
         public IReadOnlyList<ISkillBase> Skills { get; private set; }
-        public byte UninitializedSkillsCount { get; private set; }
+        public int UninitializedSkillsCount { get; private set; }
 
         private void Awake()
         {
@@ -27,7 +27,7 @@ namespace Assets.Scripts.Skills
 
         private void Start()
         {
-            UninitializedSkillsCount = (byte)GetUninitializedSkills().Count();
+            UninitializedSkillsCount = GetUninitializedSkills().Count();
 
             InitializeSkill(Skills[0]);
         }

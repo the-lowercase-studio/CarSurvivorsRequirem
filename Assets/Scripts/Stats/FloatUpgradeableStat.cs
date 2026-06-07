@@ -26,10 +26,10 @@ namespace Assets.Scripts.Stats
 
         public override void OnAfterDeserialize()
         {
-            base.OnAfterDeserialize();
-
             MinMaxRange = _floatMinMaxRange;
             _rangeOfPossibleValuesForUpgrade = _floatRangeOfPossibleValuesForUpgrade;
+
+            base.OnAfterDeserialize();
         }
     }
 }

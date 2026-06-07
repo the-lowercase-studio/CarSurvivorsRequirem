@@ -16,6 +16,7 @@ MonoBehaviour:
     <IsSubstractModeOn>k__BackingField: 1
     <Unit>k__BackingField: 2
     _alwaysUseMinValueForUpgrade: 0
+    _hasUnlimitedMaxValue: 0
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 8
     _floatMinMaxRange:
@@ -28,18 +29,20 @@ MonoBehaviour:
     <IsSubstractModeOn>k__BackingField: 0
     <Unit>k__BackingField: 3
     _alwaysUseMinValueForUpgrade: 0
+    _hasUnlimitedMaxValue: 1
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 1
     _floatMinMaxRange:
       <Min>k__BackingField: 1
       <Max>k__BackingField: 4
     _floatRangeOfPossibleValuesForUpgrade:
-      <Min>k__BackingField: 1.2
-      <Max>k__BackingField: 2.2
+      <Min>k__BackingField: 1
+      <Max>k__BackingField: 1.2
   _size:
     <IsSubstractModeOn>k__BackingField: 0
     <Unit>k__BackingField: 1
     _alwaysUseMinValueForUpgrade: 0
+    _hasUnlimitedMaxValue: 1
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 1
     _floatMinMaxRange:
@@ -52,6 +55,7 @@ MonoBehaviour:
     <IsSubstractModeOn>k__BackingField: 0
     <Unit>k__BackingField: 3
     _alwaysUseMinValueForUpgrade: 0
+    _hasUnlimitedMaxValue: 1
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 1
     _floatMinMaxRange:
@@ -64,11 +68,12 @@ MonoBehaviour:
     <IsSubstractModeOn>k__BackingField: 0
     <Unit>k__BackingField: 0
     _alwaysUseMinValueForUpgrade: 0
+    _hasUnlimitedMaxValue: 1
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 5
-    _byteMinMaxRange:
+    _intMinMaxRange:
       <Min>k__BackingField: 5
       <Max>k__BackingField: 18
-    _byteRangeOfPossibleValuesForUpgrade:
+    _intRangeOfPossibleValuesForUpgrade:
       <Min>k__BackingField: 4
       <Max>k__BackingField: 6

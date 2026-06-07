@@ -189,19 +189,19 @@ Preset:
     value: 5
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _damage._byteMinMaxRange.<Min>k__BackingField
+    propertyPath: _damage._intMinMaxRange.<Min>k__BackingField
     value: 5
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _damage._byteMinMaxRange.<Max>k__BackingField
+    propertyPath: _damage._intMinMaxRange.<Max>k__BackingField
     value: 18
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _damage._byteRangeOfPossibleValuesForUpgrade.<Min>k__BackingField
+    propertyPath: _damage._intRangeOfPossibleValuesForUpgrade.<Min>k__BackingField
     value: 4
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _damage._byteRangeOfPossibleValuesForUpgrade.<Max>k__BackingField
+    propertyPath: _damage._intRangeOfPossibleValuesForUpgrade.<Max>k__BackingField
     value: 6
     objectReference: {fileID: 0}
   m_ExcludedProperties: []
