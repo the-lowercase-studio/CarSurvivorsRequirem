@@ -9,6 +9,8 @@ namespace Assets.Scripts.Stats
     {
         public bool CanBeUpgraded { get; }
 
+        public bool HasUnlimitedMaxValue { get; }
+
         public bool IsSubstractModeOn { get; }
 
         public StatsUnits Unit { get; }
@@ -29,10 +31,13 @@ namespace Assets.Scripts.Stats
         [field: SerializeField] public bool IsSubstractModeOn { get; protected set; }
         [field: SerializeField] public StatsUnits Unit { get; protected set; }
         [SerializeField] protected bool _alwaysUseMinValueForUpgrade;
+        [SerializeField] private bool _hasUnlimitedMaxValue;
         [field: SerializeField, HideInInspector] public bool CanBeUpgraded { get; protected set; } = true;
         public ValueRange<T> MinMaxRange { get; protected set; }
         [field: SerializeField, HideInInspector] public T Value { get; protected set; }
         protected ValueRange<T> _rangeOfPossibleValuesForUpgrade;
+
+        public bool HasUnlimitedMaxValue => _hasUnlimitedMaxValue;
 
         public event EventHandler OnUpgrade;
 
@@ -70,7 +75,7 @@ namespace Assets.Scripts.Stats
 
             float newValue = value + delta;
 
-            if (IsValueExceedingOrEqualMaxValue(newValue, maxValue))
+            if (ShouldApplyMaxValueLimit() && IsValueExceedingOrEqualMaxValue(newValue, maxValue))
             {
                 newValue = maxValue;
                 CanBeUpgraded = false;
@@ -102,13 +107,18 @@ namespace Assets.Scripts.Stats
                 return;
             }
 
-            float valueFloat = Convert.ToSingle(Value);
             float maxValueFloat = Convert.ToSingle(MinMaxRange.Max);
             float minValueFloat = Convert.ToSingle(MinMaxRange.Min);
 
             Value = MinMaxRange.Min;
 
-            CanBeUpgraded = !Mathf.Approximately(minValueFloat, maxValueFloat);
+            CanBeUpgraded = !ShouldApplyMaxValueLimit()
+                || !Mathf.Approximately(minValueFloat, maxValueFloat);
+        }
+
+        private bool ShouldApplyMaxValueLimit()
+        {
+            return IsSubstractModeOn || !HasUnlimitedMaxValue;
         }
 
         private bool IsValueExceedingOrEqualMaxValue(float value, float maxValue)

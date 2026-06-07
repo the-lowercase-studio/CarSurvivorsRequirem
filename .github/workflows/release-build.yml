@@ -51,6 +51,7 @@ jobs:
           projectPath: .
           unityVersion: 6000.4.5f1
           targetPlatform: ${{ matrix.targetPlatform }}
+          buildName: CarSurvivors
 
       - name: Get Version
         id: version
