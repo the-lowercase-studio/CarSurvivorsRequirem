@@ -13,9 +13,11 @@ public class LasergunSkillSO : SkillUpgradeableStatsConfig
     [SerializeField] private TurretConfigSO _turretConfig;
     [SerializeField] private FloatUpgradeableStat _delayBetweenShoots;
     [SerializeField] private IntUpgradeableStat _numberOfTurrets;
+    [SerializeField] private IntUpgradeableStat _numberOfTargets;
     public TurretConfigSO TurretConfig => _turretConfig;
     public FloatUpgradeableStat DelayBetweenShoots { get; private set; }
     public IntUpgradeableStat NumberOfTurrets { get; private set; }
+    public IntUpgradeableStat NumberOfTargets { get; private set; }
 
     [Header("Laser Stats")]
     [SerializeField] private ProjectileConfigSO _projectileConfig;
@@ -36,6 +38,7 @@ public class LasergunSkillSO : SkillUpgradeableStatsConfig
     private void DeepCopyUpgradeableStats()
     {
         NumberOfTurrets = DeepCopyUtility.DeepCopy(_numberOfTurrets);
+        NumberOfTargets = DeepCopyUtility.DeepCopy(_numberOfTargets);
         DelayBetweenShoots = DeepCopyUtility.DeepCopy(_delayBetweenShoots);
         Damage = DeepCopyUtility.DeepCopy(_startDamage);
         Range = DeepCopyUtility.DeepCopy(_startRange);
