@@ -65,7 +65,7 @@ namespace Assets.Scripts.UI.Skills
                 return;
             }
 
-            if (_newSkillSection.activeSelf && Keyboard.current.enterKey.wasPressedThisFrame)
+            if (_newSkillSection.activeSelf && Keyboard.current.fKey.wasPressedThisFrame)
             {
                 HandleContinueButtonClicked();
                 return;

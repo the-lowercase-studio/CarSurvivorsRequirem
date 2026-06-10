@@ -90,12 +90,13 @@ namespace Assets.Scripts.UI.Skills
         {
             if (_rarityBackgroundImage == null
                 || _raritySpriteMapping == null
-                || !_raritySpriteMapping.TryGetSprite(rarity, out Sprite sprite))
+                || !_raritySpriteMapping.TryGetVisual(rarity, out Sprite sprite, out Color color))
             {
                 return;
             }
 
             _rarityBackgroundImage.sprite = sprite;
+            _rarityBackgroundImage.color = color;
         }
     }
 }

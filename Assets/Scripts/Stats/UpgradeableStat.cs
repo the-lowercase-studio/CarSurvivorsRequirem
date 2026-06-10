@@ -1,5 +1,6 @@
 ﻿using Assets.Scripts.Common.Types;
 using Assets.Scripts.Skills;
+using Assets.Scripts.Skills.UpgradeFlow;
 using System;
 using UnityEngine;
 
@@ -21,6 +22,10 @@ namespace Assets.Scripts.Stats
 
         public float UpgradeRangeMax { get; }
 
+        public bool OverrideDefaultRarity { get; }
+
+        public SkillUpgradeRarity Rarity { get; }
+
         public StatsUnits Unit { get; }
 
         public void Upgrade(float upgradeValue);
@@ -40,6 +45,8 @@ namespace Assets.Scripts.Stats
         [field: SerializeField] public StatsUnits Unit { get; protected set; }
         [SerializeField] protected bool _alwaysUseMinValueForUpgrade;
         [SerializeField] private bool _hasUnlimitedMaxValue;
+        [field: SerializeField] public bool OverrideDefaultRarity { get; protected set; }
+        [field: SerializeField] public SkillUpgradeRarity Rarity { get; protected set; }
         [field: SerializeField, HideInInspector] public bool CanBeUpgraded { get; protected set; } = true;
         public ValueRange<T> MinMaxRange { get; protected set; }
         [field: SerializeField, HideInInspector] public T Value { get; protected set; }

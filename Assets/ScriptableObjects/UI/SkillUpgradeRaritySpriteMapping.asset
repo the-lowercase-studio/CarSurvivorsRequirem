@@ -12,10 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 619e137fd44098e41a701d84e7c312c0, type: 3}
   m_Name: SkillUpgradeRaritySpriteMapping
   m_EditorClassIdentifier: Assembly-CSharp::Assets.ScriptableObjects.UI.SkillUpgradeRaritySpriteMapping
-  _sprites:
-  - <Rarity>k__BackingField: 0
-    <Sprite>k__BackingField: {fileID: 2016435058, guid: f782ac1aff959b64f83efee73e479cf1, type: 3}
-  - <Rarity>k__BackingField: 1
-    <Sprite>k__BackingField: {fileID: 1890024860, guid: bd1ee82693ae61e4695de12499e71f1f, type: 3}
-  - <Rarity>k__BackingField: 2
-    <Sprite>k__BackingField: {fileID: -2052896546, guid: 7ba73e1dc40906d45a429acc962171d1, type: 3}
+  _commonSprite: {fileID: 2016435058, guid: f782ac1aff959b64f83efee73e479cf1, type: 3}
+  _outlinedSprite: {fileID: 1890024860, guid: bd1ee82693ae61e4695de12499e71f1f, type: 3}
+  _commonColor: {r: 1, g: 1, b: 1, a: 1}
+  _rareColor: {r: 1, g: 1, b: 1, a: 1}
+  _ultraRareColor: {r: 1, g: 0.913718, b: 0, a: 1}

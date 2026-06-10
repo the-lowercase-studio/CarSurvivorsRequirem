@@ -25,7 +25,7 @@ TagManager:
   - InstantKill
   - VFX
   - Audio
-  - 
+  - WorldUI
   - 
   - 
   - 
@@ -54,3 +54,4 @@ TagManager:
   - Light Layer 5
   - Light Layer 6
   - Light Layer 7
+  m_MigratedRenderPipelines: []

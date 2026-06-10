@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4338806624551796277}
   - component: {fileID: 6905223007019089948}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: UpgradeButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -70,7 +70,8 @@ GameObject:
   - component: {fileID: 3436615340972070011}
   - component: {fileID: 6951335998446833203}
   - component: {fileID: 6962594972033447135}
-  m_Layer: 8
+  - component: {fileID: 7610919673700096443}
+  m_Layer: 16
   m_Name: Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -125,7 +126,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 2016435058, guid: f782ac1aff959b64f83efee73e479cf1, type: 3}
+  m_Sprite: {fileID: 1890024860, guid: bd1ee82693ae61e4695de12499e71f1f, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -214,6 +215,21 @@ MonoBehaviour:
   _growScaleMultiplier: 1.06
   _growAnimationDuration: 0.2
   _shrinkAnimatioDuration: 0.1
+--- !u!114 &7610919673700096443
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4956672815345637843}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
+  m_EffectColor: {r: 0, g: 0, b: 0, a: 0.5}
+  m_EffectDistance: {x: 0, y: 0}
+  m_UseGraphicAlpha: 1
 --- !u!1 &6119563883981965586
 GameObject:
   m_ObjectHideFlags: 0
@@ -226,7 +242,7 @@ GameObject:
   - component: {fileID: 63965650387247100}
   - component: {fileID: 1087451972146598719}
   - component: {fileID: 8704949570522960816}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: SelectKeyImage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -313,7 +329,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 24886932756162918}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: SelectKeyImageHolder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -351,7 +367,7 @@ GameObject:
   - component: {fileID: 3125914354699185332}
   - component: {fileID: 2182667704714362805}
   - component: {fileID: 3648753915158046390}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: Text (TMP)
   m_TagString: Untagged
   m_Icon: {fileID: 0}

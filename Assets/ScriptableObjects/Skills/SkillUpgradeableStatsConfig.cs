@@ -32,8 +32,6 @@ namespace Assets.ScriptableObjects.Player.Skills
 
     public abstract class SkillUpgradeableStatsConfig : ScriptableObject, ISkillUpgradeableStatsConfig
     {
-        [SerializeField] private SkillUpgradeStatRarityOverride[] _rarityOverrides;
-
         public IEnumerable<NameUpgradableStatPair> GetUpgradeableStatsThatCanBeUpgraded()
         {
             List<NameUpgradableStatPair> upgradeableStats = new();
@@ -50,36 +48,21 @@ namespace Assets.ScriptableObjects.Player.Skills
                     upgradeableStats.Add(new NameUpgradableStatPair(
                         propertyInfo.Name,
                         upgradeableStat,
-                        GetRarityOverride(propertyInfo.Name)));
+                        GetRarityOverride(upgradeableStat)));
                 }
             }
 
             return upgradeableStats;
         }
 
-        private SkillUpgradeRarity? GetRarityOverride(string statName)
+        private SkillUpgradeRarity? GetRarityOverride(IUpgradeableStat upgradeableStat)
         {
-            if (_rarityOverrides == null)
+            if (upgradeableStat.OverrideDefaultRarity)
             {
-                return null;
-            }
-
-            foreach (SkillUpgradeStatRarityOverride rarityOverride in _rarityOverrides)
-            {
-                if (rarityOverride.StatName == statName)
-                {
-                    return rarityOverride.Rarity;
-                }
+                return upgradeableStat.Rarity;
             }
 
             return null;
         }
-    }
-
-    [Serializable]
-    public struct SkillUpgradeStatRarityOverride
-    {
-        [field: SerializeField] public string StatName { get; private set; }
-        [field: SerializeField] public SkillUpgradeRarity Rarity { get; private set; }
     }
 }

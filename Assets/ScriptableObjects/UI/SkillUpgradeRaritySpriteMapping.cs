@@ -1,4 +1,3 @@
-using System;
 using Assets.Scripts.Skills.UpgradeFlow;
 using UnityEngine;
 
@@ -7,34 +6,29 @@ namespace Assets.ScriptableObjects.UI
     [CreateAssetMenu(fileName = "SkillUpgradeRaritySpriteMapping", menuName = "Scriptable Objects/UI/Skill Upgrade Rarity Sprite Mapping")]
     public class SkillUpgradeRaritySpriteMapping : ScriptableObject
     {
-        [SerializeField] private SkillUpgradeRaritySprite[] _sprites;
+        [SerializeField] private Sprite _commonSprite;
+        [SerializeField] private Sprite _outlinedSprite;
+        [SerializeField] private Color _commonColor = Color.white;
+        [SerializeField] private Color _rareColor = Color.white;
+        [SerializeField] private Color _ultraRareColor = Color.white;
 
-        public bool TryGetSprite(SkillUpgradeRarity rarity, out Sprite sprite)
+        public bool TryGetVisual(SkillUpgradeRarity rarity, out Sprite sprite, out Color color)
         {
-            if (_sprites == null)
+            color = rarity switch
             {
-                sprite = null;
-                return false;
-            }
+                SkillUpgradeRarity.Rare => _rareColor,
+                SkillUpgradeRarity.UltraRare => _ultraRareColor,
+                _ => _commonColor
+            };
 
-            foreach (SkillUpgradeRaritySprite raritySprite in _sprites)
+            sprite = rarity switch
             {
-                if (raritySprite.Rarity == rarity)
-                {
-                    sprite = raritySprite.Sprite;
-                    return sprite != null;
-                }
-            }
+                SkillUpgradeRarity.Rare => _outlinedSprite,
+                SkillUpgradeRarity.UltraRare => _outlinedSprite,
+                _ => _commonSprite
+            };
 
-            sprite = null;
-            return false;
+            return sprite != null;
         }
-    }
-
-    [Serializable]
-    public struct SkillUpgradeRaritySprite
-    {
-        [field: SerializeField] public SkillUpgradeRarity Rarity { get; private set; }
-        [field: SerializeField] public Sprite Sprite { get; private set; }
     }
 }

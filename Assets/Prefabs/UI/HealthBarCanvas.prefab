@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 593428645127512961}
   - component: {fileID: 1833454922515158653}
   - component: {fileID: 1392485172912787361}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: Fill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -84,7 +84,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6091703174895846676}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: Fill Area
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -122,7 +122,7 @@ GameObject:
   - component: {fileID: 8740130503622917252}
   - component: {fileID: 6941146590113762250}
   - component: {fileID: 4205118747865137846}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: HealthBarSlider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -255,7 +255,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1652605876193057166}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -294,7 +294,7 @@ GameObject:
   - component: {fileID: 6044507724812358617}
   - component: {fileID: 1359625985709593938}
   - component: {fileID: 6985478346368457557}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: Fill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -341,7 +341,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.23921569, g: 0.09803922, b: 0.011764706, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 0
@@ -369,7 +369,7 @@ GameObject:
   - component: {fileID: 6292315397129453767}
   - component: {fileID: 2809248910578468026}
   - component: {fileID: 5287534924494987372}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: Fill (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -416,7 +416,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.23921569, g: 0.09803922, b: 0.011764706, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 0
@@ -446,7 +446,7 @@ GameObject:
   - component: {fileID: 6069897430884871333}
   - component: {fileID: 4755619676840758172}
   - component: {fileID: 2725266226125143720}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: HealthBarCanvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -485,6 +485,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5046112d6f4322c4486d710d475e2a44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _isDirectionFlipped: 0
+  _rotationSmoothSpeed: 12
+  _maxXRotation: 180
+  _maxYRotation: 180
+  _localYOffset: 0
 --- !u!223 &6069897430884871333
 Canvas:
   m_ObjectHideFlags: 0
@@ -503,6 +508,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
+  m_UseReflectionProbes: 0
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0

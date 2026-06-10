@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 5408576977649307617}
   - component: {fileID: 7419117134307897359}
   - component: {fileID: 1571515411553014357}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: SkillUpgradePresenter
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -61,6 +61,7 @@ MonoBehaviour:
   _newSkillSection: {fileID: 3017999522807307857}
   _newSkillName: {fileID: 7431511457781083769}
   _newSkillDescription: {fileID: 7914849654050836860}
+  _newSkillLevelInterval: 6
   _buttonsAudioPlayer: {fileID: 2812685238107425388}
 --- !u!114 &1488344482911922785
 MonoBehaviour:
@@ -153,7 +154,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5299601792255637267}
   - component: {fileID: 7968436093041726275}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: Content
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -218,7 +219,7 @@ GameObject:
   - component: {fileID: 1535222182591683812}
   - component: {fileID: 612988869027225672}
   - component: {fileID: 8975841112874827239}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -292,7 +293,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1762228030553163483}
   - component: {fileID: 1268826944114861887}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: StatsUpgrades
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -349,7 +350,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2812976654222992272}
   - component: {fileID: 6163543167547961442}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: NameLabel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -406,7 +407,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6679562809247368051}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: ContinueButtonImageHolder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -430,7 +431,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -0.85, y: 0.098}
+  m_AnchoredPosition: {x: -0.82, y: 0.091}
   m_SizeDelta: {x: 0.7, y: 0.7}
   m_Pivot: {x: 1, y: 0}
 --- !u!1 &1639217939515953646
@@ -443,7 +444,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4986655539042342246}
   - component: {fileID: 5464334856251099310}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: SkillVisualSlot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -499,7 +500,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8031953292164862762}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: NewSkillInfo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -537,7 +538,7 @@ GameObject:
   - component: {fileID: 1968162193450044634}
   - component: {fileID: 5478975533684483056}
   - component: {fileID: 7780037848303315690}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: SkillImage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -609,7 +610,7 @@ GameObject:
   - component: {fileID: 3146275826432128306}
   - component: {fileID: 7937135752363205849}
   - component: {fileID: 7914849654050836860}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: DescriptionText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -745,7 +746,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1848845091687484392}
   - component: {fileID: 8833026691642336301}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: NewSkillSection
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -800,7 +801,7 @@ GameObject:
   - component: {fileID: 7497910989065646003}
   - component: {fileID: 1502740488756992600}
   - component: {fileID: 5743838876883609270}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -874,7 +875,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8575961293494652370}
   - component: {fileID: 6248312908142926317}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: Info
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -938,7 +939,7 @@ GameObject:
   m_Component:
   - component: {fileID: 590364770244218515}
   - component: {fileID: 7046388917241310823}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: ButtonsHolder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1000,7 +1001,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5968097105852246294}
   - component: {fileID: 7500044335991502309}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: Content
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1065,7 +1066,7 @@ GameObject:
   - component: {fileID: 5436000346332604613}
   - component: {fileID: 3499756468797249217}
   - component: {fileID: 1019758945662653351}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1140,7 +1141,7 @@ GameObject:
   - component: {fileID: 7088491612054123103}
   - component: {fileID: 6541015974655218565}
   - component: {fileID: 2812685238107425388}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: AudioClipPlayer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1299,7 +1300,7 @@ GameObject:
   - component: {fileID: 8359598115947673174}
   - component: {fileID: 8865937481994910291}
   - component: {fileID: 7431511457781083769}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: NameText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1437,7 +1438,7 @@ GameObject:
   - component: {fileID: 6371650878355747707}
   - component: {fileID: 5822971365341608682}
   - component: {fileID: 3073563470006142173}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: ContinueButtonImage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1491,7 +1492,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 18dd137f1e827994ab585065add2b740, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 778f301b9ebdf494a82f2d6546ea954d, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -1525,7 +1526,7 @@ GameObject:
   m_Component:
   - component: {fileID: 513106478262250365}
   - component: {fileID: 9107061050147174511}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: SkillVisualSlot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1583,7 +1584,7 @@ GameObject:
   - component: {fileID: 1008157793248645149}
   - component: {fileID: 9133336039902393458}
   - component: {fileID: 3210695080329329485}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1657,7 +1658,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5496072294498461764}
   - component: {fileID: 5035447472354609815}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: UpgradeSkillSection
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1710,7 +1711,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3768969036971928017}
   - component: {fileID: 7667571770060640554}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: DescriptionLabel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1769,7 +1770,7 @@ GameObject:
   - component: {fileID: 6684164443234859016}
   - component: {fileID: 8601228521190793476}
   - component: {fileID: 9158586288370156738}
-  m_Layer: 8
+  m_Layer: 16
   m_Name: SkillImage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
