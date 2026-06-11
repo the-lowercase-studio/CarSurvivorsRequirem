@@ -57,8 +57,9 @@ It is not responsible for:
   - `RandomUninitializedSkillsInitializator` picks and initializes a random uninitialized skill through the registry.
   - `RandomUpgradeableSkillFinder` filters to `IUpgradeableSkill`, then picks a random candidate with at least one upgradeable stat still available. Its registry overload only considers initialized skills; `SkillUpgradeFlow` can pass a broader candidate set.
   - `SkillUpgradeFlow` owns skill reward queueing. It has separate APIs for new-skill rewards and stat-upgrade rewards, prevents the same locked skill from being queued twice for initialization, initializes queued new skills when dequeued, and builds up to three randomized upgrade options.
-  - `SkillUpgradeRequest` and `SkillUpgradeOption` carry the UI-facing request type, target skill, button text, and upgrade action.
-  - `SkillUpgradeableStatsConfig` uses reflection over public instance properties assignable to `IUpgradeableStat` to expose upgrade choices.
+  - `SkillUpgradeRequest` and `SkillUpgradeOption` carry the UI-facing request type, target skill, button text, upgrade action, and calculated or overridden rarity.
+  - `SkillUpgradeableStatsConfig` uses reflection over public instance properties assignable to `IUpgradeableStat` to expose upgrade choices and reads stat-level rarity overrides when `OverrideDefaultRarity` is enabled.
+  - `SkillUpgradeRarityCalculator` classifies non-overridden upgrade rolls as `Common`, `Rare`, or `UltraRare` from the rolled value's normalized position in the stat upgrade range.
   - Current concrete upgrade configs use `IntUpgradeableStat` for discrete damage, piercing, saw-count, turret-count, lasergun target-count, and landmine damage values, and `FloatUpgradeableStat` for cooldown, size, range, speed, radius, and knockback values.
   - `SkillInfoSO` provides UI name and description text for unlock and upgrade presentation.
 - Concrete player skills:
@@ -78,6 +79,7 @@ It is not responsible for:
   - `SkillUpgradePresenter` listens to `IPlayerLevelPresenter.OnExpSliderVisualEndValueReached` and collectible spawner `OnSpawnedEntityReleased`.
   - Skill crates queue random stat-upgrade requests. Level rewards queue a random new-skill request every `_newSkillLevelInterval` levels after level 1 when locked skills remain; if no new skill is queued, the presenter queues a random stat-upgrade request instead.
   - While showing UI, the presenter hides all skill visuals, displays either a new-skill section or stat-upgrade buttons, and advances through queued requests as the player continues or selects an option.
+  - Upgrade option creation rolls the upgrade value, uses the stat rarity override when present, otherwise calculates rarity from the upgrade range, then passes rarity through to the generated UI button.
   - Upgrade buttons call `IUpgradeableStat.Upgrade`, which updates the copied runtime stat value and raises `OnUpgrade`; skill configs and skill components subscribe to those events to update derived configs or activate more child items.
 
 ## Rules and Invariants
@@ -90,6 +92,8 @@ It is not responsible for:
   - Skill visuals shown by `SkillsVisualPresenter` are matched by GameObject name against `SkillInfoSO.Name`.
   - Skill unlock and upgrade UI is driven by level presenter and skill-crate release events, not by skill components directly.
   - Upgrade UI selection and queueing belong in `ISkillUpgradeFlow`; UI rendering and hotkey handling belong in `SkillUpgradePresenter`.
+  - Rarity classification must stay presentation-only. Do not make gameplay strength depend on the visual rarity label.
+  - Integer upgrade rarity accounts for Unity's exclusive integer `Random.Range` upper bound; `_alwaysUseMinValueForUpgrade` stats classify from the configured upgrade range minimum.
 - Ordering or sequencing guarantees:
   - Registry discovery happens in `Awake`; initial skill activation and uninitialized count setup happen in `Start`.
   - New skills are queued without initialization, tracked in `_skillsQueuedForInitialization`, then `SkillUpgradeFlow.TryGetNextRequest` removes the queued marker and initializes the skill immediately before returning a new-skill request to the presenter.
@@ -112,6 +116,7 @@ It is not responsible for:
 - Safe extension areas:
   - Add a new player skill by implementing `ISkillBase` or deriving from `UpgradeableSkill<TConfig>`, assigning `SkillInfoSO` and config references, and placing the component under `SkillsRegistry`.
   - Add upgradeable stats by adding serialized starting stat fields, deep-copying them in the config `OnEnable`, and exposing public `IUpgradeableStat` properties.
+  - Mark finite or high-impact stats with `OverrideDefaultRarity` and `Rarity` on the stat itself when random range position is not the desired rarity signal.
   - Add child activatable items by using `ItemsWithScriptableConfigsActivator<TItem, TConfig>` when each child implements `IInitializableWithScriptableConfig<TConfig>`.
   - Add new unlock or upgrade triggers through `ISkillUpgradeFlow` or a narrow event consumed by `SkillUpgradePresenter`, rather than making skills own UI presentation.
 - Required dependencies and contracts:
@@ -123,7 +128,7 @@ It is not responsible for:
 - Testing implications:
   - Compile after C# changes with `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`.
   - In Unity, validate initial skill activation, skill-crate unlock flow, level-up upgrade flow, upgrade button clicks/hotkeys, continue input, and visual matching by skill name.
-  - For a new skill, test first initialization, repeated upgrade choices, max-stat behavior, scene reload/runtime reset behavior, audio/VFX references, and enemy interaction layers.
+  - For a new skill, test first initialization, repeated upgrade choices, max-stat behavior, rarity labeling/backgrounds, scene reload/runtime reset behavior, audio/VFX references, and enemy interaction layers.
   - For physics skills, validate enemy layer filtering, terrain obstruction checks, collider trigger setup, and knockback/stun interactions.
   - For lasergun target-count changes, validate `NumberOfTargets = 1` against the previous single-target behavior, values `2..5` against closest-visible-enemy selection, terrain occlusion, one beam per hit target, beam cleanup after the laser effect, and multiple turret shots stacking as separate hits.
 
@@ -133,7 +138,7 @@ It is not responsible for:
   - Reflex injects `IPlayerManager`, `IPlayerLevelPresenter`, `IOnRandomGridPosSpawner<CollectibleItemsSpawner>`, and `IGridManager` into skill-adjacent components.
   - `PlayerManager` provides the registry to UI through `IPlayerManager.SkillsRegistry`.
   - `SkillUpgradeFlow` depends on `ISkillsRegistry`, `RandomUpgradeableSkillFinder`, queued reward request state, and `SkillUpgradeableStatsConfig` to choose and construct requests.
-  - `UpgradeableStat<T>` owns upgrade range, current value, max detection, subtract-mode behavior, unit display, and `OnUpgrade` events.
+  - `UpgradeableStat<T>` owns upgrade range, current value, max detection, subtract-mode behavior, unlimited max behavior, unit display, rarity override metadata, and `OnUpgrade` events.
   - `DeepCopyUtility` protects ScriptableObject-authored starting values from direct runtime mutation.
   - Unity layers in `EntityLayers` and `TerrainLayers` gate collision, target acquisition, and landmine placement.
   - Lasergun target selection uses non-allocating physics overlap buffers, enemy layer filtering, and terrain line-of-sight checks before targets are accepted.
@@ -144,6 +149,7 @@ It is not responsible for:
 - Cross-system coupling risks:
   - Skill progression is coupled to collectible release and level UI events.
   - Skill UI assumes upgradeable stat property names can be converted from PascalCase to words for button text.
+  - Skill UI rarity depends on stat upgrade ranges and optional stat-level rarity overrides; bad range metadata or missing overrides can make high-impact upgrades look too common.
   - Concrete skills rely heavily on serialized scene/prefab references, so code-only changes may compile while scene wiring remains broken.
   - `Turret<TConfig>.Awake` searches for the `ProjectilesHolder` tag, which is a scene convention outside the type contract.
 

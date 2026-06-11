@@ -42,8 +42,8 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
 - Core components:
   - `TimerPresenter` increments a scene timer once per second with `InvokeRepeating`, updates a TMP label, and exposes `TimerValue` through `ITimerPresenter`.
   - `PlayerLevelPresenter` reads `IPlayerManager.LevelController`, subscribes to exp and level-up events, animates the exp slider, updates the level label, and raises `OnExpSliderVisualEndValueReached` when a level-up visual reaches the transition point.
-  - `SkillUpgradePresenter` reacts to collectible release events and `IPlayerLevelPresenter.OnExpSliderVisualEndValueReached`, queues upgrade rewards for crates, queues level rewards with a new-skill interval fallback to upgrades, renders the current queued request, and supports Enter/number-key input.
-  - `SkillUpgradeButton` initializes generated upgrade buttons, resolves missing button/text/icon references from children, displays keyboard-number icons through `SkillUpgradeKeyboardIconMapping`, and can add optional hover callbacks through `PointerEnterHandler`.
+  - `SkillUpgradePresenter` reacts to collectible release events and `IPlayerLevelPresenter.OnExpSliderVisualEndValueReached`, queues upgrade rewards for crates, queues level rewards with a new-skill interval fallback to upgrades, renders the current queued request, passes option rarity into generated buttons, and supports Enter/number-key input.
+  - `SkillUpgradeButton` initializes generated upgrade buttons, resolves missing button/text/icon/background references from children, displays keyboard-number icons through `SkillUpgradeKeyboardIconMapping`, applies rarity background visuals through `SkillUpgradeRaritySpriteMapping`, and can add optional hover callbacks through `PointerEnterHandler`.
   - `SkillsVisualPresenter` maps `SkillInfoSO.Name` to scene visual objects by matching GameObject names, can hide all registered visuals, and logs a warning when a visual is missing.
   - `PlayerDeathPresenter` saves the current timer score, displays final level and time alive, switches background audio to death mode, enables the death screen, and pauses `GameTime`.
   - `PausePresenter` listens to the Input System `Pause` action and toggles a pause visual plus `GameTime.Pause` or `GameTime.Resume`.
@@ -61,7 +61,7 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
 - Runtime flow:
   - Gameplay scene DI registers the player manager, death presenter, level presenter, timer presenter, grid manager, enemy spawner, collectible spawner, and exp particle spawner.
   - The level presenter initializes from the player's current `LevelData`, subscribes to level events, and drives visual progression independently from immediate gameplay state changes.
-  - Skill upgrade UI can be triggered by either collectible release or exp-slider level-up visual completion. Collectible releases queue random upgrade requests. Level-up visuals queue a random new-skill request when `_newSkillLevelInterval` matches and uninitialized skills remain; otherwise they queue a random upgrade request.
+  - Skill upgrade UI can be triggered by either collectible release or exp-slider level-up visual completion. Collectible releases queue random upgrade requests. Level-up visuals queue a random new-skill request when `_newSkillLevelInterval` matches and uninitialized skills remain; otherwise they queue a random upgrade request. Upgrade requests carry rarity values from `ISkillUpgradeFlow` through `ClickableButtonData` into each `SkillUpgradeButton`.
   - Player death is initiated by health reaching zero. `PlayerDeathHandler` hides player visuals, disables non-wheel colliders, plays death VFX, and only calls `IPlayerDeathPresenter.EnableDeathScreen` after death VFX finishes.
   - Settings UI option components load stored/default values when enabled, subscribe to Unity UI value-change events, save changed values through their injected setting, and immediately call `Load` to apply the setting.
 
@@ -74,6 +74,7 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Preserve the death flow: player health reaches zero, VFX plays, death screen enables after VFX completion, score is saved from `ITimerPresenter.TimerValue`, background audio switches, then game time pauses.
   - Preserve skill-upgrade timing: level-up rewards are queued from the level slider visual completion event, not directly from `LevelController.OnLvlUp`.
   - Preserve skill-upgrade ownership: queueing rules stay in `SkillUpgradePresenter`, request storage/selection and option construction stay in `ISkillUpgradeFlow`, and UI rendering, generated buttons, visual display, and hotkeys stay in `SkillUpgradePresenter` and `SkillUpgradeButton`.
+  - Preserve rarity as UI presentation data. Rarity backgrounds should reflect `SkillUpgradeOption.Rarity` without changing which stat is upgraded or how much value is applied.
   - Preserve settings option event subscription symmetry: add Unity UI listeners in `OnEnable` and remove them in `OnDisable`.
 - Ordering or sequencing guarantees:
   - `PlayerLevelPresenter.OnExpSliderVisualEndValueReached` is raised with the reached `LevelData` after level text and slider max/value are transitioned for a level-up.
@@ -93,15 +94,16 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Add a new gameplay presenter by creating a narrow interface only if another runtime system must consume it, then bind the scene instance in `DefaultGameplaySceneInstaller`.
   - Add new skill choice visuals by extending the scene objects referenced by `SkillsVisualPresenter`, keeping names aligned with `SkillInfoSO.Name`.
   - Add or update skill-upgrade keyboard icons through `Assets/ScriptableObjects/UI/SkillUpgradeKeyboardIconMapping.cs` and the matching ScriptableObject asset; missing mappings hide the select-key image.
+  - Add or update skill-upgrade rarity backgrounds through `Assets/ScriptableObjects/UI/SkillUpgradeRaritySpriteMapping.cs` and the button prefab's mapping/background references; missing sprites or mapping references leave the existing button background unchanged.
   - Add button behaviors through `MenuButtonsFunctionality` only when they remain scene/menu operations; put gameplay state changes in the owning gameplay system instead.
 - Required dependencies and contracts:
   - UI contracts consumed outside UI should be explicit interfaces and registered in the appropriate Reflex installer.
   - Settings options require an `ISetting<TSelf, TRepresentedBy>` implementation that can save, load, and return a stored/default value.
   - Death UI requires `IPlayerManager`, `IBackgroundAudioManager`, scoreboard services, and `ITimerPresenter`.
-  - Skill upgrade UI requires `IPlayerManager`, `IPlayerLevelPresenter`, `ISkillUpgradeFlow`, `ISkillsVisualPresenter`, the collectible spawner release event, and scene/prefab wiring for optional keyboard icon mappings.
+  - Skill upgrade UI requires `IPlayerManager`, `IPlayerLevelPresenter`, `ISkillUpgradeFlow`, `ISkillsVisualPresenter`, the collectible spawner release event, and scene/prefab wiring for optional keyboard icon and rarity sprite mappings.
 - Testing implications:
   - Compile after C# UI changes with `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`.
-  - Play-mode validation is required for pause input, scene button wiring, settings controls, death VFX-to-screen timing, score text, audio mode changes, and skill upgrade panel timing.
+  - Play-mode validation is required for pause input, scene button wiring, settings controls, death VFX-to-screen timing, score text, audio mode changes, skill upgrade panel timing, and skill upgrade rarity backgrounds.
   - Manual UI checks should include repeated enable/disable cycles for settings panels to catch duplicate listeners.
 
 ## Integration Notes
@@ -111,6 +113,7 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Level UI event timing depends on `ILevelController.OnExpChange` and `ILevelController.OnLvlUp`.
   - Skill reward triggers depend on `IOnRandomGridPosSpawner<CollectibleItemsSpawner>.OnSpawnedEntityReleased`.
   - Skill reward request queueing depends on `SkillUpgradePresenter`; queued request storage, skill initialization, and upgrade option creation depend on `ISkillUpgradeFlow`.
+  - Skill upgrade button background visuals depend on `SkillUpgradeOption.Rarity`, `ClickableButtonData.Rarity`, and `SkillUpgradeRaritySpriteMapping`.
   - Death UI activation depends on `PlayerDeathHandler` and the death VFX finished event.
   - Settings UI depends on setting classes under `Assets/Scripts/Settings/`.
   - Scene/menu buttons depend on `IGameSceneLoader`.
@@ -135,6 +138,7 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - `SkillUpgradePresenter` subscribes to collectible and level-presenter events in `Start` and unsubscribes in `OnDestroy`; this is scene-lifetime safe but should be reviewed before supporting disable/re-enable lifetimes.
   - `SkillsVisualPresenter` uses GameObject name matching, so a missing or renamed visual logs a warning and leaves the requested visual hidden.
   - `SkillUpgradeButton` hides the select-key image when its icon mapping is missing, has no entry for the button number, or returns a null sprite.
+  - `SkillUpgradeButton` leaves the current background untouched when the rarity background image, rarity sprite mapping, or mapped sprite is missing.
   - `ButtonsAudioClipPlayer` declares `RequireComponent(typeof(AudioClipPlayer))` but does not initialize its `_audioClipPlayer` field before playback.
   - `AudioVolumeOption` converts slider value with `Mathf.Log10`; a zero slider value would produce an invalid decibel value unless the slider minimum prevents zero in the scene.
   - `GraphicOption` assumes the stored/default quality string exists in its hard-coded quality-level dictionary.

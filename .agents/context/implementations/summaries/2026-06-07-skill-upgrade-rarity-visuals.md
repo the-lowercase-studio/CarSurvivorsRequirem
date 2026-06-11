@@ -6,7 +6,7 @@
 - Threaded rarity through `SkillUpgradeOption`, `ClickableButtonData`, `SkillUpgradePresenter`, and `SkillUpgradeButton`.
 - Added `SkillUpgradeRarityCalculator` to classify rolled upgrade values against the stat upgrade range.
 - Exposed upgrade range metadata through `IUpgradeableStat` for rarity calculation.
-- Added property-name rarity overrides to `SkillUpgradeableStatsConfig` so finite/high-impact stats can be explicitly tagged in the Editor.
+- Added stat-level rarity override metadata consumed by `SkillUpgradeableStatsConfig` so finite/high-impact stats can be explicitly tagged in the Editor.
 - Added `SkillUpgradeRaritySpriteMapping` for mapping rarity values to button background sprites.
 
 ## Notes

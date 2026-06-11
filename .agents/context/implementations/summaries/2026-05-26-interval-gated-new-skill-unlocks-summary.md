@@ -8,9 +8,9 @@ The change is limited to skill reward routing. It does not change skill upgrade 
 
 ## Completed Changes
 
-- Added `_newSkillLevelInterval = 6` to `SkillUpgradePresenter`.
+- Added `_newSkillLevelInterval` to `SkillUpgradePresenter`; current source default is `3`.
 - Split reward request handling so level-up rewards and crate rewards have separate code paths.
-- Level-up rewards now grant a new skill only when `(currentLevel - 1) % _newSkillLevelInterval == 0`, so the default first new skill arrives at level 7.
+- Level-up rewards now grant a new skill only when `(currentLevel - 1) % _newSkillLevelInterval == 0`; with the current source default of `3`, the first new skill arrives at level 4.
 - Crate rewards now queue skill upgrades only and cannot unlock locked skills early.
 - Replaced `ISkillUpgradeFlow.QueueRandomRequest` with explicit methods:
   - `QueueRandomNewSkillRequest`.
@@ -26,7 +26,7 @@ The change is limited to skill reward routing. It does not change skill upgrade 
 ## Manual Checks Still Needed
 
 - In Unity play mode, confirm only the first skill is active at start.
-- Confirm levels 2-6 offer upgrades only with the default interval.
-- Confirm level 7 offers one new skill when locked skills remain.
-- Confirm crates before level 7 offer upgrades only.
-- Optionally set `_newSkillLevelInterval` to another value, such as `3`, and confirm unlocks occur at levels 4, 7, and 10.
+- Confirm levels 2-3 offer upgrades only with the current default interval.
+- Confirm level 4 offers one new skill when locked skills remain.
+- Confirm crates before level 4 offer upgrades only.
+- Optionally set `_newSkillLevelInterval` to another value, such as `6`, and confirm unlocks occur at levels 7, 13, and 19.
