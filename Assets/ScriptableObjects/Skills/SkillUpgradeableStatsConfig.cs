@@ -27,11 +27,15 @@ namespace Assets.ScriptableObjects.Player.Skills
 
     public interface ISkillUpgradeableStatsConfig
     {
+        public void ResetRuntimeState();
+
         public IEnumerable<NameUpgradableStatPair> GetUpgradeableStatsThatCanBeUpgraded();
     }
 
     public abstract class SkillUpgradeableStatsConfig : ScriptableObject, ISkillUpgradeableStatsConfig
     {
+        public abstract void ResetRuntimeState();
+
         public IEnumerable<NameUpgradableStatPair> GetUpgradeableStatsThatCanBeUpgraded()
         {
             List<NameUpgradableStatPair> upgradeableStats = new();

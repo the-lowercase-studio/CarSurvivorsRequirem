@@ -20,6 +20,11 @@ namespace Assets.ScriptableObjects.Skills.PlayerSkills.SawSkill
 
         private void OnEnable()
         {
+            ResetRuntimeState();
+        }
+
+        public override void ResetRuntimeState()
+        {
             KnockbackRange = DeepCopyUtility.DeepCopy(_knockbackRange);
             Damage = DeepCopyUtility.DeepCopy(_damage);
             NuberOfSaws = DeepCopyUtility.DeepCopy(_numberOfSaws);

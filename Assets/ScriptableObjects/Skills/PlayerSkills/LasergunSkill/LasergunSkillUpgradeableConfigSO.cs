@@ -28,6 +28,11 @@ public class LasergunSkillSO : SkillUpgradeableStatsConfig
 
     private void OnEnable()
     {
+        ResetRuntimeState();
+    }
+
+    public override void ResetRuntimeState()
+    {
         DeepCopyUpgradeableStats();
 
         PrepareProjectileConfig();
