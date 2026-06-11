@@ -32,6 +32,11 @@ namespace Assets.ScriptableObjects.Skills.PlayerSkills.MinigunSkill
 
         private void OnEnable()
         {
+            ResetRuntimeState();
+        }
+
+        public override void ResetRuntimeState()
+        {
             DeepCopyUpgradeableStats();
 
             PrepareTurretConfig();

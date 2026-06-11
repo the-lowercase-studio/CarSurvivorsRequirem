@@ -27,6 +27,8 @@ namespace Assets.Scripts.Skills
 
         private void Start()
         {
+            ResetUpgradeableSkillConfigs();
+
             UninitializedSkillsCount = GetUninitializedSkills().Count();
 
             InitializeSkill(Skills[0]);
@@ -71,6 +73,14 @@ namespace Assets.Scripts.Skills
             }
 
             Skills = skills;
+        }
+
+        private void ResetUpgradeableSkillConfigs()
+        {
+            foreach (IUpgradeableSkill skill in Skills.OfType<IUpgradeableSkill>())
+            {
+                skill.Config?.ResetRuntimeState();
+            }
         }
     }
 }

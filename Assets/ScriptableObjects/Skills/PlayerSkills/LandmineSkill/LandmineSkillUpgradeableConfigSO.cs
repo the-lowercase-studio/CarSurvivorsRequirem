@@ -22,6 +22,11 @@ namespace Assets.ScriptableObjects.Skills.PlayerSkills.LandmineSkill
 
         private void OnEnable()
         {
+            ResetRuntimeState();
+        }
+
+        public override void ResetRuntimeState()
+        {
             SpawnCooldown = DeepCopyUtility.DeepCopy(_spawnCooldown);
             ExplosionRadius = DeepCopyUtility.DeepCopy(_explosionRadius);
             Damage = DeepCopyUtility.DeepCopy(_damage);
