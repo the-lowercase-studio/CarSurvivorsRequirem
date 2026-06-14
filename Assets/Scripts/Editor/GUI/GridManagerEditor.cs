@@ -14,6 +14,9 @@ namespace Assets.Scripts.Editor.GUI
         private SerializedProperty _playerGridConfiguration;
         private SerializedProperty _delayBetweenPlayerChunkGridUpdate;
 
+        private SerializedProperty _flowFieldTargetPredictionTime;
+        private SerializedProperty _maxFlowFieldTargetOffset;
+
         private SerializedProperty _worldCellBorderColor;
         private SerializedProperty _playerChunkCellBorderColor;
         private SerializedProperty _blockedCellBorderDrawColor;
@@ -27,6 +30,7 @@ namespace Assets.Scripts.Editor.GUI
 
         private bool _worldGridGroup;
         private bool _playerGridChunkGroup;
+        private bool _targetPredictionGroup;
         private bool _debugGroup;
 
         private const int SPACE_BETWEEN_GROUPS = 2;
@@ -38,6 +42,9 @@ namespace Assets.Scripts.Editor.GUI
 
             _playerGridConfiguration = serializedObject.FindProperty(nameof(_playerGridConfiguration));
             _delayBetweenPlayerChunkGridUpdate = serializedObject.FindProperty(nameof(_delayBetweenPlayerChunkGridUpdate));
+
+            _flowFieldTargetPredictionTime = serializedObject.FindProperty(nameof(_flowFieldTargetPredictionTime));
+            _maxFlowFieldTargetOffset = serializedObject.FindProperty(nameof(_maxFlowFieldTargetOffset));
 
             _worldCellBorderColor = serializedObject.FindProperty(nameof(_worldCellBorderColor));
             _playerChunkCellBorderColor = serializedObject.FindProperty(nameof(_playerChunkCellBorderColor));
@@ -68,6 +75,16 @@ namespace Assets.Scripts.Editor.GUI
             {
                 EditorGUILayout.PropertyField(_playerGridConfiguration);
                 EditorGUILayout.PropertyField(_delayBetweenPlayerChunkGridUpdate);
+            }
+            EditorGUI.EndFoldoutHeaderGroup();
+
+            EditorGUILayout.Space(SPACE_BETWEEN_GROUPS);
+
+            _targetPredictionGroup = EditorGUILayout.BeginFoldoutHeaderGroup(_targetPredictionGroup, "Target Prediction Group");
+            if (_targetPredictionGroup)
+            {
+                EditorGUILayout.PropertyField(_flowFieldTargetPredictionTime);
+                EditorGUILayout.PropertyField(_maxFlowFieldTargetOffset);
             }
             EditorGUI.EndFoldoutHeaderGroup();
 

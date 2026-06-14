@@ -63,7 +63,7 @@ Runtime flow:
 2. `GridManager.OnEnable` initializes the world flow field toward the center of `WorldGrid`.
 3. `GridManager` repeatedly creates a player chunk around the player and updates flow-field data for that chunk.
 4. `FlowField.CreateCostField` resets each processed cell and assigns costs from terrain overlap checks.
-5. `GridManager` resolves `DestinationCell` from `WorldGrid` using the requested destination position.
+5. `GridManager` computes the destination position using the player's position and speed-clamped velocity offset (Target Prediction), and resolves `DestinationCell` from `WorldGrid`.
 6. `FlowField.CreateIntegrationField` starts at `DestinationCell` and propagates `BestCost` through cardinal neighbors.
 7. `FlowField.CreateFlowField` compares all neighboring directions and writes each cell's `BestDirection`.
 8. `FlowFieldMovementController.MoveOnFlowFieldGrid` finds the mover's current cell in `IGridManager.WorldGrid`, converts `BestDirection.Vector` into Unity X/Z movement, blends in separation, and updates `transform.position`.
@@ -80,6 +80,9 @@ Enemy movement and EXP particles both consume `FlowFieldMovementController`; the
 - `CreateIntegrationField` uses `GridDirection.CardinalDirections` for propagation.
 - `CreateFlowField` uses `GridDirection.AllDirections`, then writes a cardinal or intercardinal direction through `GridDirection.GetDirectionFromV2I`.
 - Movement uses Unity X/Z axes from `Cell.BestDirection.Vector`; Y movement remains zero.
+- **Target Prediction**: GridManager computes the target cell ahead of the player using `GetMovementVelocity()` from `ICarController`.
+  - When the player speed is above `0.1f`, the destination is offset: `destination = playerPosition + velocity.normalized * Mathf.Clamp(speed * _flowFieldTargetPredictionTime, 0f, _maxFlowFieldTargetOffset)`.
+  - Prediction values default to `0.25s` lead time and `6.0f` maximum offset units, adjustable via the inspector foldout **Target Prediction Group**.
 - `FlowFieldMovementController` blends grid movement with separation from nearby enemies found through `EntityLayers.Enemy`.
 - `FlowFieldMovementController` reads `IGridManager.WorldGrid`, even though current field updates are usually performed on the player chunk after startup.
 - Flow-field data lives on shared `Cell` instances. Updating a player chunk can mutate cells also visible through `WorldGrid`.
@@ -138,7 +141,6 @@ Known limitations:
 - `DestinationCell` is resolved from `WorldGrid` during chunk updates; if the destination is outside the processed chunk, integration behavior relies on shared references and should be reviewed before refactoring.
 - `FlowFieldMovementController` runs a separation `OverlapSphere` in `FixedUpdate` for every component instance.
 - `FlowFieldDebug` flow direction mode reads `cell.BestDirection.Vector`; this assumes `BestDirection` is never null.
-- `FlowField` cost constants currently live inside `FlowField.cs` rather than a FlowFieldSystem constants folder.
 
 Open design questions:
 
@@ -151,4 +153,3 @@ Suggested follow-up tasks:
 
 - Add focused validation for flow-field generation when the player is near each world-grid edge.
 - Profile per-entity separation before increasing enemy counts, EXP particle counts, or separation radius.
-- Consider moving flow-field cost constants during a dedicated coding-standards cleanup.

@@ -15,7 +15,7 @@ MonoBehaviour:
   MaxHealth: 110
   MovementSpeed: 5
   RotationSpeed: 5
-  Damage: 24
+  Damage: 18
   DangerLevel: 4
   ExpForKill: 120
   IsMovingByCrawling: 0

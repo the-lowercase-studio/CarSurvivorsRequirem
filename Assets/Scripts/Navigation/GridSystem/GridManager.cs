@@ -24,6 +24,10 @@ namespace Assets.Scripts.Navigation.GridSystem
         [SerializeField] private float _delayBetweenPlayerChunkGridUpdate = 0.32f;
         public Grid GridPlayerChunk { get; private set; }
 
+        [Header("Target Prediction")]
+        [SerializeField] private float _flowFieldTargetPredictionTime = 0.25f;
+        [SerializeField] private float _maxFlowFieldTargetOffset = 6f;
+
 #if DEBUG
         [SerializeField] private bool _debugGrid;
         [SerializeField] private bool _debugFlowField;
@@ -98,7 +102,19 @@ namespace Assets.Scripts.Navigation.GridSystem
         private void UpdateFlowFieldWithNewPlayerChunkGrid()
         {
             UpdatePlayerChunkBasedOnPlayerPositionInWorldGrid();
-            UpdateFlowField(GridPlayerChunk, _playerManager.GameObject.transform.position);
+
+            Vector3 playerPosition = _playerManager.GameObject.transform.position;
+            Vector3 velocity = _playerManager.CarController.GetMovementVelocity();
+            float speed = velocity.magnitude;
+
+            Vector3 destination = playerPosition;
+            if (speed > 0.1f)
+            {
+                float offsetDistance = Mathf.Clamp(speed * _flowFieldTargetPredictionTime, 0f, _maxFlowFieldTargetOffset);
+                destination += velocity.normalized * offsetDistance;
+            }
+
+            UpdateFlowField(GridPlayerChunk, destination);
         }
 
         private void UpdatePlayerChunkBasedOnPlayerPositionInWorldGrid()
