@@ -82,7 +82,8 @@ The world grid and player chunk are not independent cell stores. The player chun
 - `FlowField.CreateCostField` resets each processed cell before assigning terrain cost.
 - `FlowField.CreateIntegrationField` uses cardinal neighbors for integration cost propagation.
 - `FlowField.CreateFlowField` uses all directions when choosing each cell's best direction.
-- `DestinationCell` is resolved from `WorldGrid`, even when the flow field update is running over `GridPlayerChunk`.
+- **Target Prediction**: GridManager calculates the flow-field destination cell using velocity-based prediction (multiplying player car velocity by a configurable prediction time, clamped to a maximum offset) to path enemies ahead of player movement.
+- `DestinationCell` is resolved from `WorldGrid` using the target prediction destination, even when the flow field update is running over `GridPlayerChunk`.
 - Enemy spawning and enemy teleporting use the player chunk and avoid cells visible to the main camera.
 - Collectible spawning uses the full world grid and marks `Cell.IsOccupiedByCollectible` until collection.
 - Debug grid and flow-field drawing are compiled under `#if DEBUG`.

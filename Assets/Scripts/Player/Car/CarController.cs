@@ -13,6 +13,8 @@ namespace Assets.Scripts.Player.Car
         event EventHandler OnBrakeRelease;
 
         float GetMovementSpeed();
+
+        Vector3 GetMovementVelocity();
     }
 
     [RequireComponent(typeof(Rigidbody))]
@@ -114,6 +116,13 @@ namespace Assets.Scripts.Player.Car
         public float GetMovementSpeed()
         {
             return _rb.linearVelocity.magnitude;
+        }
+
+        public Vector3 GetMovementVelocity()
+        {
+            Vector3 velocity = _rb.linearVelocity;
+            velocity.y = 0f;
+            return velocity;
         }
 
         private void HandleMove()

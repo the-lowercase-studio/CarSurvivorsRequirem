@@ -972,8 +972,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _spawnChanceDecreaseFactor:
-    <Min>k__BackingField: 1.6
-    <Max>k__BackingField: 2.8
+    <Min>k__BackingField: 2.5
+    <Max>k__BackingField: 3.6
   _enemiesParent: {fileID: 361168572}
   _poolEnemiesInfo:
   - EnemyPrefab: {fileID: 8544650596686725407, guid: 08b441f56ebe2754ab1e7d5eefb63ac5, type: 3}
@@ -1129,7 +1129,6 @@ MonoBehaviour:
   _expParticleSpawner: {fileID: 375309169}
   _collectibleItemsSpawner: {fileID: 36651507}
   _mainCamera: {fileID: 2001922875}
-  _worldUICamera: {fileID: 1756599831}
 --- !u!1 &549734345
 GameObject:
   m_ObjectHideFlags: 0
@@ -3510,6 +3509,8 @@ MonoBehaviour:
     Height: 34
     CellSize: 1
   _delayBetweenPlayerChunkGridUpdate: 0.32
+  _flowFieldTargetPredictionTime: 0.25
+  _maxFlowFieldTargetOffset: 6
   _debugGrid: 1
   _debugFlowField: 0
   _worldCellBorderColor: {r: 0, g: 0, b: 1, a: 1}
