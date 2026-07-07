@@ -1,10 +1,10 @@
-﻿using Assets.Scripts.Common.Types;
+using Assets.Scripts.Common.Types;
 using Assets.Scripts.Initializers;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace Assets.Scripts.Enemies
+namespace Assets.Scripts.Spawners.Enemies
 {
     public class EnemiesSpawnChanceRedistributionSystem
         : IInitializable<EnemiesSpawnChanceRedistributionSystem.Configuration>

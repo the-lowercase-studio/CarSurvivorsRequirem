@@ -1,11 +1,17 @@
 using Assets.Scripts.Enemies;
+using Assets.Scripts.Spawners.Enemies;
 using Assets.Scripts.Spawners.GridSpace;
 using Reflex.Attributes;
 using UnityEngine;
 
 namespace Assets.Scripts.Waves
 {
-    public class WaveManager : MonoBehaviour
+    public interface IWaveFreezer
+    {
+        bool IsFrozen { get; set; }
+    }
+
+    public class WaveManager : MonoBehaviour, IWaveFreezer
     {
         [Inject] private readonly IOnRandomGridPosSpawner<EnemiesSpawner> _enemiesSpawner;
 
@@ -16,6 +22,8 @@ namespace Assets.Scripts.Waves
         private float _maxEnemiesInWaveMultiplier = 1.2f;
         private ushort _wave = 1;
 
+        public bool IsFrozen { get; set; }
+
         private void Start()
         {
             _currentSpawnWaveDelay = _firstWaveDelay;
@@ -23,6 +31,8 @@ namespace Assets.Scripts.Waves
 
         private void Update()
         {
+            if (IsFrozen) return;
+
             WavesProcess();
         }
 

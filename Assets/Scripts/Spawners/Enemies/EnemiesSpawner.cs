@@ -1,4 +1,5 @@
 using Assets.Scripts.Common.Types;
+using Assets.Scripts.Enemies;
 using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.Pooling;
 using Assets.Scripts.Spawners.GridSpace;
@@ -8,10 +9,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 
-namespace Assets.Scripts.Enemies
+namespace Assets.Scripts.Spawners.Enemies
 {
+    public interface ISwarmEnemySpawner
+    {
+        IReadOnlyList<EnemySpawnInfo> EnemyConfigs { get; }
+        void SpawnSpecificEnemy(EnemySpawnInfo enemyInfo, int count = 1);
+    }
+
     public class EnemiesSpawner : MonoBehaviour,
-        IOnRandomGridPosSpawner<EnemiesSpawner>, IObjectReleaseNotifier
+        IOnRandomGridPosSpawner<EnemiesSpawner>, IObjectReleaseNotifier, ISwarmEnemySpawner
     {
         [Inject] private readonly IGridManager _gridManager;
         [Inject] private readonly Camera _mainCamera = null;
@@ -28,6 +35,7 @@ namespace Assets.Scripts.Enemies
         public event EventHandler OnSpawnedEntityReleased;
 
         public uint CurrentlySpawnedObjectsCount { get; private set; }
+        public IReadOnlyList<EnemySpawnInfo> EnemyConfigs => _poolEnemiesInfo;
 
         private void Awake()
         {
@@ -43,6 +51,7 @@ namespace Assets.Scripts.Enemies
             };
 
             _enemiesSpawnChanceRedistributionSystem.Initialize(config);
+            PreWarmPools();
         }
 
         private void PoolEnemies()
@@ -59,21 +68,30 @@ namespace Assets.Scripts.Enemies
             }
         }
 
+        private void PreWarmPools()
+        {
+            foreach (var kvp in _enemyPools)
+            {
+                EnemySpawnInfo info = kvp.Key;
+                ObjectPool<Enemy> pool = kvp.Value;
+
+                List<Enemy> temp = new List<Enemy>(info.MaxAmount);
+                for (int i = 0; i < info.MaxAmount; i++)
+                {
+                    temp.Add(pool.Get());
+                }
+                foreach (Enemy enemy in temp)
+                {
+                    pool.Release(enemy);
+                }
+            }
+        }
+
         private void OnEnemyGet(Enemy enemy)
         {
-            Cell cell = GridCellsNotVisibleByMainCamera.GetRandomWalkableCell(_gridManager.GridPlayerChunk, _mainCamera);
-
-            if (cell == null)
-            {
-                Debug.LogWarning("No walkable cells found for enemy spawn.");
-                return;
-            }
-
             enemy.OnGet();
 
             enemy.OnCanBeReleased += Enemy_OnRelease;
-
-            enemy.transform.position = cell.WorldPos;
 
             enemy.gameObject.SetActive(true);
 
@@ -107,26 +125,57 @@ namespace Assets.Scripts.Enemies
 
         public void SpawnAtRandomGridPos(int count = 1)
         {
-            for (int i = 0; i < count; i++)
+            IEnumerable<Cell> cells = GridCellsNotVisibleByMainCamera.GetRandomWalkableCells(_gridManager.GridPlayerChunk, _mainCamera, count);
+            using (var enumerator = cells.GetEnumerator())
             {
-                EnemySpawnInfo currentEnemyToSpawnInfo = RandomEnemyInfoBasedOnSpawnChance();
-                if (currentEnemyToSpawnInfo != null)
+                for (int i = 0; i < count; i++)
                 {
-                    _enemyPools[currentEnemyToSpawnInfo].Get();
+                    if (!enumerator.MoveNext()) break;
+
+                    EnemySpawnInfo currentEnemyToSpawnInfo = RandomEnemyInfoBasedOnSpawnChance();
+                    if (currentEnemyToSpawnInfo != null)
+                    {
+                        Enemy enemy = _enemyPools[currentEnemyToSpawnInfo].Get();
+                        enemy.transform.position = enumerator.Current.WorldPos;
+                    }
                 }
             }
 
             _enemiesSpawnChanceRedistributionSystem.RedistributeSpawnChance();
         }
 
+        public void SpawnSpecificEnemy(EnemySpawnInfo enemyInfo, int count = 1)
+        {
+            if (!_enemyPools.TryGetValue(enemyInfo, out ObjectPool<Enemy> pool)) return;
+
+            IEnumerable<Cell> cells = GridCellsNotVisibleByMainCamera.GetRandomWalkableCells(_gridManager.GridPlayerChunk, _mainCamera, count);
+            using (var enumerator = cells.GetEnumerator())
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    if (!enumerator.MoveNext()) break;
+
+                    Enemy enemy = pool.Get();
+                    enemy.transform.position = enumerator.Current.WorldPos;
+                }
+            }
+        }
+
         public void SpawnRandomEnemiesBasedOnSpawnChance(int count)
         {
-            for (int i = 0; i < count; i++)
+            IEnumerable<Cell> cells = GridCellsNotVisibleByMainCamera.GetRandomWalkableCells(_gridManager.GridPlayerChunk, _mainCamera, count);
+            using (var enumerator = cells.GetEnumerator())
             {
-                EnemySpawnInfo currentEnemyToSpawnInfo = RandomEnemyInfoBasedOnSpawnChance();
-                if (currentEnemyToSpawnInfo != null)
+                for (int i = 0; i < count; i++)
                 {
-                    _enemyPools[currentEnemyToSpawnInfo].Get();
+                    if (!enumerator.MoveNext()) break;
+
+                    EnemySpawnInfo currentEnemyToSpawnInfo = RandomEnemyInfoBasedOnSpawnChance();
+                    if (currentEnemyToSpawnInfo != null)
+                    {
+                        Enemy enemy = _enemyPools[currentEnemyToSpawnInfo].Get();
+                        enemy.transform.position = enumerator.Current.WorldPos;
+                    }
                 }
             }
 
