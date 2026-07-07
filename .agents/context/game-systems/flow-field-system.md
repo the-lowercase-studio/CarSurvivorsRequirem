@@ -24,28 +24,28 @@ It is not responsible for:
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/Navigation/FlowFieldSystem/FlowField.cs`
-  - `Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldMovementController.cs`
-  - `Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldDebug.cs`
+  - Assets/Scripts/Navigation/FlowFieldSystem/FlowField.cs
+  - Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldMovementController.cs
+  - Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldDebug.cs
 - Related systems:
-  - `Assets/Scripts/Navigation/GridSystem/GridManager.cs`
-  - `Assets/Scripts/Navigation/GridSystem/Cell.cs`
-  - `Assets/Scripts/Navigation/GridSystem/GridDirection.cs`
-  - `Assets/Scripts/Navigation/GridSystem/WorldPosToCellConverter.cs`
-  - `Assets/Scripts/Enemies/EnemyMovementController.cs`
-  - `Assets/Scripts/LevelSystem/Exp/ExpParticle.cs`
-  - `Assets/Scripts/LayerMasks/TerrainLayers.cs`
-  - `Assets/Scripts/LayerMasks/EntityLayers.cs`
+  - Assets/Scripts/Navigation/GridSystem/GridManager.cs
+  - Assets/Scripts/Navigation/GridSystem/Cell.cs
+  - Assets/Scripts/Navigation/GridSystem/GridDirection.cs
+  - Assets/Scripts/Navigation/GridSystem/WorldPosToCellConverter.cs
+  - Assets/Scripts/Enemies/EnemyMovementController.cs
+  - Assets/Scripts/LevelSystem/Exp/ExpParticle.cs
+  - Assets/Scripts/LayerMasks/TerrainLayers.cs
+  - Assets/Scripts/LayerMasks/EntityLayers.cs
 - Related docs:
-  - `.agents/context/game-systems/grid-system.md`
-  - `.agents/context/game-systems/enemies-system.md`
-  - `.agents/context/game-systems/level-system.md`
-  - `.agents/context/project-coding-standards.md`
-  - `.agents/context/ai-game-dev-best-practices.md`
+  - .agents/context/game-systems/grid-system.md
+  - .agents/context/game-systems/enemies-system.md
+  - .agents/context/game-systems/level-system.md
+  - .agents/context/project-coding-standards.md
+  - .agents/context/ai-game-dev-best-practices.md
 - Related skills:
-  - `.agents/skills/check-optimalization/SKILL.md` when changing field update cadence, physics queries, grid size, or per-entity separation.
-  - `.agents/skills/di-integration/SKILL.md` when changing `IGridManager` or injected movement dependencies.
-  - `.agents/skills/unity-refactor-suggestions/SKILL.md` for behavior-preserving cleanup proposals.
+  - .agents/skills/check-optimalization/SKILL.md when changing field update cadence, physics queries, grid size, or per-entity separation.
+  - .agents/skills/di-integration/SKILL.md when changing `IGridManager` or injected movement dependencies.
+  - .agents/skills/unity-refactor-suggestions/SKILL.md for behavior-preserving cleanup proposals.
 
 ## Architecture and Data Flow
 
@@ -135,12 +135,11 @@ Cross-system coupling risks:
 
 ## Known Risks and Open Questions
 
-Known limitations:
-
-- Player chunks near world-grid edges can contain null cells, but `FlowField` currently iterates grid cells without null guards.
-- `DestinationCell` is resolved from `WorldGrid` during chunk updates; if the destination is outside the processed chunk, integration behavior relies on shared references and should be reviewed before refactoring.
-- `FlowFieldMovementController` runs a separation `OverlapSphere` in `FixedUpdate` for every component instance.
-- `FlowFieldDebug` flow direction mode reads `cell.BestDirection.Vector`; this assumes `BestDirection` is never null.
+- Known limitations:
+  - Player chunks near world-grid edges can contain null cells; `FlowField` correctly handles this using null checks during cost and flow field updates.
+  - `DestinationCell` is resolved from `WorldGrid` during chunk updates; if the destination is outside the processed chunk, integration behavior relies on shared references and should be reviewed before refactoring.
+  - `FlowFieldMovementController` runs a separation `OverlapSphere` in `FixedUpdate` for every component instance.
+  - `FlowFieldDebug` flow direction mode reads `cell.BestDirection.Vector`; this assumes `BestDirection` is never null.
 
 Open design questions:
 

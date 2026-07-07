@@ -9,31 +9,31 @@ It does not own the complete behavior of every spawned object. Enemy behavior, c
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/Spawners/`
-  - `Assets/Scripts/Spawners/GridSpace/IOnRandomGridPosSpawner.cs`
-  - `Assets/Scripts/Spawners/GridSpace/IInGridSpaceSpawner.cs`
-  - `Assets/Scripts/Spawners/WorldSpace/IInWorldSpaceSpawner.cs`
-  - `Assets/Scripts/Spawners/ISpawnedObjectsCounter.cs`
-  - `Assets/Scripts/Spawners/SpawnChanceInfo.cs`
+  - Assets/Scripts/Spawners/
+  - Assets/Scripts/Spawners/GridSpace/IOnRandomGridPosSpawner.cs
+  - Assets/Scripts/Spawners/GridSpace/IInGridSpaceSpawner.cs
+  - Assets/Scripts/Spawners/WorldSpace/IInWorldSpaceSpawner.cs
+  - Assets/Scripts/Spawners/ISpawnedObjectsCounter.cs
+  - Assets/Scripts/Spawners/SpawnChanceInfo.cs
 - Current concrete implementations:
-  - `Assets/Scripts/Enemies/EnemiesSpawner.cs`
-  - `Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/CollectibleItemsSpawner.cs`
-  - `Assets/Scripts/DamageNumbers/DamageNumbersSpawner.cs`
-  - `Assets/Scripts/LevelSystem/Exp/ExpParticleSpawner.cs`
-  - `Assets/Scripts/Skills/PlayerSkills/Minigun/MinigunTurret.cs`
+  - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs
+  - Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/CollectibleItemsSpawner.cs
+  - Assets/Scripts/DamageNumbers/DamageNumbersSpawner.cs
+  - Assets/Scripts/LevelSystem/Exp/ExpParticleSpawner.cs
+  - Assets/Scripts/Skills/PlayerSkills/Minigun/MinigunTurret.cs
 - DI setup:
-  - `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
-  - `Assets/Scripts/ReflexDI/BootLoader.cs`
+  - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
+  - Assets/Scripts/ReflexDI/BootLoader.cs
 - Related docs:
-  - `.agents/context/game-systems/enemies-system.md`
-  - `.agents/context/game-systems/collectibles-system.md`
-  - `.agents/context/game-systems/damage-numbers-system.md`
-  - `.agents/context/game-systems/level-system.md`
-  - `.agents/context/game-systems/grid-system.md`
+  - .agents/context/game-systems/enemies-system.md
+  - .agents/context/game-systems/collectibles-system.md
+  - .agents/context/game-systems/damage-numbers-system.md
+  - .agents/context/game-systems/level-system.md
+  - .agents/context/game-systems/grid-system.md
 - Related agents or instructions:
-  - `.agents/skills/document-system/SKILL.md`
-  - `.agents/skills/di-integration/SKILL.md`
-  - `.agents/context/project-coding-standards.md`
+  - .agents/skills/document-system/SKILL.md
+  - .agents/skills/di-integration/SKILL.md
+  - .agents/context/project-coding-standards.md
 
 ## Architecture and Data Flow
 
@@ -116,7 +116,7 @@ It does not own the complete behavior of every spawned object. Enemy behavior, c
 ## Known Risks and Open Questions
 
 - Known limitations:
-  - `IInGridSpaceSpawner<TSelf, TSpecificConfig>` currently appears to be a contract with no runtime implementation in `Assets/Scripts`.
+  - `IInGridSpaceSpawner<TSelf, TSpecificConfig>` currently appears to be a contract with no runtime implementation in Assets/Scripts.
   - `SpawnChanceInfo` uses misspelled field/method names such as `TresholdToStartAddingSpawnChanceToOtherInfos` and `HasReachedTresholdToStartAddingSpawnChanceToOtherInfos`; renaming affects serialized data and call sites.
   - Some concrete spawner docs record implementation-specific edge cases, including collectible count behavior for prefabs without `ICollectible`, exp divider behavior, and enemy spawn chance redistribution assumptions.
   - `MinigunTurret` implements `IInWorldSpaceSpawner<MinigunTurret, ProjectileSpawnConfig>` but is not registered as a scene-level DI spawner in the inspected installers.

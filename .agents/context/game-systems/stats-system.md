@@ -5,7 +5,6 @@
 The Stats system owns reusable upgradeable stat value types used by skill configs and skill upgrade UI.
 
 It is responsible for:
-
 - Representing upgradeable numeric values with min/max bounds.
 - Calculating random upgrade values from configured upgrade ranges.
 - Applying upgrades and raising upgrade events.
@@ -13,7 +12,6 @@ It is responsible for:
 - Providing display units consumed by skill UI.
 
 It is not responsible for:
-
 - Skill selection, unlock flow, or upgrade UI timing.
 - Final balance values stored in ScriptableObject assets.
 - Applying stat effects to gameplay objects beyond raising `OnUpgrade`.
@@ -21,33 +19,33 @@ It is not responsible for:
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/Stats/UpgradeableStat.cs`
-  - `Assets/Scripts/Stats/FloatUpgradeableStat.cs`
-  - `Assets/Scripts/Stats/IntUpgradeableStat.cs`
-  - `Assets/Scripts/Common/Types/ValueRange.cs`
-  - `Assets/Scripts/Skills/StatsUnits.cs`
+  - Assets/Scripts/Stats/UpgradeableStat.cs
+  - Assets/Scripts/Stats/FloatUpgradeableStat.cs
+  - Assets/Scripts/Stats/IntUpgradeableStat.cs
+  - Assets/Scripts/Common/Types/ValueRange.cs
+  - Assets/Scripts/Skills/StatsUnits.cs
 - Main consumers:
-  - `Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs`
-  - `Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs`
-  - `Assets/Scripts/Skills/UpgradeableSkill.cs`
-  - `Assets/ScriptableObjects/Skills/PlayerSkills/`
-  - `Assets/Scripts/Skills/PlayerSkills/`
+  - Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs
+  - Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs
+  - Assets/Scripts/Skills/UpgradeableSkill.cs
+  - Assets/ScriptableObjects/Skills/PlayerSkills
+  - Assets/Scripts/Skills/PlayerSkills
 - Related docs:
-  - `.agents/context/game-systems/skills-system.md`
-  - `.agents/context/game-systems/projectiles-system.md`
-  - `.agents/context/project-coding-standards.md`
+  - .agents/context/game-systems/skills-system.md
+  - .agents/context/game-systems/projectiles-system.md
+  - .agents/context/project-coding-standards.md
 - Related agents or instructions:
-  - `.agents/skills/document-system/SKILL.md`
+  - .agents/skills/document-system/SKILL.md
 
 ## Architecture and Data Flow
 
 - Core components:
-  - `IUpgradeableStat` exposes `CanBeUpgraded`, `HasUnlimitedMaxValue`, `IsSubstractModeOn`, `AlwaysUseMinValueForUpgrade`, upgrade range metadata, optional rarity override metadata, `StatsUnits Unit`, upgrade calculation methods, `Upgrade(float)`, and `OnUpgrade`.
-  - `UpgradeableStat<T>` stores a typed `Value`, min/max range, upgrade-value range, unit, subtract mode, unlimited-max flag, rarity override fields, and upgrade availability.
-  - `FloatUpgradeableStat` and `IntUpgradeableStat` provide non-generic serializable Unity variants.
-  - `ValueRange<T>` currently supports random upgrade values for `float` and `int`; byte ranges are no longer implemented.
-  - `StatsUnits` defines `None`, `Percentage`, `Seconds`, and `Meters`; `ToDisplayString` maps them to UI suffixes.
-  - `SkillUpgradeableStatsConfig` reflects public instance properties assignable to `IUpgradeableStat` and exposes only stats where `CanBeUpgraded` is true.
+  - Assets/Scripts/Stats/UpgradeableStat.cs exposes `CanBeUpgraded`, `HasUnlimitedMaxValue`, `IsSubstractModeOn`, `AlwaysUseMinValueForUpgrade`, upgrade range metadata, optional rarity override metadata, `StatsUnits Unit`, upgrade calculation methods, `Upgrade(float)`, and `OnUpgrade`.
+  - Assets/Scripts/Stats/UpgradeableStat.cs stores a typed `Value`, min/max range, upgrade-value range, unit, subtract mode, unlimited-max flag, rarity override fields, and upgrade availability.
+  - Assets/Scripts/Stats/FloatUpgradeableStat.cs and Assets/Scripts/Stats/IntUpgradeableStat.cs provide non-generic serializable Unity variants.
+  - Assets/Scripts/Common/Types/ValueRange.cs currently supports random upgrade values for `float` and `int`; byte ranges are no longer implemented.
+  - Assets/Scripts/Skills/StatsUnits.cs defines `None`, `Percentage`, `Seconds`, and `Meters`; `ToDisplayString` maps them to UI suffixes.
+  - Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs reflects public instance properties assignable to Assets/Scripts/Stats/UpgradeableStat.cs and exposes only stats where `CanBeUpgraded` is true.
 - Runtime flow:
   - Skill config ScriptableObjects hold serialized starting stat fields.
   - Config `OnEnable` methods deep-copy starting stats into public runtime properties.
@@ -61,7 +59,7 @@ It is not responsible for:
 ## Rules and Invariants
 
 - Critical behavior rules:
-  - Upgradeable stats intended for skill UI must be public properties assignable to `IUpgradeableStat`.
+  - Upgradeable stats intended for skill UI must be public properties assignable to Assets/Scripts/Stats/UpgradeableStat.cs.
   - Serialized starting stat fields should be deep-copied before runtime mutation so ScriptableObject-authored starting values are not directly mutated.
   - `Upgrade` is a synchronous state change and raises `OnUpgrade` immediately after updating `Value`.
   - `CanBeUpgraded` becomes false when the value reaches the max boundary only when max limiting applies.
@@ -84,13 +82,13 @@ It is not responsible for:
 
 - Safe extension areas:
   - Add a new upgradeable skill stat by adding a serialized starting stat, deep-copying it in config `OnEnable`, exposing a public property, and subscribing to `OnUpgrade` where derived runtime config must update.
-  - Add a new stat value type by deriving from `UpgradeableStat<T>` when Unity serialization requires a concrete non-generic wrapper, and update `ValueRange<T>.GetRandomValueInRange` if random upgrade generation needs that type.
+  - Add a new stat value type by deriving from Assets/Scripts/Stats/UpgradeableStat.cs when Unity serialization requires a concrete non-generic wrapper, and update `ValueRange<T>.GetRandomValueInRange` if random upgrade generation needs that type.
   - Override rarity on an individual stat by enabling `OverrideDefaultRarity` and setting `Rarity` when upgrade range position does not communicate the upgrade's actual impact.
-  - Add a new display unit in `StatsUnits` only when all UI formatting paths are reviewed.
+  - Add a new display unit in Assets/Scripts/Skills/StatsUnits.cs only when all UI formatting paths are reviewed.
 - Required dependencies and contracts:
   - Stat value type `T` must be a struct implementing `IComparable<T>` and `IConvertible`; random upgrade values are currently implemented only for `float` and `int`.
   - Min/max and upgrade ranges must be assigned for stats that should upgrade.
-  - Public stat properties must remain accessible to reflection in `SkillUpgradeableStatsConfig`.
+  - Public stat properties must remain accessible to reflection in Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs.
 - Testing implications:
   - Compile after stat or config code changes.
   - In Unity, validate upgrade button text, rarity visuals, value changes, maxed-stat removal, unlimited-max behavior, subtract-mode behavior, and runtime reset on scene/domain reload.
@@ -99,25 +97,25 @@ It is not responsible for:
 ## Integration Notes
 
 - Upstream dependencies:
-  - `ValueRange<T>` supplies min/max and random upgrade ranges.
-  - `DeepCopyUtility` is used by skill configs to create runtime stat copies.
+  - Assets/Scripts/Common/Types/ValueRange.cs supplies min/max and random upgrade ranges.
+  - Assets/Scripts/Utils/DeepCopyUtility.cs is used by skill configs to create runtime stat copies.
   - Skill upgrade UI owns presentation, rarity background application, and button callbacks.
 - Downstream consumers:
   - Skill configs update projectile and turret configs when stat events fire.
   - Concrete skills listen to count stats to activate more turrets or saws.
-  - UI filters and displays available stat upgrades through `IUpgradeableStat`.
+  - UI filters and displays available stat upgrades through Assets/Scripts/Stats/UpgradeableStat.cs.
 - Cross-system coupling risks:
-  - Reflection in `SkillUpgradeableStatsConfig` couples UI availability to public property shape.
+  - Reflection in Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs couples UI availability to public property shape.
   - Rarity calculation depends on `UpgradeRangeMin`, `UpgradeRangeMax`, `AlwaysUseMinValueForUpgrade`, `IsIntegerUpgradeRange`, and optional stat-level overrides.
   - ScriptableObject `OnEnable` reset behavior affects run-state persistence.
-  - Changing `StatsUnits` display affects player-facing upgrade text.
+  - Changing Assets/Scripts/Skills/StatsUnits.cs display affects player-facing upgrade text.
   - Mutating projectile/turret configs through stat events can affect all consumers sharing that runtime config instance.
 
 ## Known Risks and Open Questions
 
 - Known limitations:
   - `IsSubstractModeOn` and `CanBeUgraded` naming errors exist in current public contracts.
-  - `FloatUpgradeableStat` and `IntUpgradeableStat` constructors include a `maxValue` parameter that is not used directly.
+  - Assets/Scripts/Stats/FloatUpgradeableStat.cs and Assets/Scripts/Stats/IntUpgradeableStat.cs constructors include a `maxValue` parameter that is not used directly.
   - `ByteUpgradeableStat` and `ByteValueRange` have been removed; references to byte upgrade stats are stale.
   - UI percentage display behavior is specialized and should be verified before changing `GetWhatPercentOfValueIsUpgradeValue`.
 - Open design questions:

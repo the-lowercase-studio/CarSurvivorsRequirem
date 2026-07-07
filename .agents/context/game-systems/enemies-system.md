@@ -9,37 +9,37 @@ It does not own wave timing, grid generation, flow-field direction calculation, 
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/Enemies/Enemy.cs`
-  - `Assets/Scripts/Enemies/EnemiesSpawner.cs`
-  - `Assets/Scripts/Enemies/EnemiesSpawnChanceRedistributionSystem.cs`
-  - `Assets/Scripts/Enemies/EnemyMovementController.cs`
-  - `Assets/Scripts/Enemies/EnemyAttackController.cs`
-  - `Assets/Scripts/Enemies/EnemyDeathHandler.cs`
-  - `Assets/Scripts/Enemies/EnemyAnimator.cs`
-  - `Assets/Scripts/Enemies/EnemyCollisionsController.cs`
-  - `Assets/Scripts/Enemies/EnemiesOutsidePlayerChunkTeleporter.cs`
-  - `Assets/Scripts/Enemies/EnemySpawnInfo.cs`
+  - Assets/Scripts/Enemies/Enemy.cs
+  - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs
+  - Assets/Scripts/Spawners/Enemies/EnemiesSpawnChanceRedistributionSystem.cs
+  - Assets/Scripts/Enemies/EnemyMovementController.cs
+  - Assets/Scripts/Enemies/EnemyAttackController.cs
+  - Assets/Scripts/Enemies/EnemyDeathHandler.cs
+  - Assets/Scripts/Enemies/EnemyAnimator.cs
+  - Assets/Scripts/Enemies/EnemyCollisionsController.cs
+  - Assets/Scripts/Enemies/EnemiesOutsidePlayerChunkTeleporter.cs
+  - Assets/Scripts/Spawners/Enemies/EnemySpawnInfo.cs
 - Designer-authored data:
-  - `Assets/ScriptableObjects/Enemy/EnemyConfigSO.cs`
+  - Assets/ScriptableObjects/Enemy/EnemyConfigSO.cs
   - Enemy prefabs referenced by `EnemiesSpawner._poolEnemiesInfo`
 - Related systems:
-  - Wave timing: `Assets/Scripts/Waves/WaveManager.cs`
-  - Grid and off-camera spawn cells: `Assets/Scripts/Navigation/GridSystem/`
-  - Flow-field movement: `Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldMovementController.cs`
-  - Health: `Assets/Scripts/HealthSystem/Health.cs`
-  - Status effects: `Assets/Scripts/StatusEffects/StunController.cs`
-  - Damage numbers and VFX: `Assets/Scripts/DamageNumbers/`, `Assets/Scripts/VFX/`
-  - Experience particles: `Assets/Scripts/LevelSystem/Exp/`
-  - DI installer: `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
+  - Wave timing: Assets/Scripts/Waves/WaveManager.cs
+  - Grid and off-camera spawn cells: Assets/Scripts/Navigation/GridSystem/
+  - Flow-field movement: Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldMovementController.cs
+  - Health: Assets/Scripts/HealthSystem/Health.cs
+  - Status effects: Assets/Scripts/StatusEffects/StunController.cs
+  - Damage numbers and VFX: Assets/Scripts/DamageNumbers/, Assets/Scripts/VFX/
+  - Experience particles: Assets/Scripts/LevelSystem/Exp/
+  - DI installer: Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
 - Related docs:
-  - `.agents/context/game-systems/flow-field-system.md`
-  - `.agents/context/project-coding-standards.md`
-  - `.agents/context/ai-game-dev-best-practices.md`
+  - .agents/context/game-systems/flow-field-system.md
+  - .agents/context/project-coding-standards.md
+  - .agents/context/ai-game-dev-best-practices.md
 - Related agents or instructions:
-  - `.agents/skills/document-system/SKILL.md`
-  - `.agents/skills/architecture-review/SKILL.md`
-  - `.agents/skills/check-optimalization/SKILL.md`
-  - `.agents/skills/di-integration/SKILL.md`
+  - .agents/skills/document-system/SKILL.md
+  - .agents/skills/architecture-review/SKILL.md
+  - .agents/skills/check-optimalization/SKILL.md
+  - .agents/skills/di-integration/SKILL.md
 
 ## Architecture and Data Flow
 

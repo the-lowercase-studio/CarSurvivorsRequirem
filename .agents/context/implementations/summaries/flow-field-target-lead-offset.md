@@ -10,12 +10,12 @@ Implemented target prediction for the navigation flow field by targeting a veloc
 ## Key Changes
 
 ### Player Car
-- **[CarController.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Player/Car/CarController.cs)**:
+- **Assets/Scripts/Player/Car/CarController.cs**:
   - Added `Vector3 GetMovementVelocity()` to the `ICarController` interface.
   - Implemented `GetMovementVelocity()` to return `_rb.linearVelocity` projected to the horizontal XZ plane (`velocity.y = 0f`).
 
 ### Flow-Field Generation
-- **[GridManager.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Navigation/GridSystem/GridManager.cs)**:
+- **Assets/Scripts/Navigation/GridSystem/GridManager.cs**:
   - Added serialized fields `_flowFieldTargetPredictionTime` (default: `0.25f`) and `_maxFlowFieldTargetOffset` (default: `6f`).
   - Modified `UpdateFlowFieldWithNewPlayerChunkGrid()` to query the player car's velocity via `GetMovementVelocity()`.
   - When velocity is above a small threshold (`0.1f`), calculates target offset: `offsetDistance = Mathf.Clamp(speed * _flowFieldTargetPredictionTime, 0f, _maxFlowFieldTargetOffset)`.
@@ -23,7 +23,7 @@ Implemented target prediction for the navigation flow field by targeting a veloc
   - Maintains centering of the player grid chunk on the actual player position for stability.
 
 ### Unity Editor Expose
-- **[GridManagerEditor.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Editor/GUI/GridManagerEditor.cs)**:
+- **Assets/Scripts/Editor/GUI/GridManagerEditor.cs**:
   - Exposed the new prediction parameters in a foldout group named **Target Prediction Group**.
 
 ## Verification Plan & Execution

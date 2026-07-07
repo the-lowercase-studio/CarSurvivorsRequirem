@@ -608,6 +608,188 @@ Mesh:
       - serializedVersion: 1
         m_IndexStart: 0
         m_IndexCount: 0
+--- !u!1 &219321888
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 219321889}
+  - component: {fileID: 219321890}
+  m_Layer: 0
+  m_Name: WaveManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &219321889
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 219321888}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 517296375}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &219321890
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 219321888}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d515f033d2b0e3a4d8707ab5be13c789, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Waves.WaveManager
+  _startSpawnWaveDelay: 8
+--- !u!1 &296508215
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 296508216}
+  - component: {fileID: 296508218}
+  - component: {fileID: 296508217}
+  m_Layer: 0
+  m_Name: SwarmTekst
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &296508216
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 296508215}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1592724050}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &296508217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 296508215}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: New Text
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 36
+  m_fontSizeBase: 36
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_characterHorizontalScale: 1
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_TextWrappingMode: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 0
+  m_ActiveFontFeatures: 6e72656b
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_EmojiFallbackSupport: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &296508218
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 296508215}
+  m_CullTransparentMesh: 1
 --- !u!1 &361168571
 GameObject:
   m_ObjectHideFlags: 0
@@ -977,28 +1159,28 @@ MonoBehaviour:
   _enemiesParent: {fileID: 361168572}
   _poolEnemiesInfo:
   - EnemyPrefab: {fileID: 8544650596686725407, guid: 08b441f56ebe2754ab1e7d5eefb63ac5, type: 3}
-    MaxAmount: 100
+    MaxAmount: 180
     SpawnChanceInfo:
       SpawnChance: 100
       TresholdToStartAddingSpawnChanceToOtherInfos: 0
       SpawnChanceWillNotChange: 0
       HasEverReachedThreshold: 0
   - EnemyPrefab: {fileID: 6539511401407038030, guid: ad4b105b525d63e48b2389383719ba24, type: 3}
-    MaxAmount: 90
+    MaxAmount: 140
     SpawnChanceInfo:
       SpawnChance: 0
       TresholdToStartAddingSpawnChanceToOtherInfos: 30
       SpawnChanceWillNotChange: 0
       HasEverReachedThreshold: 0
   - EnemyPrefab: {fileID: 2460934273244476936, guid: 1f7f36cb9467b6b4b84a4ad278f05987, type: 3}
-    MaxAmount: 80
+    MaxAmount: 30
     SpawnChanceInfo:
       SpawnChance: 0
       TresholdToStartAddingSpawnChanceToOtherInfos: 36
       SpawnChanceWillNotChange: 0
       HasEverReachedThreshold: 0
   - EnemyPrefab: {fileID: 8544650596686725407, guid: d5bb0f9692c21d340823d0058bfb4042, type: 3}
-    MaxAmount: 80
+    MaxAmount: 100
     SpawnChanceInfo:
       SpawnChance: 0
       TresholdToStartAddingSpawnChanceToOtherInfos: 30
@@ -1025,6 +1207,9 @@ MonoBehaviour:
       TresholdToStartAddingSpawnChanceToOtherInfos: 0
       SpawnChanceWillNotChange: 0
       HasEverReachedThreshold: 0
+  _swarmSpawnVfxPrefab: {fileID: 8344966909035156067, guid: 6e276f066ac3ecb49bde40f2f75c0e62, type: 3}
+  _outerSpawnBufferCells: 6
+  _maxEnemiesPerCell: 2
 --- !u!1 &517296374
 GameObject:
   m_ObjectHideFlags: 0
@@ -1056,8 +1241,10 @@ Transform:
   m_Children:
   - {fileID: 2116983120}
   - {fileID: 549734346}
-  - {fileID: 36651506}
   - {fileID: 449990456}
+  - {fileID: 742325822}
+  - {fileID: 36651506}
+  - {fileID: 219321889}
   - {fileID: 172225608}
   - {fileID: 375309168}
   m_Father: {fileID: 0}
@@ -1128,7 +1315,10 @@ MonoBehaviour:
   _timerPresenter: {fileID: 2059122252}
   _expParticleSpawner: {fileID: 375309169}
   _collectibleItemsSpawner: {fileID: 36651507}
+  _waveManager: {fileID: 219321890}
+  _swarmNotificationPresenter: {fileID: 1592724051}
   _mainCamera: {fileID: 2001922875}
+  _postProcessVolume: {fileID: 1699568833015964712}
 --- !u!1 &549734345
 GameObject:
   m_ObjectHideFlags: 0
@@ -1292,6 +1482,57 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 594433662}
   m_CullTransparentMesh: 1
+--- !u!1 &742325821
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 742325822}
+  - component: {fileID: 742325823}
+  m_Layer: 0
+  m_Name: SwarmSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &742325822
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 742325821}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 517296375}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &742325823
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 742325821}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c84ccd84fd1288241b9dc7881e326871, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Enemies.SwarmSpawner
+  _minSwarmInterval: 80
+  _maxSwarmInterval: 100
+  _minSwarmSize: 60
+  _maxSwarmSize: 86
+  _swarmWarningDuration: 10
+  _swarmDuration: 5
+  _spawnTickInterval: 1
 --- !u!1 &825131015
 GameObject:
   m_ObjectHideFlags: 0
@@ -2145,6 +2386,7 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1592724050}
   - {fileID: 3889146629778686341}
   - {fileID: 2059122251}
   - {fileID: 6512237454196796941}
@@ -2526,6 +2768,65 @@ MonoBehaviour:
   m_FirstSelected: {fileID: 0}
   m_sendNavigationEvents: 1
   m_DragThreshold: 10
+--- !u!1 &1592724049
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1592724050}
+  - component: {fileID: 1592724051}
+  m_Layer: 0
+  m_Name: SwarmPresenter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1592724050
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1592724049}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 296508216}
+  m_Father: {fileID: 1077564981}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: 0, y: -136.73}
+  m_SizeDelta: {x: 1920, y: 94.9658}
+  m_Pivot: {x: 0.5, y: 1}
+--- !u!114 &1592724051
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1592724049}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c3d55fad69e3db4badc74d8da86c258, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.HUD.SwarmNotificationPresenter
+  _swarmText: {fileID: 296508217}
+  _incomingTemplateMessage: Swarm Incoming in {0}s
+  _ongoingMessage: Swarm ongoing
+  _growDuration: 0.4
+  _punchScale: 0.15
+  _punchDuration: 0.6
+  _exitDuration: 0.3
+  _targetGamma: 0.7
+  _gammaEnterDuration: 10
+  _gammaExitDuration: 2
 --- !u!43 &1593915516
 Mesh:
   m_ObjectHideFlags: 0
@@ -3683,6 +3984,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f693d0edd422bf04984409a5ec507429, type: 3}
+--- !u!114 &1699568833015964712 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 241017312021434159, guid: f693d0edd422bf04984409a5ec507429, type: 3}
+  m_PrefabInstance: {fileID: 1699568833015964711}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &2007183185026868721
 PrefabInstance:
   m_ObjectHideFlags: 0

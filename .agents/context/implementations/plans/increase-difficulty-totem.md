@@ -13,12 +13,12 @@ The totem is one-use per instance and uses direct `Keyboard.current.eKey` input.
 - Update `EnemiesSpawnChanceRedistributionSystem` to store an additive redistribution bonus and use random serialized factor plus accumulated bonus.
 - Do not immediately redistribute spawn chances on activation; the effect applies on future spawn redistributions.
 - Register `_enemiesSpawner` in `DefaultGameplaySceneInstaller` as `IEnemySpawnDifficultyController`.
-- Add `Assets/Scripts/Enemies/IncreaseDifficultyTotem.cs`.
+- Add Assets/Scripts/Enemies/IncreaseDifficultyTotem.cs.
 - Inject `IEnemySpawnDifficultyController` into `IncreaseDifficultyTotem`.
 - Use trigger enter/exit with `EntityLayers.Player`.
 - In `Update`, when the player is in range and `Keyboard.current.eKey.wasPressedThisFrame`, apply the increase once.
 - Set `_hasBeenUsed = true` and disable the component after activation.
-- Document the implemented system under `.agents/context/`, including prefab setup, DI dependency, input behavior, and how the difficulty increase affects enemy spawn chance redistribution.
+- Document the implemented system under .agents/context/, including prefab setup, DI dependency, input behavior, and how the difficulty increase affects enemy spawn chance redistribution.
 
 ## Tests And Validation
 
@@ -28,7 +28,7 @@ The totem is one-use per instance and uses direct `Keyboard.current.eKey` input.
 - In Unity Play Mode, confirm repeated `E` presses on the same totem do not stack.
 - In Unity Play Mode, confirm multiple separate totems can each apply their own increase.
 - In Unity Play Mode, confirm enemy spawn chance redistribution still runs after waves and spawns without DI errors.
-- Review the new `.agents/context/` documentation for accurate file paths and behavior.
+- Review the new .agents/context/ documentation for accurate file paths and behavior.
 
 ## Assumptions
 

@@ -23,33 +23,33 @@ It is not responsible for:
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/Navigation/GridSystem/GridManager.cs`
-  - `Assets/Scripts/Navigation/GridSystem/Grid.cs`
-  - `Assets/Scripts/Navigation/GridSystem/Cell.cs`
-  - `Assets/Scripts/Navigation/GridSystem/GridDirection.cs`
-  - `Assets/Scripts/Navigation/GridSystem/WorldPosToCellConverter.cs`
-  - `Assets/Scripts/Navigation/GridSystem/GridCellsNotVisibleByMainCamera.cs`
-  - `Assets/Scripts/Navigation/GridSystem/RandomWalkableCellsFinder.cs`
-  - `Assets/Scripts/Navigation/GridSystem/GridEdgeHelper.cs`
-  - `Assets/Scripts/Navigation/GridSystem/CellStatusDescriber.cs`
-  - `Assets/Scripts/Navigation/GridSystem/GridDebug.cs`
+  - Assets/Scripts/Navigation/GridSystem/GridManager.cs
+  - Assets/Scripts/Navigation/GridSystem/Grid.cs
+  - Assets/Scripts/Navigation/GridSystem/Cell.cs
+  - Assets/Scripts/Navigation/GridSystem/GridDirection.cs
+  - Assets/Scripts/Navigation/GridSystem/WorldPosToCellConverter.cs
+  - Assets/Scripts/Navigation/GridSystem/GridCellsNotVisibleByMainCamera.cs
+  - Assets/Scripts/Navigation/GridSystem/RandomWalkableCellsFinder.cs
+  - Assets/Scripts/Navigation/GridSystem/GridEdgeHelper.cs
+  - Assets/Scripts/Navigation/GridSystem/CellStatusDescriber.cs
+  - Assets/Scripts/Navigation/GridSystem/GridDebug.cs
 - Related systems:
-  - `Assets/Scripts/Navigation/FlowFieldSystem/FlowField.cs`
-  - `Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldMovementController.cs`
-  - `Assets/Scripts/Enemies/EnemiesSpawner.cs`
-  - `Assets/Scripts/Enemies/EnemiesOutsidePlayerChunkTeleporter.cs`
-  - `Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/CollectibleItemsSpawner.cs`
-  - `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
-  - `Assets/Scripts/Editor/GUI/GridManagerEditor.cs`
+  - Assets/Scripts/Navigation/FlowFieldSystem/FlowField.cs
+  - Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldMovementController.cs
+  - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs
+  - Assets/Scripts/Enemies/EnemiesOutsidePlayerChunkTeleporter.cs
+  - Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/CollectibleItemsSpawner.cs
+  - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
+  - Assets/Scripts/Editor/GUI/GridManagerEditor.cs
 - Related docs:
-  - `.agents/context/game-systems/flow-field-system.md`
-  - `.agents/context/project-coding-standards.md`
-  - `.agents/context/ai-game-dev-best-practices.md`
-  - `.agents/context/technology-documentation.md`
+  - .agents/context/game-systems/flow-field-system.md
+  - .agents/context/project-coding-standards.md
+  - .agents/context/ai-game-dev-best-practices.md
+  - .agents/context/technology-documentation.md
 - Related skills:
-  - `.agents/skills/di-integration/SKILL.md` when changing grid bindings or injected consumers.
-  - `.agents/skills/check-optimalization/SKILL.md` when changing update cadence, physics queries, or cell scan behavior.
-  - `.agents/skills/unity-refactor-suggestions/SKILL.md` for behavior-preserving cleanup proposals.
+  - .agents/skills/di-integration/SKILL.md when changing grid bindings or injected consumers.
+  - .agents/skills/check-optimalization/SKILL.md when changing update cadence, physics queries, or cell scan behavior.
+  - .agents/skills/unity-refactor-suggestions/SKILL.md for behavior-preserving cleanup proposals.
 
 ## Architecture and Data Flow
 
@@ -66,7 +66,7 @@ Runtime flow:
 2. `GridManager.OnEnable` initializes the world flow field toward the world-grid center cell.
 3. `GridManager.OnEnable` schedules `UpdateFlowFieldWithNewPlayerChunkGrid` using `_delayBetweenPlayerChunkGridUpdate`.
 4. Each player-chunk update finds the cell closest to the player in `WorldGrid`.
-5. `CreatePlayerChunkBasedOnPlayerPositionInWorldGrid` builds a `GridPlayerChunk` around that world cell and reuses references to cells from `WorldGrid`.
+5. `UpdatePlayerChunkBasedOnPlayerPositionInWorldGrid` builds a `GridPlayerChunk` around that world cell and reuses references to cells from `WorldGrid`.
 6. `UpdateFlowField` runs cost-field, integration-field, and flow-field generation for the selected grid.
 7. Consumers read `IGridManager.WorldGrid`, `IGridManager.GridPlayerChunk`, or `IGridManager.DestinationCell`.
 
@@ -98,8 +98,8 @@ Preserve these constraints when editing:
 ## Extension Points
 
 - Add new grid consumers by injecting `IGridManager` through Reflex where DI is already active.
-- Add new cell query helpers as small static utilities in `Assets/Scripts/Navigation/GridSystem/` when they are pure queries over `Grid` or `Cell`.
-- Add new terrain cost behavior in `FlowField.CreateCostField` only after checking `Assets/Scripts/LayerMasks/` and all movement/spawn consumers.
+- Add new cell query helpers as small static utilities in Assets/Scripts/Navigation/GridSystem/ when they are pure queries over `Grid` or `Cell`.
+- Add new terrain cost behavior in `FlowField.CreateCostField` only after checking Assets/Scripts/LayerMasks/ and all movement/spawn consumers.
 - Add debug-only visualization through `GridDebug` or `FlowFieldDebug` under the existing debug flow.
 - Extend the custom inspector in `GridManagerEditor` if new serialized `GridManager` settings need designer access.
 
@@ -138,9 +138,8 @@ Cross-system coupling risks:
 
 Known limitations:
 
-- `CreatePlayerChunkBasedOnPlayerPositionInWorldGrid` can leave null slots in `GridPlayerChunk.Cells` near world-grid edges because out-of-bounds world cells are skipped rather than filled.
+- `UpdatePlayerChunkBasedOnPlayerPositionInWorldGrid` can leave null slots in `GridPlayerChunk.Cells` near world-grid edges because out-of-bounds world cells are skipped rather than filled.
 - The current flow-field update passes a `DestinationCell` from `WorldGrid` into integration over the selected grid. This relies on shared cell references and may be fragile when the destination cell is outside a partial player chunk.
-- `GridCellsNotVisibleByMainCamera` has a private visibility helper even though `CellCameraVisibilityChecker` provides the same public query.
 - `GridDirection.GetDirectionFromV2I` compares `GridDirection` instances to a `Vector2Int` through the implicit conversion path; keep this behavior in mind before refactoring equality or direction lookup.
 - `RandomWalkableCellsFinder` uses `UnityEngine.Random`, so collectible placement is not deterministic across runs unless Unity's random state is controlled elsewhere.
 
@@ -154,5 +153,5 @@ Open design questions:
 Suggested follow-up tasks:
 
 - Add a focused test or debug validation for player chunk creation at all four world-grid edges.
-- Consolidate duplicate camera visibility logic into one helper if behavior remains identical.
+- Consolidate duplicate camera visibility logic if any remains across other systems.
 - Review flow-field update frequency and physics overlap cost with the `check-optimalization` skill before changing grid sizes or update delays.

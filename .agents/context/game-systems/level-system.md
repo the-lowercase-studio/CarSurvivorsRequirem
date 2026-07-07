@@ -9,26 +9,26 @@ It is not responsible for enemy balance, choosing skill upgrades, score saving, 
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/LevelSystem/LevelController.cs`
-  - `Assets/Scripts/LevelSystem/Exp/ExpParticle.cs`
-  - `Assets/Scripts/LevelSystem/Exp/ExpParticleSpawner.cs`
+  - Assets/Scripts/LevelSystem/LevelController.cs
+  - Assets/Scripts/LevelSystem/Exp/ExpParticle.cs
+  - Assets/Scripts/LevelSystem/Exp/ExpParticleSpawner.cs
 - Related runtime integration:
-  - `Assets/Scripts/Player/PlayerManager.cs`
-  - `Assets/Scripts/Enemies/EnemyDeathHandler.cs`
-  - `Assets/Scripts/UI/Level/PlayerLevelPresenter.cs`
-  - `Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs`
-  - `Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeFlow.cs`
-  - `Assets/Scripts/UI/Death/PlayerDeathPresenter.cs`
-  - `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
+  - Assets/Scripts/Player/PlayerManager.cs
+  - Assets/Scripts/Enemies/EnemyDeathHandler.cs
+  - Assets/Scripts/UI/Level/PlayerLevelPresenter.cs
+  - Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs
+  - Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeFlow.cs
+  - Assets/Scripts/UI/Death/PlayerDeathPresenter.cs
+  - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
 - Editor tooling:
-  - `Assets/Scripts/Editor/GUI/LevelControllerEditor.cs`
+  - Assets/Scripts/Editor/GUI/LevelControllerEditor.cs
 - Related docs:
-  - `.agents/context/project-coding-standards.md`
-  - `.agents/context/ai-game-dev-best-practices.md`
+  - .agents/context/project-coding-standards.md
+  - .agents/context/ai-game-dev-best-practices.md
 - Related skills:
-  - `.agents/skills/di-integration/SKILL.md` for Reflex binding changes.
-  - `.agents/skills/check-optimalization/SKILL.md` for exp particle pooling or allocation review.
-  - `.agents/skills/unity-refactor-suggestions/SKILL.md` for behavior-preserving cleanup.
+  - .agents/skills/di-integration/SKILL.md for Reflex binding changes.
+  - .agents/skills/check-optimalization/SKILL.md for exp particle pooling or allocation review.
+  - .agents/skills/unity-refactor-suggestions/SKILL.md for behavior-preserving cleanup.
 
 ## Architecture and Data Flow
 

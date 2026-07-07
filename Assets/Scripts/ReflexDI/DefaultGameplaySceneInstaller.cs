@@ -4,14 +4,17 @@ using Assets.Scripts.LevelSystem.Exp;
 using Assets.Scripts.Player;
 using Assets.Scripts.Skills.ObjectsImpactingSkills.Crate;
 using Assets.Scripts.Skills.UpgradeFlow;
+using Assets.Scripts.Spawners.Enemies;
 using Assets.Scripts.Spawners.GridSpace;
 using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.UI.Death;
 using Assets.Scripts.UI.HUD;
 using Assets.Scripts.UI.Level;
 using Assets.Scripts.UI.Skills;
+using Assets.Scripts.Waves;
 using Reflex.Core;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Assets.Scripts.ReflexDI
 {
@@ -26,7 +29,10 @@ namespace Assets.Scripts.ReflexDI
         [SerializeField] private TimerPresenter _timerPresenter;
         [SerializeField] private ExpParticleSpawner _expParticleSpawner;
         [SerializeField] private CollectibleItemsSpawner _collectibleItemsSpawner;
+        [SerializeField] private WaveManager _waveManager;
+        [SerializeField] private SwarmNotificationPresenter _swarmNotificationPresenter;
         [SerializeField] private Camera _mainCamera;
+        [SerializeField] private Volume _postProcessVolume;
 
         public Camera MainCamera => _mainCamera;
 
@@ -52,8 +58,18 @@ namespace Assets.Scripts.ReflexDI
 
             //Spawners
             builder.AddSingleton(_enemiesSpawner, typeof(IOnRandomGridPosSpawner<EnemiesSpawner>));
+            builder.AddSingleton(_enemiesSpawner, typeof(ISwarmEnemySpawner));
             builder.AddSingleton(_collectibleItemsSpawner, typeof(IOnRandomGridPosSpawner<CollectibleItemsSpawner>));
             builder.AddSingleton(_expParticleSpawner, typeof(IInWorldSpaceSpawner<ExpParticleSpawner, float>));
+
+            //Waves
+            builder.AddSingleton(_waveManager, typeof(IWaveFreezer));
+
+            //Swarm UI
+            builder.AddSingleton(_swarmNotificationPresenter, typeof(ISwarmNotificationPresenter));
+
+            //Post Processing
+            builder.AddSingleton(_postProcessVolume);
         }
     }
 }

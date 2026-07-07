@@ -9,24 +9,24 @@ It is not responsible for measuring elapsed gameplay time, deciding when the pla
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/ScoreBoard/StoredScoreBoard.cs`
-  - `Assets/Scripts/ScoreBoard/ScoreBoardNewScoreSaver.cs`
-  - `Assets/Scripts/ScoreBoard/ScoreBoardBestScoreGetter.cs`
-  - `Assets/Scripts/ScoreBoard/ScoreBoardPresenter.cs`
-  - `Assets/Scripts/ScoreBoard/ScoreBoardEntry.cs`
+  - Assets/Scripts/ScoreBoard/StoredScoreBoard.cs
+  - Assets/Scripts/ScoreBoard/ScoreBoardNewScoreSaver.cs
+  - Assets/Scripts/ScoreBoard/ScoreBoardBestScoreGetter.cs
+  - Assets/Scripts/ScoreBoard/ScoreBoardPresenter.cs
+  - Assets/Scripts/ScoreBoard/ScoreBoardEntry.cs
 - Related runtime integration:
-  - `Assets/Scripts/ReflexDI/ProjectInstaller.cs`
-  - `Assets/Scripts/UI/Death/PlayerDeathPresenter.cs`
-  - `Assets/Scripts/UI/HUD/TimerPresenter.cs`
-  - `Assets/Scripts/Storage/AppStorage.cs`
+  - Assets/Scripts/ReflexDI/ProjectInstaller.cs
+  - Assets/Scripts/UI/Death/PlayerDeathPresenter.cs
+  - Assets/Scripts/UI/HUD/TimerPresenter.cs
+  - Assets/Scripts/Storage/AppStorage.cs
 - Related docs:
-  - `.agents/context/game-systems/ui-system.md`
-  - `.agents/context/game-systems/level-system.md`
-  - `.agents/context/project-coding-standards.md`
+  - .agents/context/game-systems/ui-system.md
+  - .agents/context/game-systems/level-system.md
+  - .agents/context/project-coding-standards.md
 - Related agents or instructions:
   - Root `AGENTS.md`
-  - `.agents/skills/document-system/SKILL.md`
-  - `.agents/skills/di-integration/SKILL.md` when changing scoreboard service bindings
+  - .agents/skills/document-system/SKILL.md
+  - .agents/skills/di-integration/SKILL.md when changing scoreboard service bindings
 
 ## Architecture and Data Flow
 
@@ -74,7 +74,7 @@ It is not responsible for measuring elapsed gameplay time, deciding when the pla
   - Runtime consumers that save scores should depend on `IScoreBoardNewScoreSaver`, not `StoredScoreBoard`.
   - Runtime consumers that only need the best score should depend on `IScoreBoardBestScoreGetter`.
   - Scoreboard UI requires a `ScoreBoardEntry` prefab, an entries parent transform, and Reflex injection for `StoredScoreBoard`.
-  - Storage depends on `AppStorage`, which persists JSON under `Assets/Data/AppStorage.Editor.json` in the Unity Editor and `Data/AppStorage.json` under the build root resolved from `Directory.GetParent(Application.dataPath)` in builds.
+  - Storage depends on `AppStorage`, which persists JSON under Assets/Data/AppStorage.Editor.json in the Unity Editor and Data/AppStorage.json under the build root resolved from `Directory.GetParent(Application.dataPath)` in builds.
 - Testing implications:
   - Focused edit-mode tests for `ScoreBoardNewScoreSaver` should cover empty storage, duplicate scores, full storage, lower-than-minimum rejection, higher-than-current-best insertion, and max-count enforcement.
   - Play-mode or manual UI validation is needed for scoreboard row instantiation, repeated panel enable/disable cycles, and death-screen "New Best!" messaging.
