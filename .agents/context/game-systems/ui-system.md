@@ -2,40 +2,40 @@
 
 ## Purpose
 
-The UI system presents runtime game state, menu actions, settings options, pause/death screens, and skill initialization or upgrade choices. It is mostly scene-wired Unity UI backed by small presenter components under `Assets/Scripts/UI/`.
+The UI system presents runtime game state, menu actions, settings options, pause/death screens, and skill initialization or upgrade choices. It is mostly scene-wired Unity UI backed by small presenter components under Assets/Scripts/UI/.
 
 The UI system is not responsible for owning gameplay state, scoring rules, settings storage, scene loading, audio modes, skill selection algorithms, or player lifecycle. Those behaviors live in their owning gameplay, settings, audio, score, and scene-loading systems; UI components consume them through inspector references, events, or Reflex-injected interfaces.
 
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/UI/`
-  - `Assets/Scripts/UI/Level/`
-  - `Assets/Scripts/UI/Skills/`
-  - `Assets/Scripts/UI/Death/`
-  - `Assets/Scripts/UI/Settings/`
+  - Assets/Scripts/UI/
+  - Assets/Scripts/UI/Level/
+  - Assets/Scripts/UI/Skills/
+  - Assets/Scripts/UI/Death/
+  - Assets/Scripts/UI/Settings/
 - Related runtime code:
-  - `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
-  - `Assets/Scripts/ReflexDI/MainMenuInstaller.cs`
-  - `Assets/Scripts/ReflexDI/ProjectInstaller.cs`
-  - `Assets/Scripts/Player/PlayerDeathHandler.cs`
-  - `Assets/Scripts/Settings/`
-  - `Assets/Scripts/ScoreBoard/`
-  - `Assets/Scripts/GameFlow/`
+  - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
+  - Assets/Scripts/ReflexDI/MainMenuInstaller.cs
+  - Assets/Scripts/ReflexDI/ProjectInstaller.cs
+  - Assets/Scripts/Player/PlayerDeathHandler.cs
+  - Assets/Scripts/Settings/
+  - Assets/Scripts/ScoreBoard/
+  - Assets/Scripts/GameFlow/
 - Related docs:
-  - `.agents/context/game-systems/settings-system.md`
-  - `.agents/context/game-systems/level-system.md`
-  - `.agents/context/game-systems/scoreboard-system.md`
-  - `.agents/context/game-systems/health-system.md`
-  - `.agents/context/game-systems/damage-numbers-system.md`
-  - `.agents/context/game-systems/collectibles-system.md`
-  - `.agents/context/game-systems/spawners-system.md`
-  - `.agents/context/technology-documentation.md`
+  - .agents/context/game-systems/settings-system.md
+  - .agents/context/game-systems/level-system.md
+  - .agents/context/game-systems/scoreboard-system.md
+  - .agents/context/game-systems/health-system.md
+  - .agents/context/game-systems/damage-numbers-system.md
+  - .agents/context/game-systems/collectibles-system.md
+  - .agents/context/game-systems/spawners-system.md
+  - .agents/context/technology-documentation.md
 - Related agents or instructions:
   - Root `AGENTS.md`
-  - `.agents/context/project-coding-standards.md`
-  - `.agents/skills/document-system/SKILL.md`
-  - `.agents/skills/di-integration/SKILL.md` when adding injected UI dependencies
+  - .agents/context/project-coding-standards.md
+  - .agents/skills/document-system/SKILL.md
+  - .agents/skills/di-integration/SKILL.md when adding injected UI dependencies
 
 ## Architecture and Data Flow
 
@@ -93,8 +93,8 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Add a new settings option by implementing `IOptionComponent<T>`, injecting the appropriate `ISetting<TSelf, TRepresentedBy>`, binding the setting in `MainMenuInstaller`, loading without notifying the control, and subscribing/unsubscribing in `OnEnable`/`OnDisable`.
   - Add a new gameplay presenter by creating a narrow interface only if another runtime system must consume it, then bind the scene instance in `DefaultGameplaySceneInstaller`.
   - Add new skill choice visuals by extending the scene objects referenced by `SkillsVisualPresenter`, keeping names aligned with `SkillInfoSO.Name`.
-  - Add or update skill-upgrade keyboard icons through `Assets/ScriptableObjects/UI/SkillUpgradeKeyboardIconMapping.cs` and the matching ScriptableObject asset; missing mappings hide the select-key image.
-  - Add or update skill-upgrade rarity backgrounds through `Assets/ScriptableObjects/UI/SkillUpgradeRaritySpriteMapping.cs` and the button prefab's mapping/background references; missing sprites or mapping references leave the existing button background unchanged.
+  - Add or update skill-upgrade keyboard icons through Assets/ScriptableObjects/UI/SkillUpgradeKeyboardIconMapping.cs and the matching ScriptableObject asset; missing mappings hide the select-key image.
+  - Add or update skill-upgrade rarity backgrounds through Assets/ScriptableObjects/UI/SkillUpgradeRaritySpriteMapping.cs and the button prefab's mapping/background references; missing sprites or mapping references leave the existing button background unchanged.
   - Add button behaviors through `MenuButtonsFunctionality` only when they remain scene/menu operations; put gameplay state changes in the owning gameplay system instead.
 - Required dependencies and contracts:
   - UI contracts consumed outside UI should be explicit interfaces and registered in the appropriate Reflex installer.
@@ -115,7 +115,7 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Skill reward request queueing depends on `SkillUpgradePresenter`; queued request storage, skill initialization, and upgrade option creation depend on `ISkillUpgradeFlow`.
   - Skill upgrade button background visuals depend on `SkillUpgradeOption.Rarity`, `ClickableButtonData.Rarity`, and `SkillUpgradeRaritySpriteMapping`.
   - Death UI activation depends on `PlayerDeathHandler` and the death VFX finished event.
-  - Settings UI depends on setting classes under `Assets/Scripts/Settings/`.
+  - Settings UI depends on setting classes under Assets/Scripts/Settings/.
   - Scene/menu buttons depend on `IGameSceneLoader`.
   - Pause and death panels manipulate `GameTime`.
 - Downstream consumers:

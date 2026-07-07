@@ -24,28 +24,28 @@ It is not responsible for:
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/Navigation/FlowFieldSystem/FlowField.cs`
-  - `Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldMovementController.cs`
-  - `Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldDebug.cs`
+  - Assets/Scripts/Navigation/FlowFieldSystem/FlowField.cs
+  - Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldMovementController.cs
+  - Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldDebug.cs
 - Related systems:
-  - `Assets/Scripts/Navigation/GridSystem/GridManager.cs`
-  - `Assets/Scripts/Navigation/GridSystem/Cell.cs`
-  - `Assets/Scripts/Navigation/GridSystem/GridDirection.cs`
-  - `Assets/Scripts/Navigation/GridSystem/WorldPosToCellConverter.cs`
-  - `Assets/Scripts/Enemies/EnemyMovementController.cs`
-  - `Assets/Scripts/LevelSystem/Exp/ExpParticle.cs`
-  - `Assets/Scripts/LayerMasks/TerrainLayers.cs`
-  - `Assets/Scripts/LayerMasks/EntityLayers.cs`
+  - Assets/Scripts/Navigation/GridSystem/GridManager.cs
+  - Assets/Scripts/Navigation/GridSystem/Cell.cs
+  - Assets/Scripts/Navigation/GridSystem/GridDirection.cs
+  - Assets/Scripts/Navigation/GridSystem/WorldPosToCellConverter.cs
+  - Assets/Scripts/Enemies/EnemyMovementController.cs
+  - Assets/Scripts/LevelSystem/Exp/ExpParticle.cs
+  - Assets/Scripts/LayerMasks/TerrainLayers.cs
+  - Assets/Scripts/LayerMasks/EntityLayers.cs
 - Related docs:
-  - `.agents/context/game-systems/grid-system.md`
-  - `.agents/context/game-systems/enemies-system.md`
-  - `.agents/context/game-systems/level-system.md`
-  - `.agents/context/project-coding-standards.md`
-  - `.agents/context/ai-game-dev-best-practices.md`
+  - .agents/context/game-systems/grid-system.md
+  - .agents/context/game-systems/enemies-system.md
+  - .agents/context/game-systems/level-system.md
+  - .agents/context/project-coding-standards.md
+  - .agents/context/ai-game-dev-best-practices.md
 - Related skills:
-  - `.agents/skills/check-optimalization/SKILL.md` when changing field update cadence, physics queries, grid size, or per-entity separation.
-  - `.agents/skills/di-integration/SKILL.md` when changing `IGridManager` or injected movement dependencies.
-  - `.agents/skills/unity-refactor-suggestions/SKILL.md` for behavior-preserving cleanup proposals.
+  - .agents/skills/check-optimalization/SKILL.md when changing field update cadence, physics queries, grid size, or per-entity separation.
+  - .agents/skills/di-integration/SKILL.md when changing `IGridManager` or injected movement dependencies.
+  - .agents/skills/unity-refactor-suggestions/SKILL.md for behavior-preserving cleanup proposals.
 
 ## Architecture and Data Flow
 

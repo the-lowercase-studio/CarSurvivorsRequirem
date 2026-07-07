@@ -138,8 +138,9 @@ For documentation-only changes, review links and paths for accuracy. A Unity Edi
 - Keep agent operational guidance under `.agents/`.
 - Keep this root `AGENTS.md` as a short entry point, not a full replacement for `.agents/context/*`.
 - Keep game-system documentation in `.agents/context/game-systems/`.
-- Keep implementation plans in `.agents/context/implementations/plans/`.
-- Keep implementation summaries in `.agents/context/implementations/summaries/`.
+- Keep implementation plans in `.agents/context/implementations/plans/` and summaries in `.agents/context/implementations/summaries/`.
+- Do not prefix filenames for implementation plans and summaries with dates; specify the date inside the file content instead.
+- Write file and directory paths in agent documentation relative to the project root as plain text, without markdown links or backticks (e.g. `- Assets/Scripts/...`).
 - When adding a new specialist domain, add or update the matching skill or agent file under `.agents/`.
 - Keep skill descriptions explicit with `Use when:` trigger language.
 - Update cross-references when docs move or filenames change.

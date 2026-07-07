@@ -9,32 +9,32 @@ The audio system is not responsible for gameplay decisions, UI flow, settings pe
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/Audio/`
-  - `Assets/Scripts/ReflexDI/BootLoader.cs`
-  - `Assets/Scripts/Settings/AudioVolumeSetting.cs`
-  - `Assets/Scripts/UI/Settings/AudioVolumeOption.cs`
+  - Assets/Scripts/Audio/
+  - Assets/Scripts/ReflexDI/BootLoader.cs
+  - Assets/Scripts/Settings/AudioVolumeSetting.cs
+  - Assets/Scripts/UI/Settings/AudioVolumeOption.cs
 - Common consumers:
-  - `Assets/Scripts/UI/Death/PlayerDeathPresenter.cs`
-  - `Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs`
-  - `Assets/Scripts/UI/Common/ButtonsAudioClipPlayer.cs`
-  - `Assets/Scripts/Player/PlayerManager.cs`
-  - `Assets/Scripts/Player/PlayerDamagedHandler.cs`
-  - `Assets/Scripts/Enemies/Enemy.cs`
-  - `Assets/Scripts/Enemies/EnemyDeathHandler.cs`
-  - `Assets/Scripts/LevelSystem/Exp/ExpParticle.cs`
-  - `Assets/Scripts/Skills/PlayerSkills/`
+  - Assets/Scripts/UI/Death/PlayerDeathPresenter.cs
+  - Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs
+  - Assets/Scripts/UI/Common/ButtonsAudioClipPlayer.cs
+  - Assets/Scripts/Player/PlayerManager.cs
+  - Assets/Scripts/Player/PlayerDamagedHandler.cs
+  - Assets/Scripts/Enemies/Enemy.cs
+  - Assets/Scripts/Enemies/EnemyDeathHandler.cs
+  - Assets/Scripts/LevelSystem/Exp/ExpParticle.cs
+  - Assets/Scripts/Skills/PlayerSkills/
 - Related docs:
-  - `.agents/context/game-systems/settings-system.md`
-  - `.agents/context/game-systems/ui-system.md`
-  - `.agents/context/game-systems/level-system.md`
-  - `.agents/context/game-systems/enemies-system.md`
-  - `.agents/context/game-systems/skills-system.md`
-  - `.agents/context/technology-documentation.md`
+  - .agents/context/game-systems/settings-system.md
+  - .agents/context/game-systems/ui-system.md
+  - .agents/context/game-systems/level-system.md
+  - .agents/context/game-systems/enemies-system.md
+  - .agents/context/game-systems/skills-system.md
+  - .agents/context/technology-documentation.md
 - Related agents or instructions:
   - Root `AGENTS.md`
-  - `.agents/context/project-coding-standards.md`
-  - `.agents/skills/document-system/SKILL.md`
-  - `.agents/skills/di-integration/SKILL.md` when adding injected audio dependencies or bindings
+  - .agents/context/project-coding-standards.md
+  - .agents/skills/document-system/SKILL.md
+  - .agents/skills/di-integration/SKILL.md when adding injected audio dependencies or bindings
 
 ## Architecture and Data Flow
 

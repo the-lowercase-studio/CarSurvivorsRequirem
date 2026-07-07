@@ -23,33 +23,33 @@ It is not responsible for:
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/Navigation/GridSystem/GridManager.cs`
-  - `Assets/Scripts/Navigation/GridSystem/Grid.cs`
-  - `Assets/Scripts/Navigation/GridSystem/Cell.cs`
-  - `Assets/Scripts/Navigation/GridSystem/GridDirection.cs`
-  - `Assets/Scripts/Navigation/GridSystem/WorldPosToCellConverter.cs`
-  - `Assets/Scripts/Navigation/GridSystem/GridCellsNotVisibleByMainCamera.cs`
-  - `Assets/Scripts/Navigation/GridSystem/RandomWalkableCellsFinder.cs`
-  - `Assets/Scripts/Navigation/GridSystem/GridEdgeHelper.cs`
-  - `Assets/Scripts/Navigation/GridSystem/CellStatusDescriber.cs`
-  - `Assets/Scripts/Navigation/GridSystem/GridDebug.cs`
+  - Assets/Scripts/Navigation/GridSystem/GridManager.cs
+  - Assets/Scripts/Navigation/GridSystem/Grid.cs
+  - Assets/Scripts/Navigation/GridSystem/Cell.cs
+  - Assets/Scripts/Navigation/GridSystem/GridDirection.cs
+  - Assets/Scripts/Navigation/GridSystem/WorldPosToCellConverter.cs
+  - Assets/Scripts/Navigation/GridSystem/GridCellsNotVisibleByMainCamera.cs
+  - Assets/Scripts/Navigation/GridSystem/RandomWalkableCellsFinder.cs
+  - Assets/Scripts/Navigation/GridSystem/GridEdgeHelper.cs
+  - Assets/Scripts/Navigation/GridSystem/CellStatusDescriber.cs
+  - Assets/Scripts/Navigation/GridSystem/GridDebug.cs
 - Related systems:
-  - `Assets/Scripts/Navigation/FlowFieldSystem/FlowField.cs`
-  - `Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldMovementController.cs`
-  - `Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs`
-  - `Assets/Scripts/Enemies/EnemiesOutsidePlayerChunkTeleporter.cs`
-  - `Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/CollectibleItemsSpawner.cs`
-  - `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
-  - `Assets/Scripts/Editor/GUI/GridManagerEditor.cs`
+  - Assets/Scripts/Navigation/FlowFieldSystem/FlowField.cs
+  - Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldMovementController.cs
+  - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs
+  - Assets/Scripts/Enemies/EnemiesOutsidePlayerChunkTeleporter.cs
+  - Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/CollectibleItemsSpawner.cs
+  - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
+  - Assets/Scripts/Editor/GUI/GridManagerEditor.cs
 - Related docs:
-  - `.agents/context/game-systems/flow-field-system.md`
-  - `.agents/context/project-coding-standards.md`
-  - `.agents/context/ai-game-dev-best-practices.md`
-  - `.agents/context/technology-documentation.md`
+  - .agents/context/game-systems/flow-field-system.md
+  - .agents/context/project-coding-standards.md
+  - .agents/context/ai-game-dev-best-practices.md
+  - .agents/context/technology-documentation.md
 - Related skills:
-  - `.agents/skills/di-integration/SKILL.md` when changing grid bindings or injected consumers.
-  - `.agents/skills/check-optimalization/SKILL.md` when changing update cadence, physics queries, or cell scan behavior.
-  - `.agents/skills/unity-refactor-suggestions/SKILL.md` for behavior-preserving cleanup proposals.
+  - .agents/skills/di-integration/SKILL.md when changing grid bindings or injected consumers.
+  - .agents/skills/check-optimalization/SKILL.md when changing update cadence, physics queries, or cell scan behavior.
+  - .agents/skills/unity-refactor-suggestions/SKILL.md for behavior-preserving cleanup proposals.
 
 ## Architecture and Data Flow
 
@@ -98,8 +98,8 @@ Preserve these constraints when editing:
 ## Extension Points
 
 - Add new grid consumers by injecting `IGridManager` through Reflex where DI is already active.
-- Add new cell query helpers as small static utilities in `Assets/Scripts/Navigation/GridSystem/` when they are pure queries over `Grid` or `Cell`.
-- Add new terrain cost behavior in `FlowField.CreateCostField` only after checking `Assets/Scripts/LayerMasks/` and all movement/spawn consumers.
+- Add new cell query helpers as small static utilities in Assets/Scripts/Navigation/GridSystem/ when they are pure queries over `Grid` or `Cell`.
+- Add new terrain cost behavior in `FlowField.CreateCostField` only after checking Assets/Scripts/LayerMasks/ and all movement/spawn consumers.
 - Add debug-only visualization through `GridDebug` or `FlowFieldDebug` under the existing debug flow.
 - Extend the custom inspector in `GridManagerEditor` if new serialized `GridManager` settings need designer access.
 

@@ -9,16 +9,16 @@ It does not own player health, leveling, skills, spawning, camera behavior, enem
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/Player/Car/CarController.cs`
-  - `Assets/Scripts/Player/Car/CarVfxEffectsController.cs`
+  - Assets/Scripts/Player/Car/CarController.cs
+  - Assets/Scripts/Player/Car/CarVfxEffectsController.cs
 - Related systems:
-  - `Assets/Scripts/Player/PlayerManager.cs`
-  - `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
-  - `Assets/Scripts/Skills/PlayerSkills/Saw/SawBlade.cs`
-  - `Assets/InputSystem/InputSystem_Actions.inputactions`
+  - Assets/Scripts/Player/PlayerManager.cs
+  - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
+  - Assets/Scripts/Skills/PlayerSkills/Saw/SawBlade.cs
+  - Assets/InputSystem/InputSystem_Actions.inputactions
 - Related docs:
-  - `.agents/context/project-coding-standards.md`
-  - `.agents/context/ai-game-dev-best-practices.md`
+  - .agents/context/project-coding-standards.md
+  - .agents/context/ai-game-dev-best-practices.md
 
 ## Architecture and Data Flow
 
@@ -63,7 +63,7 @@ It does not own player health, leveling, skills, spawning, camera behavior, enem
 ## Integration Notes
 
 - Upstream dependencies:
-  - Unity Input System global actions from `Assets/InputSystem/InputSystem_Actions.inputactions`.
+  - Unity Input System global actions from Assets/InputSystem/InputSystem_Actions.inputactions.
   - Unity physics through `Rigidbody` and `WheelCollider`.
   - Serialized car setup for wheel colliders, wheel model transforms, center of mass, mesh renderer, light holder, and trail renderers.
 - Downstream consumers:

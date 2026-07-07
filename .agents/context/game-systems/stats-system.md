@@ -19,33 +19,33 @@ It is not responsible for:
 ## Reading Map
 
 - Primary code locations:
-  - [UpgradeableStat.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/UpgradeableStat.cs)
-  - [FloatUpgradeableStat.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/FloatUpgradeableStat.cs)
-  - [IntUpgradeableStat.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/IntUpgradeableStat.cs)
-  - [ValueRange.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Common/Types/ValueRange.cs)
-  - [StatsUnits.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/StatsUnits.cs)
+  - Assets/Scripts/Stats/UpgradeableStat.cs
+  - Assets/Scripts/Stats/FloatUpgradeableStat.cs
+  - Assets/Scripts/Stats/IntUpgradeableStat.cs
+  - Assets/Scripts/Common/Types/ValueRange.cs
+  - Assets/Scripts/Skills/StatsUnits.cs
 - Main consumers:
-  - [SkillUpgradeableStatsConfig.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs)
-  - [SkillUpgradePresenter.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs)
-  - [UpgradeableSkill.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeableSkill.cs)
-  - [PlayerSkills ScriptableObjects](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/ScriptableObjects/Skills/PlayerSkills)
-  - [PlayerSkills scripts](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/PlayerSkills)
+  - Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs
+  - Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs
+  - Assets/Scripts/Skills/UpgradeableSkill.cs
+  - Assets/ScriptableObjects/Skills/PlayerSkills
+  - Assets/Scripts/Skills/PlayerSkills
 - Related docs:
-  - [skills-system.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/game-systems/skills-system.md)
-  - [projectiles-system.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/game-systems/projectiles-system.md)
-  - [project-coding-standards.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/project-coding-standards.md)
+  - .agents/context/game-systems/skills-system.md
+  - .agents/context/game-systems/projectiles-system.md
+  - .agents/context/project-coding-standards.md
 - Related agents or instructions:
-  - [document-system SKILL.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/skills/document-system/SKILL.md)
+  - .agents/skills/document-system/SKILL.md
 
 ## Architecture and Data Flow
 
 - Core components:
-  - [IUpgradeableStat](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/UpgradeableStat.cs) exposes `CanBeUpgraded`, `HasUnlimitedMaxValue`, `IsSubstractModeOn`, `AlwaysUseMinValueForUpgrade`, upgrade range metadata, optional rarity override metadata, `StatsUnits Unit`, upgrade calculation methods, `Upgrade(float)`, and `OnUpgrade`.
-  - [UpgradeableStat<T>](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/UpgradeableStat.cs) stores a typed `Value`, min/max range, upgrade-value range, unit, subtract mode, unlimited-max flag, rarity override fields, and upgrade availability.
-  - [FloatUpgradeableStat](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/FloatUpgradeableStat.cs) and [IntUpgradeableStat](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/IntUpgradeableStat.cs) provide non-generic serializable Unity variants.
-  - [ValueRange<T>](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Common/Types/ValueRange.cs) currently supports random upgrade values for `float` and `int`; byte ranges are no longer implemented.
-  - [StatsUnits](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/StatsUnits.cs) defines `None`, `Percentage`, `Seconds`, and `Meters`; `ToDisplayString` maps them to UI suffixes.
-  - [SkillUpgradeableStatsConfig](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs) reflects public instance properties assignable to [IUpgradeableStat](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/UpgradeableStat.cs) and exposes only stats where `CanBeUpgraded` is true.
+  - Assets/Scripts/Stats/UpgradeableStat.cs exposes `CanBeUpgraded`, `HasUnlimitedMaxValue`, `IsSubstractModeOn`, `AlwaysUseMinValueForUpgrade`, upgrade range metadata, optional rarity override metadata, `StatsUnits Unit`, upgrade calculation methods, `Upgrade(float)`, and `OnUpgrade`.
+  - Assets/Scripts/Stats/UpgradeableStat.cs stores a typed `Value`, min/max range, upgrade-value range, unit, subtract mode, unlimited-max flag, rarity override fields, and upgrade availability.
+  - Assets/Scripts/Stats/FloatUpgradeableStat.cs and Assets/Scripts/Stats/IntUpgradeableStat.cs provide non-generic serializable Unity variants.
+  - Assets/Scripts/Common/Types/ValueRange.cs currently supports random upgrade values for `float` and `int`; byte ranges are no longer implemented.
+  - Assets/Scripts/Skills/StatsUnits.cs defines `None`, `Percentage`, `Seconds`, and `Meters`; `ToDisplayString` maps them to UI suffixes.
+  - Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs reflects public instance properties assignable to Assets/Scripts/Stats/UpgradeableStat.cs and exposes only stats where `CanBeUpgraded` is true.
 - Runtime flow:
   - Skill config ScriptableObjects hold serialized starting stat fields.
   - Config `OnEnable` methods deep-copy starting stats into public runtime properties.
@@ -59,7 +59,7 @@ It is not responsible for:
 ## Rules and Invariants
 
 - Critical behavior rules:
-  - Upgradeable stats intended for skill UI must be public properties assignable to [IUpgradeableStat](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/UpgradeableStat.cs).
+  - Upgradeable stats intended for skill UI must be public properties assignable to Assets/Scripts/Stats/UpgradeableStat.cs.
   - Serialized starting stat fields should be deep-copied before runtime mutation so ScriptableObject-authored starting values are not directly mutated.
   - `Upgrade` is a synchronous state change and raises `OnUpgrade` immediately after updating `Value`.
   - `CanBeUpgraded` becomes false when the value reaches the max boundary only when max limiting applies.
@@ -82,13 +82,13 @@ It is not responsible for:
 
 - Safe extension areas:
   - Add a new upgradeable skill stat by adding a serialized starting stat, deep-copying it in config `OnEnable`, exposing a public property, and subscribing to `OnUpgrade` where derived runtime config must update.
-  - Add a new stat value type by deriving from [UpgradeableStat<T>](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/UpgradeableStat.cs) when Unity serialization requires a concrete non-generic wrapper, and update `ValueRange<T>.GetRandomValueInRange` if random upgrade generation needs that type.
+  - Add a new stat value type by deriving from Assets/Scripts/Stats/UpgradeableStat.cs when Unity serialization requires a concrete non-generic wrapper, and update `ValueRange<T>.GetRandomValueInRange` if random upgrade generation needs that type.
   - Override rarity on an individual stat by enabling `OverrideDefaultRarity` and setting `Rarity` when upgrade range position does not communicate the upgrade's actual impact.
-  - Add a new display unit in [StatsUnits](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/StatsUnits.cs) only when all UI formatting paths are reviewed.
+  - Add a new display unit in Assets/Scripts/Skills/StatsUnits.cs only when all UI formatting paths are reviewed.
 - Required dependencies and contracts:
   - Stat value type `T` must be a struct implementing `IComparable<T>` and `IConvertible`; random upgrade values are currently implemented only for `float` and `int`.
   - Min/max and upgrade ranges must be assigned for stats that should upgrade.
-  - Public stat properties must remain accessible to reflection in [SkillUpgradeableStatsConfig](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs).
+  - Public stat properties must remain accessible to reflection in Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs.
 - Testing implications:
   - Compile after stat or config code changes.
   - In Unity, validate upgrade button text, rarity visuals, value changes, maxed-stat removal, unlimited-max behavior, subtract-mode behavior, and runtime reset on scene/domain reload.
@@ -97,25 +97,25 @@ It is not responsible for:
 ## Integration Notes
 
 - Upstream dependencies:
-  - [ValueRange.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Common/Types/ValueRange.cs) supplies min/max and random upgrade ranges.
-  - [DeepCopyUtility.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Utils/DeepCopyUtility.cs) is used by skill configs to create runtime stat copies.
+  - Assets/Scripts/Common/Types/ValueRange.cs supplies min/max and random upgrade ranges.
+  - Assets/Scripts/Utils/DeepCopyUtility.cs is used by skill configs to create runtime stat copies.
   - Skill upgrade UI owns presentation, rarity background application, and button callbacks.
 - Downstream consumers:
   - Skill configs update projectile and turret configs when stat events fire.
   - Concrete skills listen to count stats to activate more turrets or saws.
-  - UI filters and displays available stat upgrades through [IUpgradeableStat](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/UpgradeableStat.cs).
+  - UI filters and displays available stat upgrades through Assets/Scripts/Stats/UpgradeableStat.cs.
 - Cross-system coupling risks:
-  - Reflection in [SkillUpgradeableStatsConfig](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs) couples UI availability to public property shape.
+  - Reflection in Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs couples UI availability to public property shape.
   - Rarity calculation depends on `UpgradeRangeMin`, `UpgradeRangeMax`, `AlwaysUseMinValueForUpgrade`, `IsIntegerUpgradeRange`, and optional stat-level overrides.
   - ScriptableObject `OnEnable` reset behavior affects run-state persistence.
-  - Changing [StatsUnits](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/StatsUnits.cs) display affects player-facing upgrade text.
+  - Changing Assets/Scripts/Skills/StatsUnits.cs display affects player-facing upgrade text.
   - Mutating projectile/turret configs through stat events can affect all consumers sharing that runtime config instance.
 
 ## Known Risks and Open Questions
 
 - Known limitations:
   - `IsSubstractModeOn` and `CanBeUgraded` naming errors exist in current public contracts.
-  - [FloatUpgradeableStat](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/FloatUpgradeableStat.cs) and [IntUpgradeableStat](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/IntUpgradeableStat.cs) constructors include a `maxValue` parameter that is not used directly.
+  - Assets/Scripts/Stats/FloatUpgradeableStat.cs and Assets/Scripts/Stats/IntUpgradeableStat.cs constructors include a `maxValue` parameter that is not used directly.
   - `ByteUpgradeableStat` and `ByteValueRange` have been removed; references to byte upgrade stats are stale.
   - UI percentage display behavior is specialized and should be verified before changing `GetWhatPercentOfValueIsUpgradeValue`.
 - Open design questions:

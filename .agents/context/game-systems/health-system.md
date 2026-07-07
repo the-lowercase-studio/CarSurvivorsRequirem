@@ -9,30 +9,30 @@ It does not own damage calculation, target selection, enemy/player death present
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/HealthSystem/Health.cs`
-  - `Assets/Scripts/HealthSystem/RegenativeHealth.cs`
-  - `Assets/Scripts/HealthSystem/HealthBar.cs`
+  - Assets/Scripts/HealthSystem/Health.cs
+  - Assets/Scripts/HealthSystem/RegenativeHealth.cs
+  - Assets/Scripts/HealthSystem/HealthBar.cs
 - Main integration points:
-  - `Assets/Scripts/Enemies/Enemy.cs`
-  - `Assets/Scripts/Enemies/EnemyDeathHandler.cs`
-  - `Assets/Scripts/Player/PlayerManager.cs`
-  - `Assets/Scripts/Player/PlayerDamagedHandler.cs`
-  - `Assets/Scripts/Player/PlayerDeathHandler.cs`
-  - `Assets/Scripts/StatusEffects/IDamageable.cs`
+  - Assets/Scripts/Enemies/Enemy.cs
+  - Assets/Scripts/Enemies/EnemyDeathHandler.cs
+  - Assets/Scripts/Player/PlayerManager.cs
+  - Assets/Scripts/Player/PlayerDamagedHandler.cs
+  - Assets/Scripts/Player/PlayerDeathHandler.cs
+  - Assets/Scripts/StatusEffects/IDamageable.cs
 - Related systems:
-  - Damage numbers: `Assets/Scripts/DamageNumbers/`
-  - VFX: `Assets/Scripts/VFX/`
-  - Experience payout: `Assets/Scripts/LevelSystem/Exp/`
-  - Player death UI: `Assets/Scripts/UI/Death/`
+  - Damage numbers: Assets/Scripts/DamageNumbers/
+  - VFX: Assets/Scripts/VFX/
+  - Experience payout: Assets/Scripts/LevelSystem/Exp/
+  - Player death UI: Assets/Scripts/UI/Death/
 - Related docs:
-  - `.agents/context/project-coding-standards.md`
-  - `.agents/context/ai-game-dev-best-practices.md`
-  - `.agents/context/game-systems/enemies-system.md`
-  - `.agents/context/game-systems/damage-numbers-system.md`
+  - .agents/context/project-coding-standards.md
+  - .agents/context/ai-game-dev-best-practices.md
+  - .agents/context/game-systems/enemies-system.md
+  - .agents/context/game-systems/damage-numbers-system.md
 - Related agents or instructions:
-  - `.agents/skills/document-system/SKILL.md`
-  - `.agents/skills/architecture-review/SKILL.md`
-  - `.agents/skills/check-optimalization/SKILL.md`
+  - .agents/skills/document-system/SKILL.md
+  - .agents/skills/architecture-review/SKILL.md
+  - .agents/skills/check-optimalization/SKILL.md
 
 ## Architecture and Data Flow
 

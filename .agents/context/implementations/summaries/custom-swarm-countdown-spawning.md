@@ -21,23 +21,23 @@ This summary details the modifications made to support custom swarm warning coun
 ## 2. Implementation Details
 
 ### UI HUD Notification Component
-#### [SwarmNotificationPresenter.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/UI/HUD/SwarmNotificationPresenter.cs)
+#### Assets/Scripts/UI/HUD/SwarmNotificationPresenter.cs
 * Replaced `Show()` with `ShowIncoming(int secondsRemaining)` and `ShowOngoing()`.
 * Changed default `_targetGamma` to `-0.7f` (added tooltip describing the negative direction for URP).
 * Added check in `Start()` to automatically negate `_targetGamma` if set to a positive value in the inspector (safeguarding existing serialized components).
 * Cached starting `LiftGammaGain` color offset at `Start()` and implemented `TweenGamma(float targetVal, float duration)`.
 
 ### DI Container Installer
-#### [DefaultGameplaySceneInstaller.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs)
+#### Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
 * Bound the `Volume _postProcessVolume` field as a singleton.
 
 ### Swarm Spawner Component
-#### [SwarmSpawner.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Spawners/Swarm/SwarmSpawner.cs)
+#### Assets/Scripts/Spawners/Swarm/SwarmSpawner.cs
 * Updated defaults: `_minSwarmSize = 80`, `_maxSwarmSize = 100`.
 * Refactored `SwarmCoroutine` to count down warning times via `Time.deltaTime` and distribute spawned counts progressively over ticks.
 
 ### Enemies Spawner Component
-#### [EnemiesSpawner.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs)
+#### Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs
 * Added `PreWarmPools()` in `Start()` to pre-instantiate and return `MaxAmount` instances of each enemy pool configuration.
 * Removed cell search/position settings from `OnEnemyGet()`.
 * Refactored `SpawnAtRandomGridPos()`, `SpawnSpecificEnemy()`, and `SpawnRandomEnemiesBasedOnSpawnChance()` to batch-gather off-screen cells via `GridCellsNotVisibleByMainCamera.GetRandomWalkableCells()` and assign positions sequentially to pooled instances.

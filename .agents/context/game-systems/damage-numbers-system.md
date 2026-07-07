@@ -9,24 +9,24 @@ It does not calculate damage, change health values, choose combat targets, play 
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/DamageNumbers/DamageNumbersSpawner.cs`
-  - `Assets/Scripts/DamageNumbers/DamageNumber.cs`
-  - `Assets/Scripts/DamageNumbers/DamageNumberApearance.cs`
+  - Assets/Scripts/DamageNumbers/DamageNumbersSpawner.cs
+  - Assets/Scripts/DamageNumbers/DamageNumber.cs
+  - Assets/Scripts/DamageNumbers/DamageNumberApearance.cs
 - Integration points:
-  - `Assets/Scripts/Enemies/Enemy.cs`
-  - `Assets/Scripts/ReflexDI/BootLoader.cs`
-  - `Assets/Scripts/Settings/DamageNumbersSetting.cs`
-  - `Assets/Scripts/UI/Settings/DamageNumbersOption.cs`
-  - `Assets/Scripts/Spawners/WorldSpace/IInWorldSpaceSpawner.cs`
-  - `Assets/Scripts/ObjectLifecycle/Actions/IEnableDisableFunctionalityTrigger.cs`
+  - Assets/Scripts/Enemies/Enemy.cs
+  - Assets/Scripts/ReflexDI/BootLoader.cs
+  - Assets/Scripts/Settings/DamageNumbersSetting.cs
+  - Assets/Scripts/UI/Settings/DamageNumbersOption.cs
+  - Assets/Scripts/Spawners/WorldSpace/IInWorldSpaceSpawner.cs
+  - Assets/Scripts/ObjectLifecycle/Actions/IEnableDisableFunctionalityTrigger.cs
 - Related docs:
-  - `.agents/context/game-systems/settings-system.md`
-  - `.agents/context/project-coding-standards.md`
-  - `.agents/context/ai-game-dev-best-practices.md`
+  - .agents/context/game-systems/settings-system.md
+  - .agents/context/project-coding-standards.md
+  - .agents/context/ai-game-dev-best-practices.md
 - Related skills or instructions:
-  - `.agents/skills/di-integration/SKILL.md`
-  - `.agents/skills/check-optimalization/SKILL.md`
-  - `.agents/skills/preserve-coding-standards/SKILL.md`
+  - .agents/skills/di-integration/SKILL.md
+  - .agents/skills/check-optimalization/SKILL.md
+  - .agents/skills/preserve-coding-standards/SKILL.md
 
 ## Architecture and Data Flow
 

@@ -22,26 +22,26 @@ It is not responsible for:
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/Projectiles/Projectile.cs`
-  - `Assets/Scripts/Projectiles/ProjectileSpawnConfig.cs`
-  - `Assets/ScriptableObjects/ProjectileConfigSO.cs`
+  - Assets/Scripts/Projectiles/Projectile.cs
+  - Assets/Scripts/Projectiles/ProjectileSpawnConfig.cs
+  - Assets/ScriptableObjects/ProjectileConfigSO.cs
 - Current projectile owner:
-  - `Assets/Scripts/Skills/PlayerSkills/Minigun/MinigunTurret.cs`
-  - `Assets/Scripts/Skills/Turret.cs`
+  - Assets/Scripts/Skills/PlayerSkills/Minigun/MinigunTurret.cs
+  - Assets/Scripts/Skills/Turret.cs
 - Related code:
-  - `Assets/Scripts/StatusEffects/EntityManipulationHelper.cs`
-  - `Assets/Scripts/LayerMasks/EntityLayers.cs`
-  - `Assets/Scripts/LayerMasks/TerrainLayers.cs`
-  - `Assets/Scripts/Extensions/TransformTweenExtensions.cs`
+  - Assets/Scripts/StatusEffects/EntityManipulationHelper.cs
+  - Assets/Scripts/LayerMasks/EntityLayers.cs
+  - Assets/Scripts/LayerMasks/TerrainLayers.cs
+  - Assets/Scripts/Extensions/TransformTweenExtensions.cs
 - Related docs:
-  - `.agents/context/game-systems/skills-system.md`
-  - `.agents/context/game-systems/pooling-and-object-lifecycle-system.md`
-  - `.agents/context/game-systems/status-effects-system.md`
-  - `.agents/context/game-systems/spawners-system.md`
-  - `.agents/context/project-coding-standards.md`
+  - .agents/context/game-systems/skills-system.md
+  - .agents/context/game-systems/pooling-and-object-lifecycle-system.md
+  - .agents/context/game-systems/status-effects-system.md
+  - .agents/context/game-systems/spawners-system.md
+  - .agents/context/project-coding-standards.md
 - Related agents or instructions:
-  - `.agents/skills/document-system/SKILL.md`
-  - `.agents/skills/check-optimalization/SKILL.md`
+  - .agents/skills/document-system/SKILL.md
+  - .agents/skills/check-optimalization/SKILL.md
 
 ## Architecture and Data Flow
 
