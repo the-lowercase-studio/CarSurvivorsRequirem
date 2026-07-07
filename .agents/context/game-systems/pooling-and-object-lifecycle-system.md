@@ -6,7 +6,7 @@ The Pooling and Object Lifecycle system defines shared contracts for pooled obje
 
 It is responsible for:
 
-- Standardizing pooled object get/release behavior through `IPoolable`.
+- Standardizing pooled object get/release behavior through [IPoolable.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Pooling/IPoolable.cs).
 - Exposing release events from spawners and spawned objects.
 - Defining lifecycle completion contracts for objects that need presentation to finish before disable.
 - Defining generic functionality enable/disable contracts used by settings.
@@ -21,49 +21,46 @@ It is not responsible for:
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/Pooling/IPoolable.cs`
-  - `Assets/Scripts/Pooling/IObjectReleaseNotifier.cs`
-  - `Assets/Scripts/ObjectLifecycle/DontDestroyOnSceneLoad.cs`
-  - `Assets/Scripts/ObjectLifecycle/Actions/INeedToCompleteBeforeDisable.cs`
-  - `Assets/Scripts/ObjectLifecycle/Actions/IEnableDisableFunctionalityTrigger.cs`
+  - [IPoolable.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Pooling/IPoolable.cs)
+  - [IObjectReleaseNotifier.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Pooling/IObjectReleaseNotifier.cs)
+  - [DontDestroyOnSceneLoad.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ObjectLifecycle/DontDestroyOnSceneLoad.cs)
+  - [INeedToCompleteBeforeDisable.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ObjectLifecycle/Actions/INeedToCompleteBeforeDisable.cs)
+  - [IEnableDisableFunctionalityTrigger.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ObjectLifecycle/Actions/IEnableDisableFunctionalityTrigger.cs)
 - Current concrete users:
-  - `Assets/Scripts/Enemies/Enemy.cs`
-  - `Assets/Scripts/Enemies/EnemiesSpawner.cs`
-  - `Assets/Scripts/Enemies/EnemyDeathHandler.cs`
-  - `Assets/Scripts/LevelSystem/Exp/ExpParticle.cs`
-  - `Assets/Scripts/LevelSystem/Exp/ExpParticleSpawner.cs`
-  - `Assets/Scripts/Projectiles/Projectile.cs`
-  - `Assets/Scripts/Skills/PlayerSkills/Minigun/MinigunTurret.cs`
-  - `Assets/Scripts/DamageNumbers/DamageNumbersSpawner.cs`
-  - `Assets/Scripts/Volumes/DeathVolume.cs`
-  - `Assets/Scripts/Settings/DamageNumbersSetting.cs`
+  - [Enemy.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Enemies/Enemy.cs)
+  - [EnemiesSpawner.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs)
+  - [EnemyDeathHandler.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Enemies/EnemyDeathHandler.cs)
+  - [ExpParticle.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/LevelSystem/Exp/ExpParticle.cs)
+  - [ExpParticleSpawner.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/LevelSystem/Exp/ExpParticleSpawner.cs)
+  - [Projectile.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Projectiles/Projectile.cs)
+  - [MinigunTurret.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/PlayerSkills/Minigun/MinigunTurret.cs)
+  - [DamageNumbersSpawner.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/DamageNumbers/DamageNumbersSpawner.cs)
+  - [DeathVolume.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Volumes/DeathVolume.cs)
+  - [DamageNumbersSetting.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Settings/DamageNumbersSetting.cs)
 - Related docs:
-  - `.agents/context/game-systems/spawners-system.md`
-  - `.agents/context/game-systems/enemies-system.md`
-  - `.agents/context/game-systems/projectiles-system.md`
-  - `.agents/context/game-systems/level-system.md`
-  - `.agents/context/game-systems/damage-numbers-system.md`
-  - `.agents/context/game-systems/settings-system.md`
-  - `.agents/context/project-coding-standards.md`
-- Related agents or instructions:
-  - `.agents/skills/document-system/SKILL.md`
-  - `.agents/skills/check-optimalization/SKILL.md`
+  - [spawners-system.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/game-systems/spawners-system.md)
+  - [enemies-system.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/game-systems/enemies-system.md)
+  - [projectiles-system.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/game-systems/projectiles-system.md)
+  - [level-system.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/game-systems/level-system.md)
+  - [damage-numbers-system.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/game-systems/damage-numbers-system.md)
+  - [settings-system.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/game-systems/settings-system.md)
+  - [project-coding-standards.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/project-coding-standards.md)
 
 ## Architecture and Data Flow
 
 - Core contracts:
-  - `IPoolable` requires `OnGet`, `OnRelease`, `ReturnToPool`, and `OnCanBeReleased`.
-  - `IObjectReleaseNotifier` exposes `OnSpawnedEntityReleased` for spawners or spawner-like components.
-  - `INeedToCompleteBeforeDisable` exposes `OnCompleted` for presentation or async cleanup that must finish before disable.
-  - `IEnableDisableFunctionalityTrigger<T>` exposes `EnableFunctionality` and `DisableFunctionality` for feature toggles.
-  - `DontDestroyOnSceneLoad` calls `DontDestroyOnLoad(gameObject)` in `Awake`.
+  - [IPoolable.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Pooling/IPoolable.cs) requires `OnGet`, `OnRelease`, `ReturnToPool`, and `OnCanBeReleased` event handler.
+  - [IObjectReleaseNotifier.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Pooling/IObjectReleaseNotifier.cs) exposes `OnSpawnedEntityReleased` for spawners or spawner-like components.
+  - [INeedToCompleteBeforeDisable.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ObjectLifecycle/Actions/INeedToCompleteBeforeDisable.cs) exposes `OnCompleted` for presentation or async cleanup that must finish before disable.
+  - [IEnableDisableFunctionalityTrigger.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ObjectLifecycle/Actions/IEnableDisableFunctionalityTrigger.cs) exposes `EnableFunctionality` and `DisableFunctionality` for feature toggles.
+  - [DontDestroyOnSceneLoad.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ObjectLifecycle/DontDestroyOnSceneLoad.cs) calls `DontDestroyOnLoad(gameObject)` in `Awake`.
 - Runtime flow:
   - Pool-backed spawners create `ObjectPool<T>` instances and provide get/release callbacks.
   - On get, the spawner calls the object's `OnGet`, subscribes to release/life-end events, activates the GameObject, and increments active count.
   - During active play, the object raises `OnCanBeReleased`, `OnLifeEnd`, or a domain-specific completion signal.
   - On release, the spawner calls `OnRelease`, unsubscribes events, deactivates the GameObject, raises `OnSpawnedEntityReleased`, and decrements active count.
-  - `DeathVolume` first applies full HP damage to `IDamageable` objects; if no damageable capability exists, it calls `ReturnToPool` on `IPoolable`.
-  - Settings can enable or disable feature behavior through `IEnableDisableFunctionalityTrigger<T>`, currently used for damage numbers.
+  - [DeathVolume.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Volumes/DeathVolume.cs) first applies full HP damage to `IDamageable` objects; if no damageable capability exists, it calls `ReturnToPool` on [IPoolable.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Pooling/IPoolable.cs).
+  - Settings can enable or disable feature behavior through [IEnableDisableFunctionalityTrigger.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ObjectLifecycle/Actions/IEnableDisableFunctionalityTrigger.cs), currently used for damage numbers.
 
 ## Rules and Invariants
 
@@ -75,9 +72,9 @@ It is not responsible for:
   - `OnSpawnedEntityReleased` means an active spawned object left active play; do not use it as a spawn-created event.
   - Active object counts must increment and decrement exactly once per successful active spawn.
 - Ordering or sequencing guarantees:
-  - Enemy pool release is delayed by `EnemyDeathHandler.OnCompleted` through `INeedToCompleteBeforeDisable`.
+  - Enemy pool release is delayed by [EnemyDeathHandler.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Enemies/EnemyDeathHandler.cs)'s `OnCompleted` through [INeedToCompleteBeforeDisable.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ObjectLifecycle/Actions/INeedToCompleteBeforeDisable.cs).
   - Projectile and exp particle release is event-driven by life/completion events.
-  - `DeathVolume` prioritizes full HP damage over direct pool return when an object is damageable.
+  - [DeathVolume.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Volumes/DeathVolume.cs) prioritizes full HP damage over direct pool return when an object is damageable.
 - Constraints contributors must preserve:
   - Keep pooled lifecycle events paired with spawner subscriptions and unsubscriptions.
   - Preserve required scene/prefab components that implement lifecycle contracts.
@@ -87,10 +84,10 @@ It is not responsible for:
 ## Extension Points
 
 - Safe extension areas:
-  - Add a new pooled object by implementing `IPoolable` and using an owning spawner's `ObjectPool<T>` get/release callbacks.
-  - Add delayed disable behavior by implementing `INeedToCompleteBeforeDisable` on a sibling component and raising `OnCompleted` when all required presentation finishes.
-  - Add a setting-controlled feature by implementing `IEnableDisableFunctionalityTrigger<T>` and binding it through Reflex.
-  - Add persistent scene objects with `DontDestroyOnSceneLoad` when their lifetime is intentionally global.
+  - Add a new pooled object by implementing [IPoolable.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Pooling/IPoolable.cs) and using an owning spawner's `ObjectPool<T>` get/release callbacks.
+  - Add delayed disable behavior by implementing [INeedToCompleteBeforeDisable.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ObjectLifecycle/Actions/INeedToCompleteBeforeDisable.cs) on a sibling component and raising `OnCompleted` when all required presentation finishes.
+  - Add a setting-controlled feature by implementing [IEnableDisableFunctionalityTrigger.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ObjectLifecycle/Actions/IEnableDisableFunctionalityTrigger.cs) and binding it through Reflex.
+  - Add persistent scene objects with [DontDestroyOnSceneLoad.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ObjectLifecycle/DontDestroyOnSceneLoad.cs) when their lifetime is intentionally global.
 - Required dependencies and contracts:
   - Pooled objects must expose a reliable release signal or be released only by their owning spawner.
   - Delayed-disable components must always raise `OnCompleted`; otherwise pooled objects can remain active forever.
@@ -119,10 +116,10 @@ It is not responsible for:
 ## Known Risks and Open Questions
 
 - Known limitations:
-  - `IPoolable` does not define whether `OnCanBeReleased` should be raised before or after internal cleanup; current implementations vary by path.
-  - `INeedToCompleteBeforeDisable` has only an event and no cancellation or timeout contract.
-  - `IEnableDisableFunctionalityTrigger<T>` uses a self-referential generic constraint that makes bindings specific but verbose.
-  - `DontDestroyOnSceneLoad` does not prevent duplicates if multiple scenes contain the same persistent object.
+  - [IPoolable.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Pooling/IPoolable.cs) does not define whether `OnCanBeReleased` should be raised before or after internal cleanup; current implementations vary by path.
+  - [INeedToCompleteBeforeDisable.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ObjectLifecycle/Actions/INeedToCompleteBeforeDisable.cs) has only an event and no cancellation or timeout contract.
+  - [IEnableDisableFunctionalityTrigger.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ObjectLifecycle/Actions/IEnableDisableFunctionalityTrigger.cs) uses a self-referential generic constraint that makes bindings specific but verbose.
+  - [DontDestroyOnSceneLoad.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ObjectLifecycle/DontDestroyOnSceneLoad.cs) does not prevent duplicates if multiple scenes contain the same persistent object.
 - Open design questions:
   - Should pooled lifecycle have a stricter state machine to prevent double release?
   - Should delayed-disable contracts include failure/timeout behavior?

@@ -37,22 +37,23 @@ It does not own damage calculation, target selection, enemy/player death present
 ## Architecture and Data Flow
 
 - Core components:
-  - `Health` is the base `MonoBehaviour` implementation of `IHealth`. It stores `MaxHealth`, `CurrentHealth`, alive state, and the events used by gameplay and UI.
-  - `RegenativeHealth` inherits `Health` and adds timed automatic healing through `Update` when current health is below max health.
+  - `Health` is the base `MonoBehaviour` implementation of `IHealth`. It stores `MaxHealth`, `CurrentHealth`, alive state (`_isAlive`), and the events used by gameplay and UI.
+  - `RegenativeHealth` (note the spelling typo `RegenativeHealth` instead of `RegenerativeHealth` in filename and class name) inherits `Health` and adds timed automatic healing through `Update` when current health is below max health.
   - `HealthBar` requires a Unity `Slider`, reads a serialized `Health` reference, updates the slider and fill color on health changes, and can shake on health decrease through DOTween.
   - `IHealthy` is a narrow provider interface for objects that expose an `IHealth` reference.
   - `IDamageable` is the status-affectable contract used by attackers and helpers. Its implementations decide how incoming damage maps to health, VFX, audio, and presentation.
 - Key interfaces:
-  - `IHealth` exposes `CurrentHealth`, mutable `MaxHealth`, health change events, `DecreaseHealth`, `IncreaseHealth`, and `IsAlive`.
+  - `IHealth` exposes `CurrentHealth`, mutable `MaxHealth`, health change events (`OnHealthChange`, `OnHealthDecreased`, `OnHealthIncreased`, `OnNoHealth`), `DecreaseHealth`, `IncreaseHealth`, and `IsAlive`.
   - `IRegenativeHealth` extends `IHealth` with regeneration amount and delay state.
   - `IHealthy` exposes an `IHealth Health` property and is implemented by `Enemy`, `PlayerManager`, and `IPlayerManager`.
   - `IDamageable` exposes `TakeDamage` and `TakeFullHpDamage`; current player and enemy implementations reduce health through their owned `IHealth`.
 - Runtime flow:
-  - `Health.OnEnable` subscribes internal handlers so decreased, increased, and no-health events raise the aggregate `OnHealthChange` event. It also marks the instance alive and resets `CurrentHealth` to `MaxHealth`.
-  - `Health.DecreaseHealth` exits when already dead. If remaining health is greater than incoming damage, it subtracts the value and raises `OnHealthDecreased`; otherwise it sets health to zero, marks dead, and raises `OnNoHealth`.
-  - `Health.IncreaseHealth` exits when dead. If the increase stays below max health, it adds health and raises `OnHealthIncreased`; otherwise it clamps to `MaxHealth` without raising a health event.
+  - **Aggregate Event Forwarding Chain**: `Health.OnEnable` subscribes `InvokeOnHealthChange` to its own narrow events: `OnHealthDecreased`, `OnHealthIncreased`, and `OnNoHealth`. As a result, raising any of these narrow events automatically invokes `OnHealthChange` to notify general observers (e.g., UI sliders). These subscriptions are explicitly unsubscribed in `OnDisable` to avoid duplicate forwarding across re-enable cycles of pooled objects.
+  - `Health.DecreaseHealth` exits when already dead. If remaining health is greater than incoming damage, it subtracts the value and raises `OnHealthDecreased`; otherwise it sets health to zero, marks dead (`_isAlive = false`), and raises `OnNoHealth`. There is no check for negative input values.
+  - `Health.IncreaseHealth` exits when dead. If the increase stays below max health, it adds health and raises `OnHealthIncreased`; otherwise it clamps to `MaxHealth` without raising `OnHealthIncreased` or `OnHealthChange`. There is no check for negative input values.
   - `RegenativeHealth.OnEnable` resets regeneration amount and delay from serialized values after base health reset.
-  - `RegenativeHealth.Update` runs regeneration while current health is below max health and both regeneration amount and delay are positive. Each completed delay calls `IncreaseHealth(MaxRegenerationAmount)` and resets the delay.
+  - `RegenativeHealth.Update` runs regeneration every frame when `CurrentHealth < MaxHealth` and both regeneration amount and delay configs are positive.
+  - **Regeneration Process**: `RegenativeHealth.RegenerationProcess` checks if `CurrentRegenerationDelay` is greater than 0. If so, it decrements it by `Time.deltaTime`. Otherwise, if `CurrentHealth > 0` (preventing regeneration from dead state), it calls `IncreaseHealth(MaxRegenerationAmount)` and resets the delay to `StartRegenerationDelay`.
   - `Enemy.OnGet` sets `Health.MaxHealth` from `EnemyConfigSO.MaxHealth`. Because pooled enemies are activated after this setup, `Health.OnEnable` then resets `CurrentHealth` to the configured max health.
   - `Enemy.TakeDamage` spawns a damage number, decreases health, and only plays blood VFX when `Health.IsAlive()` remains true.
   - `EnemyDeathHandler` listens to `Health.OnNoHealth`, disables physical interaction and visuals, plays death feedback, spawns experience, and completes the pool-release sequence after VFX and audio finish.

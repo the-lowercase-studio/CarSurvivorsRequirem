@@ -16,7 +16,7 @@ It does not own the complete behavior of every spawned object. Enemy behavior, c
   - `Assets/Scripts/Spawners/ISpawnedObjectsCounter.cs`
   - `Assets/Scripts/Spawners/SpawnChanceInfo.cs`
 - Current concrete implementations:
-  - `Assets/Scripts/Enemies/EnemiesSpawner.cs`
+  - `Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs`
   - `Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/CollectibleItemsSpawner.cs`
   - `Assets/Scripts/DamageNumbers/DamageNumbersSpawner.cs`
   - `Assets/Scripts/LevelSystem/Exp/ExpParticleSpawner.cs`

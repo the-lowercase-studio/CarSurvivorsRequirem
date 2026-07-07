@@ -10,15 +10,15 @@ It does not own wave timing, grid generation, flow-field direction calculation, 
 
 - Primary code locations:
   - `Assets/Scripts/Enemies/Enemy.cs`
-  - `Assets/Scripts/Enemies/EnemiesSpawner.cs`
-  - `Assets/Scripts/Enemies/EnemiesSpawnChanceRedistributionSystem.cs`
+  - `Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs`
+  - `Assets/Scripts/Spawners/Enemies/EnemiesSpawnChanceRedistributionSystem.cs`
   - `Assets/Scripts/Enemies/EnemyMovementController.cs`
   - `Assets/Scripts/Enemies/EnemyAttackController.cs`
   - `Assets/Scripts/Enemies/EnemyDeathHandler.cs`
   - `Assets/Scripts/Enemies/EnemyAnimator.cs`
   - `Assets/Scripts/Enemies/EnemyCollisionsController.cs`
   - `Assets/Scripts/Enemies/EnemiesOutsidePlayerChunkTeleporter.cs`
-  - `Assets/Scripts/Enemies/EnemySpawnInfo.cs`
+  - `Assets/Scripts/Spawners/Enemies/EnemySpawnInfo.cs`
 - Designer-authored data:
   - `Assets/ScriptableObjects/Enemy/EnemyConfigSO.cs`
   - Enemy prefabs referenced by `EnemiesSpawner._poolEnemiesInfo`

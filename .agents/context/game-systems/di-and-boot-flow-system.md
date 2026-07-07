@@ -16,50 +16,47 @@ It is not responsible for:
 
 - Gameplay behavior owned by bound services.
 - Unity scene asset setup beyond serialized installer references.
-- Player-facing pause/death/skill-choice rules, although those rules call `GameTime`.
+- Player-facing pause/death/skill-choice rules, although those rules call [GameTime](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/GameFlow/GameTime.cs).
 
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/ReflexDI/BootLoader.cs`
-  - `Assets/Scripts/ReflexDI/ProjectInstaller.cs`
-  - `Assets/Scripts/ReflexDI/MainMenuInstaller.cs`
-  - `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
-  - `Assets/Scripts/GameFlow/GameScenesLoader.cs`
-  - `Assets/Scripts/GameFlow/GameTime.cs`
+  - [BootLoader.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/BootLoader.cs)
+  - [ProjectInstaller.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/ProjectInstaller.cs)
+  - [MainMenuInstaller.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/MainMenuInstaller.cs)
+  - [DefaultGameplaySceneInstaller.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs)
+  - [GameScenesLoader.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/GameFlow/GameScenesLoader.cs)
+  - [GameTime.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/GameFlow/GameTime.cs)
 - Related docs:
-  - `.agents/context/game-systems/audio-system.md`
-  - `.agents/context/game-systems/settings-system.md`
-  - `.agents/context/game-systems/spawners-system.md`
-  - `.agents/context/game-systems/ui-system.md`
-  - `.agents/context/project-coding-standards.md`
-  - `.agents/context/technology-documentation.md`
-- Related agents or instructions:
-  - `.agents/skills/di-integration/SKILL.md`
-  - `.agents/skills/architecture-review/SKILL.md`
-  - `.agents/skills/document-system/SKILL.md`
+  - [audio-system.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/game-systems/audio-system.md)
+  - [settings-system.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/game-systems/settings-system.md)
+  - [spawners-system.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/game-systems/spawners-system.md)
+  - [ui-system.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/game-systems/ui-system.md)
+  - [project-coding-standards.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/project-coding-standards.md)
+  - [technology-documentation.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/technology-documentation.md)
 
 ## Architecture and Data Flow
 
 - Core components:
-  - `ProjectInstaller` registers project-level singletons: `GameSceneLoader`, `StoredScoreBoard`, `ScoreBoardNewScoreSaver`, and `ScoreBoardBestScoreGetter`.
-  - `MainMenuInstaller` registers menu-scoped settings services and exposes each setting through both `ISetting<TSetting, TValue>` and `ISettingLoader`.
-  - `DefaultGameplaySceneInstaller` binds scene references for player, UI presenters, grid manager, enemy spawner, exp particle spawner, and collectible spawner.
-  - `BootLoader` subscribes to `SceneScope.OnSceneContainerBuilding` and adds boot-scene audio and damage-number services to every scene container.
-  - `GameSceneLoader` wraps `SceneManager.LoadSceneAsync`, tracks `CurrentLoadedScene`, and raises load-start and load-completed events.
-  - `GameTime` is a static helper that sets `Time.timeScale` to `0f` or `1f`.
+  - [ProjectInstaller.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/ProjectInstaller.cs) registers project-level singletons: [GameSceneLoader](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/GameFlow/GameScenesLoader.cs) (as `IGameSceneLoader`), [StoredScoreBoard](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ScoreBoard/StoredScoreBoard.cs), [ScoreBoardNewScoreSaver](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ScoreBoard/ScoreBoardNewScoreSaver.cs) (as `IScoreBoardNewScoreSaver`), and [ScoreBoardBestScoreGetter](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ScoreBoard/ScoreBoardBestScoreGetter.cs) (as `IScoreBoardBestScoreGetter`).
+  - [MainMenuInstaller.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/MainMenuInstaller.cs) registers menu-scoped settings services: `AudioVolumeSetting`, `GraphicSetting`, `FullScreenSetting`, `ResolutionSetting`, and `DamageNumbersSetting` (each bound to their `ISetting<TSelf, TValue>` and `ISettingLoader` interfaces).
+  - [DefaultGameplaySceneInstaller.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs) binds scene references for player, UI presenters, grid manager, enemy spawner, exp particle spawner, and collectible spawner.
+  - [BootLoader.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/BootLoader.cs) subscribes to `SceneScope.OnSceneContainerBuilding` and adds boot-scene audio and damage-number services to every scene container. It also resolves camera dependencies for [DamageNumbersSpawner](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/DamageNumbers/DamageNumbersSpawner.cs) by locating [DefaultGameplaySceneInstaller.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs) in loaded scenes.
+  - [GameSceneLoader](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/GameFlow/GameScenesLoader.cs) wraps `SceneManager.LoadSceneAsync`, tracks `CurrentLoadedScene`, and raises load-start and load-completed events.
+  - [GameTime](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/GameFlow/GameTime.cs) is a static helper that sets `Time.timeScale` to `0f` or `1f`.
 - Runtime flow:
   - Boot scene creates the project Reflex container and injects `IGameSceneLoader` into `BootLoader`.
   - `BootLoader.Start` registers `InstallExtra` with `SceneScope.OnSceneContainerBuilding`.
   - After one `WaitForEndOfFrame`, `BootLoader` loads `GameScene.MainMenu`.
   - `GameSceneLoader.LoadNewSceneAsync` raises `OnStartLoadingScene`, starts a single-mode scene load, then resumes `GameTime`, updates `CurrentLoadedScene`, and raises `OnSceneLoaded` when Unity completes the load.
   - As scene containers are built, `BootLoader.InstallExtra` registers the serialized `AudioMixersManager`, `BackgroundAudioManager`, and `DamageNumbersSpawner` instances.
+  - When initializing scene camera dependencies, `BootLoader` checks the loaded scene's root game objects for a [DefaultGameplaySceneInstaller.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs) components, extracting the main camera reference and initializing `DamageNumbersSpawner` with it.
 
 ## Rules and Invariants
 
 - Critical behavior rules:
   - Keep scene/runtime dependencies explicit through Reflex bindings where DI is already used.
-  - Register gameplay-scene object references in `DefaultGameplaySceneInstaller`, menu settings in `MainMenuInstaller`, project lifetime services in `ProjectInstaller`, and cross-scene boot extras in `BootLoader`.
+  - Register gameplay-scene object references in [DefaultGameplaySceneInstaller.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs), menu settings in [MainMenuInstaller.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/MainMenuInstaller.cs), project lifetime services in [ProjectInstaller.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/ProjectInstaller.cs), and cross-scene boot extras in [BootLoader.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/BootLoader.cs).
   - Do not replace existing injected dependencies with singleton access, `FindAnyObjectByType`, or broad scene searches.
   - Preserve `GameScene` enum integer values unless Unity build settings and all call sites are intentionally updated together.
   - Treat changes to boot scene loading order, first loaded scene, and `GameTime.Resume` on scene completion as flow changes requiring Unity play-mode validation.
@@ -76,10 +73,10 @@ It is not responsible for:
 ## Extension Points
 
 - Safe extension areas:
-  - Add a project-wide service in `ProjectInstaller` when it should survive scene changes and has no scene-object dependency.
-  - Add a gameplay scene service in `DefaultGameplaySceneInstaller` when it is a serialized scene object or gameplay-scene scoped dependency.
-  - Add a menu-only setting or service in `MainMenuInstaller`.
-  - Add a boot-provided cross-scene MonoBehaviour service in `BootLoader.InstallExtra` when it is owned by the boot scene and consumed by multiple scenes.
+  - Add a project-wide service in [ProjectInstaller.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/ProjectInstaller.cs) when it should survive scene changes and has no scene-object dependency.
+  - Add a gameplay scene service in [DefaultGameplaySceneInstaller.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs) when it is a serialized scene object or gameplay-scene scoped dependency.
+  - Add a menu-only setting or service in [MainMenuInstaller.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/MainMenuInstaller.cs).
+  - Add a boot-provided cross-scene MonoBehaviour service in [BootLoader.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/BootLoader.cs)'s `InstallExtra` when it is owned by the boot scene and consumed by multiple scenes.
 - Required dependencies and contracts:
   - New Reflex bindings should use existing narrow interfaces where possible.
   - New scene enum entries must match Unity build index assumptions in `SceneManager.LoadSceneAsync((int)scene, LoadSceneMode.Single)`.
@@ -103,15 +100,15 @@ It is not responsible for:
 - Cross-system coupling risks:
   - Moving `DamageNumbersSpawner` registration can break both enemy damage feedback and damage-number setting application.
   - Changing scene load event order can break background audio and UI assumptions.
-  - `GameTime` is static and global; pause/resume calls from pause UI, skill UI, death UI, and scene loading can override each other.
+  - [GameTime](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/GameFlow/GameTime.cs) is static and global; pause/resume calls from pause UI, skill UI, death UI, and scene loading can override each other.
 
 ## Known Risks and Open Questions
 
 - Known limitations:
-  - `GameTime` has no pause reason stack, so the last caller wins.
-  - `GameSceneLoader.CurrentLoadedScene` defaults to `MainMenu` before any scene load completes.
+  - [GameTime](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/GameFlow/GameTime.cs) has no pause reason stack, so the last caller wins.
+  - [GameSceneLoader](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/GameFlow/GameScenesLoader.cs)'s `CurrentLoadedScene` defaults to `MainMenu` before any scene load completes.
   - Scene loading depends on enum integer values rather than scene names or typed build-setting validation.
-  - `BootLoader` loads main menu after one frame; scene setup that assumes a longer boot initialization window must be verified in Unity.
+  - [BootLoader.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/BootLoader.cs) loads main menu after one frame; scene setup that assumes a longer boot initialization window must be verified in Unity.
 - Open design questions:
   - Should pause state become an injected service with reason tracking if more systems pause independently?
   - Should scene references move from enum integer values to explicit scene asset/name configuration?

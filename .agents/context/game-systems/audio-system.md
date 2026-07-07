@@ -41,8 +41,8 @@ The audio system is not responsible for gameplay decisions, UI flow, settings pe
 - Core components:
   - `AudioClipConfig` is a serializable clip configuration containing an `AudioClip`, volume, pitch, and loop flag. It is used by both background music and local clip players.
   - `BackgroundAudioManager` is a scene-level service with an `AudioSource`. It maps `GameScene` values to `AudioClipConfig` entries, listens to `IGameSceneLoader.OnSceneLoaded`, and plays or continues the configured background clip for the loaded scene.
-  - `AudioMixersManager` is a scene-level service that applies a volume value to the configured Unity `AudioMixer`.
-  - `AudioClipPlayer` is a reusable local sound-effect component. It maps string names to arrays of `AudioClipConfig` variants, randomly selects a variant, prepares its required `AudioSource`, plays the clip, and raises `OnAudioClipFinished` after the clip length.
+  - `AudioMixersManager` is a scene-level service that applies a volume value to the configured Unity `AudioMixer`. Crucially, its implementation of `SetMixerVolume(string mixerName = "Main", float volume = 0.5f)` ignores the `mixerName` parameter and always sets the `"Volume"` parameter on `_mainAudioMixer`.
+  - `AudioClipPlayer` is a reusable local sound-effect component. It maps string names to arrays of `AudioClipConfig` variants, randomly selects a variant, prepares its required `AudioSource` by setting its `clip`, `volume`, `pitch`, and `loop`, plays the clip, and raises `OnAudioClipFinished` after the clip length.
 - Key interfaces:
   - `IBackgroundAudioManager` exposes death/default background audio mode changes.
   - `IAudioMixersManager` exposes mixer volume application.
@@ -112,6 +112,7 @@ The audio system is not responsible for gameplay decisions, UI flow, settings pe
 ## Known Risks and Open Questions
 
 - Known limitations:
+  - **Shared State Stomping in `PlayOneShot`**: `AudioClipPlayer.PlayOneShot` modifies the shared `_audioSource`'s properties (`clip`, `volume`, `pitch`, `loop`) prior to playing. If concurrent or rapid overlapping `PlayOneShot` requests are made on the same component for different clips, they will overwrite each other's volume, pitch, and loop configurations mid-play.
   - `AudioClipPlayer.GetRandomAudioClipVariantFromConfigByName` checks `config.ClipVariants` when `config` may be null, so a missing audio name can throw instead of logging and returning null.
   - `AudioClipPlayer.PlayOneShot` does not cancel previously scheduled finish callbacks, so repeated one-shot playback can raise multiple finish events.
   - `AudioClipPlayer` schedules finish callbacks with `_audioSource.clip.length`; pitch changes and looping clips are not accounted for.

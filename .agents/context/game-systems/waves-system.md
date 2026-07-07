@@ -11,7 +11,7 @@ It does not own enemy prefab selection, spawn chance redistribution, off-camera 
 - Primary code locations:
   - `Assets/Scripts/Waves/WaveManager.cs`
 - Related systems:
-  - Enemy spawning and active enemy count: `Assets/Scripts/Enemies/EnemiesSpawner.cs`
+  - Enemy spawning and active enemy count: `Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs`
   - Spawn contract: `Assets/Scripts/Spawners/GridSpace/IOnRandomGridPosSpawner.cs`
   - Active spawned object count contract: `Assets/Scripts/Spawners/ISpawnedObjectsCounter.cs`
   - Gameplay scene DI binding: `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`

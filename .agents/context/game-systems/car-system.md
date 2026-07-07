@@ -23,15 +23,15 @@ It does not own player health, leveling, skills, spawning, camera behavior, enem
 ## Architecture and Data Flow
 
 - Core components:
-  - `ICarController` is colocated with `CarController` and exposes brake events plus current movement speed.
+  - `ICarController` is colocated with `CarController` and exposes brake events, current movement speed, and Y-flattened movement velocity.
   - `CarController` is a `MonoBehaviour` requiring a `Rigidbody`. It reads global Input System actions named `Move` and `Brake`, applies torque and steering to configured `WheelCollider` entries, applies brake torque, applies drift friction to rear wheels when drift requirements are met, and copies wheel collider poses to visible wheel model transforms.
   - `CarVfxEffectsController` requires `CarController`, reads `ICarController` from the same GameObject, reacts to brake events, and periodically toggles speed trails based on `GetMovementSpeed()`.
 - Runtime flow:
   - `Awake`: `CarController` caches the `Rigidbody`, resolves `Move` and `Brake` actions from `InputSystem.actions`, assigns the configured center of mass, and caches original rear-wheel sideways friction; `CarVfxEffectsController` caches `ICarController`.
-  - `OnEnable`/`OnDisable`: `CarController` subscribes and unsubscribes named brake action callbacks that raise `OnBrakePress` and `OnBrakeRelease`; `OnDisable` also restores drift friction when needed.
+  - `OnEnable`/`OnDisable`: `CarController` subscribes and unsubscribes named brake action callbacks that raise `OnBrakePress` and `OnBrakeRelease`; `OnDisable` also restores drift friction when needed. `CarVfxEffectsController` subscribes in `OnEnable` and unsubscribes in `OnDisable` to the car controller's brake events.
   - `Update`: `CarController` reads normalized movement input and current brake state.
   - `FixedUpdate`: `CarController` updates motor torque, front-axle steering, drift state, brake torque, and wheel model poses.
-  - `Start` in VFX: `CarVfxEffectsController` finds the stop-light material, subscribes to car brake events, configures trail lifetime, disables trail emission, and starts repeated speed threshold checks.
+  - `Start` in VFX: `CarVfxEffectsController` finds the stop-light material, configures trail lifetime, disables trail emission, and starts repeated speed threshold checks.
 
 ## Rules and Invariants
 
@@ -40,6 +40,7 @@ It does not own player health, leveling, skills, spawning, camera behavior, enem
 - `CarController` assumes `_wheels` contains valid `WheelCollider` and wheel model pairs. Front axle entries are the only wheels that receive steering angle changes.
 - Drift requires brake input, minimum rigidbody speed, minimum forward input, and minimum steering input. While drifting, rear sideways friction stiffness is multiplied by `_driftRearSidewaysStiffnessMultiplier`, and brake torque uses `_driftBrakeTorqueMultiplier` instead of the normal brake multiplier.
 - `GetMovementSpeed()` returns `Rigidbody.linearVelocity.magnitude`; consumers should treat it as physics-frame movement speed, not input strength.
+- `GetMovementVelocity()` returns `Rigidbody.linearVelocity` with the vertical component `y` forced to `0f`.
 - `PlayerManager.CarController` is the DI-facing access path for gameplay systems. `DefaultGameplaySceneInstaller` binds `PlayerManager` as `IPlayerManager`, not `ICarController` directly.
 - VFX behavior is local to the car object. Brake light and trail changes should not become authoritative gameplay state.
 
@@ -79,7 +80,7 @@ It does not own player health, leveling, skills, spawning, camera behavior, enem
 ## Known Risks and Open Questions
 
 - Known limitations:
-  - `CarVfxEffectsController` subscribes to car events but does not unsubscribe in `OnDisable` or `OnDestroy`.
+  - `CarVfxEffectsController` correctly unsubscribes in `OnDisable`, but if the component or GameObject is destroyed without `OnDisable` running (rare in Unity), reference leakage might occur.
   - The stop-light material lookup matches the exact material name `CarStopLights`; Unity material instancing can append suffixes such as `(Instance)` depending on runtime access.
   - The code relies on global `InputSystem.actions`, so tests or alternate input setups need that action asset configured.
   - Normal brake torque multiplier is a private hard-coded field, while drift brake behavior is serialized.

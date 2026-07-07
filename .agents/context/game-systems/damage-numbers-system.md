@@ -32,9 +32,9 @@ It does not calculate damage, change health values, choose combat targets, play 
 
 - Core components:
   - `DamageNumbersSpawner` is a scene-level `MonoBehaviour` registered through Reflex as both `IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig>` and `IEnableDisableFunctionalityTrigger<DamageNumbersSpawner>`.
-  - `DamageNubmersSpawnerConfig` carries the damage value and `ShapeModes` movement shape for a spawn request.
+  - `DamageNubmersSpawnerConfig` (note the spelling typo `DamageNubmersSpawnerConfig`) carries the damage value and `ShapeModes` movement shape for a spawn request.
   - `DamageNumber` is the pooled popup instance. It receives `DamageNumberConfig`, writes TextMeshPro text/color/font size, runs DOTween font-size animation, and raises `OnLifeEnd`.
-  - `DamageNumberApearance` stores the visual values used by a popup: font size, grow multiplier, and color.
+  - `DamageNumberApearance` (note the spelling typo `DamageNumberApearance`) stores the visual values used by a popup: font size, grow multiplier, and color.
   - `DamageNumbersSetting` stores and loads the enabled state through `AppStorage`.
   - `DamageNumbersOption` binds the setting to a UI `Toggle`.
 - Key interfaces:
@@ -45,8 +45,10 @@ It does not calculate damage, change health values, choose combat targets, play 
   - `BootLoader.InstallExtra` registers the serialized `DamageNumbersSpawner` instance into each scene container.
   - `Enemy.TakeDamage` calls `_damageNumbersSpawner.Spawn` at the blood VFX transform position before decreasing health.
   - `DamageNumbersSpawner.Spawn` exits early when popups are disabled.
-  - The spawner picks the last serialized threshold entry whose `Treshold` is less than or equal to the incoming damage.
-  - The spawner gets a `DamageNumber` from `UnityEngine.Pool.ObjectPool`, positions it, initializes its text appearance, subscribes to `OnLifeEnd`, starts a DOTween `DOMove`, and increments `CurrentlySpawnedObjectsCount`.
+  - The spawner picks the last serialized threshold entry whose `Treshold` (spelling typo) is less than or equal to the incoming damage from `_visualApearanceByDamageTresholds` (spelling typo).
+  - The spawner gets a `DamageNumber` from `UnityEngine.Pool.ObjectPool`, positions it, initializes its text appearance, and initializes camera-facing direction.
+  - **Camera-Facing Initialization**: `DamageNumbersSpawner.InitializeCameraFacingEffects` fetches all `FaceMainCameraDirection` components in the popup's children and calls `cameraFacingEffect.Initialize(_mainCamera)` to ensure the damage texts face the camera properly in 3D world space.
+  - The spawner subscribes to `OnLifeEnd`, starts a DOTween `DOMove` (interpolating over `_damagePopupVisibilityDuration`), and increments `CurrentlySpawnedObjectsCount`.
   - `DamageNumber.Initialize` grows font size, shrinks it to zero, then raises `OnLifeEnd`.
   - `DamageNumbersSpawner.DamageNumber_OnLifeEnd` unsubscribes, decrements the spawned count, releases the popup back to the pool, and raises `OnSpawnedEntityReleased`.
 
@@ -98,6 +100,7 @@ It does not calculate damage, change health values, choose combat targets, play 
 ## Known Risks and Open Questions
 
 - Known limitations:
+  - **Animation Duration Mismatch**: The physical movement of the popup (`DOMove`) uses the spawner's serialized `_damagePopupVisibilityDuration` as its duration. However, the font-size resizing animation inside `DamageNumber.Initialize` is sequenced via `DOTween.To` with a hardcoded speed constant `RESIZING_ANIMATION_SPEED = 0.6f` for growth and another `0.6f` for disappearing, resulting in a fixed size animation duration of `1.2f` seconds. If `_damagePopupVisibilityDuration` is configured to anything other than `1.2f` seconds, the movement and resizing durations will mismatch.
   - Active DOTween tweens are not explicitly killed before pooled popup reuse. If reuse happens before old tweens complete, animation state could overlap.
   - `DamageNumber.IsInitialized` remains true after the first initialization and is not reset on pool release.
   - `_popupsSpeedRange` is serialized but not used by the current movement logic.

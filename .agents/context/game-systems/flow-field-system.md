@@ -135,12 +135,11 @@ Cross-system coupling risks:
 
 ## Known Risks and Open Questions
 
-Known limitations:
-
-- Player chunks near world-grid edges can contain null cells, but `FlowField` currently iterates grid cells without null guards.
-- `DestinationCell` is resolved from `WorldGrid` during chunk updates; if the destination is outside the processed chunk, integration behavior relies on shared references and should be reviewed before refactoring.
-- `FlowFieldMovementController` runs a separation `OverlapSphere` in `FixedUpdate` for every component instance.
-- `FlowFieldDebug` flow direction mode reads `cell.BestDirection.Vector`; this assumes `BestDirection` is never null.
+- Known limitations:
+  - Player chunks near world-grid edges can contain null cells; `FlowField` correctly handles this using null checks during cost and flow field updates.
+  - `DestinationCell` is resolved from `WorldGrid` during chunk updates; if the destination is outside the processed chunk, integration behavior relies on shared references and should be reviewed before refactoring.
+  - `FlowFieldMovementController` runs a separation `OverlapSphere` in `FixedUpdate` for every component instance.
+  - `FlowFieldDebug` flow direction mode reads `cell.BestDirection.Vector`; this assumes `BestDirection` is never null.
 
 Open design questions:
 

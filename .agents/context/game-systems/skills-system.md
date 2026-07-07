@@ -5,16 +5,14 @@
 The Skills system owns player skill registration, skill initialization, upgradeable skill stats, and the runtime behavior of the current concrete player skills.
 
 It is responsible for:
-
 - Discovering child skill components under the player skill registry.
 - Initializing locked skills and tracking how many skills remain uninitialized.
 - Queuing skill unlock or stat-upgrade requests through the skill upgrade flow service.
 - Exposing upgradeable skill stats to the skill upgrade UI.
-- Applying stat upgrades through `IUpgradeableStat`.
+- Applying stat upgrades through [IUpgradeableStat](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/UpgradeableStat.cs).
 - Running concrete skill behavior for saw blades, minigun turrets, laser turrets, and landmines.
 
 It is not responsible for:
-
 - Player experience gain or level progression.
 - Skill-crate grid spawning and collection lifecycle.
 - Generic projectile damage, projectile lifetime, enemy health, knockback, stun, audio, or VFX implementations.
@@ -23,60 +21,60 @@ It is not responsible for:
 ## Reading Map
 
 - Primary code locations:
-  - `Assets/Scripts/Skills/`
-  - `Assets/Scripts/Skills/UpgradeFlow/`
-  - `Assets/Scripts/Skills/PlayerSkills/`
-  - `Assets/ScriptableObjects/Skills/`
+  - [Assets/Scripts/Skills/](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills)
+  - [Assets/Scripts/Skills/UpgradeFlow/](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeFlow)
+  - [Assets/Scripts/Skills/PlayerSkills/](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/PlayerSkills)
+  - [Assets/ScriptableObjects/Skills/](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/ScriptableObjects/Skills)
 - Related code:
-  - `Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs`
-  - `Assets/Scripts/UI/Skills/SkillUpgradeButton.cs`
-  - `Assets/Scripts/UI/Skills/SkillsVisualPresenter.cs`
-  - `Assets/Scripts/Player/PlayerManager.cs`
-  - `Assets/Scripts/Stats/UpgradeableStat.cs`
-  - `Assets/Scripts/Skills/ItemsWithScriptableConfigsActivator.cs`
-  - `Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/CollectibleItemsSpawner.cs`
-  - `Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs`
+  - [SkillUpgradePresenter.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs)
+  - [SkillUpgradeButton.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/UI/Skills/SkillUpgradeButton.cs)
+  - [SkillsVisualPresenter.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/UI/Skills/SkillsVisualPresenter.cs)
+  - [PlayerManager.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Player/PlayerManager.cs)
+  - [UpgradeableStat.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/UpgradeableStat.cs)
+  - [ItemsWithScriptableConfigsActivator.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/ItemsWithScriptableConfigsActivator.cs)
+  - [CollectibleItemsSpawner.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/CollectibleItemsSpawner.cs)
+  - [DefaultGameplaySceneInstaller.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs)
 - Related docs:
-  - `.agents/context/game-systems/collectibles-system.md`
-  - `.agents/context/game-systems/level-system.md`
-  - `.agents/context/project-coding-standards.md`
-  - `.agents/context/ai-game-dev-best-practices.md`
+  - [collectibles-system.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/game-systems/collectibles-system.md)
+  - [level-system.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/game-systems/level-system.md)
+  - [project-coding-standards.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/project-coding-standards.md)
+  - [ai-game-dev-best-practices.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/context/ai-game-dev-best-practices.md)
 - Related agents or instructions:
-  - `.agents/skills/document-system/SKILL.md`
-  - `.agents/skills/di-integration/SKILL.md` for Reflex binding changes.
-  - `.agents/skills/architecture-review/SKILL.md` for ownership, event, and dependency review.
-  - `.agents/skills/check-optimalization/SKILL.md` for projectile, physics query, pooling, and coroutine performance review.
+  - [document-system SKILL.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/skills/document-system/SKILL.md)
+  - [di-integration SKILL.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/skills/di-integration/SKILL.md) for Reflex binding changes.
+  - [architecture-review SKILL.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/skills/architecture-review/SKILL.md) for ownership, event, and dependency review.
+  - [check-optimalization SKILL.md](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/.agents/skills/check-optimalization/SKILL.md) for projectile, physics query, pooling, and coroutine performance review.
 
 ## Architecture and Data Flow
 
 - Core components:
-  - `ISkillBase` is the common player skill contract. It extends `IInitializable` and exposes `SkillInfoSO`.
-  - `IUpgradeableSkill` extends `ISkillBase` and exposes `CanBeUgraded()` plus an `ISkillUpgradeableStatsConfig` config.
-  - `UpgradeableSkill<TUpgradeableConfig>` is the base `MonoBehaviour` for skills backed by a ScriptableObject upgrade config. It activates the skill GameObject during initialization when config exists.
-  - `SkillsRegistry` discovers direct child components implementing `ISkillBase` in `Awake`, caches them in `Skills`, counts uninitialized skills as an `int` in `Start`, and initializes `Skills[0]` as the starting skill.
-  - `RandomUninitializedSkillsInitializator` picks and initializes a random uninitialized skill through the registry.
-  - `RandomUpgradeableSkillFinder` filters to `IUpgradeableSkill`, then picks a random candidate with at least one upgradeable stat still available. Its registry overload only considers initialized skills; `SkillUpgradeFlow` can pass a broader candidate set.
-  - `SkillUpgradeFlow` owns skill reward queueing. It has separate APIs for new-skill rewards and stat-upgrade rewards, prevents the same locked skill from being queued twice for initialization, initializes queued new skills when dequeued, and builds up to three randomized upgrade options.
-  - `SkillUpgradeRequest` and `SkillUpgradeOption` carry the UI-facing request type, target skill, button text, upgrade action, and calculated or overridden rarity.
-  - `SkillUpgradeableStatsConfig` uses reflection over public instance properties assignable to `IUpgradeableStat` to expose upgrade choices and reads stat-level rarity overrides when `OverrideDefaultRarity` is enabled.
-  - `SkillUpgradeRarityCalculator` classifies non-overridden upgrade rolls as `Common`, `Rare`, or `UltraRare` from the rolled value's normalized position in the stat upgrade range.
-  - Current concrete upgrade configs use `IntUpgradeableStat` for discrete damage, piercing, saw-count, turret-count, lasergun target-count, and landmine damage values, and `FloatUpgradeableStat` for cooldown, size, range, speed, radius, and knockback values.
-  - `SkillInfoSO` provides UI name and description text for unlock and upgrade presentation.
+  - [ISkillBase](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/ISkillBase.cs) is the common player skill contract. It extends `IInitializable` and exposes [SkillInfoSO](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/ScriptableObjects/Skills/SkillInfoSO.cs).
+  - [IUpgradeableSkill](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeableSkill.cs) extends [ISkillBase](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/ISkillBase.cs) and exposes `CanBeUgraded()` plus an `ISkillUpgradeableStatsConfig` config.
+  - [UpgradeableSkill](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeableSkill.cs) is the base `MonoBehaviour` for skills backed by a ScriptableObject upgrade config. It activates the skill GameObject during initialization when config exists.
+  - [SkillsRegistry](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/SkillsRegistry.cs) discovers direct child components implementing [ISkillBase](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/ISkillBase.cs) in `Awake`, caches them in `Skills`, counts uninitialized skills as an `int` in `Start`, and initializes `Skills[0]` as the starting skill.
+  - [RandomUninitializedSkillsInitializator](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/RandomUninitializedSkillsInitializator.cs) picks and initializes a random uninitialized skill through the registry.
+  - [RandomUpgradeableSkillFinder](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/RandomUpgradeableSkillFinder.cs) filters to [IUpgradeableSkill](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeableSkill.cs), then picks a random candidate with at least one upgradeable stat still available. Its registry overload only considers initialized skills; [SkillUpgradeFlow](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeFlow.cs) can pass a broader candidate set.
+  - [SkillUpgradeFlow](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeFlow.cs) owns skill reward queueing. It has separate APIs for new-skill rewards and stat-upgrade rewards, prevents the same locked skill from being queued twice for initialization, initializes queued new skills when dequeued, and builds up to three randomized upgrade options.
+  - [SkillUpgradeRequest](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeRequest.cs) and [SkillUpgradeOption](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeOption.cs) carry the UI-facing request type, target skill, button text, upgrade action, and calculated or overridden rarity.
+  - [SkillUpgradeableStatsConfig](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs) uses reflection over public instance properties assignable to [IUpgradeableStat](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/UpgradeableStat.cs) to expose upgrade choices and reads stat-level rarity overrides when `OverrideDefaultRarity` is enabled.
+  - [SkillUpgradeRarityCalculator](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeRarityCalculator.cs) classifies non-overridden upgrade rolls as `Common`, `Rare`, or `UltraRare` from the rolled value's normalized position in the stat upgrade range.
+  - Current concrete upgrade configs use [IntUpgradeableStat](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/IntUpgradeableStat.cs) for discrete damage, piercing, saw-count, turret-count, lasergun target-count, and landmine damage values, and [FloatUpgradeableStat](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/FloatUpgradeableStat.cs) for cooldown, size, range, speed, radius, and knockback values.
+  - [SkillInfoSO](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/ScriptableObjects/Skills/SkillInfoSO.cs) provides UI name and description text for unlock and upgrade presentation.
 - Concrete player skills:
-  - `SawSkill` initializes saw blades from its serialized blade list. The first blade is initialized immediately; upgrading `NuberOfSaws` initializes more random inactive blades.
-  - `SawBlade` damages enemies on trigger contact, applies knockback scaled by player movement speed, stuns enemies for the knockback duration, and plays attack audio.
-  - `MinigunSkill` initializes random minigun turrets, initializes more turrets when `NumberOfTurrets` upgrades, and runs a coroutine that repeatedly tells initialized turrets to shoot.
-  - `MinigunTurret` rotates its visual with DOTween, pools `Projectile` instances, initializes projectiles from `TurretConfigSO.ProjectileStatsSO`, plays muzzle VFX and shoot audio, and releases projectiles on life-end events.
-  - `LasergunSkill` initializes laser turrets, initializes more turrets when `NumberOfTurrets` upgrades, applies `NumberOfTargets` to each initialized turret, and invokes repeated shooting based on `DelayBetweenShoots`.
-  - `LasergunTurret` acquires the closest visible enemy targets within range up to its configured target count, rotates toward the closest primary target, plays charge VFX, fires one line-renderer beam per captured hit target, and applies configured damage once to each captured target.
-  - `LandmineSkill` periodically spawns landmine instances at the player position when a downward raycast confirms ground below.
-  - `Landmine` explodes on enemy trigger contact, applies area damage, knockback, stun, explosion VFX, and destroys itself after death VFX completes.
+  - [SawSkill](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/PlayerSkills/Saw/SawSkill.cs) initializes saw blades from its serialized blade list. The first blade is initialized immediately; upgrading `NuberOfSaws` initializes more random inactive blades.
+  - [SawBlade](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/PlayerSkills/Saw/SawBlade.cs) damages enemies on trigger contact, applies knockback scaled by player movement speed, stuns enemies for the knockback duration, and plays attack audio.
+  - [MinigunSkill](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/PlayerSkills/Minigun/MinigunSkill.cs) initializes random minigun turrets, initializes more turrets when `NumberOfTurrets` upgrades, and runs a coroutine that repeatedly tells initialized turrets to shoot.
+  - [MinigunTurret](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/PlayerSkills/Minigun/MinigunTurret.cs) rotates its visual with DOTween, pools `Projectile` instances, initializes projectiles from `TurretConfigSO.ProjectileStatsSO`, plays muzzle VFX and shoot audio, and releases projectiles on life-end events.
+  - [LasergunSkill](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/PlayerSkills/Lasergun/LasergunSkill.cs) initializes laser turrets, initializes more turrets when `NumberOfTurrets` upgrades, applies `NumberOfTargets` to each initialized turret, and invokes repeated shooting based on `DelayBetweenShoots`.
+  - [LasergunTurret](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/PlayerSkills/Lasergun/LasergunTurret.cs) acquires the closest visible enemy targets within range up to its configured target count, rotates toward the closest primary target, plays charge VFX, fires one line-renderer beam per captured hit target, and applies configured damage once to each captured target.
+  - [LandmineSkill](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/PlayerSkills/LandmineTrap/LandmineSkill.cs) periodically spawns landmine instances at the player position when a downward raycast confirms ground below.
+  - [Landmine](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/PlayerSkills/LandmineTrap/Landmine.cs) explodes on enemy trigger contact, applies area damage, knockback, stun, explosion VFX, and destroys itself after death VFX completes.
 - Runtime flow:
-  - `DefaultGameplaySceneInstaller` binds `PlayerManager` as `IPlayerManager`, `SkillsVisualPresenter` as `ISkillsVisualPresenter`, `SkillUpgradeFlow` as `ISkillUpgradeFlow`, and `CollectibleItemsSpawner` as `IOnRandomGridPosSpawner<CollectibleItemsSpawner>`.
+  - [DefaultGameplaySceneInstaller](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs) binds `PlayerManager` as `IPlayerManager`, `SkillsVisualPresenter` as `ISkillsVisualPresenter`, `SkillUpgradeFlow` as `ISkillUpgradeFlow`, and `CollectibleItemsSpawner` as `IOnRandomGridPosSpawner<CollectibleItemsSpawner>`.
   - `PlayerManager.Awake` gets the child `ISkillsRegistry`, making it available through `IPlayerManager.SkillsRegistry`.
-  - `SkillsRegistry.Awake` registers all direct child skills implementing `ISkillBase`.
+  - `SkillsRegistry.Awake` registers all direct child skills implementing [ISkillBase](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/ISkillBase.cs).
   - `SkillsRegistry.Start` counts uninitialized skills and initializes the first registered skill as the starting skill.
-  - `SkillUpgradePresenter` listens to `IPlayerLevelPresenter.OnExpSliderVisualEndValueReached` and collectible spawner `OnSpawnedEntityReleased`.
+  - [SkillUpgradePresenter](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs) listens to `IPlayerLevelPresenter.OnExpSliderVisualEndValueReached` and collectible spawner `OnSpawnedEntityReleased`.
   - Skill crates queue random stat-upgrade requests. Level rewards queue a random new-skill request every `_newSkillLevelInterval` levels after level 1 when locked skills remain; if no new skill is queued, the presenter queues a random stat-upgrade request instead.
   - While showing UI, the presenter hides all skill visuals, displays either a new-skill section or stat-upgrade buttons, and advances through queued requests as the player continues or selects an option.
   - Upgrade option creation rolls the upgrade value, uses the stat rarity override when present, otherwise calculates rarity from the upgrade range, then passes rarity through to the generated UI button.
@@ -85,13 +83,13 @@ It is not responsible for:
 ## Rules and Invariants
 
 - Critical behavior rules:
-  - Skills must be registered as direct children of the `SkillsRegistry` transform if they should be discovered by the current registry.
+  - Skills must be registered as direct children of the [SkillsRegistry](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/SkillsRegistry.cs) transform if they should be discovered by the current registry.
   - A skill without a valid config logs a warning and remains uninitialized.
-  - Upgradeable stats intended for UI must be public properties on the skill config and implement `IUpgradeableStat`.
+  - Upgradeable stats intended for UI must be public properties on the skill config and implement [IUpgradeableStat](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/UpgradeableStat.cs).
   - Runtime upgrade state should use deep-copied stats from `OnEnable`, not mutate serialized starting stat objects directly.
-  - Skill visuals shown by `SkillsVisualPresenter` are matched by GameObject name against `SkillInfoSO.Name`.
+  - Skill visuals shown by `SkillsVisualPresenter` are matched by GameObject name against [SkillInfoSO](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/ScriptableObjects/Skills/SkillInfoSO.cs).Name.
   - Skill unlock and upgrade UI is driven by level presenter and skill-crate release events, not by skill components directly.
-  - Upgrade UI selection and queueing belong in `ISkillUpgradeFlow`; UI rendering and hotkey handling belong in `SkillUpgradePresenter`.
+  - Upgrade UI selection and queueing belong in [ISkillUpgradeFlow](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeFlow.cs); UI rendering and hotkey handling belong in [SkillUpgradePresenter](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs).
   - Rarity classification must stay presentation-only. Do not make gameplay strength depend on the visual rarity label.
   - Integer upgrade rarity accounts for Unity's exclusive integer `Random.Range` upper bound; `_alwaysUseMinValueForUpgrade` stats classify from the configured upgrade range minimum.
 - Ordering or sequencing guarantees:
@@ -107,24 +105,24 @@ It is not responsible for:
   - Treat changes to skill stat ranges, cooldowns, damage, range, projectile stats, target selection, spawn cadence, and activation counts as player-facing balance changes.
   - Preserve lasergun target selection as closest visible enemies in range unless a design change explicitly approves different targeting.
   - Preserve one lasergun shoot sound per turret shot, even when multiple targets are hit.
-  - Keep DI-facing dependencies explicit where already established. For example, `SawBlade` depends on `IPlayerManager`, and skill UI receives player and collectible dependencies through Reflex.
+  - Keep DI-facing dependencies explicit where already established. For example, [SawBlade](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/PlayerSkills/Saw/SawBlade.cs) depends on `IPlayerManager`, and skill UI receives player and collectible dependencies through Reflex.
   - Avoid replacing registry, UI, or turret dependencies with singleton access or broad scene searches.
   - Do not edit `.prefab`, `.unity`, `.asset`, or `.meta` files directly unless the user explicitly asks and the text change is safe to review.
 
 ## Extension Points
 
 - Safe extension areas:
-  - Add a new player skill by implementing `ISkillBase` or deriving from `UpgradeableSkill<TConfig>`, assigning `SkillInfoSO` and config references, and placing the component under `SkillsRegistry`.
-  - Add upgradeable stats by adding serialized starting stat fields, deep-copying them in the config `OnEnable`, and exposing public `IUpgradeableStat` properties.
+  - Add a new player skill by implementing [ISkillBase](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/ISkillBase.cs) or deriving from [UpgradeableSkill](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeableSkill.cs), assigning [SkillInfoSO](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/ScriptableObjects/Skills/SkillInfoSO.cs) and config references, and placing the component under [SkillsRegistry](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/SkillsRegistry.cs).
+  - Add upgradeable stats by adding serialized starting stat fields, deep-copying them in the config `OnEnable`, and exposing public [IUpgradeableStat](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/UpgradeableStat.cs) properties.
   - Mark finite or high-impact stats with `OverrideDefaultRarity` and `Rarity` on the stat itself when random range position is not the desired rarity signal.
-  - Add child activatable items by using `ItemsWithScriptableConfigsActivator<TItem, TConfig>` when each child implements `IInitializableWithScriptableConfig<TConfig>`.
-  - Add new unlock or upgrade triggers through `ISkillUpgradeFlow` or a narrow event consumed by `SkillUpgradePresenter`, rather than making skills own UI presentation.
+  - Add child activatable items by using [ItemsWithScriptableConfigsActivator](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/ItemsWithScriptableConfigsActivator.cs) when each child implements `IInitializableWithScriptableConfig`.
+  - Add new unlock or upgrade triggers through [ISkillUpgradeFlow](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeFlow.cs) or a narrow event consumed by [SkillUpgradePresenter](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs), rather than making skills own UI presentation.
 - Required dependencies and contracts:
-  - New upgrade configs should inherit `SkillUpgradeableStatsConfig` if their stats should appear in the current UI.
-  - New upgrade flow behavior should stay behind `ISkillUpgradeFlow` unless another system explicitly needs a different contract.
+  - New upgrade configs should inherit [SkillUpgradeableStatsConfig](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs) if their stats should appear in the current UI.
+  - New upgrade flow behavior should stay behind [ISkillUpgradeFlow](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeFlow.cs) unless another system explicitly needs a different contract.
   - New child skill items must correctly implement `Initialize(config)` and `IsInitialized()`, because activators use `IsInitialized()` to avoid double activation.
   - New projectile-based skills should use the existing projectile config and pooling patterns unless a different lifecycle is intentionally reviewed.
-  - New UI skill visuals must have names matching `SkillInfoSO.Name`.
+  - New UI skill visuals must have names matching [SkillInfoSO](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/ScriptableObjects/Skills/SkillInfoSO.cs).Name.
 - Testing implications:
   - Compile after C# changes with `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`.
   - In Unity, validate initial skill activation, skill-crate unlock flow, level-up upgrade flow, upgrade button clicks/hotkeys, continue input, and visual matching by skill name.
@@ -137,21 +135,21 @@ It is not responsible for:
 - Upstream dependencies:
   - Reflex injects `IPlayerManager`, `IPlayerLevelPresenter`, `IOnRandomGridPosSpawner<CollectibleItemsSpawner>`, and `IGridManager` into skill-adjacent components.
   - `PlayerManager` provides the registry to UI through `IPlayerManager.SkillsRegistry`.
-  - `SkillUpgradeFlow` depends on `ISkillsRegistry`, `RandomUpgradeableSkillFinder`, queued reward request state, and `SkillUpgradeableStatsConfig` to choose and construct requests.
+  - [SkillUpgradeFlow](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeFlow.cs) depends on [ISkillsRegistry](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/SkillsRegistry.cs), [RandomUpgradeableSkillFinder](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/RandomUpgradeableSkillFinder.cs), queued reward request state, and [SkillUpgradeableStatsConfig](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs) to choose and construct requests.
   - `UpgradeableStat<T>` owns upgrade range, current value, max detection, subtract-mode behavior, unlimited max behavior, unit display, rarity override metadata, and `OnUpgrade` events.
-  - `DeepCopyUtility` protects ScriptableObject-authored starting values from direct runtime mutation.
+  - [DeepCopyUtility](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Utils/DeepCopyUtility.cs) protects ScriptableObject-authored starting values from direct runtime mutation.
   - Unity layers in `EntityLayers` and `TerrainLayers` gate collision, target acquisition, and landmine placement.
   - Lasergun target selection uses non-allocating physics overlap buffers, enemy layer filtering, and terrain line-of-sight checks before targets are accepted.
 - Downstream consumers:
-  - `SkillUpgradePresenter` consumes `ISkillUpgradeFlow`, `SkillUpgradeRequest`, `SkillUpgradeOption`, `ISkillsRegistry`, `ISkillBase`, `IUpgradeableSkill`, `SkillInfoSO`, and `IUpgradeableStat`.
-  - `SkillsVisualPresenter` consumes `SkillInfoSO.Name` for visual lookup.
+  - [SkillUpgradePresenter](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs) consumes [ISkillUpgradeFlow](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeFlow.cs), [SkillUpgradeRequest](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeRequest.cs), [SkillUpgradeOption](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeOption.cs), [ISkillsRegistry](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/SkillsRegistry.cs), [ISkillBase](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/ISkillBase.cs), [IUpgradeableSkill](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeableSkill.cs), and [SkillInfoSO](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/ScriptableObjects/Skills/SkillInfoSO.cs).
+  - [SkillsVisualPresenter](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/UI/Skills/SkillsVisualPresenter.cs) consumes [SkillInfoSO](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/ScriptableObjects/Skills/SkillInfoSO.cs).Name for visual lookup.
   - Projectile, health, status, audio, VFX, grid, collectible, and level systems react to skill behavior but do not own skill progression state.
 - Cross-system coupling risks:
   - Skill progression is coupled to collectible release and level UI events.
   - Skill UI assumes upgradeable stat property names can be converted from PascalCase to words for button text.
   - Skill UI rarity depends on stat upgrade ranges and optional stat-level rarity overrides; bad range metadata or missing overrides can make high-impact upgrades look too common.
   - Concrete skills rely heavily on serialized scene/prefab references, so code-only changes may compile while scene wiring remains broken.
-  - `Turret<TConfig>.Awake` searches for the `ProjectilesHolder` tag, which is a scene convention outside the type contract.
+  - [Turret](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/Turret.cs) searches for the "ProjectilesHolder" tag, which is a scene convention outside the type contract.
 
 ## Known Risks and Open Questions
 
@@ -159,17 +157,17 @@ It is not responsible for:
   - `IUpgradeableSkill.CanBeUgraded` and `SawSkillUpgradeableConfigSO.NuberOfSaws` contain spelling errors that are now part of the code contract.
   - `SkillsRegistry.Start` initializes `Skills[0]`, so starting skill depends on direct child order and fails if no skills are registered.
   - `SkillUpgradeFlow.QueueRandomSkillUpgradeRequest` does nothing when no candidate upgradeable skill is found, so reward triggers can silently produce no visible section if every available stat is maxed or no upgradeable skills are eligible.
-  - `Landmine.Initialize` does not set `_isInitialized`, so `Landmine.IsInitialized()` remains false after initialization.
-  - `LandmineSkill` has a serialized `_cooldown` field that is not used; active spawn cadence comes from `_config.SpawnCooldown.Value`.
-  - `LasergunTurret` creates additional line-renderer instances at runtime when `NumberOfTargets` grows above one; those clones depend on the serialized first `LineRenderer` being a valid beam template.
+  - [Landmine](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/PlayerSkills/LandmineTrap/Landmine.cs).Initialize does not set `_isInitialized`, so [Landmine](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/PlayerSkills/LandmineTrap/Landmine.cs).IsInitialized() remains false after initialization.
+  - [LandmineSkill](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/PlayerSkills/LandmineTrap/LandmineSkill.cs) has a serialized `_cooldown` field that is not used; active spawn cadence comes from `_config.SpawnCooldown.Value`.
+  - [LasergunTurret](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/PlayerSkills/Lasergun/LasergunTurret.cs) creates additional line-renderer instances at runtime when `NumberOfTargets` grows above one; those clones depend on the serialized first `LineRenderer` being a valid beam template.
   - Some current skill code uses direct scene/tag lookup patterns that do not match the preferred DI direction for new code.
 - Open design questions:
   - Should starting skill be explicitly configured instead of relying on registry child order?
   - Should skill unlock and upgrade selection be deterministic, weighted, or player-choice based rather than random?
-  - Should generic collectible spawning remain under `Skills/ObjectsImpactingSkills/Crate` as more pickups are added?
+  - Should generic collectible spawning remain under [ObjectsImpactingSkills/Crate](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/ObjectsImpactingSkills/Crate) as more pickups are added?
   - Should skill configs be reset per run through a central run-state service instead of relying on ScriptableObject `OnEnable` cloning?
 - Suggested follow-up tasks:
-  - Add guardrails in `SkillsRegistry` for empty registries before `Skills[0]` is initialized.
+  - Add guardrails in [SkillsRegistry](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/SkillsRegistry.cs) for empty registries before `Skills[0]` is initialized.
   - Fix the landmine initialization flag and remove or wire the unused cooldown field in a focused behavior-preserving cleanup.
-  - Review `SkillUpgradeFlow` queueing for repeated upgrade requests against the same skill and stale requests after stats reach max values.
+  - Review [SkillUpgradeFlow](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeFlow.cs) queueing for repeated upgrade requests against the same skill and stale requests after stats reach max values.
   - Consider a dedicated skill progression service if more systems need to trigger, observe, save, or restore skill state.
