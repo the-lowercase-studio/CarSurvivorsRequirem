@@ -4,6 +4,8 @@
 
 The Swarm System manages high-density enemy spawning events that occur periodically. During a swarm event, the standard wave spawning process is paused, and a targeted warning countdown is shown to the player before a large batch of a specific enemy type is spawned incrementally.
 
+Swarms are allowed to spawn enemies inside the Player Chunk (which is disallowed for classic wave spawning). Swarm spawning respects the configured cell occupancy limit (`_maxEnemiesPerCell`) to keep enemies from piling up on the exact same cells upon spawn.
+
 It does not own standard wave pacing or the low-level object pooling of the enemies, which are managed by the Wave Manager and the Enemies Spawn System.
 
 ## Reading Map
@@ -32,7 +34,7 @@ It does not own standard wave pacing or the low-level object pooling of the enem
   - **Cooldown Phase**: `SwarmSpawner.Update` counts down the swarm timer (`_nextSwarmTime`) when no swarm is active.
   - **Swarm Trigger**: When the timer expires, `StartSwarm` freezes standard waves (`_waveFreezer.IsFrozen = true`), selects the target enemy type sequentially using `_currentSwarmIndex`, computes the target size, and starts `SwarmCoroutine`.
   - **Warning Phase**: The coroutine runs for `_swarmWarningDuration` seconds, informing the player of the countdown using `ISwarmNotificationPresenter.ShowIncoming`.
-  - **Spawning Phase**: The coroutine enters the spawning loop, calculating and triggering fractional enemy spawns at each `_spawnTickInterval` using `_swarmEnemySpawner.SpawnSpecificEnemy`.
+  - **Spawning Phase**: The coroutine enters the spawning loop, calculating and triggering fractional enemy spawns at each `_spawnTickInterval` using `_swarmEnemySpawner.SpawnSpecificEnemy`. The spawner uses `GridCellsNotVisibleByMainCamera.GetRandomWalkableCells` within `GridPlayerChunk` to select candidate spawning positions, respecting the `_maxEnemiesPerCell` limit.
   - **Restoration**: Once all spawns complete, `EndSwarm` hides the UI, unfreezes standard waves, increments `_currentSwarmIndex`, and resets the cooldown timer.
 
 ## Rules and Invariants
@@ -41,6 +43,7 @@ It does not own standard wave pacing or the low-level object pooling of the enem
   - Standard waves must remain frozen (`IsFrozen = true`) from the moment a swarm starts until all spawning ticks finish.
   - Swarms must progress sequentially through the spawner's enemy configuration list using `_currentSwarmIndex` (clamped to the list length).
   - Swarm sizes are bounded by the enemy config's `MaxAmount`.
+  - Swarms are allowed to spawn enemies inside the Player Chunk (centered on the player), but must respect the cell occupancy limit `_maxEnemiesPerCell` (default: 2) to limit overlapping upon spawn.
 - Ordering or sequencing guarantees:
   - The warning countdown ticks once per integer second.
   - Spawning tick intervals must wait for `_spawnTickInterval` seconds between batches.
@@ -66,7 +69,7 @@ The `SwarmNotificationPresenter` integrates with standard UI and rendering pipel
   - `Volume` and `LiftGammaGain` (URP) are required for screen dimming.
   - Reflex DI binds `ISwarmNotificationPresenter`, `IWaveFreezer`, and `ISwarmEnemySpawner`.
 - Downstream consumers:
-  - `EnemiesSpawner` handles low-level instantiation of swarm enemies.
+  - `EnemiesSpawner` handles low-level instantiation of swarm enemies, enforcing `_maxEnemiesPerCell` density inside the player chunk.
   - `WaveManager` halts and resumes wave pacing based on the swarm state.
 
 ## Known Risks and Open Questions

@@ -16,7 +16,7 @@ namespace Assets.Scripts.UI.HUD
 
     public class SwarmNotificationPresenter : MonoBehaviour, ISwarmNotificationPresenter
     {
-        [Inject] private readonly Volume _postProcessVolume;
+        [Inject] private readonly Volume _postProcessVolume = null;
 
         [SerializeField] private TextMeshProUGUI _swarmText;
         [SerializeField] private string _incomingTemplateMessage = "Swarm Incoming in {0}s";

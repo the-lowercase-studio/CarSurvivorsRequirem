@@ -1159,28 +1159,28 @@ MonoBehaviour:
   _enemiesParent: {fileID: 361168572}
   _poolEnemiesInfo:
   - EnemyPrefab: {fileID: 8544650596686725407, guid: 08b441f56ebe2754ab1e7d5eefb63ac5, type: 3}
-    MaxAmount: 100
+    MaxAmount: 180
     SpawnChanceInfo:
       SpawnChance: 100
       TresholdToStartAddingSpawnChanceToOtherInfos: 0
       SpawnChanceWillNotChange: 0
       HasEverReachedThreshold: 0
   - EnemyPrefab: {fileID: 6539511401407038030, guid: ad4b105b525d63e48b2389383719ba24, type: 3}
-    MaxAmount: 90
+    MaxAmount: 140
     SpawnChanceInfo:
       SpawnChance: 0
       TresholdToStartAddingSpawnChanceToOtherInfos: 30
       SpawnChanceWillNotChange: 0
       HasEverReachedThreshold: 0
   - EnemyPrefab: {fileID: 2460934273244476936, guid: 1f7f36cb9467b6b4b84a4ad278f05987, type: 3}
-    MaxAmount: 80
+    MaxAmount: 30
     SpawnChanceInfo:
       SpawnChance: 0
       TresholdToStartAddingSpawnChanceToOtherInfos: 36
       SpawnChanceWillNotChange: 0
       HasEverReachedThreshold: 0
   - EnemyPrefab: {fileID: 8544650596686725407, guid: d5bb0f9692c21d340823d0058bfb4042, type: 3}
-    MaxAmount: 80
+    MaxAmount: 100
     SpawnChanceInfo:
       SpawnChance: 0
       TresholdToStartAddingSpawnChanceToOtherInfos: 30
@@ -1207,6 +1207,9 @@ MonoBehaviour:
       TresholdToStartAddingSpawnChanceToOtherInfos: 0
       SpawnChanceWillNotChange: 0
       HasEverReachedThreshold: 0
+  _swarmSpawnVfxPrefab: {fileID: 8344966909035156067, guid: 6e276f066ac3ecb49bde40f2f75c0e62, type: 3}
+  _outerSpawnBufferCells: 6
+  _maxEnemiesPerCell: 2
 --- !u!1 &517296374
 GameObject:
   m_ObjectHideFlags: 0
@@ -2383,12 +2386,12 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1592724050}
   - {fileID: 3889146629778686341}
   - {fileID: 2059122251}
   - {fileID: 6512237454196796941}
   - {fileID: 853691209}
   - {fileID: 1808999225}
-  - {fileID: 1592724050}
   m_Father: {fileID: 1943576992}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}

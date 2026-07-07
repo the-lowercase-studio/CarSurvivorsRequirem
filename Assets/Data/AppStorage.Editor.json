@@ -3,9 +3,11 @@
   "FullScreenMode": 3,
   "DamageNumbersEnabled": true,
   "ScoreBoard": [
+    210,
+    190,
+    159,
+    133,
     107,
-    87,
-    72,
-    70
+    106
   ]
 }

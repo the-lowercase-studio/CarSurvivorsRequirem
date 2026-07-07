@@ -4,6 +4,8 @@
 
 The Enemies Spawn System is responsible for pooling, instantiating, selecting, and placing enemy entities in grid space. It handles weighted random selection based on progressive spawn chances, manages individual object pools for configured enemy types, determines valid off-camera positions, and redistributes spawn chances to progressively introduce more challenging enemies.
 
+It separates classic wave spawning (which is restricted to spawning outside the player's immediate chunk boundaries) from swarm spawning (which is allowed to spawn inside the player chunk). It also enforces a cell occupancy density limit to prevent too many enemies from overlapping on the same cell on spawn.
+
 It does not own enemy combat behavior, wave pacing, or swarm warning cues. Those are delegated to the enemies, waves, and swarm systems.
 
 ## Reading Map
@@ -35,15 +37,17 @@ It does not own enemy combat behavior, wave pacing, or swarm warning cues. Those
   - `IObjectReleaseNotifier`: Emits `OnSpawnedEntityReleased` events when an enemy is returned to the pool, allowing other systems to react.
 - Runtime flow:
   - **Setup**: During `Awake`, `EnemiesSpawner` pools configured enemy types. During `Start`, it initializes the redistribution system and pre-warms the pools.
-  - **Standard Wave Spawning**: `WaveManager` calls `SpawnAtRandomGridPos`. The spawner selects random walkable cells outside the camera view, uses `RandomEnemyInfoBasedOnSpawnChance` to select a prefab weight-proportionally, gets it from the pool, activates it, and increments `CurrentlySpawnedObjectsCount`. Finally, it invokes chance redistribution.
-  - **Swarm Spawning**: `SwarmSpawner` calls `SpawnSpecificEnemy`. The spawner retrieves and activates the exact requested enemy type, bypassing weight checks and redistribution logic.
+  - **Standard Wave Spawning**: `WaveManager` calls `SpawnAtRandomGridPos`. The spawner uses `GridCellsNotVisibleByMainCamera.GetRandomWalkableCellsOutsidePlayerChunk` to select random walkable cells in `WorldGrid` that are outside the player chunk but within `_outerSpawnBufferCells` bounds. It filters cells to ensure they have fewer than `_maxEnemiesPerCell` enemies, and adds cells multiple times based on available slots to ensure the requested count is met. Finally, it pulls prefabs weight-proportionally, gets them from the pool, activates them, and invokes chance redistribution.
+  - **Swarm Spawning**: `SwarmSpawner` calls `SpawnSpecificEnemy`. The spawner uses `GridCellsNotVisibleByMainCamera.GetRandomWalkableCells` to select random walkable cells within `GridPlayerChunk` that are not visible. It also respects the `_maxEnemiesPerCell` occupancy limit.
   - **Release**: When an enemy dies or is removed, it invokes its `OnCanBeReleased` event. The spawner catches this, deactivates the enemy, decrements `CurrentlySpawnedObjectsCount`, and fires `OnSpawnedEntityReleased`.
 
 ## Rules and Invariants
 
 - Critical behavior rules:
-  - Standard waves must spawn via `IOnRandomGridPosSpawner<EnemiesSpawner>` using weighted chances.
-  - Swarms must spawn via `ISwarmEnemySpawner.SpawnSpecificEnemy` to target specific types.
+  - Standard waves must spawn via `IOnRandomGridPosSpawner<EnemiesSpawner>` using weighted chances, and only outside the Player Chunk boundary.
+  - Swarms must spawn via `ISwarmEnemySpawner.SpawnSpecificEnemy` and can spawn inside the Player Chunk.
+  - Both spawning systems must respect the cell occupancy limit `_maxEnemiesPerCell` (default: 2), preventing spawning on cells that are already full.
+  - If spawning slots are scarce for standard waves, the search area expands dynamically (`_outerSpawnBufferCells` increases by 4 per iteration) until the requested number of enemies can be safely accommodated or no new cells are discovered.
   - Newly spawned or teleported enemies must be positioned on walkable cells out of the main camera's viewport.
   - Spawn chance redistribution must execute exactly once per standard spawn batch.
 - Ordering or sequencing guarantees:
@@ -65,17 +69,18 @@ The `EnemiesSpawnChanceRedistributionSystem` operates on configured `EnemySpawnI
 
 - **Adding Enemies**: Create a prefab with `Enemy` and config, and add it to the `_poolEnemiesInfo` list on `EnemiesSpawner` in the Unity Inspector.
 - **Redistribution Adjustments**: Tune `_spawnChanceDecreaseFactor` or configure thresholds in `SpawnChanceInfo` to alter the pace at which harder enemies start to dominate standard waves.
+- **Spawning Limits**: Adjust `_outerSpawnBufferCells` (default: 8) to change how far classic waves spawn, or `_maxEnemiesPerCell` (default: 2) to change maximum spawning density.
 
 ## Integration Notes
 
 - Upstream dependencies:
-  - `IGridManager` supplies chunk grid boundaries.
+  - `IGridManager` supplies chunk grid boundaries (via `GridPlayerChunk` and `WorldGrid`).
   - `Camera _mainCamera` is used to filter out visible cells.
   - Reflex scene installer binds the spawner interface.
 - Downstream consumers:
   - `WaveManager` pacing depends on standard waves and active counts.
   - `SwarmSpawner` queries configs and spawns specific waves during swarms.
-  - `EnemiesOutsidePlayerChunkTeleporter` teleports stray enemies back to valid cells.
+  - `EnemiesOutsidePlayerChunkTeleporter` teleports stray enemies back to valid cells inside the player chunk.
 
 ## Known Risks and Open Questions
 

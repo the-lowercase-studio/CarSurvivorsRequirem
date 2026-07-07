@@ -9,9 +9,9 @@ namespace Assets.Scripts.Spawners.Swarm
 {
     public class SwarmSpawner : MonoBehaviour
     {
-        [Inject] private readonly ISwarmEnemySpawner _swarmEnemySpawner;
-        [Inject] private readonly IWaveFreezer _waveFreezer;
-        [Inject] private readonly ISwarmNotificationPresenter _swarmNotificationPresenter;
+        [Inject] private readonly ISwarmEnemySpawner _swarmEnemySpawner = null;
+        [Inject] private readonly IWaveFreezer _waveFreezer = null;
+        [Inject] private readonly ISwarmNotificationPresenter _swarmNotificationPresenter = null;
 
         [Header("Swarm Timing")]
         [SerializeField] private float _minSwarmInterval = 120f;
@@ -36,6 +36,23 @@ namespace Assets.Scripts.Spawners.Swarm
             _nextSwarmTime = Random.Range(_minSwarmInterval, _maxSwarmInterval);
         }
 
+        private void OnDisable()
+        {
+            if (_isSwarmActive)
+            {
+                if (_waveFreezer != null)
+                {
+                    _waveFreezer.IsFrozen = false;
+                }
+                _isSwarmActive = false;
+            }
+            if (_swarmCoroutine != null)
+            {
+                StopCoroutine(_swarmCoroutine);
+                _swarmCoroutine = null;
+            }
+        }
+
         private void Update()
         {
             if (_isSwarmActive) return;
@@ -50,10 +67,10 @@ namespace Assets.Scripts.Spawners.Swarm
 
         private void StartSwarm()
         {
-            _isSwarmActive = true;
-
             int configCount = _swarmEnemySpawner.EnemyConfigs.Count;
             if (configCount == 0) return;
+
+            _isSwarmActive = true;
 
             int clampedIndex = Mathf.Min(_currentSwarmIndex, configCount - 1);
             EnemySpawnInfo selectedConfig = _swarmEnemySpawner.EnemyConfigs[clampedIndex];

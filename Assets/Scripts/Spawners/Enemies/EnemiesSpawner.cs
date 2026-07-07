@@ -3,6 +3,7 @@ using Assets.Scripts.Enemies;
 using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.Pooling;
 using Assets.Scripts.Spawners.GridSpace;
+using Assets.Scripts.VFX;
 using Reflex.Attributes;
 using System;
 using System.Collections.Generic;
@@ -25,11 +26,17 @@ namespace Assets.Scripts.Spawners.Enemies
 
         [Header("SpawnExpParticle Chance Settings")]
         [SerializeField] private FloatValueRange _spawnChanceDecreaseFactor;
-        private EnemiesSpawnChanceRedistributionSystem _enemiesSpawnChanceRedistributionSystem = new();
 
         [Header("Enemies Pool settings")]
         [SerializeField] private Transform _enemiesParent;
         [SerializeField] private List<EnemySpawnInfo> _poolEnemiesInfo;
+        [SerializeField] private VFXPlayer _swarmSpawnVfxPrefab;
+
+        [Header("Spawn Distance & Occupancy Settings")]
+        [SerializeField] private int _outerSpawnBufferCells = 8;
+        [SerializeField] private int _maxEnemiesPerCell = 2;
+
+        private EnemiesSpawnChanceRedistributionSystem _enemiesSpawnChanceRedistributionSystem = new();
         private Dictionary<EnemySpawnInfo, ObjectPool<Enemy>> _enemyPools = new();
 
         public event EventHandler OnSpawnedEntityReleased;
@@ -61,6 +68,7 @@ namespace Assets.Scripts.Spawners.Enemies
                 ObjectPool<Enemy> currentEnemyPool = new(createFunc: () => Instantiate(poolEnemyInfo.EnemyPrefab, _enemiesParent),
                                                          actionOnGet: OnEnemyGet,
                                                          actionOnRelease: OnEnemyRelease,
+                                                         actionOnDestroy: enemy => Destroy(enemy.gameObject),
                                                          defaultCapacity: poolEnemyInfo.MaxAmount,
                                                          maxSize: poolEnemyInfo.MaxAmount);
 
@@ -125,7 +133,14 @@ namespace Assets.Scripts.Spawners.Enemies
 
         public void SpawnAtRandomGridPos(int count = 1)
         {
-            IEnumerable<Cell> cells = GridCellsNotVisibleByMainCamera.GetRandomWalkableCells(_gridManager.GridPlayerChunk, _mainCamera, count);
+            IEnumerable<Cell> cells = GridCellsNotVisibleByMainCamera.GetRandomWalkableCellsOutsidePlayerChunk(
+                _gridManager.WorldGrid,
+                _gridManager.GridPlayerChunk,
+                _mainCamera,
+                count,
+                _outerSpawnBufferCells,
+                _maxEnemiesPerCell
+            );
             using (var enumerator = cells.GetEnumerator())
             {
                 for (int i = 0; i < count; i++)
@@ -148,22 +163,55 @@ namespace Assets.Scripts.Spawners.Enemies
         {
             if (!_enemyPools.TryGetValue(enemyInfo, out ObjectPool<Enemy> pool)) return;
 
-            IEnumerable<Cell> cells = GridCellsNotVisibleByMainCamera.GetRandomWalkableCells(_gridManager.GridPlayerChunk, _mainCamera, count);
+            IEnumerable<Cell> cells = GridCellsNotVisibleByMainCamera.GetRandomWalkableCells(
+                _gridManager.GridPlayerChunk,
+                _mainCamera,
+                count,
+                _maxEnemiesPerCell
+            );
             using (var enumerator = cells.GetEnumerator())
             {
                 for (int i = 0; i < count; i++)
                 {
                     if (!enumerator.MoveNext()) break;
 
-                    Enemy enemy = pool.Get();
-                    enemy.transform.position = enumerator.Current.WorldPos;
+                    Vector3 spawnPos = enumerator.Current.WorldPos;
+
+                    if (_swarmSpawnVfxPrefab != null)
+                    {
+                        VFXPlayer vfxInstance = Instantiate(_swarmSpawnVfxPrefab, spawnPos, Quaternion.identity);
+
+                        vfxInstance.Play(new VFXPlayConfig(scale: 1f, destroyOnEnd: true));
+
+                        vfxInstance.OnVFXFinished += (sender, e) =>
+                        {
+                            if (this == null) return;
+                            if (_enemyPools.TryGetValue(enemyInfo, out ObjectPool<Enemy> currentPool))
+                            {
+                                Enemy enemy = currentPool.Get();
+                                enemy.transform.position = spawnPos;
+                            }
+                        };
+                    }
+                    else
+                    {
+                        Enemy enemy = pool.Get();
+                        enemy.transform.position = spawnPos;
+                    }
                 }
             }
         }
 
         public void SpawnRandomEnemiesBasedOnSpawnChance(int count)
         {
-            IEnumerable<Cell> cells = GridCellsNotVisibleByMainCamera.GetRandomWalkableCells(_gridManager.GridPlayerChunk, _mainCamera, count);
+            IEnumerable<Cell> cells = GridCellsNotVisibleByMainCamera.GetRandomWalkableCellsOutsidePlayerChunk(
+                _gridManager.WorldGrid,
+                _gridManager.GridPlayerChunk,
+                _mainCamera,
+                count,
+                _outerSpawnBufferCells,
+                _maxEnemiesPerCell
+            );
             using (var enumerator = cells.GetEnumerator())
             {
                 for (int i = 0; i < count; i++)
