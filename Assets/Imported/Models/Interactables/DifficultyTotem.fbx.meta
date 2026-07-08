@@ -3,7 +3,17 @@ guid: eb627ca1cb7d5e544824b5bd3d69092d
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: pisotn_gray
+    second: {fileID: 2100000, guid: ba28e41629fbe2c41bfb4c11ac09f961, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: piston_dark_gray
+    second: {fileID: 2100000, guid: 0c2b5e895fd18f64f92fea71fcd1940f, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

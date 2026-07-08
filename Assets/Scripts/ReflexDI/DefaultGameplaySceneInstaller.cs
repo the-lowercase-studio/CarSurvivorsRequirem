@@ -59,6 +59,7 @@ namespace Assets.Scripts.ReflexDI
             //Spawners
             builder.AddSingleton(_enemiesSpawner, typeof(IOnRandomGridPosSpawner<EnemiesSpawner>));
             builder.AddSingleton(_enemiesSpawner, typeof(ISwarmEnemySpawner));
+            builder.AddSingleton(_enemiesSpawner, typeof(IEnemySpawnDifficultyController));
             builder.AddSingleton(_collectibleItemsSpawner, typeof(IOnRandomGridPosSpawner<CollectibleItemsSpawner>));
             builder.AddSingleton(_expParticleSpawner, typeof(IInWorldSpaceSpawner<ExpParticleSpawner, float>));
 

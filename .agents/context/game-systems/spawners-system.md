@@ -15,12 +15,14 @@ It does not own the complete behavior of every spawned object. Enemy behavior, c
   - Assets/Scripts/Spawners/WorldSpace/IInWorldSpaceSpawner.cs
   - Assets/Scripts/Spawners/ISpawnedObjectsCounter.cs
   - Assets/Scripts/Spawners/SpawnChanceInfo.cs
+  - Assets/Scripts/Spawners/MapInteractablesSpawner.cs
 - Current concrete implementations:
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs
   - Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/CollectibleItemsSpawner.cs
   - Assets/Scripts/DamageNumbers/DamageNumbersSpawner.cs
   - Assets/Scripts/LevelSystem/Exp/ExpParticleSpawner.cs
   - Assets/Scripts/Skills/PlayerSkills/Minigun/MinigunTurret.cs
+  - Assets/Scripts/Spawners/MapInteractablesSpawner.cs
 - DI setup:
   - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
   - Assets/Scripts/ReflexDI/BootLoader.cs
@@ -44,6 +46,7 @@ It does not own the complete behavior of every spawned object. Enemy behavior, c
   - `IOnRandomGridPosSpawner<TSelf>` is for systems that pick their own random grid cell before spawning.
   - `IInGridSpaceSpawner<TSelf, TSpecificConfig>` is for systems that receive an explicit `Cell` plus caller-specific spawn config.
   - `IInWorldSpaceSpawner<TSelf, TSpecificConfig>` is for systems that receive a world-space `Vector3` plus caller-specific spawn config.
+  - `MapInteractablesSpawner`: A startup component that spawns interactive map objects (using configurable `InteractableSpawnRule` parameters) onto walkable grid cells before standard gameplay waves begin.
 - Key interfaces:
   - All generic spawner interfaces include `ISpawnedObjectsCounter` and `IObjectReleaseNotifier`.
   - Generic `TSelf` constraints keep DI bindings specific to one concrete spawner contract, for example `IOnRandomGridPosSpawner<EnemiesSpawner>`.
@@ -55,6 +58,7 @@ It does not own the complete behavior of every spawned object. Enemy behavior, c
   - Consumers inject the narrow generic spawner interface instead of finding scene objects directly.
   - Spawn requests create or retrieve objects, initialize object-specific state, subscribe to release/life-end events when needed, activate or instantiate the object, and increment `CurrentlySpawnedObjectsCount`.
   - Release paths undo per-object subscriptions, deactivate or stop tracking the object, raise `OnSpawnedEntityReleased`, and decrement `CurrentlySpawnedObjectsCount`.
+  - **Pre-Gameplay Spawning**: `MapInteractablesSpawner` runs in `Start()`. It checks walkable cells in `WorldGrid`, shuffles them, and places a randomized number of prefabs (within `MinSpawnCount` and `MaxSpawnCount`) while enforcing `MinDistanceToImpassable` and `MinDistanceToSameType` parameters.
 
 ## Rules and Invariants
 
@@ -64,6 +68,8 @@ It does not own the complete behavior of every spawned object. Enemy behavior, c
   - Preserve `CurrentlySpawnedObjectsCount` semantics: increment only for successful active spawns and decrement exactly once for each completed release path.
   - Preserve `OnSpawnedEntityReleased` as a release signal, not as a generic spawn-completed signal.
   - Treat changes to spawn chance data and redistribution as gameplay balance changes.
+  - `MapInteractablesSpawner` must run during `Start()` (not `OnEnable()` or `Awake()`) to guarantee `IGridManager` cost fields are fully computed and dynamically injected components can resolve their Reflex dependencies.
+  - Do not spawn map interactables on cells that are occupied, impassable, or too close to obstacles or other spawned objects of the same type.
 - Ordering or sequencing guarantees:
   - `EnemiesSpawner.Awake` creates object pools before `Start` initializes spawn chance redistribution.
   - `WaveManager` relies on enemy spawned counts when scheduling waves.

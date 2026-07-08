@@ -18,6 +18,7 @@ namespace Assets.Scripts.Spawners.Enemies
         private FloatValueRange _spawnChanceDecreaseFactor;
         private EnemySpawnInfo _currentEnemyInfoSpawnChanceSource;
         private List<EnemySpawnInfo> _spawnChanceSystemEnemiesInfo;
+        private float _redistributionFactorBonus = 0f;
 
         public void Initialize(Configuration config)
         {
@@ -32,6 +33,11 @@ namespace Assets.Scripts.Spawners.Enemies
         public bool IsInitialized()
         {
             return _spawnChanceSystemEnemiesInfo is not null;
+        }
+
+        public void IncreaseSpawnChanceRedistributionFactor(float amount)
+        {
+            _redistributionFactorBonus += amount;
         }
 
         public void RedistributeSpawnChance()
@@ -52,7 +58,7 @@ namespace Assets.Scripts.Spawners.Enemies
                     break;
                 }
 
-                float spawnChanceScalar = _spawnChanceDecreaseFactor.GetRandomValueInRange();
+                float spawnChanceScalar = _spawnChanceDecreaseFactor.GetRandomValueInRange() + _redistributionFactorBonus;
                 float currentSpawnChance = _currentEnemyInfoSpawnChanceSource.SpawnChanceInfo.SpawnChance;
 
                 if (currentSpawnChance > spawnChanceScalar)

@@ -12,6 +12,11 @@ using UnityEngine.Pool;
 
 namespace Assets.Scripts.Spawners.Enemies
 {
+    public interface IEnemySpawnDifficultyController
+    {
+        void IncreaseSpawnChanceRedistributionFactor(float amount);
+    }
+
     public interface ISwarmEnemySpawner
     {
         IReadOnlyList<EnemySpawnInfo> EnemyConfigs { get; }
@@ -19,7 +24,7 @@ namespace Assets.Scripts.Spawners.Enemies
     }
 
     public class EnemiesSpawner : MonoBehaviour,
-        IOnRandomGridPosSpawner<EnemiesSpawner>, IObjectReleaseNotifier, ISwarmEnemySpawner
+        IOnRandomGridPosSpawner<EnemiesSpawner>, IObjectReleaseNotifier, ISwarmEnemySpawner, IEnemySpawnDifficultyController
     {
         [Inject] private readonly IGridManager _gridManager;
         [Inject] private readonly Camera _mainCamera = null;
@@ -200,6 +205,11 @@ namespace Assets.Scripts.Spawners.Enemies
                     }
                 }
             }
+        }
+
+        public void IncreaseSpawnChanceRedistributionFactor(float amount)
+        {
+            _enemiesSpawnChanceRedistributionSystem.IncreaseSpawnChanceRedistributionFactor(amount);
         }
 
         public void SpawnRandomEnemiesBasedOnSpawnChance(int count)
