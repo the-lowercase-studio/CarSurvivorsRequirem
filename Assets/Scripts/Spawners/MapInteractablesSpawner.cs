@@ -93,13 +93,8 @@ namespace Assets.Scripts.Spawners
                         {
                             int checkX = cell.WorldGridPos.x + dx;
                             int checkY = cell.WorldGridPos.y + dy;
-                            if (checkX < 0 || checkX >= width || checkY < 0 || checkY >= height)
-                            {
-                                isNearImpassable = true;
-                                break;
-                            }
-                            Cell checkCell = worldGrid.Cells[checkX, checkY];
-                            if (checkCell == null || !CellStatusDescriber.IsWalkable(checkCell))
+                            if (checkX < 0 || checkX >= width || checkY < 0 || checkY >= height ||
+                                worldGrid.Cells[checkX, checkY] == null || !CellStatusDescriber.IsWalkable(worldGrid.Cells[checkX, checkY]))
                             {
                                 isNearImpassable = true;
                                 break;

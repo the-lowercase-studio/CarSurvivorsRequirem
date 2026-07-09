@@ -98,6 +98,7 @@ private readonly Dictionary<int, EnemyBase> _enemiesById = new();
 ### Properties, Methods, Types, and Events
 
 - Public properties and methods: PascalCase.
+- Prefer auto-properties (e.g., `public Type Property { get; private set; }`) in standard C# classes instead of separate private fields + getter properties unless custom logic or specific serialization is required.
 - Types (class, struct, enum): PascalCase.
 - Events: OnX naming.
 
@@ -188,3 +189,13 @@ Before finalizing a change:
 3. Field ordering follows Inject -> SerializeField -> private.
 4. No singleton reintroduction.
 5. Turn flow and shield-first behavior remain intact.
+6. LINQ is not used (System.Linq namespace/methods are banned).
+7. Functions/methods use block syntax ({}) instead of expression-bodied syntax (=>).
+
+## 12) Programming Guidelines and Constraints
+
+### Banned Patterns
+- **LINQ Ban**: Do not use LINQ (`System.Linq` namespace or methods like `.Any()`, `.Sum()`, `.Where()`, `.ToList()`, etc.) in gameplay, spawning, or general logic, to avoid extra allocations and keep control flow explicit.
+
+### Syntax Rules
+- **Method Block Syntax**: Do not use expression-bodied arrow syntax (`=>`) for methods/functions. Always use standard block bodies with curly braces `{}` and explicit `return` statements where applicable. (Expression-bodied auto-properties remain acceptable).

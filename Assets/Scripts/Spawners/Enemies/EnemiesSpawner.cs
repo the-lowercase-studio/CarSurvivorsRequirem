@@ -42,6 +42,7 @@ namespace Assets.Scripts.Spawners.Enemies
         [SerializeField] private int _maxEnemiesPerCell = 2;
 
         private EnemiesSpawnChanceRedistributionSystem _enemiesSpawnChanceRedistributionSystem = new();
+        [SerializeField] private float _currentRedistributionFactorBonus = 0f;
         private Dictionary<EnemySpawnInfo, ObjectPool<Enemy>> _enemyPools = new();
 
         public event EventHandler OnSpawnedEntityReleased;
@@ -63,6 +64,7 @@ namespace Assets.Scripts.Spawners.Enemies
             };
 
             _enemiesSpawnChanceRedistributionSystem.Initialize(config);
+            _currentRedistributionFactorBonus = _enemiesSpawnChanceRedistributionSystem.RedistributionFactorBonus;
             PreWarmPools();
         }
 
@@ -126,14 +128,10 @@ namespace Assets.Scripts.Spawners.Enemies
 
         private void Enemy_OnRelease(object sender, EventArgs e)
         {
-            Enemy enemy = sender as Enemy;
-
-            if (enemy is null)
+            if (sender is Enemy enemy)
             {
-                return;
+                OnEnemyRelease(enemy);
             }
-
-            OnEnemyRelease(enemy);
         }
 
         public void SpawnAtRandomGridPos(int count = 1)
@@ -210,34 +208,12 @@ namespace Assets.Scripts.Spawners.Enemies
         public void IncreaseSpawnChanceRedistributionFactor(float amount)
         {
             _enemiesSpawnChanceRedistributionSystem.IncreaseSpawnChanceRedistributionFactor(amount);
+            _currentRedistributionFactorBonus = _enemiesSpawnChanceRedistributionSystem.RedistributionFactorBonus;
         }
 
         public void SpawnRandomEnemiesBasedOnSpawnChance(int count)
         {
-            IEnumerable<Cell> cells = GridCellsNotVisibleByMainCamera.GetRandomWalkableCellsOutsidePlayerChunk(
-                _gridManager.WorldGrid,
-                _gridManager.GridPlayerChunk,
-                _mainCamera,
-                count,
-                _outerSpawnBufferCells,
-                _maxEnemiesPerCell
-            );
-            using (var enumerator = cells.GetEnumerator())
-            {
-                for (int i = 0; i < count; i++)
-                {
-                    if (!enumerator.MoveNext()) break;
-
-                    EnemySpawnInfo currentEnemyToSpawnInfo = RandomEnemyInfoBasedOnSpawnChance();
-                    if (currentEnemyToSpawnInfo != null)
-                    {
-                        Enemy enemy = _enemyPools[currentEnemyToSpawnInfo].Get();
-                        enemy.transform.position = enumerator.Current.WorldPos;
-                    }
-                }
-            }
-
-            _enemiesSpawnChanceRedistributionSystem.RedistributeSpawnChance();
+            SpawnAtRandomGridPos(count);
         }
 
         private EnemySpawnInfo RandomEnemyInfoBasedOnSpawnChance()
