@@ -15,6 +15,7 @@ It does not own enemy combat behavior, wave pacing, or swarm warning cues. Those
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawnChanceRedistributionSystem.cs
   - Assets/Scripts/Spawners/Enemies/EnemySpawnInfo.cs
   - Assets/Scripts/Spawners/SpawnChanceInfo.cs
+  - Assets/Scripts/Enemies/IncreaseDifficultyTotem.cs
 - Related docs:
   - .agents/context/game-systems/enemies-system.md
   - .agents/context/game-systems/waves-system.md
@@ -31,14 +32,17 @@ It does not own enemy combat behavior, wave pacing, or swarm warning cues. Those
   - `EnemiesSpawnChanceRedistributionSystem`: A non-MonoBehaviour helper class instantiated by the spawner. It shifts spawn probability weights as enemies are spawned, letting harder enemies appear progressively.
   - `EnemySpawnInfo`: A serializable data structure defining the enemy prefab, pool constraints (`MaxAmount`), and spawn chance configuration.
   - `SpawnChanceInfo`: Holds the current probability, threshold triggers, and behavior flags for weighted random selection.
+  - `IncreaseDifficultyTotem`: A one-use interactive totem component placed in the map. It monitors player distance, displays an interaction canvas prompt, hides itself when used, plays a VFX, and increases difficulty.
 - Key interfaces:
   - `IOnRandomGridPosSpawner<EnemiesSpawner>`: Injected into `WaveManager` for standard wave spawning and reading `CurrentlySpawnedObjectsCount`.
   - `ISwarmEnemySpawner`: Injected into `SwarmSpawner` to retrieve enemy configurations and trigger spawns for specific enemy types.
   - `IObjectReleaseNotifier`: Emits `OnSpawnedEntityReleased` events when an enemy is returned to the pool, allowing other systems to react.
+  - `IEnemySpawnDifficultyController`: Injected into interactive map objects (like the difficulty totem) to allow increasing the enemy spawn chance redistribution speed.
 - Runtime flow:
   - **Setup**: During `Awake`, `EnemiesSpawner` pools configured enemy types. During `Start`, it initializes the redistribution system and pre-warms the pools.
   - **Standard Wave Spawning**: `WaveManager` calls `SpawnAtRandomGridPos`. The spawner uses `GridCellsNotVisibleByMainCamera.GetRandomWalkableCellsOutsidePlayerChunk` to select random walkable cells in `WorldGrid` that are outside the player chunk but within `_outerSpawnBufferCells` bounds. It filters cells to ensure they have fewer than `_maxEnemiesPerCell` enemies, and adds cells multiple times based on available slots to ensure the requested count is met. Finally, it pulls prefabs weight-proportionally, gets them from the pool, activates them, and invokes chance redistribution.
   - **Swarm Spawning**: `SwarmSpawner` calls `SpawnSpecificEnemy`. The spawner uses `GridCellsNotVisibleByMainCamera.GetRandomWalkableCells` to select random walkable cells within `GridPlayerChunk` that are not visible. It also respects the `_maxEnemiesPerCell` occupancy limit.
+  - **Difficulty Increase**: Interactive elements trigger difficulty adjustments by calling `IncreaseSpawnChanceRedistributionFactor` on the injected `IEnemySpawnDifficultyController`.
   - **Release**: When an enemy dies or is removed, it invokes its `OnCanBeReleased` event. The spawner catches this, deactivates the enemy, decrements `CurrentlySpawnedObjectsCount`, and fires `OnSpawnedEntityReleased`.
 
 ## Rules and Invariants
@@ -50,6 +54,8 @@ It does not own enemy combat behavior, wave pacing, or swarm warning cues. Those
   - If spawning slots are scarce for standard waves, the search area expands dynamically (`_outerSpawnBufferCells` increases by 4 per iteration) until the requested number of enemies can be safely accommodated or no new cells are discovered.
   - Newly spawned or teleported enemies must be positioned on walkable cells out of the main camera's viewport.
   - Spawn chance redistribution must execute exactly once per standard spawn batch.
+  - The difficulty totem can only be activated once. On activation, it disables its own script component, deactivates its UI prompt canvas, and hides its visuals.
+  - Draw the totem's interaction radius gizmo exclusively in Unity editor edit mode (when not playing) to prevent runtime clutter.
 - Ordering or sequencing guarantees:
   - `EnemiesSpawner.Awake` initializes the pools before `Start` sets up the redistribution system and pre-warms.
   - When an enemy is fetched, its health is reset to `EnemyConfigSO.MaxHealth` in `Enemy.OnGet` before it is activated.
@@ -61,7 +67,7 @@ It does not own enemy combat behavior, wave pacing, or swarm warning cues. Those
 
 The `EnemiesSpawnChanceRedistributionSystem` operates on configured `EnemySpawnInfo` list entries that do not have the `SpawnChanceWillNotChange` flag set:
 1. **Threshold Assessment**: On redistribution, entries are marked as having reached their threshold (`HasEverReachedThreshold = true`) if their spawn chance equals or exceeds `TresholdToStartAddingSpawnChanceToOtherInfos`.
-2. **Subtraction**: The current active source entry (starting with the first entry in the list) has its `SpawnChance` decreased by a random value within the range `_spawnChanceDecreaseFactor`.
+2. **Subtraction**: The current active source entry (starting with the first entry in the list) has its `SpawnChance` decreased by a value computed as `_spawnChanceDecreaseFactor.GetRandomValueInRange() + _redistributionFactorBonus`.
 3. **Shift**: If the source entry's chance drops to 0, the active source shifts to the next configured entry in the list.
 4. **Geometric Distribution**: The subtracted value is redistributed to downstream eligible entries. An entry is eligible if its predecessor has met its threshold. The value is distributed geometrically (the first eligible gets half, the next a quarter, and so on, with the last eligible getting the remainder). If no entries are eligible, the entire value goes to the very last entry in the system.
 

@@ -18,6 +18,7 @@ namespace Assets.Scripts.Spawners.Enemies
         private FloatValueRange _spawnChanceDecreaseFactor;
         private EnemySpawnInfo _currentEnemyInfoSpawnChanceSource;
         private List<EnemySpawnInfo> _spawnChanceSystemEnemiesInfo;
+        public float RedistributionFactorBonus { get; private set; } = 0f;
 
         public void Initialize(Configuration config)
         {
@@ -32,6 +33,11 @@ namespace Assets.Scripts.Spawners.Enemies
         public bool IsInitialized()
         {
             return _spawnChanceSystemEnemiesInfo is not null;
+        }
+
+        public void IncreaseSpawnChanceRedistributionFactor(float amount)
+        {
+            RedistributionFactorBonus += amount;
         }
 
         public void RedistributeSpawnChance()
@@ -52,7 +58,7 @@ namespace Assets.Scripts.Spawners.Enemies
                     break;
                 }
 
-                float spawnChanceScalar = _spawnChanceDecreaseFactor.GetRandomValueInRange();
+                float spawnChanceScalar = _spawnChanceDecreaseFactor.GetRandomValueInRange() + RedistributionFactorBonus;
                 float currentSpawnChance = _currentEnemyInfoSpawnChanceSource.SpawnChanceInfo.SpawnChance;
 
                 if (currentSpawnChance > spawnChanceScalar)
@@ -86,8 +92,8 @@ namespace Assets.Scripts.Spawners.Enemies
             foreach (var info in _spawnChanceSystemEnemiesInfo)
             {
                 var spawnInfo = info.SpawnChanceInfo;
-                if (!spawnInfo.HasEverReachedThreshold && spawnInfo.HasReachedTresholdToStartAddingSpawnChanceToOtherInfos())
-                    spawnInfo.HasEverReachedThreshold = true;
+                if (!spawnInfo.HasEverReachedThreshold)
+                    spawnInfo.HasEverReachedThreshold = spawnInfo.HasReachedTresholdToStartAddingSpawnChanceToOtherInfos();
             }
         }
 
@@ -108,12 +114,9 @@ namespace Assets.Scripts.Spawners.Enemies
         private List<EnemySpawnInfo> GetEligibleEntries(int currentIndex, int lastIndex)
         {
             var eligible = new List<EnemySpawnInfo>();
-            for (int i = currentIndex; i < lastIndex; i++)
+            for (int i = currentIndex; i < lastIndex && _spawnChanceSystemEnemiesInfo[i].SpawnChanceInfo.HasEverReachedThreshold; i++)
             {
-                if (_spawnChanceSystemEnemiesInfo[i].SpawnChanceInfo.HasEverReachedThreshold)
-                    eligible.Add(_spawnChanceSystemEnemiesInfo[i + 1]);
-                else
-                    break;
+                eligible.Add(_spawnChanceSystemEnemiesInfo[i + 1]);
             }
             return eligible;
         }

@@ -98,6 +98,7 @@ Use `.agents/skills/` as reusable workflows:
 - `di-integration`: add or review Reflex bindings, injected services, and dependency boundaries.
 - `document-system`: create or update technical documentation for a specific gameplay system.
 - `preserve-coding-standards`: audit and safely fix coding-standard drift in a pointed scope.
+- `reduce-code-volume`: audit and safely reduce code volume/lines of code while keeping code readable and safe.
 - `unity-refactor-suggestions`: produce behavior-preserving Unity/C# refactor recommendations.
 
 When a request matches a skill trigger, read the relevant `SKILL.md` before editing.
