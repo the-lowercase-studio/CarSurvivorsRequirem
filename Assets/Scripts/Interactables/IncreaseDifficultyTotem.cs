@@ -5,7 +5,7 @@ using Reflex.Attributes;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Assets.Scripts.Enemies
+namespace Assets.Scripts.Interactables
 {
     public class IncreaseDifficultyTotem : MonoBehaviour
     {
