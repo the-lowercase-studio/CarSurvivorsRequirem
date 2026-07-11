@@ -19,6 +19,7 @@ It does not own player health, leveling, skills, spawning, camera behavior, enem
 - Related docs:
   - .agents/context/project-coding-standards.md
   - .agents/context/ai-game-dev-best-practices.md
+  - .agents/context/game-systems/player-system.md
 
 ## Architecture and Data Flow
 

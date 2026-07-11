@@ -9,15 +9,15 @@ It does not own wave timing, grid generation, flow-field direction calculation, 
 ## Reading Map
 
 - Primary code locations:
-  - Assets/Scripts/Enemies/Enemy.cs
+  - Assets/Scripts/Enemies/Base/Enemy.cs
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawnChanceRedistributionSystem.cs
-  - Assets/Scripts/Enemies/EnemyMovementController.cs
-  - Assets/Scripts/Enemies/EnemyAttackController.cs
-  - Assets/Scripts/Enemies/EnemyDeathHandler.cs
-  - Assets/Scripts/Enemies/EnemyAnimator.cs
-  - Assets/Scripts/Enemies/EnemyCollisionsController.cs
-  - Assets/Scripts/Enemies/EnemiesOutsidePlayerChunkTeleporter.cs
+  - Assets/Scripts/Enemies/Base/EnemyMovementController.cs
+  - Assets/Scripts/Enemies/Base/EnemyAttackController.cs
+  - Assets/Scripts/Enemies/Base/EnemyDeathHandler.cs
+  - Assets/Scripts/Enemies/Base/EnemyAnimator.cs
+  - Assets/Scripts/Enemies/Base/EnemyCollisionsController.cs
+  - Assets/Scripts/Enemies/Base/EnemiesOutsidePlayerChunkTeleporter.cs
   - Assets/Scripts/Spawners/Enemies/EnemySpawnInfo.cs
 - Designer-authored data:
   - Assets/ScriptableObjects/Enemy/EnemyConfigSO.cs

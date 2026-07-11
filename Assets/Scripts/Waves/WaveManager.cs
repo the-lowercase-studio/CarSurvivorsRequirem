@@ -1,4 +1,4 @@
-using Assets.Scripts.Enemies;
+using Assets.Scripts.Enemies.Base;
 using Assets.Scripts.Spawners.Enemies;
 using Assets.Scripts.Spawners.GridSpace;
 using Reflex.Attributes;

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using NavigationGrid = Assets.Scripts.Navigation.GridSystem.Grid;
 
-namespace Assets.Scripts.Enemies
+namespace Assets.Scripts.Enemies.Base
 {
     public class EnemiesOutsidePlayerChunkTeleporter : MonoBehaviour
     {

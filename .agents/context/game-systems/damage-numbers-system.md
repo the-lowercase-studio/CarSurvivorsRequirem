@@ -13,7 +13,7 @@ It does not calculate damage, change health values, choose combat targets, play 
   - Assets/Scripts/DamageNumbers/DamageNumber.cs
   - Assets/Scripts/DamageNumbers/DamageNumberApearance.cs
 - Integration points:
-  - Assets/Scripts/Enemies/Enemy.cs
+  - Assets/Scripts/Enemies/Base/Enemy.cs
   - Assets/Scripts/ReflexDI/BootLoader.cs
   - Assets/Scripts/Settings/DamageNumbersSetting.cs
   - Assets/Scripts/UI/Settings/DamageNumbersOption.cs

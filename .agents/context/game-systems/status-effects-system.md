@@ -23,9 +23,9 @@ It is not responsible for:
   - Assets/Scripts/StatusEffects/IKnockable.cs
   - Assets/Scripts/StatusEffects/StunController.cs
 - Current concrete users:
-  - Assets/Scripts/Enemies/Enemy.cs
-  - Assets/Scripts/Enemies/EnemyMovementController.cs
-  - Assets/Scripts/Enemies/EnemyAttackController.cs
+  - Assets/Scripts/Enemies/Base/Enemy.cs
+  - Assets/Scripts/Enemies/Base/EnemyMovementController.cs
+  - Assets/Scripts/Enemies/Base/EnemyAttackController.cs
   - Assets/Scripts/Player/PlayerDamagedHandler.cs
   - Assets/Scripts/StatusEffects/EntityManipulationHelper.cs
   - Assets/Scripts/Volumes/DeathVolume.cs

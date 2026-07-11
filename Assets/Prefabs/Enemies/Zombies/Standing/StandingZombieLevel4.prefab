@@ -12,6 +12,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: 1.66
       objectReference: {fileID: 0}
+    - target: {fileID: 229474845590807783, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
+      propertyPath: _dropEntries.Array.data[0]._dropChancePercent
+      value: 2.2
+      objectReference: {fileID: 0}
     - target: {fileID: 323885298071574372, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
       propertyPath: m_LocalPosition.y
       value: 1.657
@@ -78,7 +82,7 @@ PrefabInstance:
       objectReference: {fileID: 7536934285894457497}
     - target: {fileID: 3261852426992956232, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
       propertyPath: m_Name
-      value: Standing_Zombie_Level4
+      value: StandingZombieLevel4
       objectReference: {fileID: 0}
     - target: {fileID: 3466813591613636861, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
       propertyPath: m_LocalPosition.x

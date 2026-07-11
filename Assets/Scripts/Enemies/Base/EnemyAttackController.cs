@@ -1,4 +1,4 @@
-﻿using Assets.Scripts.Collisions;
+using Assets.Scripts.Collisions;
 using Assets.Scripts.Extensions;
 using Assets.Scripts.LayerMasks;
 using Assets.Scripts.StatusEffects;
@@ -6,7 +6,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-namespace Assets.Scripts.Enemies
+namespace Assets.Scripts.Enemies.Base
 {
     [RequireComponent(typeof(Enemy))]
     public class EnemyAttackController : MonoBehaviour

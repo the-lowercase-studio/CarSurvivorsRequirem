@@ -15,7 +15,7 @@ It does not own enemy combat behavior, wave pacing, or swarm warning cues. Those
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawnChanceRedistributionSystem.cs
   - Assets/Scripts/Spawners/Enemies/EnemySpawnInfo.cs
   - Assets/Scripts/Spawners/SpawnChanceInfo.cs
-  - Assets/Scripts/Enemies/IncreaseDifficultyTotem.cs
+  - Assets/Scripts/Interactables/IncreaseDifficultyTotem.cs
 - Related docs:
   - .agents/context/game-systems/enemies-system.md
   - .agents/context/game-systems/waves-system.md

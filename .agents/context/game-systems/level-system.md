@@ -14,7 +14,7 @@ It is not responsible for enemy balance, choosing skill upgrades, score saving, 
   - Assets/Scripts/LevelSystem/Exp/ExpParticleSpawner.cs
 - Related runtime integration:
   - Assets/Scripts/Player/PlayerManager.cs
-  - Assets/Scripts/Enemies/EnemyDeathHandler.cs
+  - Assets/Scripts/Enemies/Base/EnemyDeathHandler.cs
   - Assets/Scripts/UI/Level/PlayerLevelPresenter.cs
   - Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs
   - Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeFlow.cs

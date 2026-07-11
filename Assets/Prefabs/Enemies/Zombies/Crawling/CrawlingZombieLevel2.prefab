@@ -18,7 +18,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3261852426992956232, guid: 51bbe108060737f41995dc41eaef8a82, type: 3}
       propertyPath: m_Name
-      value: Crawling_Zombie_Level2
+      value: CrawlingZombieLevel2
       objectReference: {fileID: 0}
     - target: {fileID: 3402772935746238773, guid: 51bbe108060737f41995dc41eaef8a82, type: 3}
       propertyPath: _enemy
@@ -100,6 +100,10 @@ PrefabInstance:
       propertyPath: SubModule.subEmitters.Array.data[0].emitter
       value: 
       objectReference: {fileID: 2686127530441394451}
+    - target: {fileID: 6489595091208934302, guid: 51bbe108060737f41995dc41eaef8a82, type: 3}
+      propertyPath: _dropEntries.Array.data[0]._dropChancePercent
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6756397437299039757, guid: 51bbe108060737f41995dc41eaef8a82, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 

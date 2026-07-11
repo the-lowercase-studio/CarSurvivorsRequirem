@@ -1,4 +1,4 @@
-﻿using Assets.Scripts.LevelSystem.Exp;
+using Assets.Scripts.LevelSystem.Exp;
 using Assets.Scripts.ObjectLifecycle.Actions;
 using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.VFX;
@@ -6,7 +6,7 @@ using Reflex.Attributes;
 using System;
 using UnityEngine;
 
-namespace Assets.Scripts.Enemies
+namespace Assets.Scripts.Enemies.Base
 {
     [RequireComponent(typeof(Enemy))]
     public class EnemyDeathHandler : MonoBehaviour, INeedToCompleteBeforeDisable

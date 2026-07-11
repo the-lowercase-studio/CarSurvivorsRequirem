@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace Assets.Scripts.Enemies
+namespace Assets.Scripts.Enemies.Base
 {
     public interface IAttackAnimationPlayer
     {

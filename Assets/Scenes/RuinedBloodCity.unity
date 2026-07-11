@@ -17,7 +17,7 @@ RenderSettings:
   m_Fog: 1
   m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_FogMode: 3
-  m_FogDensity: 0.042
+  m_FogDensity: 0.031
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
   m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
@@ -119,57 +119,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &36651505
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 36651506}
-  - component: {fileID: 36651507}
-  m_Layer: 0
-  m_Name: CollectibleItemsSpawner
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &36651506
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 36651505}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 517296375}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &36651507
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 36651505}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 03e03dcbbbe0fa74e94f36fe61d25633, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _maxSpawnedCollectiblesCount: 6
-  _collectibleItemsParent: {fileID: 39965858}
-  _spawnDelay: 8
-  _collectibleItemsSpawnData:
-  - _prefab: {fileID: 8743226647122829456, guid: 2fbb8fc2b6bce83498d7142c70a1a7f0, type: 3}
-    _spawnYOffset: 0.925
-    _spawnChance: 100
 --- !u!1 &39965857
 GameObject:
   m_ObjectHideFlags: 0
@@ -1241,6 +1190,7 @@ MonoBehaviour:
   _swarmSpawnVfxPrefab: {fileID: 8344966909035156067, guid: 6e276f066ac3ecb49bde40f2f75c0e62, type: 3}
   _outerSpawnBufferCells: 6
   _maxEnemiesPerCell: 2
+  _currentRedistributionFactorBonus: 0
 --- !u!1 &517296374
 GameObject:
   m_ObjectHideFlags: 0
@@ -1274,11 +1224,11 @@ Transform:
   - {fileID: 549734346}
   - {fileID: 449990456}
   - {fileID: 742325822}
-  - {fileID: 36651506}
   - {fileID: 219321889}
   - {fileID: 172225608}
   - {fileID: 375309168}
   - {fileID: 796217916}
+  - {fileID: 1099643218}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &524479611
@@ -1346,7 +1296,8 @@ MonoBehaviour:
   _enemiesSpawner: {fileID: 449990457}
   _timerPresenter: {fileID: 2059122252}
   _expParticleSpawner: {fileID: 375309169}
-  _collectibleItemsSpawner: {fileID: 36651507}
+  _collectibleDropNotifier: {fileID: 1099643219}
+  _dropAnimationConfiguration: {fileID: 11400000, guid: 5cea685552b567c4195930b4b7731ec7, type: 2}
   _waveManager: {fileID: 219321890}
   _swarmNotificationPresenter: {fileID: 1592724051}
   _mainCamera: {fileID: 2001922875}
@@ -2704,6 +2655,51 @@ Transform:
   - {fileID: 1082899687}
   m_Father: {fileID: 550934127}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1099643217
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1099643218}
+  - component: {fileID: 1099643219}
+  m_Layer: 0
+  m_Name: CollectibleDropNotifier
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1099643218
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1099643217}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 517296375}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1099643219
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1099643217}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb6cb299b440b924fa8eddfa4a158e54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Enemies.CollectibleDropNotifier
+  _collectibleItemsParent: {fileID: 39965858}
 --- !u!1 &1169998849
 GameObject:
   m_ObjectHideFlags: 0
@@ -3814,6 +3810,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3003418373549267882, guid: d3c6bd5de9177cf4cb84cb9e60b2980f, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 14.41748
+      objectReference: {fileID: 0}
     - target: {fileID: 7839210754839533185, guid: d3c6bd5de9177cf4cb84cb9e60b2980f, type: 3}
       propertyPath: m_Name
       value: TimerPresenter
@@ -3917,6 +3917,10 @@ PrefabInstance:
     - target: {fileID: 150665922906993180, guid: 5c67f5545d1be2c44be7c43396b8b0b7, type: 3}
       propertyPath: m_Name
       value: PlayerLevelPresenter
+      objectReference: {fileID: 0}
+    - target: {fileID: 4563887016860118640, guid: 5c67f5545d1be2c44be7c43396b8b0b7, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -31.077637
       objectReference: {fileID: 0}
     - target: {fileID: 7363394262883964402, guid: 5c67f5545d1be2c44be7c43396b8b0b7, type: 3}
       propertyPath: m_AnchorMax.x

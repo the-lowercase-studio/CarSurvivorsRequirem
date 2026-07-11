@@ -1,11 +1,11 @@
-﻿using Assets.Scripts.Audio;
+using Assets.Scripts.Audio;
 using Assets.Scripts.Common.EventArgs;
 using Assets.Scripts.LevelSystem;
 using Assets.Scripts.Player;
 using Assets.Scripts.Skills;
 using Assets.Scripts.Skills.ObjectsImpactingSkills.Crate;
 using Assets.Scripts.Skills.UpgradeFlow;
-using Assets.Scripts.Spawners.GridSpace;
+using Assets.Scripts.Enemies;
 using Assets.Scripts.UI.Level;
 using Reflex.Attributes;
 using System.Collections.Generic;
@@ -20,7 +20,7 @@ namespace Assets.Scripts.UI.Skills
     {
         [Inject] private readonly IPlayerManager _playerManager;
         [Inject] private readonly IPlayerLevelPresenter _playerLevelPresenter;
-        [Inject] private readonly IOnRandomGridPosSpawner<CollectibleItemsSpawner> _collectibleItemsSpawner;
+        [Inject] private readonly ICollectibleDropNotifier _collectibleDropNotifier;
         [Inject] private readonly ISkillUpgradeFlow _skillUpgradeFlow;
         [Inject] private readonly ISkillsVisualPresenter _skillsVisualPresenter;
 
@@ -54,7 +54,7 @@ namespace Assets.Scripts.UI.Skills
 
         private void Start()
         {
-            _collectibleItemsSpawner.OnSpawnedEntityReleased += HandleCrateRewardRequest;
+            _collectibleDropNotifier.OnSkillUpgradeCollectibleCollected += HandleCrateRewardRequest;
             _playerLevelPresenter.OnExpSliderVisualEndValueReached += HandleLevelRewardRequest;
         }
 
@@ -79,7 +79,7 @@ namespace Assets.Scripts.UI.Skills
 
         private void OnDestroy()
         {
-            _collectibleItemsSpawner.OnSpawnedEntityReleased -= HandleCrateRewardRequest;
+            _collectibleDropNotifier.OnSkillUpgradeCollectibleCollected -= HandleCrateRewardRequest;
             _playerLevelPresenter.OnExpSliderVisualEndValueReached -= HandleLevelRewardRequest;
         }
 

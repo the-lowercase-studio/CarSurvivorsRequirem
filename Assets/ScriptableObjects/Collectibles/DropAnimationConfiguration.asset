@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 65bf8f67b2a44884a89f6bedcf925835, type: 3}
+  m_Name: DropAnimationConfiguration
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Enemies.DropAnimationConfiguration
+  _scatterRadius: 2
+  _scaleDuration: 0.6
+  _scatterDuration: 0.8
+  _minJumpPower: 1
+  _maxJumpPower: 1.22
+  _minDurationMultiplier: 1.2
+  _maxDurationMultiplier: 1.4

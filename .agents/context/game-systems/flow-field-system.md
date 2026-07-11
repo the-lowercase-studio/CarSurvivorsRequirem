@@ -32,7 +32,7 @@ It is not responsible for:
   - Assets/Scripts/Navigation/GridSystem/Cell.cs
   - Assets/Scripts/Navigation/GridSystem/GridDirection.cs
   - Assets/Scripts/Navigation/GridSystem/WorldPosToCellConverter.cs
-  - Assets/Scripts/Enemies/EnemyMovementController.cs
+  - Assets/Scripts/Enemies/Base/EnemyMovementController.cs
   - Assets/Scripts/LevelSystem/Exp/ExpParticle.cs
   - Assets/Scripts/LayerMasks/TerrainLayers.cs
   - Assets/Scripts/LayerMasks/EntityLayers.cs
