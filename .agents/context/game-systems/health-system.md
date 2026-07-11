@@ -13,8 +13,8 @@ It does not own damage calculation, target selection, enemy/player death present
   - Assets/Scripts/HealthSystem/RegenativeHealth.cs
   - Assets/Scripts/HealthSystem/HealthBar.cs
 - Main integration points:
-  - Assets/Scripts/Enemies/Enemy.cs
-  - Assets/Scripts/Enemies/EnemyDeathHandler.cs
+  - Assets/Scripts/Enemies/Base/Enemy.cs
+  - Assets/Scripts/Enemies/Base/EnemyDeathHandler.cs
   - Assets/Scripts/Player/PlayerManager.cs
   - Assets/Scripts/Player/PlayerDamagedHandler.cs
   - Assets/Scripts/Player/PlayerDeathHandler.cs
@@ -29,6 +29,7 @@ It does not own damage calculation, target selection, enemy/player death present
   - .agents/context/ai-game-dev-best-practices.md
   - .agents/context/game-systems/enemies-system.md
   - .agents/context/game-systems/damage-numbers-system.md
+  - .agents/context/game-systems/player-system.md
 - Related agents or instructions:
   - .agents/skills/document-system/SKILL.md
   - .agents/skills/architecture-review/SKILL.md

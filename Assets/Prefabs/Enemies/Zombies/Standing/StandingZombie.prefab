@@ -17,8 +17,9 @@ GameObject:
   - component: {fileID: 2035910355702977201}
   - component: {fileID: 4599289953647572422}
   - component: {fileID: 9047880918914326983}
-  - component: {fileID: 4176904749440768749}
   - component: {fileID: -4119674192528304505}
+  - component: {fileID: 229474845590807783}
+  - component: {fileID: 4176904749440768749}
   - component: {fileID: 7128695265574407790}
   m_Layer: 7
   m_Name: StandingZombie
@@ -154,6 +155,35 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _visual: {fileID: 8598757608740303722}
   _deathVfxPlayer: {fileID: 2363358761242140515}
+--- !u!114 &-4119674192528304505
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3261852426992956232}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20620ae30fdd0164c9bb5bdc717d3ada, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _injectionStrategy: 1
+--- !u!114 &229474845590807783
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3261852426992956232}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68d08101ac093504eb4dec55c6d54158, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Enemies.EnemyDropHandler
+  _dropEntries:
+  - _prefab: {fileID: 8743226647122829456, guid: 2fbb8fc2b6bce83498d7142c70a1a7f0, type: 3}
+    _dropChancePercent: 1
+    _yOffset: 0.85
 --- !u!65 &4176904749440768749
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -175,19 +205,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.27223295, y: 1.4912802, z: 0.27937302}
   m_Center: {x: -0.006499283, y: 0.75764006, z: -0.010313496}
---- !u!114 &-4119674192528304505
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3261852426992956232}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 20620ae30fdd0164c9bb5bdc717d3ada, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _injectionStrategy: 1
 --- !u!54 &7128695265574407790
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -480,54 +497,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: ZombieAudioClipPlayer
       objectReference: {fileID: 0}
-    - target: {fileID: 4701834208473332435, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
-      propertyPath: m_Layer
-      value: 15
-      objectReference: {fileID: 0}
-    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
-      propertyPath: _audioClipPlayerConfigs.Array.data[0]._name
-      value: Death
-      objectReference: {fileID: 0}
-    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
-      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.size
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
-      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.data[0]._pitch
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
-      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.data[1]._pitch
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
-      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.data[2]._pitch
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
-      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.data[0]._volume
-      value: 0.1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
-      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.data[1]._volume
-      value: 0.1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
-      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.data[2]._volume
-      value: 0.1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
-      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.data[0]._audioClip
-      value: 
-      objectReference: {fileID: 8300000, guid: 6de5df03f6d4bf5469db9c9606f60dea, type: 3}
-    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
-      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.data[1]._audioClip
-      value: 
-      objectReference: {fileID: 8300000, guid: 3db15ea06383fce4e91a0fc0f80401e3, type: 3}
-    - target: {fileID: 5484061065923271503, guid: 5d6f02311ba4de643a8c6cc708680cf3, type: 3}
-      propertyPath: _audioClipPlayerConfigs.Array.data[0]._clipVariants.Array.data[2]._audioClip
-      value: 
-      objectReference: {fileID: 8300000, guid: 4b67786007147e348a6e4bf6465ad71d, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

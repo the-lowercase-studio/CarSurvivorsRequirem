@@ -1,4 +1,4 @@
-using Assets.Scripts.Enemies;
+using Assets.Scripts.Enemies.Base;
 using Assets.Scripts.Spawners;
 using System;
 

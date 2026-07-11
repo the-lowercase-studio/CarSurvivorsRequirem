@@ -6,6 +6,8 @@ The Spawners system defines shared contracts and data used by runtime systems th
 
 It does not own the complete behavior of every spawned object. Enemy behavior, collectible rewards, damage popup presentation, exp collection, and projectile movement remain owned by their domain systems. Spawner implementations are responsible for choosing or receiving spawn positions, creating or pooling objects, tracking active spawned counts, and raising release notifications when a spawned object leaves active play.
 
+Collectible drops from enemies are triggered directly by death events via `EnemyDropHandler` and managed/pooled by `CollectibleDropNotifier`.
+
 ## Reading Map
 
 - Primary code locations:
@@ -18,7 +20,7 @@ It does not own the complete behavior of every spawned object. Enemy behavior, c
   - Assets/Scripts/Spawners/MapInteractablesSpawner.cs
 - Current concrete implementations:
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs
-  - Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/CollectibleItemsSpawner.cs
+  - Assets/Scripts/Enemies/CollectibleDropNotifier.cs (pools and spawns collectible drops)
   - Assets/Scripts/DamageNumbers/DamageNumbersSpawner.cs
   - Assets/Scripts/LevelSystem/Exp/ExpParticleSpawner.cs
   - Assets/Scripts/Skills/PlayerSkills/Minigun/MinigunTurret.cs
@@ -32,6 +34,7 @@ It does not own the complete behavior of every spawned object. Enemy behavior, c
   - .agents/context/game-systems/damage-numbers-system.md
   - .agents/context/game-systems/level-system.md
   - .agents/context/game-systems/grid-system.md
+  - .agents/context/game-systems/interactables-system.md
 - Related agents or instructions:
   - .agents/skills/document-system/SKILL.md
   - .agents/skills/di-integration/SKILL.md
@@ -64,7 +67,7 @@ It does not own the complete behavior of every spawned object. Enemy behavior, c
 
 - Critical behavior rules:
   - Keep spawner consumers on interface contracts such as `IOnRandomGridPosSpawner<EnemiesSpawner>` or `IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig>`.
-  - Register scene spawners through Reflex in the appropriate installer. Do not add singleton access or scene searches as a shortcut.
+  - Register scene spawners and drops services through Reflex in the appropriate installer. Do not add singleton access or scene searches as a shortcut.
   - Preserve `CurrentlySpawnedObjectsCount` semantics: increment only for successful active spawns and decrement exactly once for each completed release path.
   - Preserve `OnSpawnedEntityReleased` as a release signal, not as a generic spawn-completed signal.
   - Treat changes to spawn chance data and redistribution as gameplay balance changes.
@@ -73,14 +76,12 @@ It does not own the complete behavior of every spawned object. Enemy behavior, c
 - Ordering or sequencing guarantees:
   - `EnemiesSpawner.Awake` creates object pools before `Start` initializes spawn chance redistribution.
   - `WaveManager` relies on enemy spawned counts when scheduling waves.
-  - `CollectibleItemsSpawner` clears collectible cell occupancy before raising `OnSpawnedEntityReleased`.
   - `DamageNumbersSpawner` releases a popup after `DamageNumber.OnLifeEnd`.
   - `ExpParticleSpawner` queues spawn requests, then drains the queue during repeating checks.
 - Constraints contributors must preserve:
   - Preserve inspector-authored scene references, prefab references, parent transforms, spawn delays, and chance data.
   - Keep object lifecycle subscriptions paired with unsubscriptions in release paths.
   - Keep grid occupancy rules consistent with `GridSystem` when adding grid-based spawners.
-  - Do not edit scene, prefab, asset, or meta files directly unless explicitly requested.
 
 ## Extension Points
 
@@ -93,7 +94,6 @@ It does not own the complete behavior of every spawned object. Enemy behavior, c
   - Grid-space random spawners that need world/grid state should use injected `IGridManager`.
   - Pool-backed spawners should route object release through the spawned object's existing release or life-end event.
   - DI bindings must be added to `DefaultGameplaySceneInstaller` for gameplay-scene spawners or `BootLoader.InstallExtra` for cross-scene extras.
-  - New spawner interfaces should be avoided unless existing world-space, explicit-grid, or random-grid contracts cannot express the use case.
 - Testing implications:
   - Compile after C# contract or DI changes.
   - In Unity, validate the scene installer has the required serialized spawner reference.
@@ -103,34 +103,21 @@ It does not own the complete behavior of every spawned object. Enemy behavior, c
 ## Integration Notes
 
 - Upstream dependencies:
-  - `IGridManager` supplies grid data for enemy and collectible placement.
+  - `IGridManager` supplies grid data for placement.
   - Unity serialized fields supply prefabs, parent transforms, timing, pool size, visual thresholds, and spawn chance configuration.
-  - Unity `ObjectPool<T>` is used by enemies, damage numbers, exp particles, and minigun projectiles.
+  - Unity `ObjectPool<T>` is used by enemies, damage numbers, exp particles, minigun projectiles, and collectible drops.
 - Downstream consumers:
   - `WaveManager` drives enemy waves through `IOnRandomGridPosSpawner<EnemiesSpawner>`.
-  - `SkillUpgradePresenter` listens to collectible release through `IOnRandomGridPosSpawner<CollectibleItemsSpawner>` and delegates reward selection to `ISkillUpgradeFlow`.
+  - `SkillUpgradePresenter` listens to collectible drops through `ICollectibleDropNotifier` and delegates reward selection to `ISkillUpgradeFlow`.
   - `Enemy` spawns damage numbers through `IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig>`.
   - `EnemyDeathHandler` spawns exp particles through `IInWorldSpaceSpawner<ExpParticleSpawner, float>`.
-  - Turret/projectile skill code can use world-space spawner semantics for projectile spawning.
 - Cross-system coupling risks:
   - Wave pacing depends on `EnemiesSpawner.CurrentlySpawnedObjectsCount`.
-  - Skill upgrade UI behavior depends on collectible release notifications.
-  - Grid occupancy bugs in collectible spawning can block future collectible placement.
-  - Moving damage number bindings out of `BootLoader` can break both enemy injection and settings integration.
-  - Changing generic interface signatures affects every DI binding and consumer.
+  - Skill upgrade UI behavior depends on drop collection notifications.
 
 ## Known Risks and Open Questions
 
 - Known limitations:
   - `IInGridSpaceSpawner<TSelf, TSpecificConfig>` currently appears to be a contract with no runtime implementation in Assets/Scripts.
   - `SpawnChanceInfo` uses misspelled field/method names such as `TresholdToStartAddingSpawnChanceToOtherInfos` and `HasReachedTresholdToStartAddingSpawnChanceToOtherInfos`; renaming affects serialized data and call sites.
-  - Some concrete spawner docs record implementation-specific edge cases, including collectible count behavior for prefabs without `ICollectible`, exp divider behavior, and enemy spawn chance redistribution assumptions.
   - `MinigunTurret` implements `IInWorldSpaceSpawner<MinigunTurret, ProjectileSpawnConfig>` but is not registered as a scene-level DI spawner in the inspected installers.
-- Open design questions:
-  - Should the generic spawner contracts remain self-typed per concrete spawner, or should future shared systems use capability-specific non-self generic interfaces?
-  - Should spawn chance state be copied at runtime so inspector-authored values remain unchanged during play sessions?
-  - Should currently instantiated collectible spawns move to pooling if spawn frequency or collectible variety increases?
-- Suggested follow-up tasks:
-  - Add focused tests or debug validation for count/release behavior on enemy, collectible, damage number, and exp spawners.
-  - Review whether `IInGridSpaceSpawner<TSelf, TSpecificConfig>` is planned API or dead contract.
-  - Document any new spawner in the owning domain doc and link back to this shared contract document.

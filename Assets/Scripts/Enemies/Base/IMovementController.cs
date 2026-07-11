@@ -1,7 +1,7 @@
-﻿using DG.Tweening;
+using DG.Tweening;
 using UnityEngine;
 
-namespace Assets.Scripts.Enemies
+namespace Assets.Scripts.Enemies.Base
 {
     public interface IMovementController
     {

@@ -1,5 +1,5 @@
 using Assets.Scripts.Common.Types;
-using Assets.Scripts.Enemies;
+using Assets.Scripts.Enemies.Base;
 using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.Pooling;
 using Assets.Scripts.Spawners.GridSpace;

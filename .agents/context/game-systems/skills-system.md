@@ -32,7 +32,7 @@ It is not responsible for:
   - Assets/Scripts/Player/PlayerManager.cs
   - Assets/Scripts/Stats/UpgradeableStat.cs
   - Assets/Scripts/Skills/ItemsWithScriptableConfigsActivator.cs
-  - Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/CollectibleItemsSpawner.cs
+  - Assets/Scripts/Spawners/MapInteractablesSpawner.cs
   - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
 - Related docs:
   - .agents/context/game-systems/collectibles-system.md

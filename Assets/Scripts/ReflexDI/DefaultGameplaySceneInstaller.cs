@@ -2,7 +2,7 @@ using Assets.Scripts.Enemies;
 using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.LevelSystem.Exp;
 using Assets.Scripts.Player;
-using Assets.Scripts.Skills.ObjectsImpactingSkills.Crate;
+
 using Assets.Scripts.Skills.UpgradeFlow;
 using Assets.Scripts.Spawners.Enemies;
 using Assets.Scripts.Spawners.GridSpace;
@@ -28,7 +28,8 @@ namespace Assets.Scripts.ReflexDI
         [SerializeField] private EnemiesSpawner _enemiesSpawner;
         [SerializeField] private TimerPresenter _timerPresenter;
         [SerializeField] private ExpParticleSpawner _expParticleSpawner;
-        [SerializeField] private CollectibleItemsSpawner _collectibleItemsSpawner;
+        [SerializeField] private CollectibleDropNotifier _collectibleDropNotifier;
+        [SerializeField] private DropAnimationConfiguration _dropAnimationConfiguration;
         [SerializeField] private WaveManager _waveManager;
         [SerializeField] private SwarmNotificationPresenter _swarmNotificationPresenter;
         [SerializeField] private Camera _mainCamera;
@@ -60,7 +61,8 @@ namespace Assets.Scripts.ReflexDI
             builder.AddSingleton(_enemiesSpawner, typeof(IOnRandomGridPosSpawner<EnemiesSpawner>));
             builder.AddSingleton(_enemiesSpawner, typeof(ISwarmEnemySpawner));
             builder.AddSingleton(_enemiesSpawner, typeof(IEnemySpawnDifficultyController));
-            builder.AddSingleton(_collectibleItemsSpawner, typeof(IOnRandomGridPosSpawner<CollectibleItemsSpawner>));
+            builder.AddSingleton(_collectibleDropNotifier, typeof(ICollectibleDropNotifier));
+            builder.AddSingleton(_dropAnimationConfiguration);
             builder.AddSingleton(_expParticleSpawner, typeof(IInWorldSpaceSpawner<ExpParticleSpawner, float>));
 
             //Waves

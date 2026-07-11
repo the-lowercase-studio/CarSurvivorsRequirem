@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Assets.Scripts.Enemies
+namespace Assets.Scripts.Enemies.Base
 {
     [RequireComponent(typeof(Animator))]
     public class EnemyAnimator : MonoBehaviour, IAttackAnimationPlayer

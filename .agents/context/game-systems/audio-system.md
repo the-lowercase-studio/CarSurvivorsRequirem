@@ -19,8 +19,8 @@ The audio system is not responsible for gameplay decisions, UI flow, settings pe
   - Assets/Scripts/UI/Common/ButtonsAudioClipPlayer.cs
   - Assets/Scripts/Player/PlayerManager.cs
   - Assets/Scripts/Player/PlayerDamagedHandler.cs
-  - Assets/Scripts/Enemies/Enemy.cs
-  - Assets/Scripts/Enemies/EnemyDeathHandler.cs
+  - Assets/Scripts/Enemies/Base/Enemy.cs
+  - Assets/Scripts/Enemies/Base/EnemyDeathHandler.cs
   - Assets/Scripts/LevelSystem/Exp/ExpParticle.cs
   - Assets/Scripts/Skills/PlayerSkills/
 - Related docs:

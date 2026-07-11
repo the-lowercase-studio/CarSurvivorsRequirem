@@ -142,48 +142,45 @@ namespace Assets.Scripts.Enemies
 
         private void Health_OnNoHealth(object sender, EventArgs e)
         {
-            int totalDrops = 0;
+            var chosenDrops = new System.Collections.Generic.List<CollectibleDropEntry>();
             for (int i = 0; i < _dropEntries.Length; i++)
             {
                 if (UnityEngine.Random.Range(0f, 100f) <= _dropEntries[i].DropChancePercent)
                 {
-                    totalDrops++;
+                    chosenDrops.Add(_dropEntries[i]);
                 }
             }
 
+            int totalDrops = chosenDrops.Count;
             if (totalDrops == 0)
             {
                 return;
             }
 
-            int dropIndex = 0;
             Vector3 basePos = transform.position;
 
-            for (int i = 0; i < _dropEntries.Length; i++)
+            for (int i = 0; i < totalDrops; i++)
             {
-                if (UnityEngine.Random.Range(0f, 100f) <= _dropEntries[i].DropChancePercent)
-                {
-                    float angle = (dropIndex * 360f / totalDrops) + UnityEngine.Random.Range(-15f, 15f);
-                    float radian = angle * Mathf.Deg2Rad;
-                    Vector3 direction = new Vector3(Mathf.Cos(radian), 0f, Mathf.Sin(radian));
-                    Vector3 targetPos = basePos + direction * _animationConfig.ScatterRadius;
+                CollectibleDropEntry drop = chosenDrops[i];
+                float angle = (i * 360f / totalDrops) + UnityEngine.Random.Range(-15f, 15f);
+                float radian = angle * Mathf.Deg2Rad;
+                Vector3 direction = new Vector3(Mathf.Cos(radian), 0f, Mathf.Sin(radian));
+                Vector3 targetPos = basePos + direction * _animationConfig.ScatterRadius;
 
-                    // Ensure target position is on a walkable cell
-                    targetPos = GetWalkablePosition(basePos, targetPos);
+                // Ensure target position is on a walkable cell
+                targetPos = GetWalkablePosition(basePos, targetPos);
 
-                    Vector3 spawnPos = basePos + Vector3.up * _dropEntries[i].YOffset;
-                    targetPos.y = spawnPos.y;
+                Vector3 spawnPos = basePos + Vector3.up * drop.YOffset;
+                targetPos.y = spawnPos.y;
 
-                    _dropNotifier.SpawnCollectible(
-                        _dropEntries[i].Prefab, 
-                        spawnPos, 
-                        targetPos
-                    );
-
-                    dropIndex++;
-                }
+                _dropNotifier.SpawnCollectible(
+                    drop.Prefab, 
+                    spawnPos, 
+                    targetPos
+                );
             }
         }
+
 
         private Vector3 GetWalkablePosition(Vector3 startPos, Vector3 targetPos)
         {

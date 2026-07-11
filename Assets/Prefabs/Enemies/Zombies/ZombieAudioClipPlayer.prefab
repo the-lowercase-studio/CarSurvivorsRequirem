@@ -143,17 +143,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _audioClipPlayerConfigs:
-  - Name: Death
-    ClipVariants:
-    - AudioClip: {fileID: 8300000, guid: 6de5df03f6d4bf5469db9c9606f60dea, type: 3}
-      Volume: 0.1
-      Pitch: 1
-      Loop: 0
-    - AudioClip: {fileID: 8300000, guid: 3db15ea06383fce4e91a0fc0f80401e3, type: 3}
-      Volume: 0.1
-      Pitch: 1
-      Loop: 0
-    - AudioClip: {fileID: 8300000, guid: 4b67786007147e348a6e4bf6465ad71d, type: 3}
-      Volume: 0.1
-      Pitch: 1
-      Loop: 0
+  - _name: Death
+    _clipVariants:
+    - _audioClip: {fileID: 8300000, guid: 6de5df03f6d4bf5469db9c9606f60dea, type: 3}
+      _volume: 0.1
+      _pitch: 1
+      _loop: 0
+    - _audioClip: {fileID: 8300000, guid: 3db15ea06383fce4e91a0fc0f80401e3, type: 3}
+      _volume: 0.1
+      _pitch: 1
+      _loop: 0
+    - _audioClip: {fileID: 8300000, guid: 4b67786007147e348a6e4bf6465ad71d, type: 3}
+      _volume: 0.1
+      _pitch: 1
+      _loop: 0

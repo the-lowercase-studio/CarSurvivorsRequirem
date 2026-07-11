@@ -12,7 +12,7 @@ using Reflex.Attributes;
 using System;
 using UnityEngine;
 
-namespace Assets.Scripts.Enemies
+namespace Assets.Scripts.Enemies.Base
 {
     public class Enemy : MonoBehaviour, IHealthy, IDamageable, IKnockable, IStunnable, IPoolable
     {

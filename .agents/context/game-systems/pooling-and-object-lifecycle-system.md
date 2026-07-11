@@ -27,9 +27,9 @@ It is not responsible for:
   - Assets/Scripts/ObjectLifecycle/Actions/INeedToCompleteBeforeDisable.cs
   - Assets/Scripts/ObjectLifecycle/Actions/IEnableDisableFunctionalityTrigger.cs
 - Current concrete users:
-  - Assets/Scripts/Enemies/Enemy.cs
+  - Assets/Scripts/Enemies/Base/Enemy.cs
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs
-  - Assets/Scripts/Enemies/EnemyDeathHandler.cs
+  - Assets/Scripts/Enemies/Base/EnemyDeathHandler.cs
   - Assets/Scripts/LevelSystem/Exp/ExpParticle.cs
   - Assets/Scripts/LevelSystem/Exp/ExpParticleSpawner.cs
   - Assets/Scripts/Projectiles/Projectile.cs
@@ -72,7 +72,7 @@ It is not responsible for:
   - `OnSpawnedEntityReleased` means an active spawned object left active play; do not use it as a spawn-created event.
   - Active object counts must increment and decrement exactly once per successful active spawn.
 - Ordering or sequencing guarantees:
-  - Enemy pool release is delayed by Assets/Scripts/Enemies/EnemyDeathHandler.cs's `OnCompleted` through Assets/Scripts/ObjectLifecycle/Actions/INeedToCompleteBeforeDisable.cs.
+  - Enemy pool release is delayed by Assets/Scripts/Enemies/Base/EnemyDeathHandler.cs's `OnCompleted` through Assets/Scripts/ObjectLifecycle/Actions/INeedToCompleteBeforeDisable.cs.
   - Projectile and exp particle release is event-driven by life/completion events.
   - Assets/Scripts/Volumes/DeathVolume.cs prioritizes full HP damage over direct pool return when an object is damageable.
 - Constraints contributors must preserve:

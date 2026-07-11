@@ -12,6 +12,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: 0.824
       objectReference: {fileID: 0}
+    - target: {fileID: 229474845590807783, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
+      propertyPath: _dropEntries.Array.data[0]._dropChancePercent
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 422639940558306586, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
       propertyPath: <MaxHealth>k__BackingField
       value: 10
@@ -42,7 +46,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3261852426992956232, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
       propertyPath: m_Name
-      value: Standing_Zombie_Level1
+      value: StandingZombieLevel1
       objectReference: {fileID: 0}
     - target: {fileID: 3688238668444586915, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
       propertyPath: m_LocalPosition.x

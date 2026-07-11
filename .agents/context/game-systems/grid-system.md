@@ -37,8 +37,8 @@ It is not responsible for:
   - Assets/Scripts/Navigation/FlowFieldSystem/FlowField.cs
   - Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldMovementController.cs
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs
-  - Assets/Scripts/Enemies/EnemiesOutsidePlayerChunkTeleporter.cs
-  - Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/CollectibleItemsSpawner.cs
+  - Assets/Scripts/Enemies/Base/EnemiesOutsidePlayerChunkTeleporter.cs
+  - Assets/Scripts/Enemies/EnemyDropHandler.cs
   - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
   - Assets/Scripts/Editor/GUI/GridManagerEditor.cs
 - Related docs:
@@ -124,7 +124,7 @@ Downstream consumers:
 - `FlowFieldMovementController` reads `IGridManager.WorldGrid` and moves along the current cell's `BestDirection`.
 - `EnemiesSpawner` gets hidden walkable cells from `IGridManager.GridPlayerChunk`.
 - `EnemiesOutsidePlayerChunkTeleporter` uses `GridPlayerChunk` bounds and hidden walkable cells to recycle enemies back into the active area.
-- `CollectibleItemsSpawner` finds unoccupied walkable cells in `IGridManager.WorldGrid` and clears occupancy on collection.
+- `EnemyDropHandler` finds walkable cells in `IGridManager.WorldGrid` for collectible drop placement.
 - `GridManagerEditor` exposes grouped inspector controls for world grid, player chunk, and debug settings.
 
 Cross-system coupling risks:
