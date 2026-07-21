@@ -10,14 +10,17 @@ namespace Assets.Scripts.Enemies.Base
     public class EnemyMovementController : MonoBehaviour, IMovementController
     {
         private const float GROUND_CHECK_DISTANCE = 0.4f;
-        private Vector3 _groundCheckOffset = new(0, 0.1f, 0);
-
         private const float MOVING_TO_POSITION_ACCURACY = 0.02f;
+        private const float OBSTACLE_CHECK_RADIUS = 0.4f;
+        private const float OBSTACLE_SAFETY_BUFFER = 0.1f;
+
+        private readonly Vector3 _groundCheckOffset = new(0, 0.1f, 0);
+        private readonly Vector3 _obstacleCheckOffset = new(0, 0.5f, 0);
 
         private Enemy _enemy;
+        private IFlowFieldMovementController _flowFieldMovementController;
 
         private float _verticalPosOffset;
-
         private bool _isStunnable = false;
 
         private bool _isMovingToPositionUnrelatedToGrid;
@@ -28,8 +31,6 @@ namespace Assets.Scripts.Enemies.Base
 
         private float _movementDelayAfterAttack = 0.2f;
         private float _currentMovementDelayAfterAttack;
-
-        private IFlowFieldMovementController _flowFieldMovementController;
 
         private void Awake()
         {
@@ -83,10 +84,28 @@ namespace Assets.Scripts.Enemies.Base
                 _movementUnrelatedToSpeedTween.Kill();
             }
 
+            Vector3 startPos = transform.position;
+            Vector3 direction = pos - startPos;
+            float distance = direction.magnitude;
+            float adjustedTime = time;
+
+            if (distance > 0.001f)
+            {
+                direction.Normalize();
+                Vector3 origin = startPos + _obstacleCheckOffset;
+
+                if (Physics.SphereCast(origin, OBSTACLE_CHECK_RADIUS, direction, out RaycastHit hitInfo, distance, TerrainLayers.Impassable))
+                {
+                    float safeDistance = Mathf.Max(0f, hitInfo.distance - OBSTACLE_SAFETY_BUFFER);
+                    adjustedTime = time * (safeDistance / distance);
+                    pos = startPos + (direction * safeDistance);
+                }
+            }
+
             _isMovingToPositionUnrelatedToGrid = true;
 
             return _movementUnrelatedToSpeedTween = transform
-                .DOMove(pos, time)
+                .DOMove(pos, adjustedTime)
                 .SetEase(Ease.OutSine)
                 .OnComplete(() =>
                 {
