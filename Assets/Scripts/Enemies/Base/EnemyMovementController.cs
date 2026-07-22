@@ -51,7 +51,24 @@ namespace Assets.Scripts.Enemies.Base
         {
             _enemy.EnemyAnimator.OnAttackAnimationEnd -= EnemyAnimator_OnAttackAnimationEnd;
 
+            if (_movementUnrelatedToSpeedTween != null)
+            {
+                _movementUnrelatedToSpeedTween.Kill();
+                _movementUnrelatedToSpeedTween = null;
+            }
+
+            _isMovingToPositionUnrelatedToGrid = false;
+
             transform.position = new Vector3(0, _verticalPosOffset, 0);
+        }
+
+        private void OnDestroy()
+        {
+            if (_movementUnrelatedToSpeedTween != null)
+            {
+                _movementUnrelatedToSpeedTween.Kill();
+                _movementUnrelatedToSpeedTween = null;
+            }
         }
 
         private void FixedUpdate()

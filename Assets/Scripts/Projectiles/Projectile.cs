@@ -52,6 +52,14 @@ namespace Assets.Scripts.Projectiles
             _startScale = transform.localScale;
         }
 
+        private Tween _shrinkTween;
+
+        private void OnDestroy()
+        {
+            _shrinkTween?.Kill();
+            _shrinkTween = null;
+        }
+
         public void OnGet()
         {
             _distanceTraveled = 0f;
@@ -61,7 +69,8 @@ namespace Assets.Scripts.Projectiles
 
         public void OnRelease()
         {
-            DOTween.Kill(transform);
+            _shrinkTween?.Kill();
+            _shrinkTween = null;
 
             _isInitialized = false;
 
@@ -140,10 +149,16 @@ namespace Assets.Scripts.Projectiles
 
         private void PlayEndLifeAnimation()
         {
-            transform.LifeEndingShrinkToZeroTween(
-                _config.DisapearingDuration,
-                () => OnLifeEnd?.Invoke(this, EventArgs.Empty)
-            );
+            _shrinkTween?.Kill();
+            _shrinkTween = transform.DOScale(Vector3.zero, _config.DisapearingDuration)
+                .SetEase(Ease.Flash)
+                .OnComplete(HandleShrinkComplete);
+        }
+
+        private void HandleShrinkComplete()
+        {
+            _shrinkTween = null;
+            OnLifeEnd?.Invoke(this, EventArgs.Empty);
         }
     }
 }

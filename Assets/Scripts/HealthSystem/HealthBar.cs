@@ -12,6 +12,7 @@ namespace Assets.Scripts.HealthSystem
         [SerializeField] private Image _fillImage;
         [SerializeField] private bool _shakeOnHealthDecrease;
         private Slider _slider;
+        private Tween _shakeTween;
 
         private void Awake()
         {
@@ -38,6 +39,15 @@ namespace Assets.Scripts.HealthSystem
             {
                 _health.OnHealthDecreased -= Health_OnHealthDecreased;
             }
+
+            _shakeTween?.Kill();
+            _shakeTween = null;
+        }
+
+        private void OnDestroy()
+        {
+            _shakeTween?.Kill();
+            _shakeTween = null;
         }
 
         private void UpdateSlider_OnHealthChange(object sender, System.EventArgs e)
@@ -55,7 +65,13 @@ namespace Assets.Scripts.HealthSystem
             const bool SNAPPING = false;
             const bool FADE_OUT = true;
 
-            transform.DOShakePosition(DURATION,
+            if (_shakeTween != null && _shakeTween.IsActive())
+            {
+                _shakeTween.Complete();
+                _shakeTween.Kill();
+            }
+
+            _shakeTween = transform.DOShakePosition(DURATION,
                                       STRENGTH,
                                       VIBRATO,
                                       RANDOMNESS,

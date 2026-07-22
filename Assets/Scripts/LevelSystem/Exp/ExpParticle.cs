@@ -6,6 +6,7 @@ using Assets.Scripts.LayerMasks;
 using Assets.Scripts.Player;
 using Assets.Scripts.Pooling;
 using Assets.Scripts.Providers;
+using DG.Tweening;
 using Reflex.Attributes;
 using System;
 using System.Collections.Generic;
@@ -85,6 +86,15 @@ namespace Assets.Scripts.LevelSystem.Exp
             _startScale = transform.localScale;
         }
 
+        private Tween _shrinkTween;
+        private Action _pendingCallback;
+
+        private void OnDestroy()
+        {
+            _shrinkTween?.Kill();
+            _shrinkTween = null;
+        }
+
         public void ReturnToPool()
         {
             OnRelease();
@@ -97,10 +107,17 @@ namespace Assets.Scripts.LevelSystem.Exp
             _expCollected = false;
 
             _expAmount = 0;
+
+            _pendingCallback = null;
         }
 
         public void OnRelease()
         {
+            _shrinkTween?.Kill();
+            _shrinkTween = null;
+
+            _pendingCallback = null;
+
             transform.localScale = _startScale;
         }
 
@@ -129,28 +146,36 @@ namespace Assets.Scripts.LevelSystem.Exp
 
         public void CollectExp(Action callback = null)
         {
-            bool audioClipPlayFinished = false;
-            _audioClipPlayer.Play("ExpCollected");
-
-            _audioClipPlayer.OnAudioClipFinished += (s, e) => audioClipPlayFinished = true;
-
-            transform.LifeEndingShrinkToZeroTween(_disapearingDuration, () =>
+            if (_expCollected)
             {
-                _playerManager.LevelController.AddExp(_expAmount);
+                return;
+            }
 
-                if (audioClipPlayFinished)
-                {
-                    callback?.Invoke();
-                }
-                else
-                {
-                    _audioClipPlayer.OnAudioClipFinished += (s, e) =>
-                    {
-                        OnCanBeReleased?.Invoke(this, EventArgs.Empty);
-                        callback?.Invoke();
-                    };
-                }
-            });
+            _expCollected = true;
+            _pendingCallback = callback;
+
+            if (_audioClipPlayer != null)
+            {
+                _audioClipPlayer.Play("ExpCollected");
+            }
+
+            _shrinkTween?.Kill();
+            _shrinkTween = transform.DOScale(Vector3.zero, _disapearingDuration)
+                .SetEase(Ease.Flash)
+                .OnComplete(HandleCollectShrinkComplete);
+        }
+
+        private void HandleCollectShrinkComplete()
+        {
+            _shrinkTween = null;
+
+            _playerManager.LevelController.AddExp(_expAmount);
+
+            Action cb = _pendingCallback;
+            _pendingCallback = null;
+
+            OnCanBeReleased?.Invoke(this, EventArgs.Empty);
+            cb?.Invoke();
         }
     }
 }

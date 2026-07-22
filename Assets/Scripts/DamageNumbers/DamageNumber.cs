@@ -1,4 +1,4 @@
-﻿using Assets.Scripts.Initializers;
+using Assets.Scripts.Initializers;
 using DG.Tweening;
 using System;
 using TMPro;
@@ -25,21 +25,37 @@ namespace Assets.Scripts.DamageNumbers
         private const float RESIZING_ANIMATION_SPEED = 0.6f;
         private DamageNumberConfig _config;
 
+        private Sequence _animationSequence;
+
         public event EventHandler OnLifeEnd;
+
+        private void OnDisable()
+        {
+            KillAnimation();
+        }
+
+        private void OnDestroy()
+        {
+            KillAnimation();
+        }
 
         public void Initialize(DamageNumberConfig config)
         {
+            KillAnimation();
+
             _config = config;
 
             SetTextApearance(config);
 
-            var (fontSize, growFontSizeAnimationScaleMultiplier, _) = _config.DamagePopupApearance;
-            AnimateFontGrowing(fontSize * growFontSizeAnimationScaleMultiplier)
-                .OnComplete(() =>
-                {
-                    AnimateFontDisapearing()
-                        .OnComplete(() => OnLifeEnd?.Invoke(this, EventArgs.Empty));
-                });
+            var (_, growScaleMultiplier, _) = _config.DamagePopupApearance;
+            Vector3 targetScale = Vector3.one * growScaleMultiplier;
+
+            transform.localScale = Vector3.zero;
+
+            _animationSequence = DOTween.Sequence()
+                .Append(transform.DOScale(targetScale, RESIZING_ANIMATION_SPEED).SetEase(Ease.InOutSine))
+                .Append(transform.DOScale(Vector3.zero, RESIZING_ANIMATION_SPEED).SetEase(Ease.InOutSine))
+                .OnComplete(HandleAnimationComplete);
 
             _isInitialized = true;
         }
@@ -51,32 +67,24 @@ namespace Assets.Scripts.DamageNumbers
 
         private void SetTextApearance(DamageNumberConfig config)
         {
-            var (fontSize, growFontSizeAnimationScaleMultiplier, color) = config.DamagePopupApearance;
+            var (fontSize, _, color) = config.DamagePopupApearance;
             _textMeshPro.text = config.Damage.ToString();
             _textMeshPro.color = color;
             _textMeshPro.fontSize = fontSize;
         }
 
-        private Tween AnimateFontGrowing(float fontSizeDestination)
+        private void HandleAnimationComplete()
         {
-            return DOTween.To(
-                () => _textMeshPro.fontSize,
-                (value) => _textMeshPro.fontSize = value,
-                fontSizeDestination,
-                RESIZING_ANIMATION_SPEED
-            )
-            .SetEase(Ease.InOutSine);
+            OnLifeEnd?.Invoke(this, EventArgs.Empty);
         }
 
-        private Tween AnimateFontDisapearing()
+        private void KillAnimation()
         {
-            return DOTween.To(
-                () => _textMeshPro.fontSize,
-                (value) => _textMeshPro.fontSize = value,
-                0,
-                RESIZING_ANIMATION_SPEED
-            )
-            .SetEase(Ease.InOutSine);
+            if (_animationSequence != null && _animationSequence.IsActive())
+            {
+                _animationSequence.Kill();
+                _animationSequence = null;
+            }
         }
     }
 }

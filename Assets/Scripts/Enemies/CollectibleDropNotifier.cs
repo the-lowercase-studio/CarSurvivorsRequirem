@@ -44,6 +44,7 @@ namespace Assets.Scripts.Enemies
                         }
                     },
                     actionOnRelease: go => {
+                        go.transform.DOKill();
                         if (go.TryGetComponent<Pooling.IPoolable>(out var poolable))
                         {
                             poolable.OnRelease();

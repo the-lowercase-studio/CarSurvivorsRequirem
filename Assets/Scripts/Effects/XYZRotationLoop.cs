@@ -43,20 +43,22 @@ namespace Assets.Scripts.Effects
             }
         }
 
+        private void OnDestroy()
+        {
+            if (_rotationTween != null)
+            {
+                _rotationTween.Kill();
+                _rotationTween = null;
+            }
+        }
+
         private void SetMaxRotationTween()
         {
-            Tuple<bool, bool, bool> rotate = new Tuple<bool, bool, bool>(_rotateX, _rotateY, _rotateZ);
-
-            _maxTweenRotation = rotate switch
-            {
-                (true, false, false) => new Vector3(_maxRotationOnAxis, 0, 0),
-                (false, true, false) => new Vector3(0, _maxRotationOnAxis, 0),
-                (false, false, true) => new Vector3(0, 0, _maxRotationOnAxis),
-                (true, true, false) => new Vector3(_maxRotationOnAxis, _maxRotationOnAxis, 0),
-                (true, false, true) => new Vector3(_maxRotationOnAxis, 0, _maxRotationOnAxis),
-                (false, true, true) => new Vector3(0, _maxRotationOnAxis, _maxRotationOnAxis),
-                _ => new Vector3(_maxRotationOnAxis, _maxRotationOnAxis, _maxRotationOnAxis)
-            };
+            _maxTweenRotation = new Vector3(
+                _rotateX ? _maxRotationOnAxis : 0f,
+                _rotateY ? _maxRotationOnAxis : 0f,
+                _rotateZ ? _maxRotationOnAxis : 0f
+            );
         }
     }
 }
