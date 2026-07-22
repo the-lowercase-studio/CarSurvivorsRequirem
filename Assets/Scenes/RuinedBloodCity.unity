@@ -1563,10 +1563,15 @@ MonoBehaviour:
   _spawnParent: {fileID: 334836962}
   _spawnRules:
   - _prefab: {fileID: 407314128256930799, guid: bb7cafb4ee5680b42b042bd6dc3d9a68, type: 3}
-    _minSpawnCount: 4
-    _maxSpawnCount: 6
+    _minSpawnCount: 3
+    _maxSpawnCount: 4
     _minDistanceToImpassable: 2
-    _minDistanceToSameType: 6
+    _minDistanceToSameType: 20
+  - _prefab: {fileID: 3376091683469544734, guid: 3f6853f9f7ce6d24e97b5e09dfa1f945, type: 3}
+    _minSpawnCount: 5
+    _maxSpawnCount: 7
+    _minDistanceToImpassable: 3
+    _minDistanceToSameType: 8
 --- !u!1 &825131015
 GameObject:
   m_ObjectHideFlags: 0
