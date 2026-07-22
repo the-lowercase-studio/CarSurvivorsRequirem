@@ -39,7 +39,7 @@ It is not responsible for:
 
 - Core components:
   - MapInteractablesSpawner: A scene-bound component that reads InteractableSpawnRule configs to instantiate interactable prefabs at start. It queries the GridManager for walkable cells, shuffles them, filters candidates using spawn constraints, instantiates prefabs, and injects dependencies via Reflex.
-  - InteractableSpawnRule: A serialized class holding configuration data for a specific interactable prefab, including spawn counts (min/max), minimum distance to impassable (unwalkable) cells, and minimum distance to other spawned objects of the same type.
+  - InteractableSpawnRule: A serialized class holding configuration data for a specific interactable prefab, including spawn counts (min/max), minimum distance to impassable (unwalkable) cells, minimum distance to other interactables, and minimum distance to other spawned objects of the same type.
   - IncreaseDifficultyTotem: A concrete interactable component that manages proximity checks with the player manager, displays/hides an interaction Canvas, listens for user keyboard input, applies difficulty adjustments, triggers VFX, and disables its update loop on activation.
 - Key interfaces:
   - The system does not currently define a generic interface for interactables or their spawners. Custom interactables are implemented as separate components (e.g., IncreaseDifficultyTotem is a standalone MonoBehaviour).
@@ -47,7 +47,7 @@ It is not responsible for:
   1. On scene Start(), MapInteractablesSpawner initializes.
   2. The spawner fetches the list of walkable cells from IGridManager.WorldGrid.
   3. Walkable cells are shuffled randomly to prevent predictable patterns.
-  4. For each configured InteractableSpawnRule, the spawner attempts to place the prefab on candidates. It ensures cells are not too close to impassable/blocked cells or existing spawns of the same type (using grid-cell distance).
+  4. For each configured InteractableSpawnRule, the spawner attempts to place the prefab on candidates. It ensures cells are not too close to impassable/blocked cells, any existing interactable spawns across all rules, or existing spawns of the same type (using grid-cell distance).
   5. The spawner instantiates matching prefabs at the cell's world position.
   6. The spawner injects dependencies recursively into the spawned game object and its children using the scene's Reflex Container (Reflex.Injectors.GameObjectInjector.InjectRecursive(spawnedObject, _container)).
   7. When a player drives near IncreaseDifficultyTotem (within _interactionRadius), the totem displays _interactionCanvas.
@@ -57,7 +57,7 @@ It is not responsible for:
 
 - Critical behavior rules:
   - Spawning must only occur on walkable cells.
-  - Interactables must respect spatial constraints: minimum distance to impassable blocks and minimum spacing between identical interactable types.
+  - Interactables must respect spatial constraints: minimum distance to impassable blocks, minimum distance to any other interactable, and minimum spacing between identical interactable types.
   - Dependency injection for spawned interactables must always be done immediately after instantiation using Reflex's GameObjectInjector.InjectRecursive.
   - Interactables must check for a valid player GameObject reference (_playerManager.GameObject) before performing distance checks.
 - Constraints contributors must preserve:

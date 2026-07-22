@@ -14,12 +14,14 @@ namespace Assets.Scripts.Spawners
         [SerializeField] private int _minSpawnCount;
         [SerializeField] private int _maxSpawnCount;
         [SerializeField] private int _minDistanceToImpassable;
+        [SerializeField] private int _minDistanceToOtherInteractable = 3;
         [SerializeField] private int _minDistanceToSameType;
 
         public GameObject Prefab => _prefab;
         public int MinSpawnCount => _minSpawnCount;
         public int MaxSpawnCount => _maxSpawnCount;
         public int MinDistanceToImpassable => _minDistanceToImpassable;
+        public int MinDistanceToOtherInteractable => _minDistanceToOtherInteractable;
         public int MinDistanceToSameType => _minDistanceToSameType;
     }
 
@@ -66,6 +68,8 @@ namespace Assets.Scripts.Spawners
             // Shuffle walkable cells
             ShuffleList(walkableCells);
 
+            List<Vector2Int> allSpawnedCoordinates = new List<Vector2Int>();
+
             // Execute each rule
             foreach (InteractableSpawnRule rule in _spawnRules)
             {
@@ -111,6 +115,23 @@ namespace Assets.Scripts.Spawners
                         continue;
                     }
 
+                    // Proximity to Other Interactables Check
+                    bool isTooCloseToOtherInteractables = false;
+                    foreach (Vector2Int spawnedPos in allSpawnedCoordinates)
+                    {
+                        if (Mathf.Abs(cell.WorldGridPos.x - spawnedPos.x) <= rule.MinDistanceToOtherInteractable &&
+                            Mathf.Abs(cell.WorldGridPos.y - spawnedPos.y) <= rule.MinDistanceToOtherInteractable)
+                        {
+                            isTooCloseToOtherInteractables = true;
+                            break;
+                        }
+                    }
+
+                    if (isTooCloseToOtherInteractables)
+                    {
+                        continue;
+                    }
+
                     // Proximity to Same Type Check
                     bool isTooCloseToSameType = false;
                     foreach (Vector2Int spawnedPos in spawnedCoordinates)
@@ -133,6 +154,7 @@ namespace Assets.Scripts.Spawners
                     GameObject spawnedObject = Instantiate(rule.Prefab, cell.WorldPos, randomRotation, _spawnParent);
                     Reflex.Injectors.GameObjectInjector.InjectRecursive(spawnedObject, _container);
                     spawnedCoordinates.Add(cell.WorldGridPos);
+                    allSpawnedCoordinates.Add(cell.WorldGridPos);
                     spawnedCount++;
                 }
 

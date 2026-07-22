@@ -56,6 +56,7 @@ namespace Assets.Scripts.UI.Skills
         {
             _collectibleDropNotifier.OnSkillUpgradeCollectibleCollected += HandleCrateRewardRequest;
             _playerLevelPresenter.OnExpSliderVisualEndValueReached += HandleLevelRewardRequest;
+            _skillUpgradeFlow.OnRequestQueued += HandleRequestQueued;
         }
 
         private void Update()
@@ -81,12 +82,17 @@ namespace Assets.Scripts.UI.Skills
         {
             _collectibleDropNotifier.OnSkillUpgradeCollectibleCollected -= HandleCrateRewardRequest;
             _playerLevelPresenter.OnExpSliderVisualEndValueReached -= HandleLevelRewardRequest;
+            _skillUpgradeFlow.OnRequestQueued -= HandleRequestQueued;
+        }
+
+        private void HandleRequestQueued(object sender, System.EventArgs e)
+        {
+            TryShowQueuedRewardSection();
         }
 
         private void HandleCrateRewardRequest(object sender, System.EventArgs e)
         {
             _skillUpgradeFlow.QueueRandomSkillUpgradeRequest(_playerManager.SkillsRegistry);
-            TryShowQueuedRewardSection();
         }
 
         private void HandleLevelRewardRequest(object sender, ValueEventArgs<LevelData> e)

@@ -1,5 +1,6 @@
 using Assets.Scripts.Extensions;
 using Assets.Scripts.Stats;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,6 +8,7 @@ namespace Assets.Scripts.Skills.UpgradeFlow
 {
     public interface ISkillUpgradeFlow
     {
+        event EventHandler OnRequestQueued;
         bool QueueRandomNewSkillRequest(ISkillsRegistry skillsRegistry);
         void QueueRandomSkillUpgradeRequest(ISkillsRegistry skillsRegistry);
         bool TryGetNextRequest(ISkillsRegistry skillsRegistry, out SkillUpgradeRequest request);
@@ -15,6 +17,8 @@ namespace Assets.Scripts.Skills.UpgradeFlow
     public class SkillUpgradeFlow : ISkillUpgradeFlow
     {
         private const int MAX_SKILL_UPGRADE_OPTIONS = 3;
+
+        public event EventHandler OnRequestQueued;
 
         private readonly Queue<QueuedSkillRewardRequest> _queuedRequests = new();
         private readonly HashSet<ISkillBase> _skillsQueuedForInitialization = new();
@@ -34,6 +38,7 @@ namespace Assets.Scripts.Skills.UpgradeFlow
 
             _skillsQueuedForInitialization.Add(skill);
             _queuedRequests.Enqueue(QueuedSkillRewardRequest.ForNewSkill(skill));
+            OnRequestQueued?.Invoke(this, EventArgs.Empty);
 
             return true;
         }
@@ -44,6 +49,11 @@ namespace Assets.Scripts.Skills.UpgradeFlow
             if (upgradeableSkill is not null)
             {
                 _queuedRequests.Enqueue(QueuedSkillRewardRequest.ForUpgradeSkill(upgradeableSkill));
+                OnRequestQueued?.Invoke(this, EventArgs.Empty);
+            }
+            else
+            {
+                QueueRandomNewSkillRequest(skillsRegistry);
             }
         }
 

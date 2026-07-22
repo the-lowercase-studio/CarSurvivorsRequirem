@@ -61,7 +61,7 @@ Collectible drops from enemies are triggered directly by death events via `Enemy
   - Consumers inject the narrow generic spawner interface instead of finding scene objects directly.
   - Spawn requests create or retrieve objects, initialize object-specific state, subscribe to release/life-end events when needed, activate or instantiate the object, and increment `CurrentlySpawnedObjectsCount`.
   - Release paths undo per-object subscriptions, deactivate or stop tracking the object, raise `OnSpawnedEntityReleased`, and decrement `CurrentlySpawnedObjectsCount`.
-  - **Pre-Gameplay Spawning**: `MapInteractablesSpawner` runs in `Start()`. It checks walkable cells in `WorldGrid`, shuffles them, and places a randomized number of prefabs (within `MinSpawnCount` and `MaxSpawnCount`) while enforcing `MinDistanceToImpassable` and `MinDistanceToSameType` parameters.
+  - **Pre-Gameplay Spawning**: `MapInteractablesSpawner` runs in `Start()`. It checks walkable cells in `WorldGrid`, shuffles them, and places a randomized number of prefabs (within `MinSpawnCount` and `MaxSpawnCount`) while enforcing `MinDistanceToImpassable`, `MinDistanceToOtherInteractable`, and `MinDistanceToSameType` parameters.
 
 ## Rules and Invariants
 
@@ -72,7 +72,7 @@ Collectible drops from enemies are triggered directly by death events via `Enemy
   - Preserve `OnSpawnedEntityReleased` as a release signal, not as a generic spawn-completed signal.
   - Treat changes to spawn chance data and redistribution as gameplay balance changes.
   - `MapInteractablesSpawner` must run during `Start()` (not `OnEnable()` or `Awake()`) to guarantee `IGridManager` cost fields are fully computed and dynamically injected components can resolve their Reflex dependencies.
-  - Do not spawn map interactables on cells that are occupied, impassable, or too close to obstacles or other spawned objects of the same type.
+  - Do not spawn map interactables on cells that are occupied, impassable, or too close to obstacles, other interactables, or objects of the same type.
 - Ordering or sequencing guarantees:
   - `EnemiesSpawner.Awake` creates object pools before `Start` initializes spawn chance redistribution.
   - `WaveManager` relies on enemy spawned counts when scheduling waves.
