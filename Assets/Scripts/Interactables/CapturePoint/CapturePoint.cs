@@ -22,6 +22,13 @@ namespace Assets.Scripts.Interactables.CapturePoint
         [SerializeField] private float _maxCircleScale = 10f;
         [SerializeField] private float _shrinkDurationSeconds = 0.3f;
 
+        [Header("Radius Outline Circle Settings")]
+        [SerializeField] private Transform _outlineCirclePlane;
+        [SerializeField] private float _outlineScaleMultiplier = 1f;
+        [SerializeField] private float _outlineAnimDuration = 0.3f;
+        [SerializeField] private bool _enableOutlinePulse = true;
+        [SerializeField] private float _outlinePulseStrength = 0.05f;
+
         [Header("Captured Visuals & VFX (Optional)")]
         [SerializeField] private GameObject _deactivationVisuals;
         [SerializeField] private VFXPlayer _capturedVfxPlayer;
@@ -33,7 +40,18 @@ namespace Assets.Scripts.Interactables.CapturePoint
 
         private float _progress;
         private bool _isCaptured;
+        private bool _isPlayerInsideRadius;
         private Tween _scaleTween;
+        private Tween _outlineTween;
+        private Tween _outlinePulseTween;
+
+        private void Awake()
+        {
+            if (_outlineCirclePlane != null)
+            {
+                _outlineCirclePlane.gameObject.SetActive(false);
+            }
+        }
 
         private void Update()
         {
@@ -45,9 +63,16 @@ namespace Assets.Scripts.Interactables.CapturePoint
             Vector3 distanceVector = transform.position - _playerManager.GameObject.transform.position;
             float sqrDistance = distanceVector.sqrMagnitude;
             float sqrCaptureRadius = _captureRadius * _captureRadius;
+            bool isPlayerInRadius = sqrDistance <= sqrCaptureRadius;
 
-            if (sqrDistance <= sqrCaptureRadius)
+            if (isPlayerInRadius)
             {
+                if (!_isPlayerInsideRadius)
+                {
+                    _isPlayerInsideRadius = true;
+                    ShowOutlineCircle();
+                }
+
                 if (_captureDurationSeconds > 0f)
                 {
                     _progress += (1f / _captureDurationSeconds) * Time.deltaTime;
@@ -59,6 +84,12 @@ namespace Assets.Scripts.Interactables.CapturePoint
             }
             else
             {
+                if (_isPlayerInsideRadius)
+                {
+                    _isPlayerInsideRadius = false;
+                    HideOutlineCircle();
+                }
+
                 if (_captureDurationSeconds > 0f)
                 {
                     _progress -= ((1f / _captureDurationSeconds) * _decaySpeedMultiplier) * Time.deltaTime;
@@ -78,6 +109,7 @@ namespace Assets.Scripts.Interactables.CapturePoint
         private void OnDestroy()
         {
             _scaleTween?.Kill();
+            KillOutlineTweens();
         }
 
         private void UpdateExpandingCircleScale()
@@ -90,10 +122,78 @@ namespace Assets.Scripts.Interactables.CapturePoint
             _expandingCirclePlane.localScale = Vector3.one * (_progress * _maxCircleScale);
         }
 
+        private void ShowOutlineCircle()
+        {
+            if (_outlineCirclePlane == null)
+            {
+                return;
+            }
+
+            KillOutlineTweens();
+
+            _outlineCirclePlane.gameObject.SetActive(true);
+            _outlineCirclePlane.localScale = Vector3.zero;
+
+            Vector3 targetScale = Vector3.one * (_captureRadius * _outlineScaleMultiplier);
+
+            _outlineTween = _outlineCirclePlane
+                .DOScale(targetScale, _outlineAnimDuration)
+                .SetEase(Ease.OutBack)
+                .OnComplete(StartOutlinePulse);
+        }
+
+        private void StartOutlinePulse()
+        {
+            if (_outlineCirclePlane == null || !_enableOutlinePulse || !_isPlayerInsideRadius || _isCaptured)
+            {
+                return;
+            }
+
+            Vector3 baseScale = Vector3.one * (_captureRadius * _outlineScaleMultiplier);
+            Vector3 pulseScale = baseScale * (1f + _outlinePulseStrength);
+
+            _outlinePulseTween = _outlineCirclePlane
+                .DOScale(pulseScale, 0.6f)
+                .SetEase(Ease.InOutSine)
+                .SetLoops(-1, LoopType.Yoyo);
+        }
+
+        private void HideOutlineCircle()
+        {
+            if (_outlineCirclePlane == null)
+            {
+                return;
+            }
+
+            KillOutlineTweens();
+
+            _outlineTween = _outlineCirclePlane
+                .DOScale(Vector3.zero, _outlineAnimDuration)
+                .SetEase(Ease.InQuad)
+                .OnComplete(DisableOutlineCirclePlane);
+        }
+
+        private void DisableOutlineCirclePlane()
+        {
+            if (_outlineCirclePlane != null)
+            {
+                _outlineCirclePlane.gameObject.SetActive(false);
+            }
+        }
+
+        private void KillOutlineTweens()
+        {
+            _outlineTween?.Kill();
+            _outlineTween = null;
+            _outlinePulseTween?.Kill();
+            _outlinePulseTween = null;
+        }
+
         private void CompleteCapture()
         {
             _isCaptured = true;
             _progress = 1f;
+            _isPlayerInsideRadius = false;
 
             _scaleTween?.Kill();
             if (_expandingCirclePlane != null)
@@ -103,6 +203,8 @@ namespace Assets.Scripts.Interactables.CapturePoint
                     .SetEase(Ease.InQuad)
                     .OnComplete(DisableExpandingCirclePlane);
             }
+
+            HideOutlineCircle();
 
             SwapMaterialsOnCaptured();
 

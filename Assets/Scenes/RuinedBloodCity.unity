@@ -1566,11 +1566,13 @@ MonoBehaviour:
     _minSpawnCount: 3
     _maxSpawnCount: 4
     _minDistanceToImpassable: 2
+    _minDistanceToOtherInteractable: 3
     _minDistanceToSameType: 20
   - _prefab: {fileID: 3376091683469544734, guid: 3f6853f9f7ce6d24e97b5e09dfa1f945, type: 3}
     _minSpawnCount: 5
     _maxSpawnCount: 7
     _minDistanceToImpassable: 3
+    _minDistanceToOtherInteractable: 3
     _minDistanceToSameType: 8
 --- !u!1 &825131015
 GameObject:
@@ -3667,7 +3669,7 @@ Camera:
   m_Depth: 100
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 23551
+    m_Bits: 154623
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
