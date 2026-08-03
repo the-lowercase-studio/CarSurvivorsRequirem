@@ -165,6 +165,7 @@ namespace Assets.Scripts.DamageNumbers
             {
                 CurrentlySpawnedObjectsCount--;
                 damageNumber.OnLifeEnd -= DamageNumber_OnLifeEnd;
+                damageNumber.transform.DOKill();
                 _damageNumberPool.Release(damageNumber);
                 OnSpawnedEntityReleased?.Invoke(damageNumber, EventArgs.Empty);
             }
