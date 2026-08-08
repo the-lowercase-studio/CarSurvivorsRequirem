@@ -148,6 +148,9 @@ Then keep methods in lifecycle and behavior order that reads clearly:
 2. Keep inspector-facing names and tooltips clear when adding new designer-configurable values.
 3. Preserve existing inspector workflows and serialized data compatibility.
 4. For required `[SerializeField]` references, do not add defensive null checks in `Awake` just to throw custom errors. If a required reference is unassigned, rely on Unity's default missing-reference behavior; assigning required inspector references is user/setup responsibility.
+5. Do not use `FormerlySerializedAs` when renaming serialized fields. Before changing serialized field names:
+   - Always notify the user in advance that they will need to manually re-assign the serialized values in the Unity Editor.
+   - Exception: If the serialized change is small and straightforward to update directly in a text-formatted prefab or asset file, the agent may apply this exception to edit the prefab/asset directly, but MUST still explicitly inform the user that this action was performed.
 
 ## 6) Events and Turn-Flow Safety
 

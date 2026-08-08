@@ -77,10 +77,9 @@ Prefer these fixes when local references can be updated confidently:
 
 Be conservative with serialized fields because renames can break Unity inspector data.
 
-- If renaming an existing `[SerializeField]` field, check whether serialized assets or prefabs may depend on the old name.
-- If the rename is necessary and safe, add `UnityEngine.Serialization.FormerlySerializedAs` for the old field name.
-- If the field appears widely serialized or prefab-bound, report the issue instead of renaming unless the user approves.
-- Do not edit prefabs to repair serialization.
+- Do not use `FormerlySerializedAs` when renaming serialized fields.
+- Before changing serialized field names, notify the user first that they will need to manually re-assign the field values in the Unity Editor.
+- Exception: If the serialized change is small and straightforward to update directly in a text-formatted prefab or asset file, the agent may apply this exception to edit the prefab/asset directly, but MUST still explicitly inform the user that this action was performed.
 
 ## Behavior Guardrails
 
