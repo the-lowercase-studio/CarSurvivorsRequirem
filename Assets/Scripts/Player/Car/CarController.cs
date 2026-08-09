@@ -560,6 +560,8 @@ namespace Assets.Scripts.Player.Car
             }
             else if (wasDrifting && !_isDrifting)
             {
+                _currentDriftYawAngle = 0f;
+                _lastAppliedDriftYaw = 0f;
                 OnDriftStop?.Invoke(this, EventArgs.Empty);
             }
 
