@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8430216835907051943}
   - component: {fileID: 5739970280356037218}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: IncreaseDifficultyTotem
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -62,7 +62,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3702856054963287101}
   - component: {fileID: 1467019958321666846}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: UI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -113,7 +113,7 @@ GameObject:
   - component: {fileID: 102425132956716848}
   - component: {fileID: 2963879012849209753}
   - component: {fileID: 1779380678013792741}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: Text (TMP)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -251,7 +251,7 @@ GameObject:
   - component: {fileID: 8252028006525989579}
   - component: {fileID: 5132960868571007585}
   - component: {fileID: 4271376805825928987}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -354,7 +354,7 @@ GameObject:
   - component: {fileID: 8138151330073279919}
   - component: {fileID: 7637306815721295475}
   - component: {fileID: 6769004667715097692}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: KeyE_Image
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -441,7 +441,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4805620884656037565}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: IncreaseDifficultyPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -479,7 +479,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4173008800061696063}
   - component: {fileID: 7439116712043506652}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: Visuals
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -524,9 +524,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8430216835907051943}
     m_Modifications:
+    - target: {fileID: 1000788681327220529, guid: c8196e753063f7e4a8397390d96b5320, type: 3}
+      propertyPath: m_Layer
+      value: 17
+      objectReference: {fileID: 0}
     - target: {fileID: 2596175109509010596, guid: c8196e753063f7e4a8397390d96b5320, type: 3}
       propertyPath: m_Name
       value: Vfx_DifficultyTotemUssage
+      objectReference: {fileID: 0}
+    - target: {fileID: 2596175109509010596, guid: c8196e753063f7e4a8397390d96b5320, type: 3}
+      propertyPath: m_Layer
+      value: 17
       objectReference: {fileID: 0}
     - target: {fileID: 2786425893366874524, guid: c8196e753063f7e4a8397390d96b5320, type: 3}
       propertyPath: InitialModule.rotation3D
@@ -661,6 +669,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7181560015305814256, guid: 63f2ed1239d110f489f3d8c3f093fd1e, type: 3}
+      propertyPath: m_Layer
+      value: 17
+      objectReference: {fileID: 0}
     - target: {fileID: -5515369224744952388, guid: 63f2ed1239d110f489f3d8c3f093fd1e, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
@@ -669,15 +681,52 @@ PrefabInstance:
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -3035684181170116655, guid: 63f2ed1239d110f489f3d8c3f093fd1e, type: 3}
+      propertyPath: m_Layer
+      value: 17
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 63f2ed1239d110f489f3d8c3f093fd1e, type: 3}
       propertyPath: m_Name
       value: DifficultyTotem
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 63f2ed1239d110f489f3d8c3f093fd1e, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 63f2ed1239d110f489f3d8c3f093fd1e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4259748184111806972}
   m_SourcePrefab: {fileID: 100100000, guid: 63f2ed1239d110f489f3d8c3f093fd1e, type: 3}
+--- !u!1 &8230189218693447575 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 63f2ed1239d110f489f3d8c3f093fd1e, type: 3}
+  m_PrefabInstance: {fileID: 9148755521878475462}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &4259748184111806972
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8230189218693447575}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 0.7072257, z: 0.26324075}
+  m_Center: {x: 1.5817468e-17, y: -0.020912303, z: -0.0016084281}
 --- !u!4 &8753961736824464685 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 63f2ed1239d110f489f3d8c3f093fd1e, type: 3}
