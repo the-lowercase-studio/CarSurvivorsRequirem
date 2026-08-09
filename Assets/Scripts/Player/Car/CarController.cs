@@ -11,9 +11,23 @@ namespace Assets.Scripts.Player.Car
 
         event EventHandler OnBrakeRelease;
 
+        event EventHandler OnDriftStart;
+
+        event EventHandler OnDriftStop;
+
+        event EventHandler<int> OnDriftDirectionChanged;
+
         float GetMovementSpeed();
 
         Vector3 GetMovementVelocity();
+
+        bool IsDrifting { get; }
+
+        int DriftDirection { get; }
+
+        float DriftYawAngle { get; }
+
+        bool IsGrounded { get; }
     }
 
     [RequireComponent(typeof(Rigidbody))]
@@ -77,11 +91,24 @@ namespace Assets.Scripts.Player.Car
         [Range(0f, 1f)]
         [SerializeField] private float _driftGrip = 0.25f;
 
+        [Tooltip("Wytracanie prędkości podczas driftu w m/s² (zamiast gwałtownego zatrzymania awaryjnego), pozwalające utrzymać szybki poślizg arcade.")]
+        [SerializeField] private float _driftDeceleration = 5f;
+
         [Tooltip("Minimalna prędkość auta (m/s) wymagana do wejścia w stan driftu.")]
-        [SerializeField] private float _minSpeedToDrift = 3f;
+        [SerializeField] private float _minSpeedToDrift = 8f;
 
         [Tooltip("Mnożnik prędkości skrętu w drifcie. Pozwala na ciasne i dynamiczne nawroty przy hamulcu ręcznym.")]
         [SerializeField] private float _driftTurnMultiplier = 1.3f;
+
+        [Header("Initial D Sideways Drift")]
+        [Tooltip("Docelowy kąt obrotu karoserii w bok podczas driftu w stopniach (np. 40.0 dla wyrazistej jazdy bokiem w stylu Initial D).")]
+        [SerializeField] private float _targetDriftAngle = 40f;
+
+        [Tooltip("Szybkość zarzucania tyłu/wchodzenia karoserii w kąt poślizgu.")]
+        [SerializeField] private float _driftYawResponseSpeed = 12f;
+
+        [Tooltip("Wpływ kontry kierownicy na kąt driftu (skręcenie w stronę zakrętu pogłębia poślizg, kontra prostuje auto).")]
+        [SerializeField] private float _counterSteerImpact = 0.5f;
 
         [Header("Visual Wheels")]
         [Tooltip("Lista kół auta wraz z ich modelami 3D oraz oznaczeniem osi (Przednia/Tylna).")]
@@ -113,6 +140,9 @@ namespace Assets.Scripts.Player.Car
         private InputAction _brakeAction;
         private bool _brakeInput;
         private bool _isDrifting;
+        private int _driftDirection;
+        private float _currentDriftYawAngle;
+        private float _lastAppliedDriftYaw;
         private bool _isGrounded;
         private float _currentForwardSpeed;
         private float _smoothedSteerInput;
@@ -122,6 +152,29 @@ namespace Assets.Scripts.Player.Car
 
         public event EventHandler OnBrakePress;
         public event EventHandler OnBrakeRelease;
+        public event EventHandler OnDriftStart;
+        public event EventHandler OnDriftStop;
+        public event EventHandler<int> OnDriftDirectionChanged;
+
+        public bool IsDrifting
+        {
+            get { return _isDrifting; }
+        }
+
+        public int DriftDirection
+        {
+            get { return _driftDirection; }
+        }
+
+        public float DriftYawAngle
+        {
+            get { return _currentDriftYawAngle; }
+        }
+
+        public bool IsGrounded
+        {
+            get { return _isGrounded; }
+        }
 
         private void Awake()
         {
@@ -154,7 +207,16 @@ namespace Assets.Scripts.Player.Car
                 _brakeAction.started -= BrakeAction_Started;
                 _brakeAction.canceled -= BrakeAction_Canceled;
             }
-            _isDrifting = false;
+
+            if (_isDrifting || _driftDirection != 0 || !Mathf.Approximately(_currentDriftYawAngle, 0f))
+            {
+                _isDrifting = false;
+                _driftDirection = 0;
+                _currentDriftYawAngle = 0f;
+                _lastAppliedDriftYaw = 0f;
+                OnDriftStop?.Invoke(this, EventArgs.Empty);
+                OnDriftDirectionChanged?.Invoke(this, 0);
+            }
         }
 
         private void Update()
@@ -349,7 +411,19 @@ namespace Assets.Scripts.Player.Car
             float inputY = _moveInput.y;
             float targetForwardSpeed;
 
-            if (_brakeInput)
+            if (_isDrifting)
+            {
+                if (inputY > 0.05f)
+                {
+                    float maxTargetSpeed = _maxSpeed * inputY;
+                    targetForwardSpeed = Mathf.MoveTowards(_currentForwardSpeed, maxTargetSpeed, (_acceleration * 0.75f) * Time.fixedDeltaTime);
+                }
+                else
+                {
+                    targetForwardSpeed = Mathf.MoveTowards(_currentForwardSpeed, 0f, _driftDeceleration * Time.fixedDeltaTime);
+                }
+            }
+            else if (_brakeInput)
             {
                 targetForwardSpeed = Mathf.MoveTowards(_currentForwardSpeed, 0f, _brakeDeceleration * Time.fixedDeltaTime);
             }
@@ -386,11 +460,6 @@ namespace Assets.Scripts.Player.Car
         {
             _smoothedSteerInput = Mathf.MoveTowards(_smoothedSteerInput, _moveInput.x, _steerResponseSpeed * Time.fixedDeltaTime);
 
-            if (Mathf.Abs(_smoothedSteerInput) < 0.001f)
-            {
-                return;
-            }
-
             float forwardSpeed = Vector3.Dot(_rb.linearVelocity, transform.forward);
             float directionSign = 1f;
 
@@ -399,21 +468,105 @@ namespace Assets.Scripts.Player.Car
                 directionSign = -1f;
             }
 
-            float turnMultiplier = _isDrifting ? _driftTurnMultiplier : 1.0f;
+            float turnMultiplier = 1.0f;
+            if (_isDrifting)
+            {
+                float steerIntensity = Mathf.Abs(_smoothedSteerInput);
+                turnMultiplier = Mathf.Lerp(0.35f, _driftTurnMultiplier, steerIntensity);
+
+                bool isCounterSteering = (_driftDirection < 0 && _smoothedSteerInput > 0.05f) || (_driftDirection > 0 && _smoothedSteerInput < -0.05f);
+                if (isCounterSteering)
+                {
+                    turnMultiplier *= 0.5f;
+                }
+            }
+
             float turnAmount = _smoothedSteerInput * _turnSpeed * turnMultiplier * directionSign * Time.fixedDeltaTime;
 
-            Quaternion turnRotation = Quaternion.Euler(0f, turnAmount, 0f);
+            float yawDelta = _currentDriftYawAngle - _lastAppliedDriftYaw;
+            _lastAppliedDriftYaw = _currentDriftYawAngle;
+
+            Quaternion turnRotation = Quaternion.Euler(0f, turnAmount + yawDelta, 0f);
+
             _rb.MoveRotation(_rb.rotation * turnRotation);
         }
 
         private void UpdateDriftState()
         {
-            bool canDrift = _brakeInput
-                && GetMovementSpeed() >= _minSpeedToDrift
-                && _moveInput.y >= 0.1f
-                && Mathf.Abs(_smoothedSteerInput) >= 0.2f;
+            bool wasDrifting = _isDrifting;
+            int oldDirection = _driftDirection;
 
-            _isDrifting = canDrift;
+            float currentSpeed = GetMovementSpeed();
+            bool hasMinSpeed = currentSpeed >= _minSpeedToDrift;
+            bool isSteering = Mathf.Abs(_smoothedSteerInput) >= 0.2f;
+
+            if (_isDrifting)
+            {
+                bool speedOrMoveExit = !hasMinSpeed || _moveInput.y < 0.05f;
+                bool steerExitWithoutBrake = !_brakeInput && Mathf.Abs(_smoothedSteerInput) < 0.1f;
+                if (speedOrMoveExit || steerExitWithoutBrake)
+                {
+                    _isDrifting = false;
+                }
+            }
+            else
+            {
+                bool startCondition = _brakeInput && hasMinSpeed && _moveInput.y >= 0.1f && isSteering;
+                if (startCondition)
+                {
+                    _isDrifting = true;
+                }
+            }
+
+            if (_isDrifting)
+            {
+                if (_smoothedSteerInput < -0.05f)
+                {
+                    _driftDirection = -1;
+                }
+                else if (_smoothedSteerInput > 0.05f)
+                {
+                    _driftDirection = 1;
+                }
+            }
+            else
+            {
+                _driftDirection = 0;
+            }
+
+            float targetAngle = 0f;
+            if (_isDrifting)
+            {
+                targetAngle = _driftDirection * _targetDriftAngle;
+
+                bool isCounterSteering = (_driftDirection < 0 && _moveInput.x > 0.05f) || (_driftDirection > 0 && _moveInput.x < -0.05f);
+                if (isCounterSteering)
+                {
+                    float counterSteerFactor = Mathf.Abs(_moveInput.x);
+                    targetAngle *= (1f - counterSteerFactor * _counterSteerImpact);
+                }
+                else
+                {
+                    float steerDeepenFactor = Mathf.Abs(_moveInput.x);
+                    targetAngle *= Mathf.Lerp(0.85f, 1.15f, steerDeepenFactor);
+                }
+            }
+
+            _currentDriftYawAngle = Mathf.MoveTowards(_currentDriftYawAngle, targetAngle, _driftYawResponseSpeed * 10f * Time.deltaTime);
+
+            if (!wasDrifting && _isDrifting)
+            {
+                OnDriftStart?.Invoke(this, EventArgs.Empty);
+            }
+            else if (wasDrifting && !_isDrifting)
+            {
+                OnDriftStop?.Invoke(this, EventArgs.Empty);
+            }
+
+            if (oldDirection != _driftDirection)
+            {
+                OnDriftDirectionChanged?.Invoke(this, _driftDirection);
+            }
         }
 
         private void AnimateWheelsVisuals()

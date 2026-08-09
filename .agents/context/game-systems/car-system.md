@@ -24,15 +24,15 @@ It does not own player health, leveling, skills, spawning, camera behavior, enem
 ## Architecture and Data Flow
 
 - Core components:
-  - ICarController is colocated with CarController and exposes brake events, current movement speed, and Y-flattened movement velocity.
-  - CarController is a MonoBehaviour requiring a Rigidbody. It reads global Input System actions named Move and Brake, performs raycast grounding checks across wheel origins, applies forward acceleration/braking forces directly to Rigidbody linear velocity via ForceMode.VelocityChange, handles arcade lateral grip and drift state, rotates the vehicle via Rigidbody.MoveRotation, and animates visual wheel model transforms.
-  - CarVfxEffectsController requires CarController, reads ICarController from the same GameObject, reacts to brake events, and periodically toggles speed trails based on GetMovementSpeed().
+  - ICarController is colocated with CarController and exposes brake events, drift events (OnDriftStart, OnDriftStop, OnDriftDirectionChanged), current movement speed, Y-flattened movement velocity, IsDrifting, DriftDirection (-1 Left, 1 Right, 0 None), and DriftYawAngle.
+  - CarController is a MonoBehaviour requiring a Rigidbody. It reads global Input System actions named Move and Brake, performs raycast grounding checks across wheel origins, applies forward acceleration/braking forces directly to Rigidbody linear velocity via ForceMode.VelocityChange, handles Initial D style arcade lateral grip, momentum preservation, and decoupled sideways yaw drift angle (_targetDriftAngle, _counterSteerImpact), rotates the vehicle via Rigidbody.MoveRotation, and animates visual wheel model transforms.
+  - CarVfxEffectsController requires CarController, reads ICarController from the same GameObject, reacts to brake and drift events, controls per-side drift trails (_leftDriftTrailRenderers, _rightDriftTrailRenderers - 2 renderers per side for front and rear wheels), and periodically toggles speed trails based on GetMovementSpeed().
 - Runtime flow:
   - Awake: CarController caches the Rigidbody, resolves Move and Brake actions from InputSystem.actions, and configures ground layer mask defaults; CarVfxEffectsController caches ICarController.
-  - OnEnable/OnDisable: CarController subscribes and unsubscribes named brake action callbacks that raise OnBrakePress and OnBrakeRelease; resets drift state on disable. CarVfxEffectsController subscribes in OnEnable and unsubscribes in OnDisable to brake events.
-  - Update: CarController reads normalized movement input, brake action status, and updates drift state.
-  - FixedUpdate: CarController clears angular velocity, executes raycast grounding and Y-position snapping, calculates target linear velocity change based on acceleration/grip/drift and applies force via VelocityChange, updates Y-rotation steering via MoveRotation, and animates visual wheel models.
-  - Start in VFX: CarVfxEffectsController finds the stop-light material by name prefix, configures trail lifetime, disables trail emission, and starts repeated speed threshold checks.
+  - OnEnable/OnDisable: CarController subscribes and unsubscribes named brake action callbacks that raise OnBrakePress and OnBrakeRelease; resets drift state and drift direction on disable. CarVfxEffectsController subscribes in OnEnable and unsubscribes in OnDisable to brake, drift direction change, and drift stop events.
+  - Update: CarController reads normalized movement input, brake action status, updates drift state, calculates target drift yaw angle with counter-steer offset, and animates visual wheel models.
+  - FixedUpdate: CarController clears angular velocity, executes raycast grounding and Y-position snapping, calculates target linear velocity change based on acceleration/grip/drift and applies force via VelocityChange, updates Y-rotation steering and dynamic drift yaw offset via MoveRotation.
+  - Start in VFX: CarVfxEffectsController finds the stop-light material by name prefix, configures trail lifetime, disables trail emission for speed and drift trails, and starts repeated speed threshold checks.
 
 ## Rules and Invariants
 
@@ -40,7 +40,8 @@ It does not own player health, leveling, skills, spawning, camera behavior, enem
 - The Brake action must exist as a button action; pressing and releasing it drive deceleration, drift state eligibility, and brake VFX events.
 - CarController assumes _wheels contains valid wheel model GameObject references and Axel designations (Front/Rear).
 - Grounding uses down-facing raycasts from wheel positions with configured check distance and target Y offset, grounding the car on the highest detected terrain point.
-- Drift requires brake input, minimum movement speed (_minSpeedToDrift), forward movement input, and minimum horizontal steer input. While drifting, lateral grip drops to _driftGrip (0.25) and turn speed is scaled by _driftTurnMultiplier (1.3).
+- Drift requires brake input, minimum movement speed (_minSpeedToDrift), forward movement input, and minimum horizontal steer input. While drifting, lateral grip drops to _driftGrip (0.25), forward speed is governed by _driftDeceleration (5m/s²), turn speed is scaled by _driftTurnMultiplier (1.3), and the car body rotates into a sideways posture (_targetDriftAngle = 40°).
+- DriftDirection returns -1 for Left drift, 1 for Right drift, and 0 for None.
 - GetMovementSpeed() returns Rigidbody.linearVelocity with y forced to 0f magnitude; consumers treat it as horizontal physics movement speed.
 - GetMovementVelocity() returns Rigidbody.linearVelocity with y forced to 0f.
 - PlayerManager.CarController is the DI-facing access path for gameplay systems. DefaultGameplaySceneInstaller binds PlayerManager as IPlayerManager, not ICarController directly.
@@ -50,8 +51,8 @@ It does not own player health, leveling, skills, spawning, camera behavior, enem
 
 - Safe extension areas:
   - Add new read-only values to ICarController when another system needs car state and the value is owned by CarController.
-  - Add car-only visual reactions in CarVfxEffectsController when driven by existing car events or speed data.
-  - Tune max speed, acceleration, reverse speed, braking, turn speed, steer response speed (_steerResponseSpeed), grip values, drift thresholds, raycast origins/distances, and visual wheel radius via serialized inspector fields.
+  - Add car-only visual reactions in CarVfxEffectsController when driven by existing car events, drift direction, or speed data.
+  - Tune max speed, acceleration, reverse speed, braking, turn speed, steer response speed (_steerResponseSpeed), grip values, drift thresholds, target drift angle (_targetDriftAngle), drift yaw response speed (_driftYawResponseSpeed), counter-steer impact (_counterSteerImpact), raycast origins/distances, and visual wheel radius via serialized inspector fields.
 - Required dependencies and contracts:
   - Keep CarController on the same GameObject as a Rigidbody.
   - Keep CarVfxEffectsController on a GameObject that can resolve ICarController.

@@ -18,7 +18,14 @@ namespace Assets.Scripts.Player.Car
         [Tooltip("Efekty śladów prędkości na przód pojazdu (aktywne przy szybkiej jeździe w tył).")]
         [SerializeField] private TrailRenderer[] _frontTrailRenderers;
 
-        [Tooltip("Czas znikania śladu prędkości.")]
+        [Header("Car Drift Effect")]
+        [Tooltip("Efekty śladów/linii driftu dla lewej strony (aktywne przy drifcie w lewo, np. 2 TrailRenderery na przednie i tylne koło).")]
+        [SerializeField] private TrailRenderer[] _leftDriftTrailRenderers;
+
+        [Tooltip("Efekty śladów/linii driftu dla prawej strony (aktywne przy drifcie w prawo, np. 2 TrailRenderery na przednie i tylne koło).")]
+        [SerializeField] private TrailRenderer[] _rightDriftTrailRenderers;
+
+        [Tooltip("Czas znikania śladu prędkości oraz śladów driftu.")]
         [SerializeField] private float _trailDisappearingSpeed = 0.3f;
 
         [Tooltip("Próg prędkości, po przekroczeniu którego włączają się ślady prędkości.")]
@@ -39,6 +46,8 @@ namespace Assets.Scripts.Player.Car
         {
             _carController.OnBrakePress += CarController_OnBrakePress;
             _carController.OnBrakeRelease += CarController_OnBrakeRelease;
+            _carController.OnDriftDirectionChanged += CarController_OnDriftDirectionChanged;
+            _carController.OnDriftStop += CarController_OnDriftStop;
         }
 
         private void Start()
@@ -65,12 +74,16 @@ namespace Assets.Scripts.Player.Car
 
             SetTrailEmitting(_rearTrailRenderers, false);
             SetTrailEmitting(_frontTrailRenderers, false);
+            SetTrailEmitting(_leftDriftTrailRenderers, false);
+            SetTrailEmitting(_rightDriftTrailRenderers, false);
         }
 
         private void OnDisable()
         {
             _carController.OnBrakePress -= CarController_OnBrakePress;
             _carController.OnBrakeRelease -= CarController_OnBrakeRelease;
+            _carController.OnDriftDirectionChanged -= CarController_OnDriftDirectionChanged;
+            _carController.OnDriftStop -= CarController_OnDriftStop;
         }
 
         private void CarController_OnBrakePress(object sender, EventArgs e)
@@ -85,8 +98,61 @@ namespace Assets.Scripts.Player.Car
             _carBackLightsHolder.SetActive(false);
         }
 
+        private void CarController_OnDriftDirectionChanged(object sender, int driftDirection)
+        {
+            UpdateDriftTrails(driftDirection);
+        }
+
+        private void CarController_OnDriftStop(object sender, EventArgs e)
+        {
+            UpdateDriftTrails(0);
+        }
+
+        private void UpdateDriftTrails(int driftDirection)
+        {
+            if (!_carController.IsGrounded)
+            {
+                SetTrailEmitting(_leftDriftTrailRenderers, false);
+                SetTrailEmitting(_rightDriftTrailRenderers, false);
+                return;
+            }
+
+            if (driftDirection < 0)
+            {
+                SetTrailEmitting(_leftDriftTrailRenderers, true);
+                SetTrailEmitting(_rightDriftTrailRenderers, false);
+            }
+            else if (driftDirection > 0)
+            {
+                SetTrailEmitting(_leftDriftTrailRenderers, false);
+                SetTrailEmitting(_rightDriftTrailRenderers, true);
+            }
+            else
+            {
+                SetTrailEmitting(_leftDriftTrailRenderers, false);
+                SetTrailEmitting(_rightDriftTrailRenderers, false);
+            }
+        }
+
         private void ActivateSpeedTrailWhenSpeedExceedsThreshold()
         {
+            if (!_carController.IsGrounded)
+            {
+                SetTrailEmitting(_rearTrailRenderers, false);
+                SetTrailEmitting(_frontTrailRenderers, false);
+                SetTrailEmitting(_leftDriftTrailRenderers, false);
+                SetTrailEmitting(_rightDriftTrailRenderers, false);
+                return;
+            }
+
+            if (_carController.IsDrifting)
+            {
+                SetTrailEmitting(_rearTrailRenderers, false);
+                SetTrailEmitting(_frontTrailRenderers, false);
+                UpdateDriftTrails(_carController.DriftDirection);
+                return;
+            }
+
             Vector3 velocity = _carController.GetMovementVelocity();
             float forwardSpeed = Vector3.Dot(velocity, transform.forward);
             float activeThreshold = Mathf.Max(0.1f, _thresholdToStartSpeedTrail);
