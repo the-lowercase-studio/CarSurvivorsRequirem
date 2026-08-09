@@ -1,4 +1,5 @@
 using Assets.Scripts.Navigation.GridSystem;
+using Assets.Scripts.Player;
 using Reflex.Attributes;
 using System;
 using System.Collections.Generic;
@@ -28,6 +29,7 @@ namespace Assets.Scripts.Spawners
     public class MapInteractablesSpawner : MonoBehaviour
     {
         [Inject] private readonly IGridManager _gridManager;
+        [Inject] private readonly IPlayerManager _playerManager;
         [Inject] private readonly Reflex.Core.Container _container;
 
         [SerializeField] private Transform _spawnParent;
@@ -45,7 +47,21 @@ namespace Assets.Scripts.Spawners
             int width = worldGrid.Width;
             int height = worldGrid.Height;
 
-            // Collect all walkable cells
+            Cell playerInitialCell = null;
+            if (_playerManager != null && _playerManager.GameObject != null)
+            {
+                playerInitialCell = WorldPosToCellConverter.GetCellFromGridByWorldPos(worldGrid, _playerManager.GameObject.transform.position);
+            }
+            else if (_gridManager.GridPlayerChunk != null && _gridManager.GridPlayerChunk.Cells != null)
+            {
+                NavigationGrid playerChunk = _gridManager.GridPlayerChunk;
+                playerInitialCell = playerChunk.Cells[playerChunk.Width / 2, playerChunk.Height / 2];
+            }
+
+            int playerChunkHalfWidth = _gridManager.GridPlayerChunk != null ? _gridManager.GridPlayerChunk.Width / 2 : 0;
+            int playerChunkHalfHeight = _gridManager.GridPlayerChunk != null ? _gridManager.GridPlayerChunk.Height / 2 : 0;
+
+            // Collect all walkable cells outside the player's initial chunk
             List<Cell> walkableCells = new List<Cell>();
             for (int x = 0; x < width; x++)
             {
@@ -54,6 +70,15 @@ namespace Assets.Scripts.Spawners
                     Cell cell = worldGrid.Cells[x, y];
                     if (cell != null && CellStatusDescriber.IsWalkable(cell))
                     {
+                        if (playerInitialCell != null && playerChunkHalfWidth > 0 && playerChunkHalfHeight > 0)
+                        {
+                            if (Mathf.Abs(cell.WorldGridPos.x - playerInitialCell.WorldGridPos.x) <= playerChunkHalfWidth &&
+                                Mathf.Abs(cell.WorldGridPos.y - playerInitialCell.WorldGridPos.y) <= playerChunkHalfHeight)
+                            {
+                                continue;
+                            }
+                        }
+
                         walkableCells.Add(cell);
                     }
                 }
@@ -61,7 +86,7 @@ namespace Assets.Scripts.Spawners
 
             if (walkableCells.Count == 0)
             {
-                Debug.LogWarning("No walkable cells found on grid. Spawning aborted.");
+                Debug.LogWarning("No walkable cells found on grid outside initial player chunk. Spawning aborted.");
                 return;
             }
 
