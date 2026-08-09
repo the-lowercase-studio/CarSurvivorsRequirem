@@ -28,17 +28,17 @@ Upgraded the Car system (`CarController` and `CarVfxEffectsController`) from bas
 ## Key Changes
 
 - Assets/Scripts/Player/Car/CarController.cs
-  - Updated `ICarController` interface to expose `IsDrifting`, `DriftDirection`, `DriftYawAngle`, `OnDriftStart`, `OnDriftStop`, and `OnDriftDirectionChanged`.
-  - Added inspector fields under Arcade Grip & Drift and Initial D Sideways Drift (`_driftDeceleration`, `_targetDriftAngle`, `_driftYawResponseSpeed`, `_counterSteerImpact`).
-  - Updated `UpdateDriftState()` for drift entry, latched drift state, direction calculation (-1 Left, 1 Right, 0 None), counter-steer adjustment, and event dispatch.
+  - Updated `ICarController` interface to expose `IsDrifting`, `DriftDirection`, `DriftYawAngle`, `IsGrounded`, `OnDriftStart`, `OnDriftStop`, and `OnDriftDirectionChanged`.
+  - Added inspector fields under Arcade Grip & Drift and Initial D Sideways Drift (`_driftDeceleration`, `_targetDriftAngle`, `_driftYawResponseSpeed`, `_counterSteerImpact`, `_minSpeedToDrift = 8f`).
+  - Updated `UpdateDriftState()` for drift entry threshold, brake-held drift duration, direction calculation (-1 Left, 1 Right, 0 None), counter-steer adjustment, event dispatch, and drift exit delta reset.
   - Updated `HandleArcadeMovement()` to apply `_driftDeceleration` instead of emergency brake when drifting.
-  - Updated `HandleArcadeSteering()` to combine base path turning with the dynamic `_currentDriftYawAngle` sideways rotation.
+  - Updated `HandleArcadeSteering()` to combine base path turning, steer intensity dynamic arc scaling (`Mathf.Lerp(0.35f, _driftTurnMultiplier, steerIntensity)`), and differential slip angle delta tracking (`_lastAppliedDriftYaw`) to prevent snap-back rotation on drift exit.
 
 - Assets/Scripts/Player/Car/CarVfxEffectsController.cs
-  - Added `_leftDriftTrailRenderers` and `_rightDriftTrailRenderers` array inspector fields (2 renderers per side).
+  - Added `_leftDriftTrailRenderers` and `_rightDriftTrailRenderers` array inspector fields (2 renderers per side for ground skid marks).
   - Subscribed to `OnDriftDirectionChanged` and `OnDriftStop` in `OnEnable`/`OnDisable`.
-  - Updated `UpdateDriftTrails(int driftDirection)` to emit only the active side's trail renderers.
-  - Muted forward/reverse speed trails while `IsDrifting` is active.
+  - Updated `UpdateDriftTrails(int driftDirection)` and `ActivateSpeedTrailWhenSpeedExceedsThreshold()` to check `IsGrounded` and suppress trail emission when airborne.
+  - Preserved Inspector `Time` setting for ground skid mark disappearance duration.
 
 - .agents/context/game-systems/car-system.md
   - Documented new drift properties, events, and visual trail behavior in system docs.

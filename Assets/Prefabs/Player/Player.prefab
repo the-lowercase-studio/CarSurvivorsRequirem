@@ -1638,8 +1638,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf2be0e7c7189a74d8e17a61814e0935, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _maxSpeed: 21
+  _maxForwardSpeed: 16
+  _maxOverallSpeed: 22
   _acceleration: 10.5
+  _driftAcceleration: 16
+  _driftSpeedDecayRate: 2.4
+  _minDriftTimeToBoost: 0.1
   _reverseMaxSpeed: 16
   _reverseAcceleration: 9
   _brakeDeceleration: 28

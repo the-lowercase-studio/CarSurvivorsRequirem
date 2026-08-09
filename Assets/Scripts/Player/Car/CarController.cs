@@ -21,6 +21,10 @@ namespace Assets.Scripts.Player.Car
 
         Vector3 GetMovementVelocity();
 
+        float MaxForwardSpeed { get; }
+
+        float MaxOverallSpeed { get; }
+
         bool IsDrifting { get; }
 
         int DriftDirection { get; }
@@ -53,11 +57,23 @@ namespace Assets.Scripts.Player.Car
         }
 
         [Header("Engine & Acceleration")]
-        [Tooltip("Maksymalna prędkość liniowa jazdy do przodu w m/s (np. 16.0).")]
-        [SerializeField] private float _maxSpeed = 16f;
+        [Tooltip("Standardowa maksymalna prędkość liniowa jazdy do przodu na wprost w m/s (np. 16.0).")]
+        [SerializeField] private float _maxForwardSpeed = 16f;
 
-        [Tooltip("Szybkość przyspieszania do przodu w m/s². Niższa wartość (8-12) daje płynniejszy przyrost prędkości, wyższa (20-25) daje natychmiastowy zryw.")]
+        [Tooltip("Absolutna maksymalna prędkość ogólna osiągalna WYŁĄCZNIE podczas driftu i tuż po nim w m/s (np. 24.0).")]
+        [SerializeField] private float _maxOverallSpeed = 24f;
+
+        [Tooltip("Szybkość przyspieszania do przodu przy zwykłej jeździe na wprost w m/s². Niższa wartość (8-12) daje płynniejszy przyrost prędkości, wyższa (20-25) daje natychmiastowy zryw.")]
         [SerializeField] private float _acceleration = 25f;
+
+        [Tooltip("Szybkość przyspieszania do przodu podczas poślizgu w drifcie w stronę _maxOverallSpeed w m/s².")]
+        [SerializeField] private float _driftAcceleration = 18f;
+
+        [Tooltip("Wytracanie nadmiarowej prędkości po wyjściu z driftu na prostą (z _maxOverallSpeed z powrotem do _maxForwardSpeed) w m/s².")]
+        [SerializeField] private float _driftSpeedDecayRate = 5f;
+
+        [Tooltip("Minimalny czas trwania ciągłego poślizgu (w sekundach) wymagany do przekroczenia normalnego limitu prędkości i rozpędzania się do _maxOverallSpeed (zabezpieczenie przed snakingiem).")]
+        [SerializeField] private float _minDriftTimeToBoost = 0.25f;
 
         [Tooltip("Maksymalna prędkość cofania do tyłu w m/s (np. 8.0).")]
         [SerializeField] private float _reverseMaxSpeed = 8f;
@@ -141,11 +157,15 @@ namespace Assets.Scripts.Player.Car
         private bool _brakeInput;
         private bool _isDrifting;
         private int _driftDirection;
+        private float _currentDriftDuration;
         private float _currentDriftYawAngle;
         private float _lastAppliedDriftYaw;
         private bool _isGrounded;
         private float _currentForwardSpeed;
         private float _smoothedSteerInput;
+        private float _currentLateralGrip;
+        private float _currentTurnMultiplier = 1.0f;
+        private float _groundYVelocity;
         private float _currentVisualSteerAngle;
         private float _visualWheelSpinAngle;
         private readonly List<Vector3> _raycastOriginsCache = new List<Vector3>();
@@ -155,6 +175,16 @@ namespace Assets.Scripts.Player.Car
         public event EventHandler OnDriftStart;
         public event EventHandler OnDriftStop;
         public event EventHandler<int> OnDriftDirectionChanged;
+
+        public float MaxForwardSpeed
+        {
+            get { return _maxForwardSpeed; }
+        }
+
+        public float MaxOverallSpeed
+        {
+            get { return _maxOverallSpeed; }
+        }
 
         public bool IsDrifting
         {
@@ -184,6 +214,7 @@ namespace Assets.Scripts.Player.Car
             _brakeAction = InputSystem.actions.FindAction("Brake");
 
             _rb.centerOfMass = _centerOfMass;
+            _currentLateralGrip = _normalGrip;
 
             if (_groundLayerMask.value == 0)
             {
@@ -231,7 +262,6 @@ namespace Assets.Scripts.Player.Car
                 _brakeInput = _brakeAction.IsPressed();
             }
 
-            UpdateDriftState();
             AnimateWheelsVisuals();
         }
 
@@ -240,6 +270,7 @@ namespace Assets.Scripts.Player.Car
             _rb.angularVelocity = Vector3.zero;
 
             HandleRaycastGrounding();
+            UpdateDriftState();
             HandleArcadeMovement();
             HandleArcadeSteering();
         }
@@ -363,12 +394,16 @@ namespace Assets.Scripts.Player.Car
                 Vector3 currentPosition = _rb.position;
                 float targetY = highestGroundY + pivotHeight + GetEffectiveGroundTargetYOffset();
 
-                currentPosition.y = Mathf.MoveTowards(currentPosition.y, targetY, 25f * Time.fixedDeltaTime);
+                currentPosition.y = Mathf.SmoothDamp(currentPosition.y, targetY, ref _groundYVelocity, 0.05f, 25f, Time.fixedDeltaTime);
                 _rb.position = currentPosition;
 
                 Vector3 currentVelocity = _rb.linearVelocity;
                 currentVelocity.y = 0f;
                 _rb.linearVelocity = currentVelocity;
+            }
+            else
+            {
+                _groundYVelocity = 0f;
             }
         }
 
@@ -415,8 +450,9 @@ namespace Assets.Scripts.Player.Car
             {
                 if (inputY > 0.05f)
                 {
-                    float maxTargetSpeed = _maxSpeed * inputY;
-                    targetForwardSpeed = Mathf.MoveTowards(_currentForwardSpeed, maxTargetSpeed, (_acceleration * 0.75f) * Time.fixedDeltaTime);
+                    float effectiveMaxSpeed = (_currentDriftDuration >= _minDriftTimeToBoost) ? _maxOverallSpeed : _maxForwardSpeed;
+                    float maxTargetSpeed = effectiveMaxSpeed * inputY;
+                    targetForwardSpeed = Mathf.MoveTowards(_currentForwardSpeed, maxTargetSpeed, _driftAcceleration * Time.fixedDeltaTime);
                 }
                 else
                 {
@@ -429,8 +465,15 @@ namespace Assets.Scripts.Player.Car
             }
             else if (inputY > 0.05f)
             {
-                float maxTargetSpeed = _maxSpeed * inputY;
-                targetForwardSpeed = Mathf.MoveTowards(_currentForwardSpeed, maxTargetSpeed, _acceleration * Time.fixedDeltaTime);
+                if (_currentForwardSpeed > _maxForwardSpeed)
+                {
+                    targetForwardSpeed = Mathf.MoveTowards(_currentForwardSpeed, _maxForwardSpeed, _driftSpeedDecayRate * Time.fixedDeltaTime);
+                }
+                else
+                {
+                    float maxTargetSpeed = _maxForwardSpeed * inputY;
+                    targetForwardSpeed = Mathf.MoveTowards(_currentForwardSpeed, maxTargetSpeed, _acceleration * Time.fixedDeltaTime);
+                }
             }
             else if (inputY < -0.05f)
             {
@@ -439,13 +482,15 @@ namespace Assets.Scripts.Player.Car
             }
             else
             {
-                targetForwardSpeed = Mathf.MoveTowards(_currentForwardSpeed, 0f, _naturalDeceleration * Time.fixedDeltaTime);
+                float decayRate = (_currentForwardSpeed > _maxForwardSpeed) ? (_naturalDeceleration + _driftSpeedDecayRate) : _naturalDeceleration;
+                targetForwardSpeed = Mathf.MoveTowards(_currentForwardSpeed, 0f, decayRate * Time.fixedDeltaTime);
             }
 
             _currentForwardSpeed = targetForwardSpeed;
 
-            float currentGrip = _isDrifting ? _driftGrip : _normalGrip;
-            float targetLateralSpeed = localVelocity.x * (1f - currentGrip);
+            float targetGrip = _isDrifting ? _driftGrip : _normalGrip;
+            _currentLateralGrip = Mathf.MoveTowards(_currentLateralGrip, targetGrip, 4.0f * Time.fixedDeltaTime);
+            float targetLateralSpeed = localVelocity.x * (1f - _currentLateralGrip);
 
             Vector3 targetLocalVelocity = new Vector3(targetLateralSpeed, 0f, _currentForwardSpeed);
             Vector3 targetWorldHorizontalVelocity = transform.TransformDirection(targetLocalVelocity);
@@ -468,20 +513,21 @@ namespace Assets.Scripts.Player.Car
                 directionSign = -1f;
             }
 
-            float turnMultiplier = 1.0f;
+            float targetTurnMultiplier = 1.0f;
             if (_isDrifting)
             {
                 float steerIntensity = Mathf.Abs(_smoothedSteerInput);
-                turnMultiplier = Mathf.Lerp(0.35f, _driftTurnMultiplier, steerIntensity);
+                targetTurnMultiplier = Mathf.Lerp(0.35f, _driftTurnMultiplier, steerIntensity);
 
                 bool isCounterSteering = (_driftDirection < 0 && _smoothedSteerInput > 0.05f) || (_driftDirection > 0 && _smoothedSteerInput < -0.05f);
                 if (isCounterSteering)
                 {
-                    turnMultiplier *= 0.5f;
+                    targetTurnMultiplier *= 0.5f;
                 }
             }
 
-            float turnAmount = _smoothedSteerInput * _turnSpeed * turnMultiplier * directionSign * Time.fixedDeltaTime;
+            _currentTurnMultiplier = Mathf.MoveTowards(_currentTurnMultiplier, targetTurnMultiplier, 6.0f * Time.fixedDeltaTime);
+            float turnAmount = _smoothedSteerInput * _turnSpeed * _currentTurnMultiplier * directionSign * Time.fixedDeltaTime;
 
             float yawDelta = _currentDriftYawAngle - _lastAppliedDriftYaw;
             _lastAppliedDriftYaw = _currentDriftYawAngle;
@@ -502,19 +548,23 @@ namespace Assets.Scripts.Player.Car
 
             if (_isDrifting)
             {
+                _currentDriftDuration += Time.fixedDeltaTime;
                 bool speedOrMoveExit = !hasMinSpeed || _moveInput.y < 0.05f;
                 bool steerExitWithoutBrake = !_brakeInput && Mathf.Abs(_smoothedSteerInput) < 0.1f;
                 if (speedOrMoveExit || steerExitWithoutBrake)
                 {
                     _isDrifting = false;
+                    _currentDriftDuration = 0f;
                 }
             }
             else
             {
+                _currentDriftDuration = 0f;
                 bool startCondition = _brakeInput && hasMinSpeed && _moveInput.y >= 0.1f && isSteering;
                 if (startCondition)
                 {
                     _isDrifting = true;
+                    _currentDriftDuration = 0f;
                 }
             }
 
@@ -552,7 +602,7 @@ namespace Assets.Scripts.Player.Car
                 }
             }
 
-            _currentDriftYawAngle = Mathf.MoveTowards(_currentDriftYawAngle, targetAngle, _driftYawResponseSpeed * 10f * Time.deltaTime);
+            _currentDriftYawAngle = Mathf.MoveTowards(_currentDriftYawAngle, targetAngle, _driftYawResponseSpeed * 10f * Time.fixedDeltaTime);
 
             if (!wasDrifting && _isDrifting)
             {
@@ -560,6 +610,7 @@ namespace Assets.Scripts.Player.Car
             }
             else if (wasDrifting && !_isDrifting)
             {
+                _currentDriftDuration = 0f;
                 _currentDriftYawAngle = 0f;
                 _lastAppliedDriftYaw = 0f;
                 OnDriftStop?.Invoke(this, EventArgs.Empty);
