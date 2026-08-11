@@ -1,4 +1,4 @@
-﻿using Assets.Scripts.Common.Types;
+using Assets.Scripts.Common.Types;
 using Assets.Scripts.Skills;
 using Assets.Scripts.Skills.UpgradeFlow;
 using System;
@@ -26,7 +26,11 @@ namespace Assets.Scripts.Stats
 
         public SkillUpgradeRarity Rarity { get; }
 
+        public Sprite Icon { get; }
+
         public StatsUnits Unit { get; }
+
+        public void SetIcon(Sprite icon);
 
         public void Upgrade(float upgradeValue);
 
@@ -41,6 +45,7 @@ namespace Assets.Scripts.Stats
     public abstract class UpgradeableStat<T> : IUpgradeableStat, ISerializationCallbackReceiver
         where T : struct, IComparable<T>, IConvertible
     {
+        [field: SerializeField] public Sprite Icon { get; protected set; }
         [field: SerializeField] public bool IsSubstractModeOn { get; protected set; }
         [field: SerializeField] public StatsUnits Unit { get; protected set; }
         [SerializeField] protected bool _alwaysUseMinValueForUpgrade;
@@ -80,6 +85,11 @@ namespace Assets.Scripts.Stats
         {
             MinMaxRange = minMaxRange;
             _rangeOfPossibleValuesForUpgrade = rangeOfPossibleValuesForUpgrade;
+        }
+
+        public void SetIcon(Sprite icon)
+        {
+            Icon = icon;
         }
 
         public virtual void Upgrade(float upgradeValue)

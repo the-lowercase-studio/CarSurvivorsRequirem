@@ -12,6 +12,7 @@ namespace Assets.Scripts.UI.Skills
     {
         [SerializeField] private Button _button;
         [SerializeField] private TextMeshProUGUI _text;
+        [SerializeField] private Image _statIconImage;
         [SerializeField] private Image _selectKeyImage;
         [SerializeField] private SkillUpgradeKeyboardIconMapping _keyboardIconMapping;
         [SerializeField] private Image _rarityBackgroundImage;
@@ -22,7 +23,8 @@ namespace Assets.Scripts.UI.Skills
             int keyboardNumber,
             SkillUpgradeRarity rarity,
             Action onClick,
-            Action onPointerEnter = null)
+            Action onPointerEnter = null,
+            Sprite icon = null)
         {
             ResolveMissingReferences();
 
@@ -36,6 +38,7 @@ namespace Assets.Scripts.UI.Skills
 
             UpdateKeyboardIcon(keyboardNumber);
             UpdateRarityBackground(rarity);
+            UpdateStatIcon(icon);
 
             _button.onClick.AddListener(() => onClick?.Invoke());
 
@@ -62,10 +65,31 @@ namespace Assets.Scripts.UI.Skills
             _button ??= GetComponentInChildren<Button>();
             _text ??= GetComponentsInChildren<TextMeshProUGUI>()
                 .FirstOrDefault(text => text.gameObject.name != "SelectKeyText");
+            _statIconImage ??= GetComponentsInChildren<Image>(true)
+                .FirstOrDefault(image => image.gameObject.name == "StatIcon" || image.gameObject.name == "Icon");
             _selectKeyImage ??= GetComponentsInChildren<Image>(true)
                 .FirstOrDefault(image => image.gameObject.name == "SelectKey");
             _rarityBackgroundImage ??= _button.targetGraphic as Image;
             _rarityBackgroundImage ??= _button.GetComponent<Image>();
+        }
+
+        private void UpdateStatIcon(Sprite icon)
+        {
+            if (_statIconImage == null)
+            {
+                return;
+            }
+
+            if (icon != null)
+            {
+                _statIconImage.sprite = icon;
+                _statIconImage.enabled = true;
+            }
+            else
+            {
+                _statIconImage.sprite = null;
+                _statIconImage.enabled = false;
+            }
         }
 
         private void UpdateKeyboardIcon(int keyboardNumber)

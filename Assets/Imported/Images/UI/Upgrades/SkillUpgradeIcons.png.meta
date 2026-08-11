@@ -110,7 +110,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: DMG
+      name: DAMAGE
       rect:
         serializedVersion: 2
         x: 91
@@ -140,7 +140,7 @@ TextureImporter:
         width: 217
         height: 229
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -154,7 +154,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Radius
+      name: RADIUS
       rect:
         serializedVersion: 2
         x: 776
@@ -162,7 +162,7 @@ TextureImporter:
         width: 242
         height: 248
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -176,7 +176,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: PlusWeapon
+      name: PLUS_WEAPON
       rect:
         serializedVersion: 2
         x: 1141
@@ -184,7 +184,7 @@ TextureImporter:
         width: 225
         height: 180
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -198,7 +198,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Cooldown
+      name: COOLDOWN
       rect:
         serializedVersion: 2
         x: 1505
@@ -206,7 +206,7 @@ TextureImporter:
         width: 167
         height: 172
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -220,7 +220,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Range
+      name: RANGE
       rect:
         serializedVersion: 2
         x: 1845
@@ -228,7 +228,7 @@ TextureImporter:
         width: 266
         height: 184
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -242,7 +242,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Size
+      name: SIZE
       rect:
         serializedVersion: 2
         x: 2232
@@ -250,7 +250,7 @@ TextureImporter:
         width: 213
         height: 128
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -264,7 +264,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Piercing
+      name: PIERCING
       rect:
         serializedVersion: 2
         x: 75
@@ -272,7 +272,7 @@ TextureImporter:
         width: 212
         height: 221
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -286,7 +286,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Firerate
+      name: FIRERATE
       rect:
         serializedVersion: 2
         x: 408
@@ -294,7 +294,7 @@ TextureImporter:
         width: 227
         height: 161
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -323,15 +323,15 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      Cooldown: -1115999999
-      DMG: -838568848
-      Firerate: 1497706563
+      COOLDOWN: -1115999999
+      DAMAGE: -838568848
+      FIRERATE: 1497706563
       KNOCKBACK: -84506236
-      Piercing: 1540327766
-      PlusWeapon: 387773495
-      Radius: 19226323
-      Range: -1240442457
-      Size: -644498185
+      PIERCING: 1540327766
+      PLUS_WEAPON: 387773495
+      RADIUS: 19226323
+      RANGE: -1240442457
+      SIZE: -644498185
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
