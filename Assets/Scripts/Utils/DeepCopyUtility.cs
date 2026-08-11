@@ -1,6 +1,3 @@
-using Assets.Scripts.Stats;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 
 namespace Assets.Scripts.Utils
@@ -15,25 +12,12 @@ namespace Assets.Scripts.Utils
             }
 
             string json = JsonUtility.ToJson(obj);
-            if (!string.IsNullOrEmpty(json) && json != "{}")
+            if (string.IsNullOrEmpty(json) || json == "{}")
             {
-                return JsonUtility.FromJson<T>(json);
+                return default;
             }
 
-            using (var ms = new MemoryStream())
-            {
-                BinaryFormatter formatter = new BinaryFormatter();
-                formatter.Serialize(ms, obj);
-                ms.Position = 0;
-                T result = (T)formatter.Deserialize(ms);
-
-                if (obj is IUpgradeableStat sourceStat && result is IUpgradeableStat resultStat)
-                {
-                    resultStat.SetIcon(sourceStat.Icon);
-                }
-
-                return result;
-            }
+            return JsonUtility.FromJson<T>(json);
         }
     }
 }

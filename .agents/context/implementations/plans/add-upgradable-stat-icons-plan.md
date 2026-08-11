@@ -17,37 +17,36 @@ None.
 
 ### Core Stats & Serialization
 
-#### [MODIFY] [UpgradeableStat.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Stats/UpgradeableStat.cs)
+#### [MODIFY] Assets/Scripts/Stats/UpgradeableStat.cs
 - Add `Sprite Icon { get; }` and `void SetIcon(Sprite icon)` to `IUpgradeableStat`.
-- Add `[field: NonSerialized] [field: SerializeField] public Sprite Icon { get; protected set; }` to `UpgradeableStat<T>`.
+- Add `[field: SerializeField] public Sprite Icon { get; protected set; }` to `UpgradeableStat<T>`.
 - Implement `SetIcon(Sprite icon)` to allow setting/cloning the icon reference on runtime instances.
-- *Note:* `[field: NonSerialized]` ensures `BinaryFormatter` does not throw a `SerializationException` during deep-copying while Unity's serializer continues to serialize the backing field in ScriptableObjects.
 
-#### [MODIFY] [DeepCopyUtility.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Utils/DeepCopyUtility.cs)
-- Update `DeepCopy<T>(T obj)`: When copying an `IUpgradeableStat` instance, re-assign `sourceStat.Icon` onto the copied instance using `copyStat.SetIcon(sourceStat.Icon)`.
+#### [MODIFY] Assets/Scripts/Utils/DeepCopyUtility.cs
+- Update `DeepCopy<T>(T obj)` to perform a clean deep copy using `JsonUtility`.
 
 ---
 
 ### Skill Upgrade Flow Data Structures
 
-#### [MODIFY] [SkillUpgradeOption.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeOption.cs)
+#### [MODIFY] Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeOption.cs
 - Add `Sprite Icon { get; }` property to `SkillUpgradeOption`.
 - Update constructor `SkillUpgradeOption(string text, Action apply, SkillUpgradeRarity rarity, Sprite icon = null)`.
 
-#### [MODIFY] [SkillUpgradeFlow.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeFlow.cs)
+#### [MODIFY] Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeFlow.cs
 - In `CreateUpgradeOptions`, pass `upgradeableStat.Icon` into `new SkillUpgradeOption(..., rarity, icon)`.
 
 ---
 
 ### Skill Upgrade UI Presenter & Buttons
 
-#### [MODIFY] [ClickableButtonData.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/UI/Skills/ClickableButtonData.cs)
+#### [MODIFY] Assets/Scripts/UI/Skills/ClickableButtonData.cs
 - Add `public Sprite Icon { get; set; }` property to `ClickableButtonData`.
 
-#### [MODIFY] [SkillUpgradePresenter.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs)
+#### [MODIFY] Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs
 - In `ShowStatsUpgradeSection`, populate `Icon = option.Icon` when constructing `ClickableButtonData`.
 
-#### [MODIFY] [SkillUpgradeButton.cs](file:///d:/GameDev/Unity/During/CarSurvivorsRequirem/Assets/Scripts/UI/Skills/SkillUpgradeButton.cs)
+#### [MODIFY] Assets/Scripts/UI/Skills/SkillUpgradeButton.cs
 - Add `[SerializeField] private Image _statIconImage;` reference.
 - Update `Initialize` signature to accept `Sprite icon = null`.
 - Add `UpdateStatIcon(Sprite icon)` helper to set sprite and enable/disable `_statIconImage`.

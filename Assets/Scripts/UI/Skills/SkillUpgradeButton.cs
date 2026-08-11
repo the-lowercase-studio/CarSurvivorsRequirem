@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Assets.ScriptableObjects.UI;
 using Assets.Scripts.Skills.UpgradeFlow;
 using TMPro;
@@ -63,12 +62,47 @@ namespace Assets.Scripts.UI.Skills
         private void ResolveMissingReferences()
         {
             _button ??= GetComponentInChildren<Button>();
-            _text ??= GetComponentsInChildren<TextMeshProUGUI>()
-                .FirstOrDefault(text => text.gameObject.name != "SelectKeyText");
-            _statIconImage ??= GetComponentsInChildren<Image>(true)
-                .FirstOrDefault(image => image.gameObject.name == "StatIcon" || image.gameObject.name == "Icon");
-            _selectKeyImage ??= GetComponentsInChildren<Image>(true)
-                .FirstOrDefault(image => image.gameObject.name == "SelectKey");
+
+            if (_text == null)
+            {
+                TextMeshProUGUI[] texts = GetComponentsInChildren<TextMeshProUGUI>();
+                for (int i = 0; i < texts.Length; i++)
+                {
+                    if (texts[i].gameObject.name != "SelectKeyText")
+                    {
+                        _text = texts[i];
+                        break;
+                    }
+                }
+            }
+
+            if (_statIconImage == null)
+            {
+                Image[] images = GetComponentsInChildren<Image>(true);
+                for (int i = 0; i < images.Length; i++)
+                {
+                    string imageName = images[i].gameObject.name;
+                    if (imageName == "StatIcon" || imageName == "Icon")
+                    {
+                        _statIconImage = images[i];
+                        break;
+                    }
+                }
+            }
+
+            if (_selectKeyImage == null)
+            {
+                Image[] images = GetComponentsInChildren<Image>(true);
+                for (int i = 0; i < images.Length; i++)
+                {
+                    if (images[i].gameObject.name == "SelectKey")
+                    {
+                        _selectKeyImage = images[i];
+                        break;
+                    }
+                }
+            }
+
             _rarityBackgroundImage ??= _button.targetGraphic as Image;
             _rarityBackgroundImage ??= _button.GetComponent<Image>();
         }
