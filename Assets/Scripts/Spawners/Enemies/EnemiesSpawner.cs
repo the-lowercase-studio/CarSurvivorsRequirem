@@ -24,7 +24,7 @@ namespace Assets.Scripts.Spawners.Enemies
     }
 
     public class EnemiesSpawner : MonoBehaviour,
-        IOnRandomGridPosSpawner<EnemiesSpawner>, IObjectReleaseNotifier, ISwarmEnemySpawner, IEnemySpawnDifficultyController
+        IOnRandomGridPosSpawner<EnemiesSpawner>, ISwarmEnemySpawner, IEnemySpawnDifficultyController
     {
         [Inject] private readonly IGridManager _gridManager;
         [Inject] private readonly Camera _mainCamera = null;

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _turretConfig: {fileID: 11400000, guid: 9d39e915a695cd04eb9bcafa43aa53b4, type: 2}
   _delayBetweenShoots:
+    <Icon>k__BackingField: {fileID: 1497706563, guid: cee3411c082140d49bce96eb51f00885, type: 3}
     <IsSubstractModeOn>k__BackingField: 1
     <Unit>k__BackingField: 2
     _alwaysUseMinValueForUpgrade: 0
@@ -29,6 +30,7 @@ MonoBehaviour:
       <Min>k__BackingField: 0.2
       <Max>k__BackingField: 0.6
   _numberOfTurrets:
+    <Icon>k__BackingField: {fileID: 387773495, guid: cee3411c082140d49bce96eb51f00885, type: 3}
     <IsSubstractModeOn>k__BackingField: 0
     <Unit>k__BackingField: 0
     _alwaysUseMinValueForUpgrade: 1
@@ -44,6 +46,7 @@ MonoBehaviour:
       <Min>k__BackingField: 1
       <Max>k__BackingField: 1
   _numberOfTargets:
+    <Icon>k__BackingField: {fileID: 0}
     <IsSubstractModeOn>k__BackingField: 0
     <Unit>k__BackingField: 0
     _alwaysUseMinValueForUpgrade: 1
@@ -60,6 +63,7 @@ MonoBehaviour:
       <Max>k__BackingField: 1
   _projectileConfig: {fileID: 11400000, guid: 0f507d3152e570f49b1726235df06312, type: 2}
   _startRange:
+    <Icon>k__BackingField: {fileID: -1240442457, guid: cee3411c082140d49bce96eb51f00885, type: 3}
     <IsSubstractModeOn>k__BackingField: 0
     <Unit>k__BackingField: 3
     _alwaysUseMinValueForUpgrade: 0
@@ -75,6 +79,7 @@ MonoBehaviour:
       <Min>k__BackingField: 4
       <Max>k__BackingField: 7
   _startDamage:
+    <Icon>k__BackingField: {fileID: -838568848, guid: cee3411c082140d49bce96eb51f00885, type: 3}
     <IsSubstractModeOn>k__BackingField: 0
     <Unit>k__BackingField: 0
     _alwaysUseMinValueForUpgrade: 0

@@ -13,10 +13,13 @@ MonoBehaviour:
   m_Name: LandmineSkillUpgradeableConfig
   m_EditorClassIdentifier: 
   _spawnCooldown:
+    <Icon>k__BackingField: {fileID: -1115999999, guid: cee3411c082140d49bce96eb51f00885, type: 3}
     <IsSubstractModeOn>k__BackingField: 1
     <Unit>k__BackingField: 2
     _alwaysUseMinValueForUpgrade: 0
     _hasUnlimitedMaxValue: 0
+    <OverrideDefaultRarity>k__BackingField: 0
+    <Rarity>k__BackingField: 0
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 8
     _floatMinMaxRange:
@@ -26,10 +29,13 @@ MonoBehaviour:
       <Min>k__BackingField: 2
       <Max>k__BackingField: 4
   _explosionRadius:
+    <Icon>k__BackingField: {fileID: 19226323, guid: cee3411c082140d49bce96eb51f00885, type: 3}
     <IsSubstractModeOn>k__BackingField: 0
     <Unit>k__BackingField: 3
     _alwaysUseMinValueForUpgrade: 0
     _hasUnlimitedMaxValue: 1
+    <OverrideDefaultRarity>k__BackingField: 0
+    <Rarity>k__BackingField: 0
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 1
     _floatMinMaxRange:
@@ -39,10 +45,13 @@ MonoBehaviour:
       <Min>k__BackingField: 1
       <Max>k__BackingField: 1.2
   _size:
+    <Icon>k__BackingField: {fileID: -644498185, guid: cee3411c082140d49bce96eb51f00885, type: 3}
     <IsSubstractModeOn>k__BackingField: 0
     <Unit>k__BackingField: 1
     _alwaysUseMinValueForUpgrade: 0
     _hasUnlimitedMaxValue: 1
+    <OverrideDefaultRarity>k__BackingField: 0
+    <Rarity>k__BackingField: 0
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 1
     _floatMinMaxRange:
@@ -52,10 +61,13 @@ MonoBehaviour:
       <Min>k__BackingField: 0.7
       <Max>k__BackingField: 1.2
   _knockbackRange:
+    <Icon>k__BackingField: {fileID: -84506236, guid: cee3411c082140d49bce96eb51f00885, type: 3}
     <IsSubstractModeOn>k__BackingField: 0
     <Unit>k__BackingField: 3
     _alwaysUseMinValueForUpgrade: 0
     _hasUnlimitedMaxValue: 1
+    <OverrideDefaultRarity>k__BackingField: 0
+    <Rarity>k__BackingField: 0
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 1
     _floatMinMaxRange:
@@ -65,10 +77,13 @@ MonoBehaviour:
       <Min>k__BackingField: 2
       <Max>k__BackingField: 2.8
   _damage:
+    <Icon>k__BackingField: {fileID: -838568848, guid: cee3411c082140d49bce96eb51f00885, type: 3}
     <IsSubstractModeOn>k__BackingField: 0
     <Unit>k__BackingField: 0
     _alwaysUseMinValueForUpgrade: 0
     _hasUnlimitedMaxValue: 1
+    <OverrideDefaultRarity>k__BackingField: 0
+    <Rarity>k__BackingField: 0
     <CanBeUpgraded>k__BackingField: 1
     <Value>k__BackingField: 5
     _intMinMaxRange:

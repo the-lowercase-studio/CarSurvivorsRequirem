@@ -173,6 +173,7 @@ namespace Assets.Scripts.UI.Skills
                 {
                     Text = option.Text,
                     Rarity = option.Rarity,
+                    Icon = option.Icon,
                     OnClick = () => HandleSkillUpgradeOptionSelected(option)
                 });
             }
@@ -217,7 +218,8 @@ namespace Assets.Scripts.UI.Skills
                     clickableButtonData.Text,
                     buttonNumber,
                     clickableButtonData.Rarity,
-                    clickableButtonData.OnClick);
+                    clickableButtonData.OnClick,
+                    icon: clickableButtonData.Icon);
 
                 _upgradeButtons.Add(button);
 

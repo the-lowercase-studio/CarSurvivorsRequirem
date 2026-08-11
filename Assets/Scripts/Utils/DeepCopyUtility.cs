@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
+using UnityEngine;
 
 namespace Assets.Scripts.Utils
 {
@@ -7,13 +6,18 @@ namespace Assets.Scripts.Utils
     {
         public static T DeepCopy<T>(T obj)
         {
-            using (var ms = new MemoryStream())
+            if (obj == null)
             {
-                BinaryFormatter formatter = new BinaryFormatter();
-                formatter.Serialize(ms, obj);
-                ms.Position = 0;
-                return (T)formatter.Deserialize(ms);
+                return default;
             }
+
+            string json = JsonUtility.ToJson(obj);
+            if (string.IsNullOrEmpty(json) || json == "{}")
+            {
+                return default;
+            }
+
+            return JsonUtility.FromJson<T>(json);
         }
     }
 }

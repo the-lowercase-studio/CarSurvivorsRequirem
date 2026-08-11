@@ -110,7 +110,8 @@ namespace Assets.Scripts.Skills.UpgradeFlow
                 options.Add(new SkillUpgradeOption(
                     $"{changeInfo} <b>{statName}</b> by <Color=#F8D61C>{statValue}{statUnit}</Color>",
                     () => upgradeableStat.Upgrade(upgradeValue),
-                    rarity));
+                    rarity,
+                    upgradeableStat.Icon));
             }
 
             return options

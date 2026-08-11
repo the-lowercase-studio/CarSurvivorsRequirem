@@ -18,6 +18,7 @@ namespace Assets.Scripts.UI.HUD
     {
         [Inject] private readonly Volume _postProcessVolume = null;
 
+        [SerializeField] private GameObject _visual;
         [SerializeField] private TextMeshProUGUI _swarmText;
         [SerializeField] private string _incomingTemplateMessage = "Swarm Incoming in {0}s";
         [SerializeField] private string _ongoingMessage = "Swarm ongoing";
@@ -46,6 +47,13 @@ namespace Assets.Scripts.UI.HUD
         private void Awake()
         {
             _defaultScale = _swarmText.rectTransform.localScale;
+
+            GameObject visual = GetVisual();
+            if (visual != null)
+            {
+                visual.SetActive(false);
+            }
+
             _swarmText.gameObject.SetActive(false);
         }
 
@@ -82,6 +90,12 @@ namespace Assets.Scripts.UI.HUD
             string text = string.Format(_incomingTemplateMessage, secondsRemaining);
             _swarmText.text = text;
 
+            GameObject visual = GetVisual();
+            if (visual != null && !visual.activeSelf)
+            {
+                visual.SetActive(true);
+            }
+
             if (!_swarmText.gameObject.activeSelf)
             {
                 _swarmText.gameObject.SetActive(true);
@@ -112,6 +126,17 @@ namespace Assets.Scripts.UI.HUD
         {
             _swarmText.text = _ongoingMessage;
 
+            GameObject visual = GetVisual();
+            if (visual != null && !visual.activeSelf)
+            {
+                visual.SetActive(true);
+            }
+
+            if (!_swarmText.gameObject.activeSelf)
+            {
+                _swarmText.gameObject.SetActive(true);
+            }
+
             KillTextTweens();
             _swarmText.rectTransform.localScale = _defaultScale;
             PunchText();
@@ -129,7 +154,30 @@ namespace Assets.Scripts.UI.HUD
             _activeTween = _swarmText.rectTransform
                 .DOScale(Vector3.zero, _exitDuration)
                 .SetEase(Ease.InBack)
-                .OnComplete(() => _swarmText.gameObject.SetActive(false));
+                .OnComplete(() =>
+                {
+                    _swarmText.gameObject.SetActive(false);
+                    GameObject visual = GetVisual();
+                    if (visual != null)
+                    {
+                        visual.SetActive(false);
+                    }
+                });
+        }
+
+        private GameObject GetVisual()
+        {
+            if (_visual != null)
+            {
+                return _visual;
+            }
+
+            if (_swarmText != null && _swarmText.transform.parent != null)
+            {
+                return _swarmText.transform.parent.gameObject;
+            }
+
+            return null;
         }
 
         private void PunchText()

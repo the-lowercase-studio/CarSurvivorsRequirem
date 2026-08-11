@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Assets.ScriptableObjects.UI;
 using Assets.Scripts.Skills.UpgradeFlow;
 using TMPro;
@@ -12,6 +11,7 @@ namespace Assets.Scripts.UI.Skills
     {
         [SerializeField] private Button _button;
         [SerializeField] private TextMeshProUGUI _text;
+        [SerializeField] private Image _statIconImage;
         [SerializeField] private Image _selectKeyImage;
         [SerializeField] private SkillUpgradeKeyboardIconMapping _keyboardIconMapping;
         [SerializeField] private Image _rarityBackgroundImage;
@@ -22,7 +22,8 @@ namespace Assets.Scripts.UI.Skills
             int keyboardNumber,
             SkillUpgradeRarity rarity,
             Action onClick,
-            Action onPointerEnter = null)
+            Action onPointerEnter = null,
+            Sprite icon = null)
         {
             ResolveMissingReferences();
 
@@ -36,6 +37,7 @@ namespace Assets.Scripts.UI.Skills
 
             UpdateKeyboardIcon(keyboardNumber);
             UpdateRarityBackground(rarity);
+            UpdateStatIcon(icon);
 
             _button.onClick.AddListener(() => onClick?.Invoke());
 
@@ -60,12 +62,68 @@ namespace Assets.Scripts.UI.Skills
         private void ResolveMissingReferences()
         {
             _button ??= GetComponentInChildren<Button>();
-            _text ??= GetComponentsInChildren<TextMeshProUGUI>()
-                .FirstOrDefault(text => text.gameObject.name != "SelectKeyText");
-            _selectKeyImage ??= GetComponentsInChildren<Image>(true)
-                .FirstOrDefault(image => image.gameObject.name == "SelectKey");
+
+            if (_text == null)
+            {
+                TextMeshProUGUI[] texts = GetComponentsInChildren<TextMeshProUGUI>();
+                for (int i = 0; i < texts.Length; i++)
+                {
+                    if (texts[i].gameObject.name != "SelectKeyText")
+                    {
+                        _text = texts[i];
+                        break;
+                    }
+                }
+            }
+
+            if (_statIconImage == null)
+            {
+                Image[] images = GetComponentsInChildren<Image>(true);
+                for (int i = 0; i < images.Length; i++)
+                {
+                    string imageName = images[i].gameObject.name;
+                    if (imageName == "StatIcon" || imageName == "Icon")
+                    {
+                        _statIconImage = images[i];
+                        break;
+                    }
+                }
+            }
+
+            if (_selectKeyImage == null)
+            {
+                Image[] images = GetComponentsInChildren<Image>(true);
+                for (int i = 0; i < images.Length; i++)
+                {
+                    if (images[i].gameObject.name == "SelectKey")
+                    {
+                        _selectKeyImage = images[i];
+                        break;
+                    }
+                }
+            }
+
             _rarityBackgroundImage ??= _button.targetGraphic as Image;
             _rarityBackgroundImage ??= _button.GetComponent<Image>();
+        }
+
+        private void UpdateStatIcon(Sprite icon)
+        {
+            if (_statIconImage == null)
+            {
+                return;
+            }
+
+            if (icon != null)
+            {
+                _statIconImage.sprite = icon;
+                _statIconImage.enabled = true;
+            }
+            else
+            {
+                _statIconImage.sprite = null;
+                _statIconImage.enabled = false;
+            }
         }
 
         private void UpdateKeyboardIcon(int keyboardNumber)

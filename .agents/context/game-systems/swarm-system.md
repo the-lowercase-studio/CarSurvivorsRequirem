@@ -54,9 +54,10 @@ It does not own standard wave pacing or the low-level object pooling of the enem
 ## UI and Screen Dimming Integration
 
 The `SwarmNotificationPresenter` integrates with standard UI and rendering pipelines:
-1. **Text Animation**: Uses DOTween to scale up text using `DOScale` with an `Ease.OutBack` ease, followed by a continuous scale punch (`DOPunchScale`) to draw attention.
-2. **Post-Processing (Gamma Midtones)**: Interacts with a URP `Volume` component containing a `LiftGammaGain` block. When a swarm is incoming, it tweens the gamma midtone value down to a configured `_targetGamma` (lerping over `_gammaEnterDuration`) to darken the screen. When the swarm ends, it lerps back to the original gamma value over `_gammaExitDuration`.
-3. **Tween Management**: All active scale and post-processing tweens are explicitly killed in `OnDisable` to avoid DOTween memory leaks.
+1. **Container & Text Activation**: Activates the visual container GameObject (`_visual` or parent transform fallback) prior to activating and animating `_swarmText`. Deactivates both upon completing the hide animation.
+2. **Text Animation**: Uses DOTween to scale up text using `DOScale` with an `Ease.OutBack` ease, followed by a continuous scale punch (`DOPunchScale`) to draw attention.
+3. **Post-Processing (Gamma Midtones)**: Interacts with a URP `Volume` component containing a `LiftGammaGain` block. When a swarm is incoming, it tweens the gamma midtone value down to a configured `_targetGamma` (lerping over `_gammaEnterDuration`) to darken the screen. When the swarm ends, it lerps back to the original gamma value over `_gammaExitDuration`.
+4. **Tween Management**: All active scale and post-processing tweens are explicitly killed in `OnDisable` to avoid DOTween memory leaks.
 
 ## Extension Points
 
