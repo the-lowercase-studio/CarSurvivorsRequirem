@@ -31,6 +31,9 @@ namespace Assets.Scripts.Player.Car
         [Tooltip("Czas w sekundach, przez jaki ślady opon z driftu pozostają widoczne na ziemi.")]
         [SerializeField] private float _driftTrailLifetime = 3.0f;
 
+        [Tooltip("Czas w sekundach, przez jaki ślad opon z driftu płynnie zanika (fade out) pod koniec swojego czasu trwania.")]
+        [SerializeField] private float _driftTrailFadeTime = 0.5f;
+
         private const float SPEED_CHECK_FOR_TRAIL_DELAY = 0.1f;
         private const string CAR_STOP_LIGHTS_MAT_NAME = "CarStopLights";
 
@@ -74,6 +77,7 @@ namespace Assets.Scripts.Player.Car
             SetTrailTime(_rearTrailRenderers, _trailDisappearingSpeed);
             SetTrailTime(_frontTrailRenderers, _trailDisappearingSpeed);
             SetTrailTime(_rearDriftTrailRenderers, _driftTrailLifetime);
+            ApplyDriftTrailFadeGradient(_rearDriftTrailRenderers, _driftTrailLifetime, _driftTrailFadeTime);
 
             SetTrailEmitting(_rearTrailRenderers, false);
             SetTrailEmitting(_frontTrailRenderers, false);
@@ -176,6 +180,62 @@ namespace Assets.Scripts.Player.Car
                 {
                     trailRenderer.time = timeSeconds;
                 }
+            }
+        }
+
+        private void ApplyDriftTrailFadeGradient(TrailRenderer[] trailRenderers, float lifetime, float fadeTime)
+        {
+            if (trailRenderers == null)
+            {
+                return;
+            }
+
+            float safeLifetime = Mathf.Max(0.01f, lifetime);
+            float safeFadeTime = Mathf.Clamp(fadeTime, 0f, safeLifetime);
+            float fadeStartRatio = 1f - (safeFadeTime / safeLifetime);
+
+            foreach (var trailRenderer in trailRenderers)
+            {
+                if (trailRenderer == null)
+                {
+                    continue;
+                }
+
+                Gradient existingGradient = trailRenderer.colorGradient;
+                GradientColorKey[] colorKeys = existingGradient != null && existingGradient.colorKeys != null && existingGradient.colorKeys.Length > 0
+                    ? existingGradient.colorKeys
+                    : new[] { new GradientColorKey(Color.black, 0f), new GradientColorKey(Color.black, 1f) };
+
+                GradientAlphaKey[] alphaKeys;
+                if (fadeStartRatio >= 0.999f)
+                {
+                    alphaKeys = new[]
+                    {
+                        new GradientAlphaKey(1.0f, 0.0f),
+                        new GradientAlphaKey(1.0f, 1.0f)
+                    };
+                }
+                else if (fadeStartRatio <= 0.001f)
+                {
+                    alphaKeys = new[]
+                    {
+                        new GradientAlphaKey(1.0f, 0.0f),
+                        new GradientAlphaKey(0.0f, 1.0f)
+                    };
+                }
+                else
+                {
+                    alphaKeys = new[]
+                    {
+                        new GradientAlphaKey(1.0f, 0.0f),
+                        new GradientAlphaKey(1.0f, fadeStartRatio),
+                        new GradientAlphaKey(0.0f, 1.0f)
+                    };
+                }
+
+                Gradient gradient = new Gradient();
+                gradient.SetKeys(colorKeys, alphaKeys);
+                trailRenderer.colorGradient = gradient;
             }
         }
 
