@@ -52,12 +52,12 @@ It is not responsible for:
 - Runtime flow:
   - A projectile owner gets a projectile from its pool and calls `Projectile.OnGet()`.
   - The owner positions and rotates the projectile, then calls `SetMovementDirection`.
-  - The owner calls `Initialize(config)`, which assigns config, resets pierce count, scales the projectile, and marks it initialized.
+  - The owner calls `Initialize(config)`, which assigns config, resets pierce count (`_piercedCounter = config.MaxPiercing`), scales the projectile (`new Vector3(config.Size, config.Size, transform.localScale.y)`), and marks it initialized.
   - `FixedUpdate` moves only while `_isAlive` and `_isInitialized` are true.
-  - `OnTriggerEnter` delegates to `HandleCollisions`, which performs an overlap sphere against `EntityLayers.Enemy | TerrainLayers.Impassable`.
-  - Each overlap target is passed to `EntityManipulationHelper.Damage`.
-  - Piercing decrements until it reaches zero; then the projectile becomes not alive and raises `OnLifeEnd`.
-  - Range expiration plays a shrink tween through `TransformTweenExtensions.LifeEndingShrinkToZeroTween`, then raises `OnLifeEnd`.
+  - `OnTriggerEnter` delegates to `HandleCollisions`, which performs `Physics.OverlapSphere` at `transform.position + _sphereCollider.center` using `_sphereCollider.radius` against `EntityLayers.Enemy | TerrainLayers.Impassable`.
+  - Each non-null overlap target is passed to `EntityManipulationHelper.Damage`.
+  - Piercing decrements until it reaches zero; then the projectile marks `_isAlive = false` and raises `OnLifeEnd`.
+  - Range expiration plays a shrink animation using `transform.DOScale(Vector3.zero, _config.DisapearingDuration).SetEase(Ease.Flash)` and raises `OnLifeEnd` upon completion.
   - Pool owners listen to `OnLifeEnd` and `OnCanBeReleased`, release the projectile, and call `OnRelease`.
 
 ## Rules and Invariants
@@ -65,7 +65,7 @@ It is not responsible for:
 - Critical behavior rules:
   - Projectiles do not move or collide meaningfully until initialized and alive.
   - `SetMovementDirection` rejects `Vector3.zero`; owners should avoid firing if no valid direction exists.
-  - `OnRelease` kills DOTween tweens on the projectile transform, clears initialization, and restores start scale.
+  - `OnRelease` kills active shrink DOTween tweens on the projectile transform, clears initialization, and restores `_startScale`.
   - `ReturnToPool` calls `OnRelease` and raises `OnCanBeReleased`.
   - Collision damage uses capability lookup through `IDamageable`; projectile code should not directly depend on concrete enemy types.
   - Projectile size, speed, range, damage, and piercing are player-facing balance values.
@@ -100,7 +100,7 @@ It is not responsible for:
 - Upstream dependencies:
   - Skill configs and `TurretConfigSO` provide projectile config.
   - Minigun currently owns the projectile pool and uses `ProjectilesHolder` tag lookup from `Turret<TConfig>.Awake`.
-  - DOTween and transform tween extensions drive range-expiration disappearance.
+  - DOTween drives range-expiration disappearance.
 - Downstream consumers:
   - Enemies receive damage through `IDamageable`.
   - Pool owners consume `OnLifeEnd` and `OnCanBeReleased`.
@@ -115,7 +115,7 @@ It is not responsible for:
 - Known limitations:
   - `ProjectileSpawnConfig.ProjectileConfigSO` is populated by `MinigunTurret` but `Projectile.Initialize` currently receives `_config.ProjectileStatsSO` directly.
   - `Projectile.MoveProjectileInDirection(Vector3 direction)` ignores its `direction` parameter and uses `_movementDir`.
-  - `Projectile.OnTriggerEnter` does not use the `other` collider directly; it runs a fresh overlap sphere at the projectile position.
+  - `Projectile.OnTriggerEnter` does not use the `other` collider directly; it runs a fresh overlap sphere at `transform.position + _sphereCollider.center`.
   - `ProjectileConfigSO.DisapearingDuration` contains a spelling error that is part of the current public API.
   - `Projectile.OnLifeEnd` and `OnCanBeReleased` can both be subscribed to the same release handler by current pool owners; double-release paths should be reviewed when changing lifecycle.
 - Open design questions:

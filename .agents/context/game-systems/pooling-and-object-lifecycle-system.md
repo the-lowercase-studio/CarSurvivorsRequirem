@@ -2,21 +2,21 @@
 
 ## Purpose
 
-The Pooling and Object Lifecycle system defines shared contracts for pooled objects, release notifications, enable/disable toggles, delayed disable completion, and objects that persist across scene loads.
+The Pooling and Object Lifecycle system defines shared contracts and usage patterns for object pooling, release notifications, delayed disable sequences, setting-based functionality toggles, and cross-scene persistence.
 
 It is responsible for:
 
-- Standardizing pooled object get/release behavior through Assets/Scripts/Pooling/IPoolable.cs.
-- Exposing release events from spawners and spawned objects.
-- Defining lifecycle completion contracts for objects that need presentation to finish before disable.
-- Defining generic functionality enable/disable contracts used by settings.
-- Marking scene objects that should survive scene loads.
+- Standardizing pooled object lifecycle via Assets/Scripts/Pooling/IPoolable.cs.
+- Exposing entity release notifications from spawners through Assets/Scripts/Pooling/IObjectReleaseNotifier.cs.
+- Defining presentation completion contracts before disabling/releasing via Assets/Scripts/ObjectLifecycle/Actions/INeedToCompleteBeforeDisable.cs.
+- Exposing generic feature enable/disable contracts via Assets/Scripts/ObjectLifecycle/Actions/IEnableDisableFunctionalityTrigger.cs.
+- Marking scene objects that survive scene transitions via Assets/Scripts/ObjectLifecycle/DontDestroyOnSceneLoad.cs.
 
 It is not responsible for:
 
-- Concrete pool creation or spawn placement.
-- Enemy death, projectile movement, exp collection, or damage-number animation details.
-- Unity scene/prefab wiring beyond requiring the correct components to implement the contracts.
+- Concrete spawner placement logic or wave progression rules.
+- Damage calculations, visual effect details, or sound playback logic.
+- Direct scene wiring beyond attaching required component contracts.
 
 ## Reading Map
 
@@ -26,17 +26,19 @@ It is not responsible for:
   - Assets/Scripts/ObjectLifecycle/DontDestroyOnSceneLoad.cs
   - Assets/Scripts/ObjectLifecycle/Actions/INeedToCompleteBeforeDisable.cs
   - Assets/Scripts/ObjectLifecycle/Actions/IEnableDisableFunctionalityTrigger.cs
-- Current concrete users:
-  - Assets/Scripts/Enemies/Base/Enemy.cs
-  - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs
-  - Assets/Scripts/Enemies/Base/EnemyDeathHandler.cs
-  - Assets/Scripts/LevelSystem/Exp/ExpParticle.cs
-  - Assets/Scripts/LevelSystem/Exp/ExpParticleSpawner.cs
-  - Assets/Scripts/Projectiles/Projectile.cs
-  - Assets/Scripts/Skills/PlayerSkills/Minigun/MinigunTurret.cs
-  - Assets/Scripts/DamageNumbers/DamageNumbersSpawner.cs
-  - Assets/Scripts/Volumes/DeathVolume.cs
-  - Assets/Scripts/Settings/DamageNumbersSetting.cs
+- Concrete implementations and consumers:
+  - Assets/Scripts/Enemies/Base/Enemy.cs (IPoolable, waits for INeedToCompleteBeforeDisable)
+  - Assets/Scripts/Enemies/Base/EnemyDeathHandler.cs (INeedToCompleteBeforeDisable)
+  - Assets/Scripts/LevelSystem/Exp/ExpParticle.cs (IPoolable)
+  - Assets/Scripts/Projectiles/Projectile.cs (IPoolable)
+  - Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/SkillCrate.cs (IPoolable)
+  - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs (ObjectPool<Enemy>, IObjectReleaseNotifier via spawner interfaces)
+  - Assets/Scripts/LevelSystem/Exp/ExpParticleSpawner.cs (IObjectPool<ExpParticle>, IObjectReleaseNotifier via spawner interfaces)
+  - Assets/Scripts/Skills/PlayerSkills/Minigun/MinigunTurret.cs (IObjectPool<Projectile>)
+  - Assets/Scripts/Enemies/CollectibleDropNotifier.cs (ObjectPool<GameObject> for drop prefabs, monitors IPoolable.OnCanBeReleased)
+  - Assets/Scripts/DamageNumbers/DamageNumbersSpawner.cs (IObjectPool<DamageNumber>, IEnableDisableFunctionalityTrigger<DamageNumbersSpawner>, IObjectReleaseNotifier via spawner interface)
+  - Assets/Scripts/Settings/DamageNumbersSetting.cs (consumes IEnableDisableFunctionalityTrigger<DamageNumbersSpawner>)
+  - Assets/Scripts/Volumes/DeathVolume.cs (triggers IDamageable first, falls back to IPoolable.ReturnToPool)
 - Related docs:
   - .agents/context/game-systems/spawners-system.md
   - .agents/context/game-systems/enemies-system.md
@@ -49,81 +51,65 @@ It is not responsible for:
 ## Architecture and Data Flow
 
 - Core contracts:
-  - Assets/Scripts/Pooling/IPoolable.cs requires `OnGet`, `OnRelease`, `ReturnToPool`, and `OnCanBeReleased` event handler.
-  - Assets/Scripts/Pooling/IObjectReleaseNotifier.cs exposes `OnSpawnedEntityReleased` for spawners or spawner-like components.
-  - Assets/Scripts/ObjectLifecycle/Actions/INeedToCompleteBeforeDisable.cs exposes `OnCompleted` for presentation or async cleanup that must finish before disable.
-  - Assets/Scripts/ObjectLifecycle/Actions/IEnableDisableFunctionalityTrigger.cs exposes `EnableFunctionality` and `DisableFunctionality` for feature toggles.
-  - Assets/Scripts/ObjectLifecycle/DontDestroyOnSceneLoad.cs calls `DontDestroyOnLoad(gameObject)` in `Awake`.
+  - IPoolable requires OnGet(), OnRelease(), ReturnToPool(), and OnCanBeReleased event handler.
+  - IObjectReleaseNotifier exposes OnSpawnedEntityReleased event (inherited by IInWorldSpaceSpawner, IOnRandomGridPosSpawner, and IInGridSpaceSpawner interfaces).
+  - INeedToCompleteBeforeDisable exposes OnCompleted event for components requiring async/presentation completion (such as EnemyDeathHandler visual sequence) before object release.
+  - IEnableDisableFunctionalityTrigger<T> exposes EnableFunctionality() and DisableFunctionality() for feature toggles driven by settings.
+  - DontDestroyOnSceneLoad calls DontDestroyOnLoad(gameObject) in Awake.
 - Runtime flow:
-  - Pool-backed spawners create `ObjectPool<T>` instances and provide get/release callbacks.
-  - On get, the spawner calls the object's `OnGet`, subscribes to release/life-end events, activates the GameObject, and increments active count.
-  - During active play, the object raises `OnCanBeReleased`, `OnLifeEnd`, or a domain-specific completion signal.
-  - On release, the spawner calls `OnRelease`, unsubscribes events, deactivates the GameObject, raises `OnSpawnedEntityReleased`, and decrements active count.
-  - Assets/Scripts/Volumes/DeathVolume.cs first applies full HP damage to `IDamageable` objects; if no damageable capability exists, it calls `ReturnToPool` on Assets/Scripts/Pooling/IPoolable.cs.
-  - Settings can enable or disable feature behavior through Assets/Scripts/ObjectLifecycle/Actions/IEnableDisableFunctionalityTrigger.cs, currently used for damage numbers.
+  - Spawners create Unity ObjectPool<T> or IObjectPool<T> instances with creation, get, release, and destroy callbacks.
+  - When spawning/getting, the spawner invokes OnGet(), subscribes to object release/death signals, activates the GameObject, and increments active entity counts.
+  - During active play, the object raises OnCanBeReleased, OnCompleted, or a domain event when its life ends.
+  - When releasing, the spawner invokes OnRelease(), unsubscribes event handlers, deactivates the GameObject, emits OnSpawnedEntityReleased, and decrements active counts.
+  - DeathVolume applies full HP damage to IDamageable targets, or calls IPoolable.ReturnToPool() directly for non-damageable pooled entities.
 
 ## Rules and Invariants
 
 - Critical behavior rules:
-  - `OnGet` should reset runtime state needed for reuse.
-  - `OnRelease` should stop active animations/tweens, clear subscriptions owned by the object, and restore reusable state.
-  - `ReturnToPool` should be reserved for object-initiated or external forced release paths and must raise `OnCanBeReleased`.
-  - Spawner release paths must unsubscribe from object events before or during release to avoid duplicate callbacks across reuse.
-  - `OnSpawnedEntityReleased` means an active spawned object left active play; do not use it as a spawn-created event.
-  - Active object counts must increment and decrement exactly once per successful active spawn.
+  - OnGet() must reset runtime state (velocity, health, timers, visual flags) for clean object reuse.
+  - OnRelease() must halt active tweens/coroutines, unhook external listeners, and reset transient state.
+  - ReturnToPool() is called by the object or external volumes and must raise OnCanBeReleased to signal the owning spawner.
+  - Spawners must unsubscribe from object events upon release to prevent double-invocation on subsequent pool get calls.
+  - Active object counts must increment exactly once on get and decrement exactly once on release.
 - Ordering or sequencing guarantees:
-  - Enemy pool release is delayed by Assets/Scripts/Enemies/Base/EnemyDeathHandler.cs's `OnCompleted` through Assets/Scripts/ObjectLifecycle/Actions/INeedToCompleteBeforeDisable.cs.
-  - Projectile and exp particle release is event-driven by life/completion events.
-  - Assets/Scripts/Volumes/DeathVolume.cs prioritizes full HP damage over direct pool return when an object is damageable.
+  - Enemy release is delayed by EnemyDeathHandler's OnCompleted signal (implementing INeedToCompleteBeforeDisable).
+  - DeathVolume prioritizes IDamageable damage application over direct ReturnToPool() calls.
 - Constraints contributors must preserve:
-  - Keep pooled lifecycle events paired with spawner subscriptions and unsubscriptions.
-  - Preserve required scene/prefab components that implement lifecycle contracts.
-  - Do not introduce direct `Destroy` calls into pooled object normal release paths unless replacing pooling is intentional.
-  - Do not edit prefabs/scenes directly unless explicitly requested.
+  - Maintain exact event pairing (subscribe on get, unsubscribe on release).
+  - Do not introduce Destroy() calls on pooled objects during standard gameplay release loops.
 
 ## Extension Points
 
 - Safe extension areas:
-  - Add a new pooled object by implementing Assets/Scripts/Pooling/IPoolable.cs and using an owning spawner's `ObjectPool<T>` get/release callbacks.
-  - Add delayed disable behavior by implementing Assets/Scripts/ObjectLifecycle/Actions/INeedToCompleteBeforeDisable.cs on a sibling component and raising `OnCompleted` when all required presentation finishes.
-  - Add a setting-controlled feature by implementing Assets/Scripts/ObjectLifecycle/Actions/IEnableDisableFunctionalityTrigger.cs and binding it through Reflex.
-  - Add persistent scene objects with Assets/Scripts/ObjectLifecycle/DontDestroyOnSceneLoad.cs when their lifetime is intentionally global.
+  - Implement IPoolable on new entities managed by an ObjectPool<T> spawner.
+  - Implement INeedToCompleteBeforeDisable on secondary components (death visuals, despawn animations) to defer pooling until presentation finishes.
+  - Implement IEnableDisableFunctionalityTrigger<T> on systems controlled by toggleable settings.
+  - Attach DontDestroyOnSceneLoad to scene objects required to survive scene transitions.
 - Required dependencies and contracts:
-  - Pooled objects must expose a reliable release signal or be released only by their owning spawner.
-  - Delayed-disable components must always raise `OnCompleted`; otherwise pooled objects can remain active forever.
-  - Feature toggles consumed by settings must be registered in the active Reflex container.
+  - Pooled objects must raise OnCanBeReleased or expose direct completion events to their owning spawner.
+  - Components implementing INeedToCompleteBeforeDisable MUST fire OnCompleted; failing to do so will freeze the object in active state indefinitely.
 - Testing implications:
-  - Compile after contract changes.
-  - In Unity, validate pool reuse, active counts, event unsubscription, forced release through death volume, and scene reload persistence.
-  - For delayed disable paths, test all completion branches, including missing/short audio or VFX references.
+  - C# compile check: dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false.
+  - Play Mode testing: verify active object counts, pool reuse without leftover state, clean unsubscriptions, and death volume cleanup.
 
 ## Integration Notes
 
 - Upstream dependencies:
-  - Unity `ObjectPool<T>` is used by enemy, exp particle, damage number, and projectile owner systems.
-  - Reflex binds some lifecycle-capable services such as damage-number functionality toggles.
-  - Domain systems decide when life ends; pooling contracts only standardize release handoff.
+  - UnityEngine.Pool (ObjectPool<T>, IObjectPool<T>).
+  - Reflex DI for binding lifecycle-enabled services (e.g. DamageNumbersSpawner as IEnableDisableFunctionalityTrigger<DamageNumbersSpawner>).
 - Downstream consumers:
-  - Wave pacing depends on enemy spawned count.
-  - Skill upgrade UI listens to collectible spawner release notifications.
-  - Level progression consumes exp particle release behavior indirectly through collection flow.
-  - Settings consume damage-number enable/disable functionality.
+  - Wave system monitors active enemy counts via spawner release events.
+  - CollectibleDropNotifier monitors IPoolable.OnCanBeReleased on spawned drop objects.
+  - Settings (DamageNumbersSetting) trigger EnableFunctionality() / DisableFunctionality().
 - Cross-system coupling risks:
-  - Release notification semantics are shared by spawners, UI, and wave logic; changing event timing can cause visible gameplay changes.
-  - Pooled objects often cache component references in `Awake`; prefab composition is part of the lifecycle contract.
-  - Persistent boot objects can create duplicate-service bugs if scenes also instantiate equivalent services.
+  - Double release calls return an already pooled object to the pool, triggering Unity ObjectPool exceptions.
+  - Unsubscribing failures cause memory leaks and stale event handlers across reuse cycles.
 
 ## Known Risks and Open Questions
 
 - Known limitations:
-  - Assets/Scripts/Pooling/IPoolable.cs does not define whether `OnCanBeReleased` should be raised before or after internal cleanup; current implementations vary by path.
-  - Assets/Scripts/ObjectLifecycle/Actions/INeedToCompleteBeforeDisable.cs has only an event and no cancellation or timeout contract.
-  - Assets/Scripts/ObjectLifecycle/Actions/IEnableDisableFunctionalityTrigger.cs uses a self-referential generic constraint that makes bindings specific but verbose.
-  - Assets/Scripts/ObjectLifecycle/DontDestroyOnSceneLoad.cs does not prevent duplicates if multiple scenes contain the same persistent object.
-- Open design questions:
-  - Should pooled lifecycle have a stricter state machine to prevent double release?
-  - Should delayed-disable contracts include failure/timeout behavior?
-  - Should persistent boot services include duplicate guards?
+  - INeedToCompleteBeforeDisable lacks a timeout mechanism; broken animation states could permanently block pooling.
+  - DontDestroyOnSceneLoad does not guard against duplicate instances if multiple scenes contain the component.
 - Suggested follow-up tasks:
-  - Audit pooled release paths for double-release and missing-unsubscribe risks.
-  - Add lightweight play-mode checks for active count stability on enemies, exp particles, damage numbers, and projectiles.
+  - Add timeout safety to INeedToCompleteBeforeDisable implementations.
+

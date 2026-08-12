@@ -1623,8 +1623,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Enemies.SwarmSpawner
   _minSwarmInterval: 80
   _maxSwarmInterval: 100
-  _minSwarmSize: 60
-  _maxSwarmSize: 86
+  _minSwarmSize: 40
+  _maxSwarmSize: 60
   _swarmWarningDuration: 10
   _swarmDuration: 5
   _spawnTickInterval: 1

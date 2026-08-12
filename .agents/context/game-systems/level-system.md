@@ -23,12 +23,17 @@ It is not responsible for enemy balance, choosing skill upgrades, score saving, 
 - Editor tooling:
   - Assets/Scripts/Editor/GUI/LevelControllerEditor.cs
 - Related docs:
+  - .agents/context/game-systems/skills-system.md
+  - .agents/context/game-systems/ui-system.md
+  - .agents/context/game-systems/enemies-system.md
   - .agents/context/project-coding-standards.md
-  - .agents/context/ai-game-dev-best-practices.md
-- Related skills:
-  - .agents/skills/di-integration/SKILL.md for Reflex binding changes.
-  - .agents/skills/check-optimalization/SKILL.md for exp particle pooling or allocation review.
-  - .agents/skills/unity-refactor-suggestions/SKILL.md for behavior-preserving cleanup.
+  - .agents/context/technology-documentation.md
+- Related agents or instructions:
+  - Root AGENTS.md
+  - .agents/skills/document-system/SKILL.md
+  - .agents/skills/di-integration/SKILL.md
+  - .agents/skills/check-optimalization/SKILL.md
+  - .agents/skills/unity-refactor-suggestions/SKILL.md
 
 ## Architecture and Data Flow
 

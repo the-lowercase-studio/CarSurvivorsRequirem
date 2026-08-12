@@ -20,13 +20,15 @@ It is not responsible for measuring elapsed gameplay time, deciding when the pla
   - Assets/Scripts/UI/HUD/TimerPresenter.cs
   - Assets/Scripts/Storage/AppStorage.cs
 - Related docs:
+  - .agents/context/game-systems/storage-system.md
   - .agents/context/game-systems/ui-system.md
   - .agents/context/game-systems/level-system.md
   - .agents/context/project-coding-standards.md
+  - .agents/context/technology-documentation.md
 - Related agents or instructions:
-  - Root `AGENTS.md`
+  - Root AGENTS.md
   - .agents/skills/document-system/SKILL.md
-  - .agents/skills/di-integration/SKILL.md when changing scoreboard service bindings
+  - .agents/skills/di-integration/SKILL.md
 
 ## Architecture and Data Flow
 

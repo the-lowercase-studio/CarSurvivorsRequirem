@@ -94,6 +94,7 @@ Use `.agents/skills/` as reusable workflows:
 
 - `agent-docs-review`: update agent-facing documentation so it is concise, current, and implementation-grounded.
 - `architecture-review`: review DI correctness, ownership boundaries, turn-flow safety, and architecture drift.
+- `batch-codebase-review`: partition and orchestrate project-wide architecture review and coding standards preservation via subagents or generated prompt roadmaps.
 - `check-optimalization`: inspect performance risks and propose optimizations before implementing them.
 - `di-integration`: add or review Reflex bindings, injected services, and dependency boundaries.
 - `document-system`: create or update technical documentation for a specific gameplay system.
@@ -108,6 +109,7 @@ When a request matches a skill trigger, read the relevant `SKILL.md` before edit
 Current vendor-specific descriptors are nested under skills:
 
 - `.agents/skills/agent-docs-review/agents/openai.yaml`
+- `.agents/skills/batch-codebase-review/agents/openai.yaml`
 - `.agents/skills/preserve-coding-standards/agents/openai.yaml`
 
 Treat these YAML files as optional UI/default-prompt metadata for compatible tools. The portable workflow source remains each skill's `SKILL.md`.

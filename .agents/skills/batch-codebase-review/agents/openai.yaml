@@ -1,0 +1,4 @@
+interface:
+  display_name: "Batch Codebase Review"
+  short_description: "Partition and orchestrate codebase-wide architecture review and coding standards preservation."
+  default_prompt: "Use $batch-codebase-review to partition Assets/Scripts/ into domain batches and perform architecture review and coding standards audits."
