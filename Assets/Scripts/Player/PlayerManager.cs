@@ -20,12 +20,13 @@ namespace Assets.Scripts.Player
     [RequireComponent(typeof(RegenativeHealth), typeof(LevelController))]
     public class PlayerManager : MonoBehaviour, IPlayerManager
     {
+        [SerializeField] private AudioClipPlayer _audioClipPlayer;
+
         public IHealth Health { get; private set; }
         public ILevelController LevelController { get; private set; }
         public ISkillsRegistry SkillsRegistry { get; private set; }
         public ICarController CarController { get; private set; }
         public IAudioClipPlayer AudioClipPlayer { get; private set; }
-        [SerializeField] private AudioClipPlayer _audioClipPlayer;
 
         public GameObject GameObject => gameObject;
 

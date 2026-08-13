@@ -638,7 +638,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d515f033d2b0e3a4d8707ab5be13c789, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Waves.WaveManager
-  _startSpawnWaveDelay: 8
+  _config: {fileID: 0}
 --- !u!1 &286948911
 GameObject:
   m_ObjectHideFlags: 0
@@ -1458,7 +1458,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d515f033d2b0e3a4d8707ab5be13c789, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _startSpawnWaveDelay: 8
+  _config: {fileID: 0}
 --- !u!1 &550934126
 GameObject:
   m_ObjectHideFlags: 0
@@ -1623,8 +1623,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Enemies.SwarmSpawner
   _minSwarmInterval: 80
   _maxSwarmInterval: 100
-  _minSwarmSize: 60
-  _maxSwarmSize: 86
+  _minSwarmSize: 40
+  _maxSwarmSize: 60
   _swarmWarningDuration: 10
   _swarmDuration: 5
   _spawnTickInterval: 1
@@ -4005,14 +4005,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _worldGridConfiguration:
-    Width: 215
-    Height: 215
-    CellSize: 1
+    <Width>k__BackingField: 215
+    <Height>k__BackingField: 215
+    <CellSize>k__BackingField: 1
   _delayBetweenWorldGridUpdate: 1
   _playerGridConfiguration:
-    Width: 46
-    Height: 34
-    CellSize: 1
+    <Width>k__BackingField: 46
+    <Height>k__BackingField: 34
+    <CellSize>k__BackingField: 1
   _delayBetweenPlayerChunkGridUpdate: 0.32
   _flowFieldTargetPredictionTime: 0.25
   _maxFlowFieldTargetOffset: 6
@@ -4022,10 +4022,10 @@ MonoBehaviour:
   _playerChunkCellBorderColor: {r: 0, g: 1, b: 0, a: 1}
   _blockedCellBorderDrawColor: {r: 1, g: 0, b: 0, a: 1}
   _flowFieldDebugConfiguration:
-    DebugInfoHolder: {fileID: 439364809}
-    FontSize: 4
-    TextYOffset: 0.2
-    DisplayMode: 2
+    _debugInfoHolder: {fileID: 0}
+    _fontSize: 0
+    _textYOffset: 0
+    _displayMode: 0
 --- !u!1001 &1501572222077960501
 PrefabInstance:
   m_ObjectHideFlags: 0

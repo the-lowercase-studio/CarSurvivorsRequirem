@@ -1,10 +1,10 @@
+using Assets.Scripts.Navigation.Constants;
 using UnityEngine;
 
 namespace Assets.Scripts.Navigation.GridSystem
 {
     public class Cell
     {
-        private const int DEFAULT_FIELD_COST = 1;
         public Vector3 WorldPos { get; private set; }
         public Vector2Int WorldGridPos { get; private set; }
         public Vector2Int ChunkGridPos { get; set; }
@@ -17,7 +17,7 @@ namespace Assets.Scripts.Navigation.GridSystem
             WorldPos = worldPos;
             WorldGridPos = gridPos;
             ChunkGridPos = chunkGridPos;
-            Cost = DEFAULT_FIELD_COST;
+            Cost = GridConstants.DEFAULT_FIELD_COST;
             BestCost = ushort.MaxValue;
         }
 
@@ -27,11 +27,12 @@ namespace Assets.Scripts.Navigation.GridSystem
             {
                 return;
             }
+
             if (Cost + amount < byte.MaxValue)
             {
                 Cost += (byte)amount;
             }
-            else if (Cost + amount >= byte.MaxValue)
+            else
             {
                 Cost = byte.MaxValue;
             }
@@ -39,7 +40,7 @@ namespace Assets.Scripts.Navigation.GridSystem
 
         public void ResetCosts()
         {
-            Cost = 1;
+            Cost = GridConstants.DEFAULT_FIELD_COST;
             BestCost = ushort.MaxValue;
         }
     }

@@ -1,17 +1,17 @@
-﻿using Assets.Scripts.Storage;
 using System;
 using System.Collections.Generic;
+using Assets.Scripts.ScoreBoard.Constants;
+using Assets.Scripts.Storage;
 
 namespace Assets.Scripts.ScoreBoard
 {
     public class StoredScoreBoard : IAppStorageValue<List<uint>>
     {
         public List<uint> DefaultValue => new();
-        public byte MAX_SAVED_SCORES_COUNT = 6;
 
         public string GetKey()
         {
-            return "ScoreBoard";
+            return ScoreBoardConstants.SCORE_BOARD_STORAGE_KEY;
         }
 
         public List<uint> GetValueOrStoredDefault()
@@ -26,12 +26,13 @@ namespace Assets.Scripts.ScoreBoard
 
         public void SaveValue(List<uint> value)
         {
-            if (value.Count > MAX_SAVED_SCORES_COUNT)
+            if (value.Count > ScoreBoardConstants.MAX_SAVED_SCORES_COUNT)
             {
-                throw new ArgumentException($"StoredScoreBoard can't have more then {MAX_SAVED_SCORES_COUNT} scores.");
+                throw new ArgumentException($"StoredScoreBoard can't have more then {ScoreBoardConstants.MAX_SAVED_SCORES_COUNT} scores.");
             }
 
             AppStorage.SetValue(GetKey(), value);
         }
     }
 }
+

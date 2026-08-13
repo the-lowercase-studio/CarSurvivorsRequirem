@@ -1,9 +1,7 @@
-﻿using Assets.Scripts.UI.Death;
+using Assets.Scripts.UI.Death;
 using Assets.Scripts.VFX;
 using Reflex.Attributes;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Assets.Scripts.Player
@@ -52,10 +50,36 @@ namespace Assets.Scripts.Player
 
         private void DisableNotWheelColliders()
         {
-            IEnumerable<Collider> notWheelColliders = _allColliders.Where(aC => !_wheelColliders.Any(wC => wC == aC));
-            foreach (Collider collider in notWheelColliders)
+            if (_allColliders == null)
             {
-                collider.enabled = false;
+                return;
+            }
+
+            for (int i = 0; i < _allColliders.Length; i++)
+            {
+                Collider col = _allColliders[i];
+                if (col == null)
+                {
+                    continue;
+                }
+
+                bool isWheel = false;
+                if (_wheelColliders != null)
+                {
+                    for (int j = 0; j < _wheelColliders.Length; j++)
+                    {
+                        if (_wheelColliders[j] == col)
+                        {
+                            isWheel = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!isWheel)
+                {
+                    col.enabled = false;
+                }
             }
         }
     }

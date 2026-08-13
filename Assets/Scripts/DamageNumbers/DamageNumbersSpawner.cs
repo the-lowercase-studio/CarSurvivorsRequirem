@@ -1,11 +1,12 @@
+using System;
 using Assets.Scripts.Common.Types;
-using Assets.Scripts.ObjectLifecycle.Actions;
+using Assets.Scripts.DamageNumbers.Constants;
 using Assets.Scripts.Effects;
+using Assets.Scripts.ObjectLifecycle.Actions;
 using Assets.Scripts.Shapes;
 using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.Utils;
 using DG.Tweening;
-using System;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -53,7 +54,8 @@ namespace Assets.Scripts.DamageNumbers
         [SerializeField] private DamageNumber _damagePopupPrefab;
         [SerializeField] private VisualApearanceByDamageTreshold[] _visualApearanceByDamageTresholds;
         [SerializeField] private FloatValueRange _popupsSpeedRange;
-        [SerializeField] private float _popupsMovementRange = 1f;
+        [SerializeField] private float _popupsMovementRange = DamageNumberConstants.DEFAULT_POPUPS_MOVEMENT_RANGE;
+
         private Camera _mainCamera;
         private bool _isPopupsEnabled = true;
         private IObjectPool<DamageNumber> _damageNumberPool;
@@ -70,8 +72,8 @@ namespace Assets.Scripts.DamageNumbers
                 actionOnRelease: (obj) => obj.gameObject.SetActive(false),
                 actionOnDestroy: (obj) => Destroy(obj.gameObject),
                 collectionCheck: false,
-                defaultCapacity: 20,
-                maxSize: 100
+                defaultCapacity: DamageNumberConstants.DEFAULT_POOL_CAPACITY,
+                maxSize: DamageNumberConstants.MAX_POOL_SIZE
             );
         }
 
@@ -195,3 +197,4 @@ namespace Assets.Scripts.DamageNumbers
         }
     }
 }
+

@@ -1,30 +1,54 @@
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Assets.Scripts.Skills
 {
     public static class RandomUpgradeableSkillFinder
     {
         public static IUpgradeableSkill Find(ISkillsRegistry skillsRegistry)
-            => Find(skillsRegistry
-                .Skills
-                .OfType<IUpgradeableSkill>()
-                .Where(skill => skill.IsInitialized()));
+        {
+            var upgradeableSkills = new List<IUpgradeableSkill>();
+            IReadOnlyList<ISkillBase> skills = skillsRegistry.Skills;
+
+            if (skills != null)
+            {
+                for (int i = 0; i < skills.Count; i++)
+                {
+                    if (skills[i] is IUpgradeableSkill upgradeableSkill && upgradeableSkill.IsInitialized())
+                    {
+                        upgradeableSkills.Add(upgradeableSkill);
+                    }
+                }
+            }
+
+            return Find(upgradeableSkills);
+        }
 
         public static IUpgradeableSkill Find(IEnumerable<IUpgradeableSkill> skills)
         {
-            var upgradeableSkills = skills
-                .Where(skill => skill.CanBeUgraded())
-                .ToArray();
-
-            if (upgradeableSkills.Length == 0)
+            if (skills == null)
             {
                 return null;
             }
 
-            int randomSkillIndex = UnityEngine.Random.Range(0, upgradeableSkills.Length);
+            var upgradeableCandidates = new List<IUpgradeableSkill>();
 
-            return upgradeableSkills[randomSkillIndex];
+            foreach (IUpgradeableSkill skill in skills)
+            {
+                if (skill != null && skill.CanBeUpgraded())
+                {
+                    upgradeableCandidates.Add(skill);
+                }
+            }
+
+            if (upgradeableCandidates.Count == 0)
+            {
+                return null;
+            }
+
+            int randomSkillIndex = UnityEngine.Random.Range(0, upgradeableCandidates.Count);
+
+            return upgradeableCandidates[randomSkillIndex];
         }
     }
 }
+

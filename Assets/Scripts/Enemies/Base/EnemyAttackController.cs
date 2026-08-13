@@ -1,9 +1,9 @@
 using Assets.Scripts.Collisions;
+using Assets.Scripts.Enemies.Constants;
 using Assets.Scripts.Extensions;
 using Assets.Scripts.LayerMasks;
 using Assets.Scripts.StatusEffects;
 using System;
-using System.Linq;
 using UnityEngine;
 
 namespace Assets.Scripts.Enemies.Base
@@ -13,6 +13,7 @@ namespace Assets.Scripts.Enemies.Base
     {
         [SerializeField, Range(0, 360)] private float _attackArcAngle = 60f;
         [SerializeField] private float _attackRange = 1f;
+
         private Enemy _enemy;
         private IAttackAnimationPlayer _attackAnimationPlayer;
         private Collider _currentAttackedTarget;
@@ -105,23 +106,22 @@ namespace Assets.Scripts.Enemies.Base
 
         private Collider GetAttackedColliderIfInRange()
         {
-            return Physics.OverlapSphere(
+            Collider[] colliders = Physics.OverlapSphere(
                 transform.position,
                 _attackRange,
                 1 << _currentAttackedTarget.gameObject.layer
-            ).FirstOrDefault();
+            );
+            return colliders.Length > 0 ? colliders[0] : null;
         }
 
         private void OnDrawGizmos()
         {
-            const int SEGMENTS = 16;
-
             new Debug().DrawArc(
                 transform.position,
                 transform.forward,
                 _attackArcAngle,
                 _attackRange,
-                SEGMENTS,
+                EnemyCombatConstants.ARC_DEBUG_SEGMENTS,
                 Color.red);
         }
     }

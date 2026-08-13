@@ -1,14 +1,13 @@
 using Assets.ScriptableObjects.Skills;
 using Assets.ScriptableObjects.Skills.PlayerSkills.LandmineSkill;
 using Assets.Scripts.LayerMasks;
+using Assets.Scripts.Skills.Constants;
 using UnityEngine;
 
 namespace Assets.Scripts.Skills.PlayerSkills.LandmineTrap
 {
     public class LandmineSkill : UpgradeableSkill<LandmineSkillUpgradeableConfigSO>
     {
-        private const float CAN_PLACE_MINE_RAY_DISTANCE = 5f;
-
         [field: SerializeField] public override SkillInfoSO SkillInfo { get; protected set; }
         [field: SerializeField] protected override LandmineSkillUpgradeableConfigSO _config { get; set; }
 
@@ -25,7 +24,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.LandmineTrap
 
         private void SpawnLandmine()
         {
-            if (Physics.Raycast(transform.position, Vector3.down, CAN_PLACE_MINE_RAY_DISTANCE, TerrainLayers.Ground))
+            if (Physics.Raycast(transform.position, Vector3.down, SkillConstants.CAN_PLACE_MINE_RAY_DISTANCE, TerrainLayers.Ground))
             {
                 Landmine landmine = Instantiate(
                     _landminePrefab,
@@ -39,3 +38,4 @@ namespace Assets.Scripts.Skills.PlayerSkills.LandmineTrap
         }
     }
 }
+

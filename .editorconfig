@@ -1,0 +1,69 @@
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = crlf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.cs]
+# C# Coding Style Guidelines (matching project-coding-standards.md)
+csharp_style_separate_char_directive_and_type = true
+csharp_style_expression_bodied_methods = false:warning
+csharp_style_expression_bodied_constructors = false:warning
+csharp_style_expression_bodied_operators = false:warning
+csharp_style_expression_bodied_local_functions = false:warning
+csharp_style_expression_bodied_properties = true:suggestion
+
+# Modifiers & Accessibility
+csharp_preferred_modifier_order = public,private,protected,internal,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,volatile,async:warning
+dotnet_style_require_accessibility_modifiers = always:warning
+
+# Naming Conventions
+
+# Interfaces: IPascalCase
+dotnet_naming_rule.interface_should_be_i_pascal_case.symbols = interface_symbols
+dotnet_naming_rule.interface_should_be_i_pascal_case.style = i_pascal_case
+dotnet_naming_rule.interface_should_be_i_pascal_case.severity = warning
+
+dotnet_naming_symbols.interface_symbols.applicable_kinds = interface
+dotnet_naming_symbols.interface_symbols.applicable_accessibilities = public, internal, private
+dotnet_naming_style.i_pascal_case.required_prefix = I
+dotnet_naming_style.i_pascal_case.capitalization = pascal_case
+
+# Private & Serialized Fields: _camelCase
+dotnet_naming_rule.private_fields_should_be_camel_case_with_underscore.symbols = private_fields
+dotnet_naming_rule.private_fields_should_be_camel_case_with_underscore.style = camel_case_with_underscore
+dotnet_naming_rule.private_fields_should_be_camel_case_with_underscore.severity = warning
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private, protected, internal
+dotnet_naming_style.camel_case_with_underscore.required_prefix = _
+dotnet_naming_style.camel_case_with_underscore.capitalization = camel_case
+
+# Constants: UPPER_SNAKE_CASE
+dotnet_naming_rule.constants_should_be_upper_snake_case.symbols = constant_fields
+dotnet_naming_rule.constants_should_be_upper_snake_case.style = upper_snake_case
+dotnet_naming_rule.constants_should_be_upper_snake_case.severity = warning
+
+dotnet_naming_symbols.constant_fields.applicable_kinds = field
+dotnet_naming_symbols.constant_fields.required_modifiers = const
+dotnet_naming_style.upper_snake_case.capitalization = all_upper
+
+# Public Members, Properties, Methods, Events: PascalCase
+dotnet_naming_rule.public_members_should_be_pascal_case.symbols = public_members
+dotnet_naming_rule.public_members_should_be_pascal_case.style = pascal_case
+dotnet_naming_rule.public_members_should_be_pascal_case.severity = warning
+
+dotnet_naming_symbols.public_members.applicable_kinds = property, method, event, type
+dotnet_naming_symbols.public_members.applicable_accessibilities = public
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+
+# Diagnostics
+dotnet_diagnostic.CS0168.severity = warning # Unused variable
+dotnet_diagnostic.CS0219.severity = warning # Assigned but unused variable
+dotnet_diagnostic.CS0169.severity = warning # Unused private field
+dotnet_diagnostic.CS0414.severity = warning # Assigned private field never read
+

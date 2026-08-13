@@ -1,4 +1,5 @@
-﻿using Assets.Scripts.StatusEffects;
+using Assets.Scripts.Player.Constants;
+using Assets.Scripts.StatusEffects;
 using Assets.Scripts.VFX;
 using DG.Tweening;
 using Reflex.Attributes;
@@ -24,7 +25,7 @@ namespace Assets.Scripts.Player
         public void TakeDamage(float damage)
         {
             _playerManager.Health.DecreaseHealth(damage);
-            _playerManager.AudioClipPlayer.PlayOneShot("Damaged");
+            _playerManager.AudioClipPlayer.PlayOneShot(PlayerAudioConstants.DAMAGED_AUDIO_KEY);
             _damageVfxPlayer.Play(new());
 
             if (_shakeTween?.IsPlaying() ?? false)

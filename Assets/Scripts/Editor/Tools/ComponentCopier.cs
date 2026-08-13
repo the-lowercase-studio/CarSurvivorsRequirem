@@ -49,7 +49,9 @@ namespace Assets.Scripts.Editor.Tools
             CopyComponents(from, to);
 
             if (!recursive)
+            {
                 return;
+            }
 
             int childCount = Mathf.Min(from.transform.childCount, to.transform.childCount);
 
@@ -68,7 +70,10 @@ namespace Assets.Scripts.Editor.Tools
 
             foreach (Component fromComp in fromComponents)
             {
-                if (fromComp is Transform) continue;
+                if (fromComp is Transform)
+                {
+                    continue;
+                }
 
                 Type type = fromComp.GetType();
                 Component toComp = to.GetComponent(type);
@@ -95,11 +100,16 @@ namespace Assets.Scripts.Editor.Tools
             {
                 do
                 {
-                    if (prop.name == "m_Script") continue;
+                    if (prop.name == "m_Script")
+                    {
+                        continue;
+                    }
 
                     SerializedProperty dstProp = dstObject.FindProperty(prop.name);
                     if (dstProp != null)
+                    {
                         dstProp.serializedObject.CopyFromSerializedProperty(prop);
+                    }
                 }
                 while (prop.NextVisible(false));
             }

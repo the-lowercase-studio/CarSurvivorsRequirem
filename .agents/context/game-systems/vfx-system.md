@@ -33,7 +33,7 @@ It is not responsible for:
 - Related docs:
   - .agents/context/project-coding-standards.md
   - .agents/context/game-systems/pooling-and-object-lifecycle-system.md
-  - .agents/context/game-systems/car-system.md
+  - .agents/context/game-systems/player-system.md
 - Related agents or instructions:
   - .agents/skills/document-system/SKILL.md
 

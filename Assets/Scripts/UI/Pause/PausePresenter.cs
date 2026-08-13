@@ -1,4 +1,4 @@
-﻿using Assets.Scripts.GameFlow;
+using Assets.Scripts.GameFlow;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -18,7 +18,7 @@ namespace Assets.Scripts.UI.Pause
             InputSystem.actions.FindAction("Pause").performed -= OnPausePerformed;
         }
 
-        public void ToogleActivation()
+        public void ToggleActivation()
         {
             if (_visual.activeSelf)
             {
@@ -30,6 +30,12 @@ namespace Assets.Scripts.UI.Pause
                 _visual.SetActive(true);
                 GameTime.Pause();
             }
+        }
+
+        [System.Obsolete("Use ToggleActivation instead")]
+        public void ToogleActivation()
+        {
+            ToggleActivation();
         }
 
         private void OnPausePerformed(InputAction.CallbackContext obj)

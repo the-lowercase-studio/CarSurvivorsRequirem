@@ -1,7 +1,6 @@
 using System;
 using Assets.Scripts.Common.EventArgs;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace Assets.Scripts.LevelSystem
 {
@@ -83,6 +82,9 @@ namespace Assets.Scripts.LevelSystem
         }
 
         private float CalculateMaxExp(byte level)
-            => _expCurve.Evaluate(level);
+        {
+            return _expCurve.Evaluate(level);
+        }
     }
 }
+

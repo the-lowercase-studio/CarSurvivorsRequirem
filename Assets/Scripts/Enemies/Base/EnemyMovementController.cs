@@ -1,3 +1,4 @@
+using Assets.Scripts.Enemies.Constants;
 using Assets.Scripts.Navigation.FlowFieldSystem;
 using Assets.Scripts.LayerMasks;
 using DG.Tweening;
@@ -9,11 +10,6 @@ namespace Assets.Scripts.Enemies.Base
     [RequireComponent(typeof(Enemy), typeof(FlowFieldMovementController))]
     public class EnemyMovementController : MonoBehaviour, IMovementController
     {
-        private const float GROUND_CHECK_DISTANCE = 0.4f;
-        private const float MOVING_TO_POSITION_ACCURACY = 0.02f;
-        private const float OBSTACLE_CHECK_RADIUS = 0.4f;
-        private const float OBSTACLE_SAFETY_BUFFER = 0.1f;
-
         private readonly Vector3 _groundCheckOffset = new(0, 0.1f, 0);
         private readonly Vector3 _obstacleCheckOffset = new(0, 0.5f, 0);
 
@@ -78,7 +74,7 @@ namespace Assets.Scripts.Enemies.Base
 
         private void OnDrawGizmos()
         {
-            Vector3 endPos = transform.position + _groundCheckOffset - Vector3.up * GROUND_CHECK_DISTANCE;
+            Vector3 endPos = transform.position + _groundCheckOffset - Vector3.up * EnemyMovementConstants.GROUND_CHECK_DISTANCE;
             if (IsOnGround())
             {
                 Debug.DrawLine(transform.position, endPos, Color.green);
@@ -111,9 +107,9 @@ namespace Assets.Scripts.Enemies.Base
                 direction.Normalize();
                 Vector3 origin = startPos + _obstacleCheckOffset;
 
-                if (Physics.SphereCast(origin, OBSTACLE_CHECK_RADIUS, direction, out RaycastHit hitInfo, distance, TerrainLayers.Impassable))
+                if (Physics.SphereCast(origin, EnemyMovementConstants.OBSTACLE_CHECK_RADIUS, direction, out RaycastHit hitInfo, distance, TerrainLayers.Impassable))
                 {
-                    float safeDistance = Mathf.Max(0f, hitInfo.distance - OBSTACLE_SAFETY_BUFFER);
+                    float safeDistance = Mathf.Max(0f, hitInfo.distance - EnemyMovementConstants.OBSTACLE_SAFETY_BUFFER);
                     adjustedTime = time * (safeDistance / distance);
                     pos = startPos + (direction * safeDistance);
                 }
@@ -139,7 +135,7 @@ namespace Assets.Scripts.Enemies.Base
                 transform.position + _groundCheckOffset,
                 -Vector3.up,
                 out hitInfo,
-                GROUND_CHECK_DISTANCE,
+                EnemyMovementConstants.GROUND_CHECK_DISTANCE,
                 TerrainLayers.Ground);
 
             return hitInfo.collider is not null;
@@ -191,7 +187,7 @@ namespace Assets.Scripts.Enemies.Base
 
         private Vector3? MoveToPosition(Vector3 pos)
         {
-            bool isOnPosition = Vector3.Distance(transform.position, pos) <= MOVING_TO_POSITION_ACCURACY;
+            bool isOnPosition = Vector3.Distance(transform.position, pos) <= EnemyMovementConstants.MOVING_TO_POSITION_ACCURACY;
 
             if (_isMovingToPositionUnrelatedToGrid && !isOnPosition)
             {

@@ -1,6 +1,5 @@
 using Assets.Scripts.Initializers;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Assets.Scripts.Skills
@@ -10,7 +9,7 @@ namespace Assets.Scripts.Skills
         public IReadOnlyList<ISkillBase> Skills { get; }
         public int UninitializedSkillsCount { get; }
 
-        public IEnumerable<ISkillBase> GetUninitializedSkills();
+        public IReadOnlyList<ISkillBase> GetUninitializedSkills();
 
         public ISkillBase InitializeSkill(ISkillBase skill);
     }
@@ -29,18 +28,31 @@ namespace Assets.Scripts.Skills
         {
             ResetUpgradeableSkillConfigs();
 
-            UninitializedSkillsCount = GetUninitializedSkills().Count();
+            UninitializedSkillsCount = GetUninitializedSkills().Count;
 
-            InitializeSkill(Skills[0]);
+            if (Skills != null && Skills.Count > 0)
+            {
+                InitializeSkill(Skills[0]);
+            }
         }
 
-        public IEnumerable<ISkillBase> GetUninitializedSkills()
+        public IReadOnlyList<ISkillBase> GetUninitializedSkills()
         {
-            return Skills
-                    .Select(skill => skill as IInitializable)
-                    .Where(skill => !skill.IsInitialized())
-                    .Select(skill => skill as ISkillBase)
-                    .ToArray();
+            var uninitializedSkills = new List<ISkillBase>();
+
+            if (Skills != null)
+            {
+                for (int i = 0; i < Skills.Count; i++)
+                {
+                    ISkillBase skill = Skills[i];
+                    if (skill is IInitializable initializableSkill && !initializableSkill.IsInitialized())
+                    {
+                        uninitializedSkills.Add(skill);
+                    }
+                }
+            }
+
+            return uninitializedSkills;
         }
 
         public ISkillBase InitializeSkill(ISkillBase skill)
@@ -77,10 +89,19 @@ namespace Assets.Scripts.Skills
 
         private void ResetUpgradeableSkillConfigs()
         {
-            foreach (IUpgradeableSkill skill in Skills.OfType<IUpgradeableSkill>())
+            if (Skills == null)
             {
-                skill.Config?.ResetRuntimeState();
+                return;
+            }
+
+            for (int i = 0; i < Skills.Count; i++)
+            {
+                if (Skills[i] is IUpgradeableSkill upgradeableSkill)
+                {
+                    upgradeableSkill.Config?.ResetRuntimeState();
+                }
             }
         }
     }
 }
+

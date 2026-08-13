@@ -6,17 +6,17 @@ The DI and Boot Flow system owns Reflex container setup, boot-scene service regi
 
 It is responsible for:
 
-- Project-level service bindings that should survive scene changes.
-- Scene-level gameplay and main-menu bindings.
-- Boot-scene extra bindings injected into each scene container.
-- Loading the first menu scene from the boot scene.
-- Raising scene loading events for audio, UI, and navigation consumers.
+- Project-level service bindings that survive scene transitions.
+- Scene-level gameplay and main-menu dependency injection containers.
+- Boot-scene extra service registration injected into each scene container.
+- Initial scene loading from Boot scene to Main Menu.
+- Emitting scene loading events for audio, UI, and navigation consumers.
 
 It is not responsible for:
 
-- Gameplay behavior owned by bound services.
-- Unity scene asset setup beyond serialized installer references.
-- Player-facing pause/death/skill-choice rules, although those rules call Assets/Scripts/GameFlow/GameTime.cs.
+- Gameplay logic implemented within bound services.
+- Unity scene visual or layout setup beyond installer references.
+- Pause UI, death UI, or skill selection logic (although pause triggers invoke Assets/Scripts/GameFlow/GameTime.cs).
 
 ## Reading Map
 
@@ -29,6 +29,7 @@ It is not responsible for:
   - Assets/Scripts/GameFlow/GameTime.cs
 - Related docs:
   - .agents/context/game-systems/audio-system.md
+  - .agents/context/game-systems/game-flow-system.md
   - .agents/context/game-systems/settings-system.md
   - .agents/context/game-systems/spawners-system.md
   - .agents/context/game-systems/ui-system.md
@@ -38,81 +39,68 @@ It is not responsible for:
 ## Architecture and Data Flow
 
 - Core components:
-  - Assets/Scripts/ReflexDI/ProjectInstaller.cs registers project-level singletons: Assets/Scripts/GameFlow/GameScenesLoader.cs (as `IGameSceneLoader`), Assets/Scripts/ScoreBoard/StoredScoreBoard.cs, Assets/Scripts/ScoreBoard/ScoreBoardNewScoreSaver.cs (as `IScoreBoardNewScoreSaver`), and Assets/Scripts/ScoreBoard/ScoreBoardBestScoreGetter.cs (as `IScoreBoardBestScoreGetter`).
-  - Assets/Scripts/ReflexDI/MainMenuInstaller.cs registers menu-scoped settings services: `AudioVolumeSetting`, `GraphicSetting`, `FullScreenSetting`, `ResolutionSetting`, and `DamageNumbersSetting` (each bound to their `ISetting<TSelf, TValue>` and `ISettingLoader` interfaces).
-  - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs binds scene references for player, UI presenters, grid manager, enemy spawner, exp particle spawner, and collectible spawner.
-  - Assets/Scripts/ReflexDI/BootLoader.cs subscribes to `SceneScope.OnSceneContainerBuilding` and adds boot-scene audio and damage-number services to every scene container. It also resolves camera dependencies for Assets/Scripts/DamageNumbers/DamageNumbersSpawner.cs by locating Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs in loaded scenes.
-  - Assets/Scripts/GameFlow/GameScenesLoader.cs wraps `SceneManager.LoadSceneAsync`, tracks `CurrentLoadedScene`, and raises load-start and load-completed events.
-  - Assets/Scripts/GameFlow/GameTime.cs is a static helper that sets `Time.timeScale` to `0f` or `1f`.
+  - Assets/Scripts/ReflexDI/ProjectInstaller.cs registers project-scoped singletons: Assets/Scripts/GameFlow/GameScenesLoader.cs (as IGameSceneLoader), Assets/Scripts/ScoreBoard/StoredScoreBoard.cs, Assets/Scripts/ScoreBoard/ScoreBoardNewScoreSaver.cs (as IScoreBoardNewScoreSaver), and Assets/Scripts/ScoreBoard/ScoreBoardBestScoreGetter.cs (as IScoreBoardBestScoreGetter).
+  - Assets/Scripts/ReflexDI/MainMenuInstaller.cs registers menu-scoped settings services (scoped lifetime): AudioVolumeSetting, GraphicSetting, FullScreenSetting, ResolutionSetting, and DamageNumbersSetting (each bound to their ISetting<TSelf, TValue> and ISettingLoader interfaces).
+  - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs binds scene object references and services: Main Camera (Camera), Player (IPlayerManager), UI Presenters (IPlayerDeathPresenter, IPlayerLevelPresenter, ISkillsVisualPresenter, ITimerPresenter, ISwarmNotificationPresenter), Grid System (IGridManager), Skill Upgrade Flow (ISkillUpgradeFlow), Spawners (IOnRandomGridPosSpawner<EnemiesSpawner>, ISwarmEnemySpawner, IEnemySpawnDifficultyController, ICollectibleDropNotifier, DropAnimationConfiguration, IInWorldSpaceSpawner<ExpParticleSpawner, float>), Waves (IWaveFreezer), and Post-Processing Volume (Volume).
+  - Assets/Scripts/ReflexDI/BootLoader.cs hooks into SceneScope.OnSceneContainerBuilding to register boot-scene services into every newly created scene container. It registers AudioMixersManager (IAudioMixersManager), BackgroundAudioManager (IBackgroundAudioManager), and DamageNumbersSpawner (IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> and IEnableDisableFunctionalityTrigger<DamageNumbersSpawner>). It also inspects root scene objects for DefaultGameplaySceneInstaller to pass the main camera to DamageNumbersSpawner.
+  - Assets/Scripts/GameFlow/GameScenesLoader.cs wraps SceneManager.LoadSceneAsync, tracks CurrentLoadedScene, and fires OnStartLoadingScene and OnSceneLoaded events.
+  - Assets/Scripts/GameFlow/GameTime.cs is a static helper class controlling Time.timeScale via Pause() (sets 0f) and Resume() (sets 1f).
 - Runtime flow:
-  - Boot scene creates the project Reflex container and injects `IGameSceneLoader` into `BootLoader`.
-  - `BootLoader.Start` registers `InstallExtra` with `SceneScope.OnSceneContainerBuilding`.
-  - After one `WaitForEndOfFrame`, `BootLoader` loads `GameScene.MainMenu`.
-  - `GameSceneLoader.LoadNewSceneAsync` raises `OnStartLoadingScene`, starts a single-mode scene load, then resumes `GameTime`, updates `CurrentLoadedScene`, and raises `OnSceneLoaded` when Unity completes the load.
-  - As scene containers are built, `BootLoader.InstallExtra` registers the serialized `AudioMixersManager`, `BackgroundAudioManager`, and `DamageNumbersSpawner` instances.
-  - When initializing scene camera dependencies, `BootLoader` checks the loaded scene's root game objects for a Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs components, extracting the main camera reference and initializing `DamageNumbersSpawner` with it.
+  - Boot scene initializes the Reflex project container and injects IGameSceneLoader into BootLoader.
+  - BootLoader.Start subscribes InstallExtra to SceneScope.OnSceneContainerBuilding and starts a coroutine that waits one frame (WaitForEndOfFrame) before invoking IGameSceneLoader.LoadNewSceneAsync(GameScene.MainMenu).
+  - When loading a scene, GameSceneLoader fires OnStartLoadingScene, executes single-mode async scene loading, and on completion calls GameTime.Resume(), updates CurrentLoadedScene, and fires OnSceneLoaded.
+  - As new scene containers build, BootLoader.InstallExtra resolves main camera dependencies for DamageNumbersSpawner if DefaultGameplaySceneInstaller is present, and registers boot-level audio and damage-number spawner singletons into the scene container.
 
 ## Rules and Invariants
 
 - Critical behavior rules:
-  - Keep scene/runtime dependencies explicit through Reflex bindings where DI is already used.
-  - Register gameplay-scene object references in Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs, menu settings in Assets/Scripts/ReflexDI/MainMenuInstaller.cs, project lifetime services in Assets/Scripts/ReflexDI/ProjectInstaller.cs, and cross-scene boot extras in Assets/Scripts/ReflexDI/BootLoader.cs.
-  - Do not replace existing injected dependencies with singleton access, `FindAnyObjectByType`, or broad scene searches.
-  - Preserve `GameScene` enum integer values unless Unity build settings and all call sites are intentionally updated together.
-  - Treat changes to boot scene loading order, first loaded scene, and `GameTime.Resume` on scene completion as flow changes requiring Unity play-mode validation.
+  - Explicit dependency injection via Reflex must be preserved; avoid direct GameObject.Find, FindAnyObjectByType, or static service locators.
+  - Scene-specific bindings belong in DefaultGameplaySceneInstaller.cs, menu settings in MainMenuInstaller.cs, project-lifetime singletons in ProjectInstaller.cs, and cross-scene boot singletons in BootLoader.cs.
+  - GameScene enum values (MainMenu = 1, RuinedBloodCity = 2) must remain consistent with Unity Build Settings scene indices.
+  - GameSceneLoader.LoadNewSceneAsync must invoke GameTime.Resume() upon completion to guarantee newly loaded scenes start unpaused.
 - Ordering or sequencing guarantees:
-  - `OnStartLoadingScene` fires before the async scene operation completes.
-  - `OnSceneLoaded` fires only from the async operation completion callback, after `GameTime.Resume()` and `CurrentLoadedScene` assignment.
-  - Boot extra bindings are attached through `SceneScope.OnSceneContainerBuilding` before target scene injection completes.
-  - `BootLoader.OnDisable` unsubscribes from `SceneScope.OnSceneContainerBuilding`.
+  - OnStartLoadingScene is raised before async loading starts.
+  - OnSceneLoaded is raised after scene loading finishes, GameTime.Resume() executes, and CurrentLoadedScene updates.
+  - BootLoader hooks SceneScope.OnSceneContainerBuilding in Start and unhooks in OnDisable.
 - Constraints contributors must preserve:
-  - Preserve serialized references in installers and boot scene objects.
-  - Keep installer code limited to wiring; gameplay services should live in their owning folders.
-  - Do not edit `.unity`, `.prefab`, `.asset`, or `.meta` files directly unless explicitly requested.
+  - Installer classes should focus exclusively on dependency registration, avoiding embedded gameplay or presentation logic.
+  - Do not modify binary or asset files (.unity, .prefab, .asset, .meta) directly unless requested.
 
 ## Extension Points
 
 - Safe extension areas:
-  - Add a project-wide service in Assets/Scripts/ReflexDI/ProjectInstaller.cs when it should survive scene changes and has no scene-object dependency.
-  - Add a gameplay scene service in Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs when it is a serialized scene object or gameplay-scene scoped dependency.
-  - Add a menu-only setting or service in Assets/Scripts/ReflexDI/MainMenuInstaller.cs.
-  - Add a boot-provided cross-scene MonoBehaviour service in Assets/Scripts/ReflexDI/BootLoader.cs's `InstallExtra` when it is owned by the boot scene and consumed by multiple scenes.
+  - ProjectInstaller.cs: register new global services with scene-independent lifetimes.
+  - DefaultGameplaySceneInstaller.cs: bind new gameplay-scoped services, UI presenters, or scene object references.
+  - MainMenuInstaller.cs: bind menu-scoped settings or menu-only UI presenters.
+  - BootLoader.cs (InstallExtra): register cross-scene MonoBehaviour services owned by the boot scene.
 - Required dependencies and contracts:
-  - New Reflex bindings should use existing narrow interfaces where possible.
-  - New scene enum entries must match Unity build index assumptions in `SceneManager.LoadSceneAsync((int)scene, LoadSceneMode.Single)`.
-  - Boot extras must remain valid serialized references in the boot scene.
+  - New Reflex bindings should prefer existing narrow interfaces.
+  - New scenes added to GameScene enum must match Unity Build Settings indices.
 - Testing implications:
-  - Documentation-only changes need path/link review.
-  - C# binding or scene-flow changes should compile with `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`.
-  - In Unity, validate boot to main menu, menu to gameplay, scene reload, background audio switching, settings load, damage number setting, death reload, and pause state after scene loads.
+  - C# compile verification: dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false.
+  - Unity Play Mode verification: test flow from Boot -> Main Menu -> Gameplay -> Death/Pause reload to confirm container resolution and service injection.
 
 ## Integration Notes
 
 - Upstream dependencies:
-  - Reflex provides installer execution, container building, and injection.
-  - Unity build settings must align with `GameScene` numeric values.
-  - Boot scene serialized references provide audio and damage-number cross-scene services.
+  - Reflex DI package handles container construction and attribute-based injection ([Inject]).
+  - Unity SceneManager and Build Settings configuration.
 - Downstream consumers:
-  - Menu buttons and death/reload UI call `IGameSceneLoader`.
-  - `BackgroundAudioManager` listens to `IGameSceneLoader` events.
-  - Settings consume boot-provided audio mixer and damage-number functionality services.
-  - Gameplay systems consume scene-bound player, grid, spawner, and UI presenter interfaces.
+  - UI Presenters, ScoreBoard components, Audio Managers, Spawners, and Gameplay managers consume Reflex-bound services.
+  - BackgroundAudioManager subscribes to IGameSceneLoader events for track switching across scene transitions.
 - Cross-system coupling risks:
-  - Moving `DamageNumbersSpawner` registration can break both enemy damage feedback and damage-number setting application.
-  - Changing scene load event order can break background audio and UI assumptions.
-  - Assets/Scripts/GameFlow/GameTime.cs is static and global; pause/resume calls from pause UI, skill UI, death UI, and scene loading can override each other.
+  - Modifying BootLoader bindings or event subscriptions can break global audio management or damage number popups across scene loads.
+  - GameTime static calls affect all scaled-time gameplay logic globally.
 
 ## Known Risks and Open Questions
 
 - Known limitations:
-  - Assets/Scripts/GameFlow/GameTime.cs has no pause reason stack, so the last caller wins.
-  - Assets/Scripts/GameFlow/GameScenesLoader.cs's `CurrentLoadedScene` defaults to `MainMenu` before any scene load completes.
-  - Scene loading depends on enum integer values rather than scene names or typed build-setting validation.
-  - Assets/Scripts/ReflexDI/BootLoader.cs loads main menu after one frame; scene setup that assumes a longer boot initialization window must be verified in Unity.
+  - GameTime is static without stack-based pause reason tracking; the latest call to Pause() or Resume() overwrites state.
+  - GameSceneLoader.CurrentLoadedScene defaults to GameScene.MainMenu before any scene loading operation completes.
+  - BootLoader relies on searching scene root objects for DefaultGameplaySceneInstaller to pass the main camera to DamageNumbersSpawner.
 - Open design questions:
-  - Should pause state become an injected service with reason tracking if more systems pause independently?
-  - Should scene references move from enum integer values to explicit scene asset/name configuration?
-  - Should boot extras be split into dedicated installers if more global services are added?
+  - Should GameTime be converted to an injected IGameTime service with pause reason stack support?
+  - Should scene loading transition from integer enum indices to scene reference assets?
 - Suggested follow-up tasks:
-  - Add a boot-flow checklist for Unity scene/build-settings validation.
-  - Consider centralizing pause ownership before adding more pause-capable overlays.
+  - Audit scene container building to ensure no redundant lookups occur on scene loads.
+

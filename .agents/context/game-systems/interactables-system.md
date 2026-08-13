@@ -2,100 +2,88 @@
 
 ## Purpose
 
-The Interactables system is responsible for spawning interactive objects onto the game board and managing their life cycle, input handling, and side effects.
+The Interactables system is responsible for spawning interactive map objectives onto the game board on scene startup and managing their lifecycle, player proximity checks, UI prompts, interaction mechanics, animation flows, and reward side-effects.
 
-It is responsible for:
-- Spawning interactive objects (such as difficulty-increasing totems) onto walkable grid cells on scene startup.
-- Checking player proximity to interactable objects.
-- Presenting interaction UI prompts when a player is within range.
-- Processing player interaction inputs (such as pressing the 'E' key) and executing target behaviors (e.g., increasing wave spawn difficulty).
-- Deactivating interactables post-interaction, executing visual feedback (VFX), and resolving object state.
+In Car Survivors, map interactables include:
+1. **Difficulty Totems (`IncreaseDifficultyTotem`)**: Proximity-triggered interactable objects that accept player input (e.g. 'E' key) to permanently boost enemy spawn chance redistribution speed and wave difficulty.
+2. **Capture Points (`CapturePoint`)**: Proximity-driven objective zones that track player car residence within a capture radius, animate expanding/outline ground planes via DOTween, decay progress when the player leaves, swap mesh materials upon acquisition, and reward a skill upgrade upon reaching 100% completion.
+3. **Map Interactables Spawner (`MapInteractablesSpawner`)**: Scene component that evaluates spatial rules to place interactables on walkable grid cells during scene initialization.
 
-It is not responsible for:
-- Managing the underlying grid coordinates or computing cell walkability.
-- Controlling enemy behavior directly, only adjusting spawn chance redistribution parameters.
-- Handling player driving physics or movement mechanics.
+It does not own grid coordinate generation or cell walkability logic (owned by Grid System) or enemy combat behavior.
 
 ## Reading Map
 
 - Primary code locations:
   - Assets/Scripts/Interactables/IncreaseDifficultyTotem.cs
+  - Assets/Scripts/Interactables/CapturePoint/CapturePoint.cs
   - Assets/Scripts/Spawners/MapInteractablesSpawner.cs
 - Related code:
   - Assets/Scripts/Navigation/GridSystem/GridManager.cs
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs
   - Assets/Scripts/Player/PlayerManager.cs
-  - Assets/Scripts/Providers/IGameObjectProvider.cs
+  - Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeFlow.cs
 - Related docs:
-  - .agents/context/project-coding-standards.md
   - .agents/context/game-systems/grid-system.md
-  - .agents/context/game-systems/enemies-spawn-system.md
+  - .agents/context/game-systems/enemy-spawning-and-waves-system.md
+  - .agents/context/game-systems/skills-system.md
   - .agents/context/game-systems/di-and-boot-flow-system.md
+  - .agents/context/project-coding-standards.md
+  - .agents/context/technology-documentation.md
 - Related agents or instructions:
+  - Root AGENTS.md
   - .agents/skills/document-system/SKILL.md
   - .agents/skills/di-integration/SKILL.md
 
 ## Architecture and Data Flow
 
 - Core components:
-  - MapInteractablesSpawner: A scene-bound component that reads InteractableSpawnRule configs to instantiate interactable prefabs at start. It queries the GridManager for walkable cells, shuffles them, filters candidates using spawn constraints, instantiates prefabs, and injects dependencies via Reflex.
-  - InteractableSpawnRule: A serialized class holding configuration data for a specific interactable prefab, including spawn counts (min/max), minimum distance to impassable (unwalkable) cells, minimum distance to other interactables, and minimum distance to other spawned objects of the same type.
-  - IncreaseDifficultyTotem: A concrete interactable component that manages proximity checks with the player manager, displays/hides an interaction Canvas, listens for user keyboard input, applies difficulty adjustments, triggers VFX, and disables its update loop on activation.
+  - MapInteractablesSpawner: Scene-bound spawner that reads `InteractableSpawnRule` configs to place interactables at scene start. Queries `IGridManager` for walkable cells, shuffles candidates, checks spatial distance rules (distance to impassable cells, distance to other interactables, distance to same type), instantiates prefabs, and injects dependencies via Reflex.
+  - InteractableSpawnRule: Serialized configuration holding prefab references, min/max spawn counts, and distance constraints.
+  - IncreaseDifficultyTotem: Interactive totem component. Measures player distance, displays an interaction Canvas prompt when in range, listens for 'E' key press, calls `IEnemySpawnDifficultyController.IncreaseSpawnChanceRedistributionFactor`, triggers VFX, and deactivates itself.
+  - CapturePoint: Proximity-based area objective. Tracks player presence inside `_captureRadius` using squared distance (`sqrMagnitude`), scales an expanding ground circle plane, triggers outline plane pop-in/pulse/shrink animations via DOTween, decays progress when the player exits, swaps target mesh materials upon 100% capture, plays capture VFX, and queues a random skill upgrade request via `ISkillUpgradeFlow`.
 - Key interfaces:
-  - The system does not currently define a generic interface for interactables or their spawners. Custom interactables are implemented as separate components (e.g., IncreaseDifficultyTotem is a standalone MonoBehaviour).
+  - `IPlayerManager`: Injected dependency used by interactables to query player position and `SkillsRegistry`.
+  - `IEnemySpawnDifficultyController`: Injected into `IncreaseDifficultyTotem` to modify enemy spawn chance weights.
+  - `ISkillUpgradeFlow`: Injected into `CapturePoint` to queue skill upgrades upon capture completion.
+  - `IGridManager`: Injected into `MapInteractablesSpawner` to fetch walkable cells.
 - Runtime flow:
-  1. On scene Start(), MapInteractablesSpawner initializes.
-  2. The spawner fetches the list of walkable cells from IGridManager.WorldGrid.
-  3. Walkable cells are shuffled randomly to prevent predictable patterns.
-  4. For each configured InteractableSpawnRule, the spawner attempts to place the prefab on candidates. It ensures cells are not too close to impassable/blocked cells, any existing interactable spawns across all rules, or existing spawns of the same type (using grid-cell distance).
-  5. The spawner instantiates matching prefabs at the cell's world position.
-  6. The spawner injects dependencies recursively into the spawned game object and its children using the scene's Reflex Container (Reflex.Injectors.GameObjectInjector.InjectRecursive(spawnedObject, _container)).
-  7. When a player drives near IncreaseDifficultyTotem (within _interactionRadius), the totem displays _interactionCanvas.
-  8. If the player presses 'E' (Keyboard.current.eKey.wasPressedThisFrame), the totem increases difficulty via IEnemySpawnDifficultyController.IncreaseSpawnChanceRedistributionFactor(_difficultyIncreaseAmount), hides the canvas/visuals, triggers a VFXPlayer instance, and disables its own MonoBehaviour (enabled = false).
+  - **Spawning**: On scene `Start()`, `MapInteractablesSpawner` fetches walkable cells from `IGridManager.WorldGrid`, shuffles them, filters candidates using rules, instantiates interactable prefabs, and recursively injects Reflex dependencies via `GameObjectInjector.InjectRecursive`.
+  - **Totem Interaction**: `IncreaseDifficultyTotem.Update` measures distance to player. When within `_interactionRadius`, it displays `_interactionCanvas`. If 'E' is pressed (`Keyboard.current.eKey.wasPressedThisFrame`), it increases difficulty factor, hides canvas, triggers VFX, and sets `enabled = false`.
+  - **Capture Point Execution**: `CapturePoint.Update` measures squared distance to player. While inside radius, `_progress` increases over `_captureDurationSeconds` and `_expandingCirclePlane` scales up. An outline circle plane pops in with `Ease.OutBack`. If the player leaves, progress decays based on `_decaySpeedMultiplier` and the outline scales down. Upon reaching 1.0 progress:
+    1. `_isCaptured` becomes true and progress locks.
+    2. Ground and outline circle planes shrink to zero scale via DOTween before deactivating.
+    3. Target mesh materials (`_targetRenderer.materials`) swap to `_capturedMaterial1` and `_capturedMaterial2`.
+    4. Skill upgrade request is queued via `ISkillUpgradeFlow.QueueRandomSkillUpgradeRequest`.
+    5. Capture VFX plays and `CapturePoint` disables itself (`enabled = false`).
 
 ## Rules and Invariants
 
 - Critical behavior rules:
-  - Spawning must only occur on walkable cells.
-  - Interactables must respect spatial constraints: minimum distance to impassable blocks, minimum distance to any other interactable, and minimum spacing between identical interactable types.
-  - Dependency injection for spawned interactables must always be done immediately after instantiation using Reflex's GameObjectInjector.InjectRecursive.
-  - Interactables must check for a valid player GameObject reference (_playerManager.GameObject) before performing distance checks.
+  - Spawning occurs strictly on walkable cells during scene `Start()`.
+  - Distance checks in `CapturePoint` use squared magnitude (`sqrMagnitude <= _captureRadius * _captureRadius`) to avoid square root calculations.
+  - Capture progress is strictly clamped between 0.0 and 1.0.
+  - Dependency injection for dynamically spawned interactables must use `Reflex.Injectors.GameObjectInjector.InjectRecursive`.
+  - Completed interactables set `enabled = false` to stop `Update` execution.
+  - Active DOTween scale tweens must be killed in `OnDestroy` to avoid missing target warnings or memory leaks.
 - Constraints contributors must preserve:
-  - Keep player-facing interactions decoupled from direct player code; interactables check player distance and local keyboard state themselves.
-  - Avoid using FindAnyObjectByType or static singletons to resolve dependencies; always inject IPlayerManager and other services via Reflex.
-  - Always clean up the interaction UI (deactivate _interactionCanvas) when the interactable is used or disabled (OnDisable()).
+  - Do not use static singletons or `FindAnyObjectByType` to resolve dependencies; inject `IPlayerManager`, `ISkillUpgradeFlow`, etc., via Reflex.
+  - Clean up UI prompts or canvases when objects are deactivated.
 
 ## Extension Points
 
-- Safe extension areas:
-  - Creating new types of interactables by writing new MonoBehaviour classes and creating matching prefabs.
-  - Adding new rules under MapInteractablesSpawner's _spawnRules list in the Unity inspector.
-- Required dependencies and contracts:
-  - Interactables that need player or enemy state must define [Inject] fields for dependency injection.
-  - Interactables require proximity detection (typically measuring Vector3.Distance to the player position in Update()).
-- Testing implications:
-  - Compile-check: Run `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false` to ensure changes compile.
-  - Play-test: Verify interactables spawn on the map correctly (e.g. inside RuinedBloodCity). Check if the UI prompt appears when close, disappears when far, and disappears after interacting. Confirm the difficulty modification or other side-effects execute properly.
+- **Adding Interactables**: Create a new MonoBehaviour (or prefab), add an entry under `_spawnRules` in `MapInteractablesSpawner` in the Inspector, and configure spatial constraints.
+- **Capture Point Visuals**: Customize `_captureRadius`, `_captureDurationSeconds`, `_decaySpeedMultiplier`, `_maxCircleScale`, `_outlineCirclePlane`, and captured materials on the `CapturePoint` Inspector fields.
 
 ## Integration Notes
 
 - Upstream dependencies:
-  - IGridManager: Used by MapInteractablesSpawner to inspect layout walkability.
-  - IPlayerManager: Used by individual interactables to track player position.
-  - IEnemySpawnDifficultyController: Used by IncreaseDifficultyTotem to modify enemy spawning weights.
-  - Reflex DI: Used to resolve dependencies on dynamically spawned prefabs.
+  - `IGridManager`: Supplies cell walkability for spawning.
+  - `IPlayerManager`: Supplies player position.
+  - Reflex DI: Injects dependencies on dynamically spawned prefabs.
 - Downstream consumers:
-  - Individual interactable components that trigger effects.
-  - Player HUD/UI: Screens or overlays displayed for interactables.
-- Cross-system coupling risks:
-  - High dependency on Keyboard.current directly from the Unity Input System, which assumes active keyboard input and doesn't support gamepad binding naturally.
-  - Spawner directly reads Grid data at startup, which requires grid initialization to be completed first (ensure correct execution/startup order).
+  - `SkillUpgradePresenter`: Displays skill upgrade modal UI when `CapturePoint` completes its reward flow.
+  - `EnemiesSpawnChanceRedistributionSystem`: Receives difficulty multiplier increases from totems.
 
 ## Known Risks and Open Questions
 
-- Known limitations:
-  - Lack of a common IInteractable abstraction makes it harder to have a generic Player interaction component or generic interaction manager. Each interactable handles its own distance detection and keyboard input checks.
-  - Interaction key 'E' is hardcoded within IncreaseDifficultyTotem.cs instead of using the Unity Input System actions, meaning it cannot easily be rebound via player settings.
-- Open design questions:
-  - Should the game transition to a centralized interaction manager (e.g., player vehicle has an interaction trigger/raycast and presses interaction key, triggering the nearest IInteractable) rather than each interactable polling player distance in Update?
-  - Should we bind spawning of interactables to wave transitions or allow mid-game spawning? Currently spawning is only performed once at scene start.
+- **Interaction Key Rebinding**: `IncreaseDifficultyTotem` directly checks `Keyboard.current.eKey`, which bypasses the Unity Input System actions asset and does not support gamepad binding out of the box.

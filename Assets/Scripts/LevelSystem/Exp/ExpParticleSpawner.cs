@@ -1,11 +1,9 @@
-﻿using Assets.Scripts.Spawners.WorldSpace;
-using Assets.Scripts.Utils;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using Assets.Scripts.Spawners.WorldSpace;
+using Assets.Scripts.Utils;
 using UnityEngine;
 using UnityEngine.Pool;
-using UnityEngine.Serialization;
 
 namespace Assets.Scripts.LevelSystem.Exp
 {
@@ -33,15 +31,15 @@ namespace Assets.Scripts.LevelSystem.Exp
             public float Divider => _divider;
         }
 
+        private const float CHECK_QUEUED_EXP_SPAWNS_DELAY = 0.2f;
+
         [SerializeField] private Transform _expParticlesParent;
         [SerializeField] private float _particlesYOffset;
         [SerializeField] private ExpParticle _expParticlePrefab;
         [SerializeField] private ExpTresholdDevider[] _expTresholdDeviders;
         [SerializeField, Range(0, 30f)] private float _spawningCircleRadius;
 
-        private const float CHECK_QUEUED_EXP_SPAWNS_DELAY = 0.2f;
-
-        private Queue<ExpParticleSpawnData> _queuedExpSpawns = new();
+        private readonly Queue<ExpParticleSpawnData> _queuedExpSpawns = new();
         private IObjectPool<ExpParticle> _expParticlePool;
 
         public event EventHandler OnSpawnedEntityReleased;
@@ -73,27 +71,28 @@ namespace Assets.Scripts.LevelSystem.Exp
             CancelInvoke(nameof(SpawnParticlesBasedOnExpAmount));
         }
 
+        public void Spawn(Vector3 pos, float expValue, int count = 1)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                _queuedExpSpawns.Enqueue(new ExpParticleSpawnData(pos, expValue));
+            }
+        }
+
         private void OnGet(ExpParticle expParticle)
         {
             expParticle.OnGet();
-
             expParticle.OnCanBeReleased += ExpParticle_OnRelease;
-
             expParticle.gameObject.SetActive(true);
-
             CurrentlySpawnedObjectsCount++;
         }
 
         private void OnRelease(ExpParticle expParticle)
         {
             expParticle.OnRelease();
-
             expParticle.OnCanBeReleased -= ExpParticle_OnRelease;
-
             expParticle.gameObject.SetActive(false);
-
             OnSpawnedEntityReleased?.Invoke(this, EventArgs.Empty);
-
             CurrentlySpawnedObjectsCount--;
         }
 
@@ -105,19 +104,12 @@ namespace Assets.Scripts.LevelSystem.Exp
             }
         }
 
-        public void Spawn(Vector3 pos, float expValue, int count = 1)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                _queuedExpSpawns.Enqueue(new ExpParticleSpawnData(pos, expValue));
-            }
-        }
-
         private void SpawnParticlesBasedOnExpAmount()
         {
-            if (_expTresholdDeviders.Length == 0)
+            if (_expTresholdDeviders == null || _expTresholdDeviders.Length == 0)
             {
                 Debug.LogError("Exp treshold deviders not set for: " + transform.name);
+                return;
             }
 
             if (_queuedExpSpawns.Count == 0)
@@ -125,25 +117,34 @@ namespace Assets.Scripts.LevelSystem.Exp
                 return;
             }
 
-            ExpTresholdDevider[] reversedExpTresholdDeviders = _expTresholdDeviders.Reverse().ToArray();
-
             while (_queuedExpSpawns.Count > 0)
             {
                 ExpParticleSpawnData expParticleSpawnData = _queuedExpSpawns.Dequeue();
                 float exp = expParticleSpawnData.Exp;
                 Vector3 sphereCenterPos = expParticleSpawnData.Pos;
 
-                ExpTresholdDevider expTresholdDevider =
-                    reversedExpTresholdDeviders.FirstOrDefault(etd => etd.Treshold <= exp);
+                ExpTresholdDevider expTresholdDevider = GetMatchingTresholdDivider(exp);
 
                 float expPart = exp / expTresholdDevider.Divider;
                 for (int i = 0; i < expTresholdDevider.Divider; i++)
                 {
                     ExpParticle expParticle = SpawnExpParticleOnRandomPointInSphere(exp, sphereCenterPos);
-
                     expParticle.OnExpReachedTarget += ExpParticle_OnExpReachedTarget;
                 }
             }
+        }
+
+        private ExpTresholdDevider GetMatchingTresholdDivider(float exp)
+        {
+            for (int i = _expTresholdDeviders.Length - 1; i >= 0; i--)
+            {
+                if (_expTresholdDeviders[i].Treshold <= exp)
+                {
+                    return _expTresholdDeviders[i];
+                }
+            }
+
+            return _expTresholdDeviders[0];
         }
 
         private ExpParticle SpawnExpParticleOnRandomPointInSphere(float exp, Vector3 sphereCenterPos)
@@ -165,9 +166,9 @@ namespace Assets.Scripts.LevelSystem.Exp
             if (sender is ExpParticle expParticle)
             {
                 expParticle.CollectExp();
-
                 expParticle.OnExpReachedTarget -= ExpParticle_OnExpReachedTarget;
             }
         }
     }
 }
+

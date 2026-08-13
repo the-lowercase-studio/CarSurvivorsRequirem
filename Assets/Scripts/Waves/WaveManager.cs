@@ -15,18 +15,19 @@ namespace Assets.Scripts.Waves
     {
         [Inject] private readonly IOnRandomGridPosSpawner<EnemiesSpawner> _enemiesSpawner;
 
-        [SerializeField] private float _startSpawnWaveDelay = 8f;
+        [SerializeField] private WaveConfig _config;
+
         private float _currentSpawnWaveDelay;
-        private float _firstWaveDelay = 1f;
-        private ushort _maxEnemiesInWave = 4;
-        private float _maxEnemiesInWaveMultiplier = 1.2f;
+        private ushort _maxEnemiesInWave;
         private ushort _wave = 1;
 
         public bool IsFrozen { get; set; }
 
         private void Start()
         {
-            _currentSpawnWaveDelay = _firstWaveDelay;
+            float firstWaveDelay = _config != null ? _config.FirstWaveDelay : 1f;
+            _maxEnemiesInWave = _config != null ? _config.InitialMaxEnemiesInWave : (ushort)4;
+            _currentSpawnWaveDelay = firstWaveDelay;
         }
 
         private void Update()
@@ -45,17 +46,19 @@ namespace Assets.Scripts.Waves
             else
             {
                 SpawnWave();
-                _currentSpawnWaveDelay = _startSpawnWaveDelay;
+                float startWaveDelay = _config != null ? _config.StartSpawnWaveDelay : 8f;
+                _currentSpawnWaveDelay = startWaveDelay;
             }
         }
 
         private void SpawnWave()
         {
             _enemiesSpawner.SpawnAtRandomGridPos(_maxEnemiesInWave);
-            float maxEnemiesInWave = _maxEnemiesInWave * _maxEnemiesInWaveMultiplier;
+            float multiplier = _config != null ? _config.MaxEnemiesInWaveMultiplier : 1.2f;
+            float maxEnemiesInWave = _maxEnemiesInWave * multiplier;
             if (maxEnemiesInWave < ushort.MaxValue)
             {
-                _maxEnemiesInWave = (ushort)(_maxEnemiesInWave * _maxEnemiesInWaveMultiplier);
+                _maxEnemiesInWave = (ushort)maxEnemiesInWave;
             }
             else
             {

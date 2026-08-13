@@ -1,3 +1,4 @@
+using Assets.Scripts.Player.Constants;
 using System;
 using UnityEngine;
 
@@ -34,9 +35,6 @@ namespace Assets.Scripts.Player.Car
         [Tooltip("Czas w sekundach, przez jaki ślad opon z driftu płynnie zanika (fade out) pod koniec swojego czasu trwania.")]
         [SerializeField] private float _driftTrailFadeTime = 0.5f;
 
-        private const float SPEED_CHECK_FOR_TRAIL_DELAY = 0.1f;
-        private const string CAR_STOP_LIGHTS_MAT_NAME = "CarStopLights";
-
         private ICarController _carController;
         private Material _carStopLightsMat;
 
@@ -60,7 +58,7 @@ namespace Assets.Scripts.Player.Car
             {
                 foreach (Material mat in _carMeshRenderer.materials)
                 {
-                    if (mat != null && mat.name.StartsWith(CAR_STOP_LIGHTS_MAT_NAME))
+                    if (mat != null && mat.name.StartsWith(CarVfxConstants.CAR_STOP_LIGHTS_MAT_NAME))
                     {
                         _carStopLightsMat = mat;
                         break;
@@ -70,8 +68,8 @@ namespace Assets.Scripts.Player.Car
 
             InvokeRepeating(
                 nameof(ActivateSpeedTrailWhenSpeedExceedsThreshold),
-                SPEED_CHECK_FOR_TRAIL_DELAY,
-                SPEED_CHECK_FOR_TRAIL_DELAY
+                CarVfxConstants.SPEED_CHECK_FOR_TRAIL_DELAY,
+                CarVfxConstants.SPEED_CHECK_FOR_TRAIL_DELAY
             );
 
             SetTrailTime(_rearTrailRenderers, _trailDisappearingSpeed);

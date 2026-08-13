@@ -1,4 +1,5 @@
 using Assets.Scripts.Collisions;
+using Assets.Scripts.Enemies.Constants;
 using Assets.Scripts.Extensions;
 using Assets.Scripts.LayerMasks;
 using System;
@@ -36,9 +37,7 @@ namespace Assets.Scripts.Enemies.Base
 
         private void OnDrawGizmos()
         {
-            const int SEGMENTS = 16;
-
-            new Debug().DrawCircle(transform.position, _collisionRadius, SEGMENTS, Color.yellow);
+            new Debug().DrawCircle(transform.position, _collisionRadius, EnemyCombatConstants.CIRCLE_DEBUG_SEGMENTS, Color.yellow);
         }
 
         private void SetAllColliders()

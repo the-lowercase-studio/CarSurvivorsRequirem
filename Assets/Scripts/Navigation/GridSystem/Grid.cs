@@ -6,9 +6,9 @@ namespace Assets.Scripts.Navigation.GridSystem
     [Serializable]
     public class GridConfiguration
     {
-        public int Width;
-        public int Height;
-        public float CellSize;
+        [field: SerializeField] public int Width { get; private set; }
+        [field: SerializeField] public int Height { get; private set; }
+        [field: SerializeField] public float CellSize { get; private set; }
 
         public GridConfiguration(int width, int height, float cellSize)
         {
@@ -49,7 +49,7 @@ namespace Assets.Scripts.Navigation.GridSystem
             {
                 for (int j = 0; j < height; j++)
                 {
-                    var gridPos = new Vector2Int(i, j);
+                    Vector2Int gridPos = new Vector2Int(i, j);
                     cells[i, j] = new Cell(currentTilePos, gridPos, gridPos);
                     currentTilePos.z += CellSize;
                 }

@@ -1,3 +1,4 @@
+using Assets.Scripts.Skills.Constants;
 using Assets.Scripts.Stats;
 using UnityEngine;
 
@@ -5,9 +6,6 @@ namespace Assets.Scripts.Skills.UpgradeFlow
 {
     public static class SkillUpgradeRarityCalculator
     {
-        private const float RARE_THRESHOLD = 0.5f;
-        private const float ULTRA_RARE_THRESHOLD = 0.8f;
-
         public static SkillUpgradeRarity Calculate(IUpgradeableStat upgradeableStat, float rolledUpgradeValue)
         {
             float upgradeValue = upgradeableStat.AlwaysUseMinValueForUpgrade
@@ -16,12 +14,12 @@ namespace Assets.Scripts.Skills.UpgradeFlow
 
             if (TryGetNormalizedRangePosition(upgradeableStat, upgradeValue, out float normalizedRangePosition))
             {
-                if (normalizedRangePosition >= ULTRA_RARE_THRESHOLD)
+                if (normalizedRangePosition >= SkillConstants.ULTRA_RARE_THRESHOLD)
                 {
                     return SkillUpgradeRarity.UltraRare;
                 }
 
-                if (normalizedRangePosition >= RARE_THRESHOLD)
+                if (normalizedRangePosition >= SkillConstants.RARE_THRESHOLD)
                 {
                     return SkillUpgradeRarity.Rare;
                 }
@@ -51,3 +49,4 @@ namespace Assets.Scripts.Skills.UpgradeFlow
         }
     }
 }
+

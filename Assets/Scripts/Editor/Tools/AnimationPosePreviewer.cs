@@ -126,34 +126,69 @@ namespace Assets.Scripts.Editor.Tools
                 float value = curve.Evaluate(0f); // First frame
 
                 if (!targetTransforms.TryGetValue(binding.path, out Transform targetTransform))
+                {
                     continue;
+                }
 
                 if (binding.type == typeof(Transform))
                 {
                     if (binding.propertyName.StartsWith("m_LocalPosition"))
                     {
                         Vector3 pos = targetTransform.localPosition;
-                        if (binding.propertyName.EndsWith(".x")) pos.x = value;
-                        else if (binding.propertyName.EndsWith(".y")) pos.y = value;
-                        else if (binding.propertyName.EndsWith(".z")) pos.z = value;
+                        if (binding.propertyName.EndsWith(".x"))
+                        {
+                            pos.x = value;
+                        }
+                        else if (binding.propertyName.EndsWith(".y"))
+                        {
+                            pos.y = value;
+                        }
+                        else if (binding.propertyName.EndsWith(".z"))
+                        {
+                            pos.z = value;
+                        }
+
                         targetTransform.localPosition = pos;
                     }
                     else if (binding.propertyName.StartsWith("m_LocalScale"))
                     {
                         Vector3 scale = targetTransform.localScale;
-                        if (binding.propertyName.EndsWith(".x")) scale.x = value;
-                        else if (binding.propertyName.EndsWith(".y")) scale.y = value;
-                        else if (binding.propertyName.EndsWith(".z")) scale.z = value;
+                        if (binding.propertyName.EndsWith(".x"))
+                        {
+                            scale.x = value;
+                        }
+                        else if (binding.propertyName.EndsWith(".y"))
+                        {
+                            scale.y = value;
+                        }
+                        else if (binding.propertyName.EndsWith(".z"))
+                        {
+                            scale.z = value;
+                        }
+
                         targetTransform.localScale = scale;
                     }
                     else if (binding.propertyName.StartsWith("m_LocalRotation"))
                     {
                         Quaternion rot = targetTransform.localRotation;
                         Vector4 q = new Vector4(rot.x, rot.y, rot.z, rot.w);
-                        if (binding.propertyName.EndsWith(".x")) q.x = value;
-                        else if (binding.propertyName.EndsWith(".y")) q.y = value;
-                        else if (binding.propertyName.EndsWith(".z")) q.z = value;
-                        else if (binding.propertyName.EndsWith(".w")) q.w = value;
+                        if (binding.propertyName.EndsWith(".x"))
+                        {
+                            q.x = value;
+                        }
+                        else if (binding.propertyName.EndsWith(".y"))
+                        {
+                            q.y = value;
+                        }
+                        else if (binding.propertyName.EndsWith(".z"))
+                        {
+                            q.z = value;
+                        }
+                        else if (binding.propertyName.EndsWith(".w"))
+                        {
+                            q.w = value;
+                        }
+
                         targetTransform.localRotation = new Quaternion(q.x, q.y, q.z, q.w);
                     }
                 }

@@ -1,3 +1,4 @@
+using Assets.Scripts.Navigation.Constants;
 using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.LayerMasks;
 using System.Collections.Generic;
@@ -8,18 +9,12 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
 {
     public class FlowField
     {
-        private const int IMPASSABLE_COST = 255;
-        private const int ROUGH_TERRAIN_COST = 3;
-        private const int DEFAULT_FIELD_COST = 1;
-        private const int TERRAIN_COLLIDER_BUFFER_SIZE = 16;
-
-        private readonly Collider[] _terrainColliderBuffer = new Collider[TERRAIN_COLLIDER_BUFFER_SIZE];
+        private readonly Collider[] _terrainColliderBuffer = new Collider[FlowFieldConstants.TERRAIN_COLLIDER_BUFFER_SIZE];
         private readonly Queue<Cell> _cellsToCheck = new();
 
         public void CreateCostField(NavigationGrid grid)
         {
-            float edgesOffset = -0.05f;
-            Vector3 halfExtents = Vector3.one * (grid.CellSize / 2 + edgesOffset);
+            Vector3 halfExtents = Vector3.one * (grid.CellSize / 2 + FlowFieldConstants.EDGES_OFFSET);
 
             for (int i = 0; i < grid.Cells.GetLength(0); i++)
             {
@@ -46,33 +41,33 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
                         // A full NonAlloc buffer may have truncated colliders, so block the cell conservatively.
                         if (obstacleCount == _terrainColliderBuffer.Length)
                         {
-                            maxCost = IMPASSABLE_COST;
+                            maxCost = FlowFieldConstants.IMPASSABLE_COST;
                         }
 
                         for (int obstacleIndex = 0; obstacleIndex < obstacleCount; obstacleIndex++)
                         {
                             Collider obstacle = _terrainColliderBuffer[obstacleIndex];
                             int layerValue = 1 << obstacle.gameObject.layer;
-                            if (maxCost < IMPASSABLE_COST
+                            if (maxCost < FlowFieldConstants.IMPASSABLE_COST
                                 && (layerValue & TerrainLayers.Impassable.value) == TerrainLayers.Impassable.value)
                             {
-                                maxCost = IMPASSABLE_COST;
+                                maxCost = FlowFieldConstants.IMPASSABLE_COST;
                             }
-                            else if (maxCost < ROUGH_TERRAIN_COST
+                            else if (maxCost < FlowFieldConstants.ROUGH_TERRAIN_COST
                                 && (layerValue & TerrainLayers.Rough.value) == TerrainLayers.Rough.value)
                             {
-                                maxCost = ROUGH_TERRAIN_COST;
+                                maxCost = FlowFieldConstants.ROUGH_TERRAIN_COST;
                             }
                         }
 
-                        if (maxCost > DEFAULT_FIELD_COST)
+                        if (maxCost > FlowFieldConstants.DEFAULT_FIELD_COST)
                         {
                             cell.IncreaseCost(maxCost);
                         }
                     }
                     else
                     {
-                        cell.IncreaseCost(IMPASSABLE_COST);
+                        cell.IncreaseCost(FlowFieldConstants.IMPASSABLE_COST);
                     }
                 }
             }

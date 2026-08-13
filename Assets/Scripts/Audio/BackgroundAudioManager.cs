@@ -1,5 +1,5 @@
-﻿using System;
-using System.Linq;
+using System;
+using Assets.Scripts.Audio.Constants;
 using Assets.Scripts.Common.EventArgs;
 using Assets.Scripts.GameFlow;
 using Reflex.Attributes;
@@ -31,9 +31,9 @@ namespace Assets.Scripts.Audio
         [Inject] private readonly IGameSceneLoader _gameSceneLoader;
 
         [SerializeField] private AudioClipInSceneConfig[] _clipConfigInScenes;
+        [SerializeField] private float _deathAudioPitch = AudioConstants.DEATH_AUDIO_PITCH;
 
         private AudioSource _audioSource;
-        private float _deathAudioPitch = 0.6f;
 
         private void Awake()
         {
@@ -57,7 +57,7 @@ namespace Assets.Scripts.Audio
 
         public void ChangeAudioToDefaultAudioMode()
         {
-            _audioSource.pitch = 1f;
+            _audioSource.pitch = AudioConstants.DEFAULT_PITCH;
         }
 
         private void SceneManager_OnSceneLoaded(object sender, ValueEventArgs<GameScene> args)
@@ -67,9 +67,7 @@ namespace Assets.Scripts.Audio
 
         private void PlayOrContinuePlayingCorrectSceneBackgroundMusic(GameScene newScene)
         {
-            AudioClipConfig clipConfig = _clipConfigInScenes
-                .FirstOrDefault(config => config.Scene == newScene)
-                ?.ClipConfig;
+            AudioClipConfig clipConfig = GetClipConfigForScene(newScene);
 
             if (clipConfig is null)
             {
@@ -86,5 +84,24 @@ namespace Assets.Scripts.Audio
                 _audioSource.Play();
             }
         }
+
+        private AudioClipConfig GetClipConfigForScene(GameScene scene)
+        {
+            if (_clipConfigInScenes == null)
+            {
+                return null;
+            }
+
+            foreach (AudioClipInSceneConfig config in _clipConfigInScenes)
+            {
+                if (config != null && config.Scene == scene)
+                {
+                    return config.ClipConfig;
+                }
+            }
+
+            return null;
+        }
     }
 }
+

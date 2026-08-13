@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Collections.Generic;
 using Assets.Scripts.Settings;
 using Assets.Scripts.Settings.Resolution;
 using Reflex.Attributes;
@@ -31,29 +31,46 @@ namespace Assets.Scripts.UI.Settings
 
         public void LoadComponent()
         {
-            _resolutionDropdown.SetValueWithoutNotify(
-                ScreenSerializableResolutionHelper.GetAvailableResolutions()
-                .ToList()
-                .IndexOf(_resolutionSetting.GetValueOrStoredDefault())
-            );
+            SerializableResolution current = _resolutionSetting.GetValueOrStoredDefault();
+            int targetIndex = 0;
+            int index = 0;
+            foreach (SerializableResolution res in ScreenSerializableResolutionHelper.GetAvailableResolutions())
+            {
+                if (res.Equals(current))
+                {
+                    targetIndex = index;
+                    break;
+                }
+                index++;
+            }
+
+            _resolutionDropdown.SetValueWithoutNotify(targetIndex);
         }
 
         public void PerformValueChange(int value)
         {
-            _resolutionSetting.SaveValue(
-                ScreenSerializableResolutionHelper.GetAvailableResolutions().ToList()[value]
-            );
-
-            _resolutionSetting.Load();
+            int index = 0;
+            foreach (SerializableResolution res in ScreenSerializableResolutionHelper.GetAvailableResolutions())
+            {
+                if (index == value)
+                {
+                    _resolutionSetting.SaveValue(res);
+                    _resolutionSetting.Load();
+                    return;
+                }
+                index++;
+            }
         }
 
         private void SetDropdownOptions()
         {
             _resolutionDropdown.ClearOptions();
 
-            var options = ScreenSerializableResolutionHelper.GetAvailableResolutions()
-                .Select(r => $"{r.Width} x {r.Height}")
-                .ToList();
+            List<string> options = new List<string>();
+            foreach (SerializableResolution r in ScreenSerializableResolutionHelper.GetAvailableResolutions())
+            {
+                options.Add($"{r.Width} x {r.Height}");
+            }
 
             _resolutionDropdown.AddOptions(options);
         }

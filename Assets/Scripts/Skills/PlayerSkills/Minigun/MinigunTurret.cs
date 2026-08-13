@@ -1,7 +1,8 @@
-﻿using Assets.ScriptableObjects;
+using Assets.ScriptableObjects;
 using Assets.Scripts.Audio;
 using Assets.Scripts.Extensions;
 using Assets.Scripts.Projectiles;
+using Assets.Scripts.Projectiles.Constants;
 using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.VFX;
 using DG.Tweening;
@@ -15,10 +16,10 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
         IInWorldSpaceSpawner<MinigunTurret, ProjectileSpawnConfig>
     {
         [SerializeField] private bool _inverseRotation;
-        private Tween _rotationTween;
-        private IVFXPlayer _muzzleFleshVFXPlayer;
-        private IAudioClipPlayer _audioClipPlayer;
 
+        private Tween _rotationTween;
+        private IVFXPlayer _muzzleFlashVFXPlayer;
+        private IAudioClipPlayer _audioClipPlayer;
         private IObjectPool<Projectile> _projectilePool;
 
         public event EventHandler OnSpawnedEntityReleased;
@@ -29,15 +30,15 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
         {
             base.Awake();
 
-            _muzzleFleshVFXPlayer = GetComponentInChildren<IVFXPlayer>();
+            _muzzleFlashVFXPlayer = GetComponentInChildren<IVFXPlayer>();
             _audioClipPlayer = GetComponentInChildren<IAudioClipPlayer>();
 
             _projectilePool = new ObjectPool<Projectile>(
                 createFunc: () => Instantiate(_turretsProejctile, _projectilesParent),
                 actionOnGet: OnGetProjectile,
                 actionOnRelease: OnReleaseProjectile,
-                defaultCapacity: 10,
-                maxSize: 64
+                defaultCapacity: ProjectileConstants.DEFAULT_PROJECTILE_POOL_CAPACITY,
+                maxSize: ProjectileConstants.MAX_PROJECTILE_POOL_SIZE
             );
         }
 
@@ -84,7 +85,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
 
             projectile.Initialize(_config.ProjectileStatsSO);
 
-            _muzzleFleshVFXPlayer.Play(new());
+            _muzzleFlashVFXPlayer.Play(new());
 
             _audioClipPlayer.Play("Shoot");
         }
@@ -103,9 +104,8 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
         {
             projectile.OnGet();
 
-            projectile.OnLifeEnd += Projectile_OnLifeEnd;
-
-            projectile.OnCanBeReleased += Projectile_OnLifeEnd;
+            projectile.OnLifeEnd -= OnProjectileLifeEnded;
+            projectile.OnLifeEnd += OnProjectileLifeEnded;
 
             projectile.gameObject.SetActive(true);
 
@@ -116,9 +116,8 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
         {
             projectile.OnRelease();
 
-            projectile.OnLifeEnd -= Projectile_OnLifeEnd;
-
-            projectile.OnCanBeReleased -= Projectile_OnLifeEnd;
+            projectile.OnLifeEnd -= OnProjectileLifeEnded;
+            projectile.OnCanBeReleased -= OnProjectileLifeEnded;
 
             projectile.gameObject.SetActive(false);
 
@@ -127,7 +126,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
             CurrentlySpawnedObjectsCount--;
         }
 
-        private void Projectile_OnLifeEnd(object sender, System.EventArgs e)
+        private void OnProjectileLifeEnded(object sender, System.EventArgs e)
         {
             if (sender is Projectile projectile)
             {
@@ -147,3 +146,4 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
         }
     }
 }
+

@@ -1,44 +1,31 @@
+using System;
 using Assets.Scripts.Common.Types;
 using Assets.Scripts.Skills;
 using Assets.Scripts.Skills.UpgradeFlow;
-using System;
 using UnityEngine;
 
 namespace Assets.Scripts.Stats
 {
     public interface IUpgradeableStat
     {
-        public bool CanBeUpgraded { get; }
+        bool CanBeUpgraded { get; }
+        bool HasUnlimitedMaxValue { get; }
+        bool IsSubstractModeOn { get; }
+        bool AlwaysUseMinValueForUpgrade { get; }
+        bool IsIntegerUpgradeRange { get; }
+        float UpgradeRangeMin { get; }
+        float UpgradeRangeMax { get; }
+        bool OverrideDefaultRarity { get; }
+        SkillUpgradeRarity Rarity { get; }
+        Sprite Icon { get; }
+        StatsUnits Unit { get; }
 
-        public bool HasUnlimitedMaxValue { get; }
+        void SetIcon(Sprite icon);
+        void Upgrade(float upgradeValue);
+        float GetUpgradeValueBasedOnUpdateRange();
+        float GetWhatPercentOfValueIsUpgradeValue(float upgradeValue);
 
-        public bool IsSubstractModeOn { get; }
-
-        public bool AlwaysUseMinValueForUpgrade { get; }
-
-        public bool IsIntegerUpgradeRange { get; }
-
-        public float UpgradeRangeMin { get; }
-
-        public float UpgradeRangeMax { get; }
-
-        public bool OverrideDefaultRarity { get; }
-
-        public SkillUpgradeRarity Rarity { get; }
-
-        public Sprite Icon { get; }
-
-        public StatsUnits Unit { get; }
-
-        public void SetIcon(Sprite icon);
-
-        public void Upgrade(float upgradeValue);
-
-        public float GetUpgradeValueBasedOnUpdateRange();
-
-        public float GetWhatPercentOfValueIsUpgradeValue(float upgradeValue);
-
-        public event EventHandler OnUpgrade;
+        event EventHandler OnUpgrade;
     }
 
     [Serializable]
@@ -48,13 +35,15 @@ namespace Assets.Scripts.Stats
         [field: SerializeField] public Sprite Icon { get; protected set; }
         [field: SerializeField] public bool IsSubstractModeOn { get; protected set; }
         [field: SerializeField] public StatsUnits Unit { get; protected set; }
-        [SerializeField] protected bool _alwaysUseMinValueForUpgrade;
-        [SerializeField] private bool _hasUnlimitedMaxValue;
         [field: SerializeField] public bool OverrideDefaultRarity { get; protected set; }
         [field: SerializeField] public SkillUpgradeRarity Rarity { get; protected set; }
         [field: SerializeField, HideInInspector] public bool CanBeUpgraded { get; protected set; } = true;
-        public ValueRange<T> MinMaxRange { get; protected set; }
         [field: SerializeField, HideInInspector] public T Value { get; protected set; }
+
+        [SerializeField] private bool _alwaysUseMinValueForUpgrade;
+        [SerializeField] private bool _hasUnlimitedMaxValue;
+
+        public ValueRange<T> MinMaxRange { get; protected set; }
         protected ValueRange<T> _rangeOfPossibleValuesForUpgrade;
 
         public bool HasUnlimitedMaxValue => _hasUnlimitedMaxValue;
@@ -171,3 +160,4 @@ namespace Assets.Scripts.Stats
         }
     }
 }
+

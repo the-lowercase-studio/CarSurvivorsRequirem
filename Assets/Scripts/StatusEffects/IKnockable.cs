@@ -1,9 +1,10 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace Assets.Scripts.StatusEffects
 {
-    internal interface IKnockable
+    public interface IKnockable
     {
-        public void ApplyKnockBack(Vector3 direction, float power, float timeToArriveAtLocation);
+        void ApplyKnockBack(Vector3 direction, float power, float timeToArriveAtLocation);
     }
 }
+

@@ -28,11 +28,16 @@ namespace Assets.Scripts.Skills.UpgradeFlow
         public IReadOnlyList<SkillUpgradeOption> UpgradeOptions { get; }
 
         public static SkillUpgradeRequest ForNewSkill(ISkillBase skill)
-            => new(SkillUpgradeRequestType.NewSkill, skill, null, null);
+        {
+            return new SkillUpgradeRequest(SkillUpgradeRequestType.NewSkill, skill, null, null);
+        }
 
         public static SkillUpgradeRequest ForUpgradeSkill(
             IUpgradeableSkill skill,
             IReadOnlyList<SkillUpgradeOption> upgradeOptions)
-            => new(SkillUpgradeRequestType.UpgradeSkill, null, skill, upgradeOptions);
+        {
+            return new SkillUpgradeRequest(SkillUpgradeRequestType.UpgradeSkill, null, skill, upgradeOptions);
+        }
     }
 }
+

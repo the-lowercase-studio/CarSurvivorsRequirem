@@ -1,3 +1,4 @@
+using System;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,6 +12,7 @@ namespace Assets.Scripts.HealthSystem
         [SerializeField] private Health _health;
         [SerializeField] private Image _fillImage;
         [SerializeField] private bool _shakeOnHealthDecrease;
+
         private Slider _slider;
         private Tween _shakeTween;
 
@@ -23,7 +25,7 @@ namespace Assets.Scripts.HealthSystem
         {
             _slider.maxValue = _health.MaxHealth;
             _slider.value = _health.MaxHealth;
-            _health.OnHealthChange += UpdateSlider_OnHealthChange;
+            _health.OnHealthChanged += UpdateSlider_OnHealthChanged;
 
             if (_shakeOnHealthDecrease)
             {
@@ -33,7 +35,7 @@ namespace Assets.Scripts.HealthSystem
 
         private void OnDisable()
         {
-            _health.OnHealthChange -= UpdateSlider_OnHealthChange;
+            _health.OnHealthChanged -= UpdateSlider_OnHealthChanged;
 
             if (_shakeOnHealthDecrease)
             {
@@ -50,13 +52,13 @@ namespace Assets.Scripts.HealthSystem
             _shakeTween = null;
         }
 
-        private void UpdateSlider_OnHealthChange(object sender, System.EventArgs e)
+        private void UpdateSlider_OnHealthChanged(object sender, EventArgs e)
         {
             _fillImage.color = _gradient.Evaluate(_health.CurrentHealth / _health.MaxHealth);
             _slider.value = _health.CurrentHealth;
         }
 
-        private void Health_OnHealthDecreased(object sender, System.EventArgs e)
+        private void Health_OnHealthDecreased(object sender, EventArgs e)
         {
             const float DURATION = 0.1f;
             const float STRENGTH = 0.14f;
@@ -71,13 +73,14 @@ namespace Assets.Scripts.HealthSystem
                 _shakeTween.Kill();
             }
 
-            _shakeTween = transform.DOShakePosition(DURATION,
-                                      STRENGTH,
-                                      VIBRATO,
-                                      RANDOMNESS,
-                                      SNAPPING,
-                                      FADE_OUT,
-                                      ShakeRandomnessMode.Harmonic);
+            _shakeTween = transform.DOShakePosition(
+                DURATION,
+                STRENGTH,
+                VIBRATO,
+                RANDOMNESS,
+                SNAPPING,
+                FADE_OUT,
+                ShakeRandomnessMode.Harmonic);
         }
     }
 }

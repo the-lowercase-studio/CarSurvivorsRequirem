@@ -2,11 +2,11 @@ using Assets.ScriptableObjects;
 using Assets.Scripts.Extensions;
 using Assets.Scripts.Initializers;
 using Assets.Scripts.LayerMasks;
-using UnityEngine;
-using System;
+using Assets.Scripts.Pooling;
 using Assets.Scripts.StatusEffects;
 using DG.Tweening;
-using Assets.Scripts.Pooling;
+using System;
+using UnityEngine;
 
 namespace Assets.Scripts.Projectiles
 {
@@ -14,18 +14,22 @@ namespace Assets.Scripts.Projectiles
     {
         [SerializeField] private ProjectileConfigSO _config;
         [SerializeField] private SphereCollider _sphereCollider;
+
         private int _piercedCounter;
         private bool _isInitialized;
         private bool _isAlive = true;
-
-        public event EventHandler OnLifeEnd;
-
-        public event EventHandler OnCanBeReleased;
-
         private float _distanceTraveled;
         private Vector3 _movementDir;
-
         private Vector3 _startScale;
+        private Tween _shrinkTween;
+
+        public event EventHandler OnLifeEnd;
+        public event EventHandler OnCanBeReleased;
+
+        private void Start()
+        {
+            _startScale = transform.localScale;
+        }
 
         private void FixedUpdate()
         {
@@ -47,13 +51,6 @@ namespace Assets.Scripts.Projectiles
             HandleCollisions();
         }
 
-        private void Start()
-        {
-            _startScale = transform.localScale;
-        }
-
-        private Tween _shrinkTween;
-
         private void OnDestroy()
         {
             _shrinkTween?.Kill();
@@ -63,7 +60,6 @@ namespace Assets.Scripts.Projectiles
         public void OnGet()
         {
             _distanceTraveled = 0f;
-
             _isAlive = true;
         }
 
@@ -95,7 +91,10 @@ namespace Assets.Scripts.Projectiles
             _isInitialized = true;
         }
 
-        public bool IsInitialized() => _isInitialized;
+        public bool IsInitialized()
+        {
+            return _isInitialized;
+        }
 
         public bool SetMovementDirection(Vector3 direction)
         {
@@ -162,3 +161,4 @@ namespace Assets.Scripts.Projectiles
         }
     }
 }
+

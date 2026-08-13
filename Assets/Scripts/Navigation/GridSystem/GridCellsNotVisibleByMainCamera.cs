@@ -1,16 +1,20 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Assets.Scripts.LayerMasks;
+using Assets.Scripts.Navigation.Constants;
 
 namespace Assets.Scripts.Navigation.GridSystem
 {
     public static class GridCellsNotVisibleByMainCamera
     {
-        private static readonly Collider[] _occupancyBuffer = new Collider[32];
+        private static readonly Collider[] _occupancyBuffer = new Collider[GridConstants.OCCUPANCY_BUFFER_SIZE];
 
         private static int GetEnemyCountOnCell(Cell cell, float cellSize, int maxEnemiesPerCell)
         {
-            if (maxEnemiesPerCell <= 0) return 0;
+            if (maxEnemiesPerCell <= 0)
+            {
+                return 0;
+            }
 
             int count = Physics.OverlapBoxNonAlloc(
                 cell.WorldPos,
@@ -152,7 +156,10 @@ namespace Assets.Scripts.Navigation.GridSystem
             results.Clear();
 
             Cell centerCell = playerChunk.Cells[playerChunk.Width / 2, playerChunk.Height / 2];
-            if (centerCell == null) return;
+            if (centerCell == null)
+            {
+                return;
+            }
 
             Vector2Int centerGridPos = centerCell.WorldGridPos;
             int halfWidth = playerChunk.Width / 2;

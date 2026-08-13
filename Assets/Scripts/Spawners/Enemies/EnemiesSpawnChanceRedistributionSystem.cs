@@ -1,7 +1,6 @@
 using Assets.Scripts.Common.Types;
 using Assets.Scripts.Initializers;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Assets.Scripts.Spawners.Enemies
@@ -23,11 +22,22 @@ namespace Assets.Scripts.Spawners.Enemies
         public void Initialize(Configuration config)
         {
             _spawnChanceDecreaseFactor = config.SpawnChanceDecreaseFactor;
-            _spawnChanceSystemEnemiesInfo = config.EnemiesInfo
-                .Where(info => !info.SpawnChanceInfo.SpawnChanceWillNotChange)
-                .ToList();
+            _spawnChanceSystemEnemiesInfo = new List<EnemySpawnInfo>();
+            if (config.EnemiesInfo != null)
+            {
+                foreach (EnemySpawnInfo info in config.EnemiesInfo)
+                {
+                    if (info.SpawnChanceInfo != null && !info.SpawnChanceInfo.SpawnChanceWillNotChange)
+                    {
+                        _spawnChanceSystemEnemiesInfo.Add(info);
+                    }
+                }
+            }
 
-            _currentEnemyInfoSpawnChanceSource = _spawnChanceSystemEnemiesInfo[0];
+            if (_spawnChanceSystemEnemiesInfo.Count > 0)
+            {
+                _currentEnemyInfoSpawnChanceSource = _spawnChanceSystemEnemiesInfo[0];
+            }
         }
 
         public bool IsInitialized()

@@ -2,6 +2,7 @@ using Assets.ScriptableObjects.Skills.PlayerSkills.LandmineSkill;
 using Assets.Scripts.Audio;
 using Assets.Scripts.Initializers;
 using Assets.Scripts.LayerMasks;
+using Assets.Scripts.Skills.Constants;
 using Assets.Scripts.StatusEffects;
 using Assets.Scripts.VFX;
 using UnityEngine;
@@ -13,6 +14,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.LandmineTrap
         [SerializeField] private LandmineSkillUpgradeableConfigSO _config;
         [SerializeField] private GameObject _landmineVisual;
         [SerializeField] private VFXPlayer _deathVfxPlayer;
+
         private IAudioClipPlayer _audioClipPlayer;
         private bool _isInitialized;
 
@@ -44,16 +46,16 @@ namespace Assets.Scripts.Skills.PlayerSkills.LandmineTrap
 
         private void OnEnable()
         {
-            _deathVfxPlayer.OnVFXFinished += DeathVfxPlayer_OnVFXFinished;
+            _deathVfxPlayer.OnVFXFinished += OnDeathVfxFinished;
             _landmineVisual.SetActive(true);
         }
 
         private void OnDisable()
         {
-            _deathVfxPlayer.OnVFXFinished -= DeathVfxPlayer_OnVFXFinished;
+            _deathVfxPlayer.OnVFXFinished -= OnDeathVfxFinished;
         }
 
-        private void DeathVfxPlayer_OnVFXFinished(object sender, System.EventArgs e)
+        private void OnDeathVfxFinished(object sender, System.EventArgs e)
         {
             Destroy(gameObject);
         }
@@ -73,8 +75,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.LandmineTrap
             {
                 EntityManipulationHelper.Damage(collider, _config.Damage.Value);
 
-                const float TIME_TO_ARRIVE_AT_LOCATION_MULTIPLIER = 0.2f;
-                float timeToArriveAtLocation = _config.KnockbackRange.Value * TIME_TO_ARRIVE_AT_LOCATION_MULTIPLIER;
+                float timeToArriveAtLocation = _config.KnockbackRange.Value * SkillConstants.TIME_TO_ARRIVE_AT_LOCATION_MULTIPLIER;
 
                 ApplyExplosionKnockbackOnKnockableEntity(collider, timeToArriveAtLocation);
 
@@ -97,8 +98,14 @@ namespace Assets.Scripts.Skills.PlayerSkills.LandmineTrap
             transform.localScale = new Vector3(_config.Size.Value, transform.localScale.y, _config.Size.Value);
 
             gameObject.SetActive(true);
+
+            _isInitialized = true;
         }
 
-        public bool IsInitialized() => _isInitialized;
+        public bool IsInitialized()
+        {
+            return _isInitialized;
+        }
     }
 }
+

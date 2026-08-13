@@ -1,19 +1,17 @@
-﻿using System;
+using System;
 using UnityEngine;
 
 namespace Assets.Scripts.StatusEffects
 {
     public interface IStunController
     {
-        public bool IsStunned { get; }
+        bool IsStunned { get; }
 
-        public event EventHandler OnStunEnd;
+        event EventHandler OnStunEnd;
+        event EventHandler OnStunStart;
+        event EventHandler OnStunExtended;
 
-        public event EventHandler OnStunStart;
-
-        public event EventHandler OnStunExtended;
-
-        public void PerformStun(float duration);
+        void PerformStun(float duration);
     }
 
     public class StunController : MonoBehaviour, IStunController
@@ -21,9 +19,7 @@ namespace Assets.Scripts.StatusEffects
         public bool IsStunned { get; private set; }
 
         public event EventHandler OnStunEnd;
-
         public event EventHandler OnStunStart;
-
         public event EventHandler OnStunExtended;
 
         private float _stunTimer;
@@ -57,3 +53,4 @@ namespace Assets.Scripts.StatusEffects
         }
     }
 }
+

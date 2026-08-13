@@ -5,50 +5,43 @@ namespace Assets.Scripts.HealthSystem
 {
     public interface IHealthy
     {
-        public IHealth Health { get; }
+        IHealth Health { get; }
     }
 
     public interface IHealth
     {
-        public float CurrentHealth { get; }
-        public float MaxHealth { get; set; }
+        float CurrentHealth { get; }
+        float MaxHealth { get; set; }
 
-        public event EventHandler OnHealthChange;
+        event EventHandler OnHealthChanged;
+        event EventHandler OnHealthDecreased;
+        event EventHandler OnHealthIncreased;
+        event EventHandler OnNoHealth;
 
-        public event EventHandler OnHealthDecreased;
-
-        public event EventHandler OnHealthIncreased;
-
-        public event EventHandler OnNoHealth;
-
-        public void DecreaseHealth(float value);
-
-        public void IncreaseHealth(float value);
-
-        public bool IsAlive();
+        void DecreaseHealth(float value);
+        void IncreaseHealth(float value);
+        bool IsAlive();
     }
 
     [Serializable]
     public class Health : MonoBehaviour, IHealth
     {
         [field: SerializeField] public float MaxHealth { get; set; }
+
         public float CurrentHealth { get; protected set; }
 
-        public event EventHandler OnNoHealth;
-
-        public event EventHandler OnHealthChange;
-
+        public event EventHandler OnHealthChanged;
         public event EventHandler OnHealthDecreased;
-
         public event EventHandler OnHealthIncreased;
+        public event EventHandler OnNoHealth;
 
         private bool _isAlive;
 
         protected virtual void OnEnable()
         {
-            OnHealthDecreased += InvokeOnHealthChange;
-            OnHealthIncreased += InvokeOnHealthChange;
-            OnNoHealth += InvokeOnHealthChange;
+            OnHealthDecreased += InvokeOnHealthChanged;
+            OnHealthIncreased += InvokeOnHealthChanged;
+            OnNoHealth += InvokeOnHealthChanged;
 
             _isAlive = true;
             CurrentHealth = MaxHealth;
@@ -56,9 +49,9 @@ namespace Assets.Scripts.HealthSystem
 
         protected virtual void OnDisable()
         {
-            OnHealthDecreased -= InvokeOnHealthChange;
-            OnHealthIncreased -= InvokeOnHealthChange;
-            OnNoHealth -= InvokeOnHealthChange;
+            OnHealthDecreased -= InvokeOnHealthChanged;
+            OnHealthIncreased -= InvokeOnHealthChanged;
+            OnNoHealth -= InvokeOnHealthChanged;
         }
 
         public void DecreaseHealth(float value)
@@ -104,9 +97,10 @@ namespace Assets.Scripts.HealthSystem
             return _isAlive;
         }
 
-        private void InvokeOnHealthChange(object sender, EventArgs e)
+        private void InvokeOnHealthChanged(object sender, EventArgs e)
         {
-            OnHealthChange?.Invoke(sender, e);
+            OnHealthChanged?.Invoke(sender, e);
         }
     }
 }
+

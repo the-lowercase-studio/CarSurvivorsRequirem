@@ -16,7 +16,11 @@ using UnityEngine.UI;
 
 namespace Assets.Scripts.UI.Skills
 {
-    public class SkillUpgradePresenter : MonoBehaviour
+    public interface ISkillUpgradePresenter
+    {
+    }
+
+    public class SkillUpgradePresenter : MonoBehaviour, ISkillUpgradePresenter
     {
         [Inject] private readonly IPlayerManager _playerManager;
         [Inject] private readonly IPlayerLevelPresenter _playerLevelPresenter;

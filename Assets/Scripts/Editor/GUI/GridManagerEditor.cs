@@ -1,3 +1,4 @@
+using Assets.Scripts.Editor.Constants;
 using Assets.Scripts.Navigation.GridSystem;
 using UnityEditor;
 
@@ -33,8 +34,6 @@ namespace Assets.Scripts.Editor.GUI
         private bool _targetPredictionGroup;
         private bool _debugGroup;
 
-        private const int SPACE_BETWEEN_GROUPS = 2;
-
         private void OnEnable()
         {
             _worldGridConfiguration = serializedObject.FindProperty(nameof(_worldGridConfiguration));
@@ -68,7 +67,7 @@ namespace Assets.Scripts.Editor.GUI
             }
             EditorGUI.EndFoldoutHeaderGroup();
 
-            EditorGUILayout.Space(SPACE_BETWEEN_GROUPS);
+            EditorGUILayout.Space(EditorGUIConstants.SPACE_BETWEEN_GROUPS);
 
             _playerGridChunkGroup = EditorGUILayout.BeginFoldoutHeaderGroup(_playerGridChunkGroup, "Player GridSystem Chunk Group");
             if (_playerGridChunkGroup)
@@ -78,7 +77,7 @@ namespace Assets.Scripts.Editor.GUI
             }
             EditorGUI.EndFoldoutHeaderGroup();
 
-            EditorGUILayout.Space(SPACE_BETWEEN_GROUPS);
+            EditorGUILayout.Space(EditorGUIConstants.SPACE_BETWEEN_GROUPS);
 
             _targetPredictionGroup = EditorGUILayout.BeginFoldoutHeaderGroup(_targetPredictionGroup, "Target Prediction Group");
             if (_targetPredictionGroup)
@@ -88,7 +87,7 @@ namespace Assets.Scripts.Editor.GUI
             }
             EditorGUI.EndFoldoutHeaderGroup();
 
-            EditorGUILayout.Space(SPACE_BETWEEN_GROUPS);
+            EditorGUILayout.Space(EditorGUIConstants.SPACE_BETWEEN_GROUPS);
 
             _debugGroup = EditorGUILayout.BeginFoldoutHeaderGroup(_debugGroup, "Debug");
             if (_debugGroup)
@@ -112,7 +111,7 @@ namespace Assets.Scripts.Editor.GUI
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
 
-            EditorGUILayout.Space(SPACE_BETWEEN_GROUPS);
+            EditorGUILayout.Space(EditorGUIConstants.SPACE_BETWEEN_GROUPS);
 
             serializedObject.ApplyModifiedProperties();
         }

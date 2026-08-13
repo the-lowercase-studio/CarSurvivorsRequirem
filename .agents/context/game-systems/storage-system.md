@@ -20,10 +20,16 @@ It is not responsible for applying settings to Unity systems, deciding scoreboar
   - Assets/Scripts/ReflexDI/MainMenuInstaller.cs
   - Assets/Scripts/ReflexDI/ProjectInstaller.cs
 - Related docs:
+  - .agents/context/game-systems/scoreboard-system.md
+  - .agents/context/game-systems/settings-system.md
   - .agents/context/game-systems/ui-system.md
   - .agents/context/game-systems/audio-system.md
-  - .agents/context/project-scripts-folder-map.md
   - .agents/context/project-coding-standards.md
+  - .agents/context/technology-documentation.md
+- Related agents or instructions:
+  - Root AGENTS.md
+  - .agents/skills/document-system/SKILL.md
+  - .agents/skills/di-integration/SKILL.md
 
 ## Architecture and Data Flow
 

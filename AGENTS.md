@@ -24,12 +24,14 @@ Read agent guidance in this order:
 1. `AGENTS.md` for the project entry point and workflow.
 2. `.agents/README.md` for operational file layout.
 3. `.agents/context/project-coding-standards.md` for code style and architectural constraints.
-4. `.agents/context/technology-documentation.md` for official documentation links.
-5. `.agents/context/ai-game-dev-best-practices.md` for gameplay and review guardrails.
-6. Relevant `.agents/context/game-systems/*-system.md` files when the task touches a documented game system.
-7. Relevant `.agents/skills/*/SKILL.md` files when the task matches a skill trigger.
+4. Relevant `.agents/context/adr/*.md` files for architectural decision records.
+5. `.agents/context/technology-documentation.md` for official documentation links.
+6. `.agents/context/ai-game-dev-best-practices.md` for gameplay and review guardrails.
+7. Relevant `.agents/context/game-systems/*-system.md` files when the task touches a documented game system.
+8. Relevant `.agents/skills/*/SKILL.md` files when the task matches a skill trigger.
 
 Use `.agents/context/` as the current documentation location for agent-facing project guidance.
+Use `.agents/context/adr/` for architecture decision records (ADRs).
 Use `.agents/context/game-systems/` for game-system documentation.
 Store implementation plans under `.agents/context/implementations/plans/` and implementation summaries under `.agents/context/implementations/summaries/`.
 
@@ -94,6 +96,7 @@ Use `.agents/skills/` as reusable workflows:
 
 - `agent-docs-review`: update agent-facing documentation so it is concise, current, and implementation-grounded.
 - `architecture-review`: review DI correctness, ownership boundaries, turn-flow safety, and architecture drift.
+- `batch-codebase-review`: partition and orchestrate project-wide architecture review and coding standards preservation via subagents or generated prompt roadmaps.
 - `check-optimalization`: inspect performance risks and propose optimizations before implementing them.
 - `di-integration`: add or review Reflex bindings, injected services, and dependency boundaries.
 - `document-system`: create or update technical documentation for a specific gameplay system.
@@ -108,6 +111,7 @@ When a request matches a skill trigger, read the relevant `SKILL.md` before edit
 Current vendor-specific descriptors are nested under skills:
 
 - `.agents/skills/agent-docs-review/agents/openai.yaml`
+- `.agents/skills/batch-codebase-review/agents/openai.yaml`
 - `.agents/skills/preserve-coding-standards/agents/openai.yaml`
 
 Treat these YAML files as optional UI/default-prompt metadata for compatible tools. The portable workflow source remains each skill's `SKILL.md`.

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Generic;
 
 namespace Assets.Scripts.ScoreBoard
 {
@@ -21,12 +20,22 @@ namespace Assets.Scripts.ScoreBoard
         {
             List<uint> scoreBoardValues = _storedScoreBoard.GetValueOrStoredDefault();
 
-            if (scoreBoardValues.Count == 0)
+            if (scoreBoardValues == null || scoreBoardValues.Count == 0)
             {
                 return 0;
             }
 
-            return scoreBoardValues.Max();
+            uint maxScore = scoreBoardValues[0];
+            for (int i = 1; i < scoreBoardValues.Count; i++)
+            {
+                if (scoreBoardValues[i] > maxScore)
+                {
+                    maxScore = scoreBoardValues[i];
+                }
+            }
+
+            return maxScore;
         }
     }
 }
+

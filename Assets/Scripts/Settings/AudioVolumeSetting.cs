@@ -1,4 +1,5 @@
-﻿using Assets.Scripts.Audio;
+using Assets.Scripts.Audio;
+using Assets.Scripts.Settings.Constants;
 using Assets.Scripts.Storage;
 
 namespace Assets.Scripts.Settings
@@ -7,7 +8,7 @@ namespace Assets.Scripts.Settings
     {
         private readonly IAudioMixersManager _audioMixersManager;
 
-        public float DefaultValue => -6.02f;
+        public float DefaultValue => SettingsConstants.DEFAULT_AUDIO_VOLUME;
 
         public AudioVolumeSetting(IAudioMixersManager audioMixersManager)
         {
@@ -16,7 +17,7 @@ namespace Assets.Scripts.Settings
 
         public string GetKey()
         {
-            return "Volume";
+            return SettingsConstants.AUDIO_VOLUME_KEY;
         }
 
         public float GetValueOrStoredDefault()
@@ -40,3 +41,4 @@ namespace Assets.Scripts.Settings
         }
     }
 }
+

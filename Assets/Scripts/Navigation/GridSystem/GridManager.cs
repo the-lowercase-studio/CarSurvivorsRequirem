@@ -18,11 +18,8 @@ namespace Assets.Scripts.Navigation.GridSystem
 
         [SerializeField] private GridConfiguration _worldGridConfiguration;
         [SerializeField] private float _delayBetweenWorldGridUpdate = 0.2f;
-        public Grid WorldGrid { get; private set; }
-
         [SerializeField] private GridConfiguration _playerGridConfiguration;
         [SerializeField] private float _delayBetweenPlayerChunkGridUpdate = 0.32f;
-        public Grid GridPlayerChunk { get; private set; }
 
         [Header("Target Prediction")]
         [SerializeField] private float _flowFieldTargetPredictionTime = 0.25f;
@@ -38,11 +35,15 @@ namespace Assets.Scripts.Navigation.GridSystem
 
         [SerializeField] private FlowFieldDebugConfiguration _flowFieldDebugConfiguration;
 
-        private float _playerChunkDrawYOffset = 0.2f;
+        private const float PLAYER_CHUNK_DRAW_Y_OFFSET = 0.2f;
+        private const float DRAW_TIME_OFFSET = 0.02f;
 #endif
+
         private FlowField _flowField;
         private Cell[,] _playerChunkCells;
 
+        public Grid WorldGrid { get; private set; }
+        public Grid GridPlayerChunk { get; private set; }
         public Cell DestinationCell { get; private set; }
 
         private void Awake()
@@ -59,44 +60,27 @@ namespace Assets.Scripts.Navigation.GridSystem
 
         private void OnEnable()
         {
-            UpdateFlowField(WorldGrid, WorldGrid.Cells[WorldGrid.Width / 2, WorldGrid.Height / 2].WorldPos);
+            if (WorldGrid != null && WorldGrid.Cells != null && WorldGrid.Width > 0 && WorldGrid.Height > 0)
+            {
+                UpdateFlowField(WorldGrid, WorldGrid.Cells[WorldGrid.Width / 2, WorldGrid.Height / 2].WorldPos);
+            }
+            else
+            {
+                Debug.LogWarning("[GridManager] WorldGrid configuration is uninitialized or invalid.", this);
+            }
 
             InvokeRepeating(nameof(UpdateFlowFieldWithNewPlayerChunkGrid), 0, _delayBetweenPlayerChunkGridUpdate);
         }
 
 #if DEBUG
-
         private void Start()
         {
             if (_debugGrid)
             {
-                float drawTimeOffset = 0.02f;
-                InvokeRepeating(nameof(DebugWorldGrid), 0, _delayBetweenWorldGridUpdate + drawTimeOffset);
-                InvokeRepeating(nameof(DebugPlayerChunkGrid), 0, _delayBetweenPlayerChunkGridUpdate + drawTimeOffset);
+                InvokeRepeating(nameof(DebugWorldGrid), 0, _delayBetweenWorldGridUpdate + DRAW_TIME_OFFSET);
+                InvokeRepeating(nameof(DebugPlayerChunkGrid), 0, _delayBetweenPlayerChunkGridUpdate + DRAW_TIME_OFFSET);
             }
         }
-
-        private void DebugPlayerChunkGrid()
-        {
-            GridDebug.DisplayGrid(GridPlayerChunk,
-                                  _playerChunkCellBorderColor,
-                                  _blockedCellBorderDrawColor,
-                                  _playerChunkDrawYOffset,
-                                  _delayBetweenPlayerChunkGridUpdate);
-        }
-
-        private void DebugWorldGrid()
-        {
-            if (_debugGrid)
-            {
-                GridDebug.DisplayGrid(WorldGrid, _worldCellBorderColor, _blockedCellBorderDrawColor, 0, _delayBetweenWorldGridUpdate);
-            }
-            if (_debugFlowField)
-            {
-                FlowFieldDebug.DisplayFlowFieldDebugTextOnGrid(_flowFieldDebugConfiguration);
-            }
-        }
-
 #endif
 
         private void UpdateFlowFieldWithNewPlayerChunkGrid()
@@ -184,5 +168,35 @@ namespace Assets.Scripts.Navigation.GridSystem
             _flowField.CreateIntegrationField(gridPerformingUpdate, DestinationCell);
             _flowField.CreateFlowField(gridPerformingUpdate);
         }
+
+#if DEBUG
+        private void DebugPlayerChunkGrid()
+        {
+            GridDebug.DisplayGrid(
+                GridPlayerChunk,
+                _playerChunkCellBorderColor,
+                _blockedCellBorderDrawColor,
+                PLAYER_CHUNK_DRAW_Y_OFFSET,
+                _delayBetweenPlayerChunkGridUpdate);
+        }
+
+        private void DebugWorldGrid()
+        {
+            if (_debugGrid)
+            {
+                GridDebug.DisplayGrid(
+                    WorldGrid,
+                    _worldCellBorderColor,
+                    _blockedCellBorderDrawColor,
+                    0,
+                    _delayBetweenWorldGridUpdate);
+            }
+
+            if (_debugFlowField)
+            {
+                FlowFieldDebug.DisplayFlowFieldDebugTextOnGrid(_flowFieldDebugConfiguration);
+            }
+        }
+#endif
     }
 }

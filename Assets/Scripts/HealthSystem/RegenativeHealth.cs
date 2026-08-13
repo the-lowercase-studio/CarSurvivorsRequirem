@@ -5,10 +5,10 @@ namespace Assets.Scripts.HealthSystem
 {
     public interface IRegenativeHealth : IHealth
     {
-        public float MaxRegenerationAmount { get; }
-        public float CurrentRegenerationAmount { get; }
-        public float CurrentRegenerationDelay { get; }
-        public float StartRegenerationDelay { get; }
+        float MaxRegenerationAmount { get; }
+        float CurrentRegenerationAmount { get; }
+        float CurrentRegenerationDelay { get; }
+        float StartRegenerationDelay { get; }
     }
 
     [Serializable]
@@ -53,3 +53,4 @@ namespace Assets.Scripts.HealthSystem
         }
     }
 }
+
