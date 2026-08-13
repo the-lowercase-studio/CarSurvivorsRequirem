@@ -1,15 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Assets.Scripts.Settings.Resolution
 {
     public static class ScreenSerializableResolutionHelper
     {
-        private static IEnumerable<SerializableResolution> _availableResolutions;
+        private static IReadOnlyList<SerializableResolution> _availableResolutions;
 
-        public static IEnumerable<SerializableResolution> GetAvailableResolutions()
+        public static IReadOnlyList<SerializableResolution> GetAvailableResolutions()
         {
             if (_availableResolutions is null)
             {
@@ -22,10 +21,16 @@ namespace Assets.Scripts.Settings.Resolution
                     resolutions[i].refreshRateRatio = currentRefreshRatio;
                 }
 
-                _availableResolutions = resolutions
-                    .Distinct()
-                    .Select(r => SerializableResolution.FromUnityResolution(r))
-                    .Reverse();
+                var list = new List<SerializableResolution>();
+                for (int i = resolutions.Length - 1; i >= 0; i--)
+                {
+                    var sr = SerializableResolution.FromUnityResolution(resolutions[i]);
+                    if (!list.Contains(sr))
+                    {
+                        list.Add(sr);
+                    }
+                }
+                _availableResolutions = list;
             }
 
             return _availableResolutions;

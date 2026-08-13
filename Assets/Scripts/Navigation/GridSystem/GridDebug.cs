@@ -36,7 +36,9 @@ namespace Assets.Scripts.Navigation.GridSystem
                            cellBorderColor, duration);
         }
 
-        private static Color GetCorrectBorderColor(Cell cell, Color cellBorderColor, Color blockedCellBorderColor) =>
-            cell.Cost == byte.MaxValue ? blockedCellBorderColor : cellBorderColor;
+        private static Color GetCorrectBorderColor(Cell cell, Color cellBorderColor, Color blockedCellBorderColor)
+        {
+            return cell.Cost == byte.MaxValue ? blockedCellBorderColor : cellBorderColor;
+        }
     }
 }

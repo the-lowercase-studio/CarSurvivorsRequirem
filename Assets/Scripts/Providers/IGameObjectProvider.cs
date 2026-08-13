@@ -1,9 +1,10 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace Assets.Scripts.Providers
 {
     public interface IGameObjectProvider
     {
-        public GameObject GameObject { get; }
+        GameObject GameObject { get; }
     }
 }
+

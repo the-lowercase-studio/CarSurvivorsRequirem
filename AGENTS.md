@@ -24,12 +24,14 @@ Read agent guidance in this order:
 1. `AGENTS.md` for the project entry point and workflow.
 2. `.agents/README.md` for operational file layout.
 3. `.agents/context/project-coding-standards.md` for code style and architectural constraints.
-4. `.agents/context/technology-documentation.md` for official documentation links.
-5. `.agents/context/ai-game-dev-best-practices.md` for gameplay and review guardrails.
-6. Relevant `.agents/context/game-systems/*-system.md` files when the task touches a documented game system.
-7. Relevant `.agents/skills/*/SKILL.md` files when the task matches a skill trigger.
+4. Relevant `.agents/context/adr/*.md` files for architectural decision records.
+5. `.agents/context/technology-documentation.md` for official documentation links.
+6. `.agents/context/ai-game-dev-best-practices.md` for gameplay and review guardrails.
+7. Relevant `.agents/context/game-systems/*-system.md` files when the task touches a documented game system.
+8. Relevant `.agents/skills/*/SKILL.md` files when the task matches a skill trigger.
 
 Use `.agents/context/` as the current documentation location for agent-facing project guidance.
+Use `.agents/context/adr/` for architecture decision records (ADRs).
 Use `.agents/context/game-systems/` for game-system documentation.
 Store implementation plans under `.agents/context/implementations/plans/` and implementation summaries under `.agents/context/implementations/summaries/`.
 

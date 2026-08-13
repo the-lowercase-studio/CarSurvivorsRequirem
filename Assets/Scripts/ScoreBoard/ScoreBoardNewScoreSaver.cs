@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Generic;
+using Assets.Scripts.ScoreBoard.Constants;
 
 namespace Assets.Scripts.ScoreBoard
 {
@@ -19,37 +19,37 @@ namespace Assets.Scripts.ScoreBoard
 
         public void Save(uint score)
         {
-            var scoreBoardValues = new SortedSet<uint>(
-                _storedScoreBoard.GetValueOrStoredDefault(),
-                Comparer<uint>.Create((a, b) => b.CompareTo(a))
-            );
-
-            void SaveNewScore()
+            List<uint> scores = _storedScoreBoard.GetValueOrStoredDefault();
+            if (scores == null)
             {
-                scoreBoardValues.Add(score);
-                _storedScoreBoard.SaveValue(scoreBoardValues.ToList());
+                scores = new List<uint>();
             }
 
-            if (score <= scoreBoardValues.LastOrDefault())
-            {
-                return;
-            }
+            scores.Sort((a, b) => b.CompareTo(a));
 
-            if (scoreBoardValues.Count >= _storedScoreBoard.MAX_SAVED_SCORES_COUNT)
+            if (scores.Count >= ScoreBoardConstants.MAX_SAVED_SCORES_COUNT && scores.Count > 0)
             {
-                int diff = (scoreBoardValues.Count + 1) - _storedScoreBoard.MAX_SAVED_SCORES_COUNT;
-
-                for (int i = 0; i < diff; i++)
+                uint lowestScore = scores[scores.Count - 1];
+                if (score <= lowestScore)
                 {
-                    scoreBoardValues.Remove(scoreBoardValues.Last());
+                    return;
                 }
+            }
 
-                SaveNewScore();
-            }
-            else
+            if (!scores.Contains(score))
             {
-                SaveNewScore();
+                scores.Add(score);
             }
+
+            scores.Sort((a, b) => b.CompareTo(a));
+
+            while (scores.Count > ScoreBoardConstants.MAX_SAVED_SCORES_COUNT)
+            {
+                scores.RemoveAt(scores.Count - 1);
+            }
+
+            _storedScoreBoard.SaveValue(scores);
         }
     }
 }
+

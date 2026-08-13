@@ -5,7 +5,7 @@ namespace Assets.Scripts.Navigation.GridSystem
 {
     public class GridDirection
     {
-        public readonly Vector2Int Vector;
+        public Vector2Int Vector { get; }
 
         public static readonly GridDirection None = new GridDirection(0, 0);
         public static readonly GridDirection North = new GridDirection(0, 1);

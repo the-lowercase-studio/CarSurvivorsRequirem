@@ -10,6 +10,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
         [field: SerializeField] public override SkillInfoSO SkillInfo { get; protected set; }
         [field: SerializeField] protected override SawSkillUpgradeableConfigSO _config { get; set; }
         [SerializeField] private SawBlade[] _sawBlades;
+
         private IItemsWithScriptableConfigsActivator<SawBlade, SawSkillUpgradeableConfigSO> _sawBladesActivator;
 
         public override void Initialize()
@@ -21,15 +22,18 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
 
             InitializeSawBladesToConfiguredCount();
 
-            _config.NuberOfSaws.OnUpgrade -= NuberOfSaws_OnUpgrade;
-            _config.NuberOfSaws.OnUpgrade += NuberOfSaws_OnUpgrade;
+            if (_config?.NuberOfSaws is not null)
+            {
+                _config.NuberOfSaws.OnUpgrade -= OnNumberOfSawsUpgraded;
+                _config.NuberOfSaws.OnUpgrade += OnNumberOfSawsUpgraded;
+            }
         }
 
         private void OnDestroy()
         {
             if (_config?.NuberOfSaws is not null)
             {
-                _config.NuberOfSaws.OnUpgrade -= NuberOfSaws_OnUpgrade;
+                _config.NuberOfSaws.OnUpgrade -= OnNumberOfSawsUpgraded;
             }
         }
 
@@ -39,9 +43,10 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
             _sawBladesActivator.InitializeUntilCount(_config, _config.NuberOfSaws.Value);
         }
 
-        private void NuberOfSaws_OnUpgrade(object sender, EventArgs e)
+        private void OnNumberOfSawsUpgraded(object sender, EventArgs e)
         {
             InitializeSawBladesToConfiguredCount();
         }
     }
 }
+

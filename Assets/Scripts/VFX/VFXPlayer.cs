@@ -28,15 +28,12 @@ namespace Assets.Scripts.VFX
 
     public class VFXPlayer : MonoBehaviour, IVFXPlayer
     {
-        public event EventHandler OnVFXFinished;
-
         private ParticleSystem[] _particleSystems;
-
         private bool _particlesStartedPlaying;
-
         private float _longestParticleDuration;
-
         private VFXPlayConfig _vfxPlayConfig;
+
+        public event EventHandler OnVFXFinished;
 
         private void Awake()
         {
@@ -53,7 +50,7 @@ namespace Assets.Scripts.VFX
             _vfxPlayConfig = config;
 
             _longestParticleDuration = 0;
-            foreach (var particleSystem in _particleSystems)
+            foreach (ParticleSystem particleSystem in _particleSystems)
             {
                 if (particleSystem is null)
                 {
@@ -62,7 +59,7 @@ namespace Assets.Scripts.VFX
 
                 particleSystem.transform.localScale = Vector3.one * config.Scale;
 
-                var main = particleSystem.main;
+                ParticleSystem.MainModule main = particleSystem.main;
                 main.simulationSpeed = config.SimulationSpeed;
 
                 float currentDuration = main.duration;
@@ -112,3 +109,4 @@ namespace Assets.Scripts.VFX
         }
     }
 }
+

@@ -1,5 +1,4 @@
 using Assets.ScriptableObjects.Skills;
-using System.Linq;
 using UnityEngine;
 
 namespace Assets.Scripts.UI.Skills
@@ -16,7 +15,19 @@ namespace Assets.Scripts.UI.Skills
 
         public void ShowSkillVisualBasedOnSkillInfo(SkillInfoSO skillInfoSO)
         {
-            GameObject skillVisual = _skillsVisuals.FirstOrDefault(s => s.name == skillInfoSO.Name);
+            GameObject skillVisual = null;
+            if (_skillsVisuals != null)
+            {
+                for (int i = 0; i < _skillsVisuals.Length; i++)
+                {
+                    if (_skillsVisuals[i] != null && _skillsVisuals[i].name == skillInfoSO.Name)
+                    {
+                        skillVisual = _skillsVisuals[i];
+                        break;
+                    }
+                }
+            }
+
             if (skillVisual == null)
             {
                 Debug.LogWarning($"Skill visual for {skillInfoSO.Name} was not found.", this);

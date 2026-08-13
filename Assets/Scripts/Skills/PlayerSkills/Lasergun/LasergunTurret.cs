@@ -1,6 +1,7 @@
 using Assets.ScriptableObjects;
 using Assets.Scripts.Audio;
 using Assets.Scripts.LayerMasks;
+using Assets.Scripts.Skills.Constants;
 using Assets.Scripts.StatusEffects;
 using Assets.Scripts.VFX;
 using System;
@@ -11,18 +12,13 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
 {
     public class LasergunTurret : Turret<TurretConfigSO>
     {
-        // Unity truncates NonAlloc query results when this buffer is full; keep it high enough for dense local enemy clusters.
-        private const int TARGET_BUFFER_SIZE = 64;
-        private const int MIN_NUMBER_OF_TARGETS = 1;
-        private const float SMALLEST_ANGLE_QUALIFYING_AS_LOOKING_AT_TARGET = 4f;
-
         [SerializeField] private LineRenderer _laserLineRenderer;
         [SerializeField] private float _startShowLaserShootDuration = 0.1f;
         [SerializeField] private VFXPlayer _laserCumulatingVFX;
 
         private float _currentShowLaserShootDuration;
         private float _targetSearchCooldown;
-        private int _numberOfTargets = MIN_NUMBER_OF_TARGETS;
+        private int _numberOfTargets = SkillConstants.MIN_NUMBER_OF_TARGETS;
         private int _trackedTargetsCount;
         private int _hitTargetsCount;
         private bool _isShowingLaser;
@@ -30,11 +26,11 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
         private bool _isLookingAtTarget;
         private IAudioClipPlayer _audioClipPlayer;
         private LineRenderer[] _laserLineRenderers;
-        private Collider[] _trackedTargets = new Collider[MIN_NUMBER_OF_TARGETS];
-        private float[] _trackedTargetDistancesSqr = new float[MIN_NUMBER_OF_TARGETS];
-        private Collider[] _hitTargets = new Collider[MIN_NUMBER_OF_TARGETS];
-        private Vector3[] _hitTargetClosestPoints = new Vector3[MIN_NUMBER_OF_TARGETS];
-        private readonly Collider[] _targetBuffer = new Collider[TARGET_BUFFER_SIZE];
+        private Collider[] _trackedTargets = new Collider[SkillConstants.MIN_NUMBER_OF_TARGETS];
+        private float[] _trackedTargetDistancesSqr = new float[SkillConstants.MIN_NUMBER_OF_TARGETS];
+        private Collider[] _hitTargets = new Collider[SkillConstants.MIN_NUMBER_OF_TARGETS];
+        private Vector3[] _hitTargetClosestPoints = new Vector3[SkillConstants.MIN_NUMBER_OF_TARGETS];
+        private readonly Collider[] _targetBuffer = new Collider[SkillConstants.TARGET_BUFFER_SIZE];
         private readonly WaitForEndOfFrame _waitForEndOfFrame = new();
 
         protected override void Awake()
@@ -63,19 +59,19 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
 
         private void OnEnable()
         {
-            _laserCumulatingVFX.OnVFXFinished += LaserCumulatingVFX_OnVFXFinished;
+            _laserCumulatingVFX.OnVFXFinished += OnLaserCumulatingVfxFinished;
         }
 
         private void OnDisable()
         {
-            _laserCumulatingVFX.OnVFXFinished -= LaserCumulatingVFX_OnVFXFinished;
+            _laserCumulatingVFX.OnVFXFinished -= OnLaserCumulatingVfxFinished;
             ClearLaserLines();
             ClearTrackedTargets();
         }
 
         public void SetNumberOfTargets(int numberOfTargets)
         {
-            _numberOfTargets = Mathf.Max(MIN_NUMBER_OF_TARGETS, numberOfTargets);
+            _numberOfTargets = Mathf.Max(SkillConstants.MIN_NUMBER_OF_TARGETS, numberOfTargets);
 
             EnsureTargetCapacity(_numberOfTargets);
             EnsureLaserLineRendererCapacity(_numberOfTargets);
@@ -91,7 +87,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
             _laserCumulatingVFX.Play(new VFXPlayConfig(simulationSpeed: shootPreparingAnimationSpeed));
         }
 
-        private void LaserCumulatingVFX_OnVFXFinished(object sender, System.EventArgs e)
+        private void OnLaserCumulatingVfxFinished(object sender, System.EventArgs e)
         {
             FireLaserBeam();
         }
@@ -348,7 +344,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
 
             float angle = Quaternion.Angle(transform.rotation, targetRotation);
 
-            _isLookingAtTarget = angle <= SMALLEST_ANGLE_QUALIFYING_AS_LOOKING_AT_TARGET;
+            _isLookingAtTarget = angle <= SkillConstants.SMALLEST_ANGLE_QUALIFYING_AS_LOOKING_AT_TARGET;
 
             float angleThisFrame = _config.RotationSpeed * Time.fixedDeltaTime;
 
@@ -395,3 +391,4 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
         }
     }
 }
+

@@ -1,17 +1,17 @@
-﻿using Assets.Scripts.Settings;
-using Assets.Scripts.Storage;
 using System;
+using Assets.Scripts.Settings.Constants;
+using Assets.Scripts.Storage;
 using UnityEngine;
 
 namespace Assets.Scripts.Settings
 {
     public class GraphicSetting : ISetting<GraphicSetting, string>
     {
-        public string DefaultValue => "High";
+        public string DefaultValue => SettingsConstants.DEFAULT_GRAPHICS_QUALITY;
 
         public string GetKey()
         {
-            return "GraphicsQuality";
+            return SettingsConstants.GRAPHICS_QUALITY_KEY;
         }
 
         public string GetValueOrStoredDefault()
@@ -46,3 +46,4 @@ namespace Assets.Scripts.Settings
         }
     }
 }
+

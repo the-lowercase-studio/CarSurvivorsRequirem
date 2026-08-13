@@ -1,4 +1,4 @@
-using System.Linq;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Assets.Scripts.Skills
@@ -9,13 +9,16 @@ namespace Assets.Scripts.Skills
         {
             if (skillsRegistry.UninitializedSkillsCount > 0)
             {
-                var inactiveSkills = skillsRegistry.GetUninitializedSkills().ToArray();
-                int index = Random.Range(0, inactiveSkills.Length);
-                ISkillBase inactiveSkill = inactiveSkills[index];
-
-                if (inactiveSkill != null)
+                IReadOnlyList<ISkillBase> inactiveSkills = skillsRegistry.GetUninitializedSkills();
+                if (inactiveSkills != null && inactiveSkills.Count > 0)
                 {
-                    return skillsRegistry.InitializeSkill(inactiveSkill);
+                    int index = Random.Range(0, inactiveSkills.Count);
+                    ISkillBase inactiveSkill = inactiveSkills[index];
+
+                    if (inactiveSkill != null)
+                    {
+                        return skillsRegistry.InitializeSkill(inactiveSkill);
+                    }
                 }
             }
 
@@ -23,3 +26,4 @@ namespace Assets.Scripts.Skills
         }
     }
 }
+

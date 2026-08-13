@@ -1,5 +1,6 @@
-﻿using Assets.Scripts.DamageNumbers;
+using Assets.Scripts.DamageNumbers;
 using Assets.Scripts.ObjectLifecycle.Actions;
+using Assets.Scripts.Settings.Constants;
 using Assets.Scripts.Storage;
 
 namespace Assets.Scripts.Settings
@@ -17,7 +18,7 @@ namespace Assets.Scripts.Settings
 
         public string GetKey()
         {
-            return "DamageNumbersEnabled";
+            return SettingsConstants.DAMAGE_NUMBERS_KEY;
         }
 
         public bool GetValueOrStoredDefault()
@@ -48,3 +49,4 @@ namespace Assets.Scripts.Settings
         }
     }
 }
+

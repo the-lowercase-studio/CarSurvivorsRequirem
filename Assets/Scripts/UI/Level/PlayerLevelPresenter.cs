@@ -1,4 +1,4 @@
-﻿using Assets.Scripts.LevelSystem;
+using Assets.Scripts.LevelSystem;
 using Assets.Scripts.Player;
 using System;
 using System.Collections;
@@ -28,6 +28,7 @@ namespace Assets.Scripts.UI.Level
         [SerializeField] private Slider _expSlider;
 
         public event EventHandler<ValueEventArgs<LevelData>> OnExpSliderVisualEndValueReached;
+
 
         private ILevelController _playerLevelController;
 
@@ -62,6 +63,15 @@ namespace Assets.Scripts.UI.Level
             _playerLevelController.OnLvlUp += LevelController_OnLvlChange;
 
             InvokeRepeating(nameof(HandleTweensAnimations), 0, DELAY_BETWEEN_TWEENS_ANIMATION_CHECK);
+        }
+
+        private void OnDestroy()
+        {
+            if (_playerLevelController != null)
+            {
+                _playerLevelController.OnExpChange -= LevelController_OnExpChange;
+                _playerLevelController.OnLvlUp -= LevelController_OnLvlChange;
+            }
         }
 
         private void LevelController_OnExpChange(object sender, ValueEventArgs<LevelData> e)
@@ -210,6 +220,8 @@ namespace Assets.Scripts.UI.Level
         }
 
         private void UpdateLevelText()
-            => _levelText.text = _currentlyVisibleLevelData.Lvl.ToString();
+        {
+            _levelText.text = _currentlyVisibleLevelData.Lvl.ToString();
+        }
     }
 }

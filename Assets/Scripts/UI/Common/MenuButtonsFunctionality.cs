@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Assets.Scripts.GameFlow;
 using Reflex.Attributes;
 using UnityEngine;
@@ -11,7 +11,7 @@ namespace Assets.Scripts.UI.Common
 
         [SerializeField] private GameObject[] _enabledDisabledObjects;
 
-        public void OnSceneLoadButtonClick(string scene)
+        public void OnSceneLoadClicked(string scene)
         {
             if (Enum.TryParse(scene, true, out GameScene gameScene))
             {
@@ -23,30 +23,48 @@ namespace Assets.Scripts.UI.Common
             }
         }
 
+        [Obsolete("Use OnSceneLoadClicked instead")]
+        public void OnSceneLoadButtonClick(string scene)
+        {
+            OnSceneLoadClicked(scene);
+        }
+
+        public void ToggleActivityOfObjectDisableOthers(UnityEngine.Object targetObject)
+        {
+            if (!TryGetGameObject(targetObject, out GameObject gameObject))
+            {
+                return;
+            }
+
+            foreach (var panel in _enabledDisabledObjects)
+            {
+                if (panel != gameObject)
+                {
+                    panel.SetActive(false);
+                }
+            }
+
+            ToggleActivityOfObject(gameObject);
+        }
+
+        public void ToggleActivityOfObjectDisableOthers(GameObject gameObject)
+        {
+            ToggleActivityOfObjectDisableOthers((UnityEngine.Object)gameObject);
+        }
+
+        [Obsolete("Use ToggleActivityOfObjectDisableOthers instead")]
         public void ToogleActivityOfObjectDisableOthers(UnityEngine.Object targetObject)
         {
-            if (!TryGetGameObject(targetObject, out GameObject gameObject))
-            {
-                return;
-            }
-
-            foreach (var panel in _enabledDisabledObjects)
-            {
-                if (panel != gameObject)
-                {
-                    panel.SetActive(false);
-                }
-            }
-
-            ToogleActivityOfObject(gameObject);
+            ToggleActivityOfObjectDisableOthers(targetObject);
         }
 
+        [Obsolete("Use ToggleActivityOfObjectDisableOthers instead")]
         public void ToogleActivityOfObjectDisableOthers(GameObject gameObject)
         {
-            ToogleActivityOfObjectDisableOthers((UnityEngine.Object)gameObject);
+            ToggleActivityOfObjectDisableOthers(gameObject);
         }
 
-        public void DiasbleAllOtherObjects(UnityEngine.Object targetObject)
+        public void DisableAllOtherObjects(UnityEngine.Object targetObject)
         {
             if (!TryGetGameObject(targetObject, out GameObject gameObject))
             {
@@ -62,12 +80,24 @@ namespace Assets.Scripts.UI.Common
             }
         }
 
-        public void DiasbleAllOtherObjects(GameObject gameObject)
+        public void DisableAllOtherObjects(GameObject gameObject)
         {
-            DiasbleAllOtherObjects((UnityEngine.Object)gameObject);
+            DisableAllOtherObjects((UnityEngine.Object)gameObject);
         }
 
-        public void ToogleActivityOfObject(UnityEngine.Object targetObject)
+        [Obsolete("Use DisableAllOtherObjects instead")]
+        public void DiasbleAllOtherObjects(UnityEngine.Object targetObject)
+        {
+            DisableAllOtherObjects(targetObject);
+        }
+
+        [Obsolete("Use DisableAllOtherObjects instead")]
+        public void DiasbleAllOtherObjects(GameObject gameObject)
+        {
+            DisableAllOtherObjects(gameObject);
+        }
+
+        public void ToggleActivityOfObject(UnityEngine.Object targetObject)
         {
             if (!TryGetGameObject(targetObject, out GameObject gameObject))
             {
@@ -77,19 +107,43 @@ namespace Assets.Scripts.UI.Common
             gameObject.SetActive(!gameObject.activeSelf);
         }
 
-        public void ToogleActivityOfObject(GameObject gameObject)
+        public void ToggleActivityOfObject(GameObject gameObject)
         {
-            ToogleActivityOfObject((UnityEngine.Object)gameObject);
+            ToggleActivityOfObject((UnityEngine.Object)gameObject);
         }
 
-        public void OnTryAgainClick()
+        [Obsolete("Use ToggleActivityOfObject instead")]
+        public void ToogleActivityOfObject(UnityEngine.Object targetObject)
+        {
+            ToggleActivityOfObject(targetObject);
+        }
+
+        [Obsolete("Use ToggleActivityOfObject instead")]
+        public void ToogleActivityOfObject(GameObject gameObject)
+        {
+            ToggleActivityOfObject(gameObject);
+        }
+
+        public void OnTryAgainClicked()
         {
             _gameSceneLoader.ReloadCurrentSceneAsync();
         }
 
-        public void OnExitClick()
+        [Obsolete("Use OnTryAgainClicked instead")]
+        public void OnTryAgainClick()
+        {
+            OnTryAgainClicked();
+        }
+
+        public void OnExitClicked()
         {
             Application.Quit();
+        }
+
+        [Obsolete("Use OnExitClicked instead")]
+        public void OnExitClick()
+        {
+            OnExitClicked();
         }
 
         private bool TryGetGameObject(UnityEngine.Object targetObject, out GameObject gameObject)

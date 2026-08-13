@@ -1,8 +1,9 @@
-﻿using Assets.ScriptableObjects.Skills.PlayerSkills.SawSkill;
+using Assets.ScriptableObjects.Skills.PlayerSkills.SawSkill;
 using Assets.Scripts.Audio;
 using Assets.Scripts.Initializers;
 using Assets.Scripts.LayerMasks;
 using Assets.Scripts.Player;
+using Assets.Scripts.Skills.Constants;
 using Assets.Scripts.StatusEffects;
 using Reflex.Attributes;
 using UnityEngine;
@@ -14,9 +15,8 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
         [Inject] private readonly IPlayerManager _playerManager;
 
         private SawSkillUpgradeableConfigSO _config;
-        private bool _isInitialized;
-        private const float DEFAULT_COLLISION_KNOCKBACK = 2f;
         private IAudioClipPlayer _audioClipPlayer;
+        private bool _isInitialized;
 
         private void Awake()
         {
@@ -55,7 +55,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
             }
 
             float knockback = Mathf.Max(
-                DEFAULT_COLLISION_KNOCKBACK,
+                SkillConstants.DEFAULT_COLLISION_KNOCKBACK,
                 _config.KnockbackRange.Value * _playerManager.CarController.GetMovementSpeed()
             );
 
@@ -76,3 +76,4 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
         }
     }
 }
+

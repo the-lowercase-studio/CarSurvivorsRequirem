@@ -1,6 +1,5 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using Assets.Scripts.Settings;
 using Reflex.Attributes;
 using TMPro;
@@ -43,15 +42,15 @@ namespace Assets.Scripts.UI.Settings
 
         public void PerformValueChange(int value)
         {
-            var pair = _qualityLevels.FirstOrDefault(x => x.Value == value);
-
-            if (pair.Equals(default(KeyValuePair<string, int>)))
+            foreach (KeyValuePair<string, int> pair in _qualityLevels)
             {
-                return;
+                if (pair.Value == value)
+                {
+                    _graphicSetting.SaveValue(pair.Key);
+                    _graphicSetting.Load();
+                    return;
+                }
             }
-
-            _graphicSetting.SaveValue(pair.Key);
-            _graphicSetting.Load();
         }
 
         public void LoadComponent()
@@ -67,10 +66,11 @@ namespace Assets.Scripts.UI.Settings
         {
             _dropDown.ClearOptions();
 
-            var options = _qualityLevels
-                .OrderBy(x => x.Value)
-                .Select(x => x.Key)
-                .ToList();
+            List<string> options = new List<string>(_qualityLevels.Count);
+            foreach (KeyValuePair<string, int> pair in _qualityLevels)
+            {
+                options.Add(pair.Key);
+            }
 
             _dropDown.AddOptions(options);
         }

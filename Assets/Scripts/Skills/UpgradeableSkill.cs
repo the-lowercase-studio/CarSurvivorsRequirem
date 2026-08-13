@@ -1,13 +1,12 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Assets.ScriptableObjects.Player.Skills;
 using Assets.ScriptableObjects.Skills;
-using System.Linq;
 
 namespace Assets.Scripts.Skills
 {
     public interface IUpgradeableSkill : ISkillBase
     {
-        public bool CanBeUgraded();
+        public bool CanBeUpgraded();
 
         public ISkillUpgradeableStatsConfig Config { get; }
     }
@@ -19,9 +18,15 @@ namespace Assets.Scripts.Skills
         protected abstract TUpgradeableConfig _config { get; set; }
         public ISkillUpgradeableStatsConfig Config => _config;
 
-        public virtual bool CanBeUgraded()
+        public virtual bool CanBeUpgraded()
         {
-            return _config is not null && _config.GetUpgradeableStatsThatCanBeUpgraded().Any();
+            if (_config is null)
+            {
+                return false;
+            }
+
+            using var enumerator = _config.GetUpgradeableStatsThatCanBeUpgraded().GetEnumerator();
+            return enumerator.MoveNext();
         }
 
         public virtual void Initialize()
@@ -37,6 +42,9 @@ namespace Assets.Scripts.Skills
         }
 
         public virtual bool IsInitialized()
-            => gameObject.activeSelf && _config is not null;
+        {
+            return gameObject.activeSelf && _config is not null;
+        }
     }
 }
+

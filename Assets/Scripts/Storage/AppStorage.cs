@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
@@ -42,27 +42,42 @@ namespace Assets.Scripts.Storage
 
         public static void SetValue<T>(string key, T value)
         {
-            string dataDirectory = GetDataDirectoryPath();
-            if (!Directory.Exists(dataDirectory))
+            try
             {
-                Directory.CreateDirectory(dataDirectory);
-            }
+                string dataDirectory = GetDataDirectoryPath();
+                if (!Directory.Exists(dataDirectory))
+                {
+                    Directory.CreateDirectory(dataDirectory);
+                }
 
-            _settingsCache[key] = JToken.FromObject(value);
-            var json = JsonConvert.SerializeObject(_settingsCache, Formatting.Indented);
-            File.WriteAllText(SettingsFilePath, json);
+                _settingsCache[key] = JToken.FromObject(value);
+                var json = JsonConvert.SerializeObject(_settingsCache, Formatting.Indented);
+                File.WriteAllText(SettingsFilePath, json);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[AppStorage] Failed to set value for key '{key}': {ex.Message}");
+            }
         }
 
         private static void Load()
         {
-            if (File.Exists(SettingsFilePath))
+            try
             {
-                var json = File.ReadAllText(SettingsFilePath);
-                var obj = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(json);
-                _settingsCache = obj ?? new Dictionary<string, JToken>();
+                if (File.Exists(SettingsFilePath))
+                {
+                    var json = File.ReadAllText(SettingsFilePath);
+                    var obj = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(json);
+                    _settingsCache = obj ?? new Dictionary<string, JToken>();
+                }
+                else
+                {
+                    _settingsCache = new Dictionary<string, JToken>();
+                }
             }
-            else
+            catch (Exception ex)
             {
+                Debug.LogError($"[AppStorage] Failed to load settings file at '{SettingsFilePath}': {ex.Message}");
                 _settingsCache = new Dictionary<string, JToken>();
             }
         }

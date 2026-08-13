@@ -1,16 +1,17 @@
-﻿namespace Assets.Scripts.Initializers
+namespace Assets.Scripts.Initializers
 {
     public interface IInitializable
     {
-        public void Initialize();
+        void Initialize();
 
-        public bool IsInitialized();
+        bool IsInitialized();
     }
 
     public interface IInitializable<T>
     {
-        public void Initialize(T input);
+        void Initialize(T input);
 
-        public bool IsInitialized();
+        bool IsInitialized();
     }
 }
+

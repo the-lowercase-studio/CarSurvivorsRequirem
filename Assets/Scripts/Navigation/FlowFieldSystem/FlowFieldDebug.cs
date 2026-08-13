@@ -9,11 +9,17 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
     [Serializable]
     public class FlowFieldDebugConfiguration
     {
-        public NavigationGrid Grid;
-        public Transform DebugInfoHolder;
-        public float FontSize;
-        public float TextYOffset;
-        public FlowFieldDebug.DisplayMode DisplayMode;
+        [SerializeField] private NavigationGrid _grid;
+        [SerializeField] private Transform _debugInfoHolder;
+        [SerializeField] private float _fontSize = 1f;
+        [SerializeField] private float _textYOffset;
+        [SerializeField] private FlowFieldDebug.DisplayMode _displayMode = FlowFieldDebug.DisplayMode.CostField;
+
+        public NavigationGrid Grid { get => _grid; set => _grid = value; }
+        public Transform DebugInfoHolder => _debugInfoHolder;
+        public float FontSize => _fontSize;
+        public float TextYOffset => _textYOffset;
+        public FlowFieldDebug.DisplayMode DisplayMode => _displayMode;
 
         public FlowFieldDebugConfiguration(NavigationGrid grid,
                                            Transform debugInfoHolder,
@@ -21,11 +27,11 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
                                            float textYOffset = 0,
                                            FlowFieldDebug.DisplayMode displayMode = FlowFieldDebug.DisplayMode.CostField)
         {
-            Grid = grid;
-            DebugInfoHolder = debugInfoHolder;
-            FontSize = fontSize;
-            TextYOffset = textYOffset;
-            DisplayMode = displayMode;
+            _grid = grid;
+            _debugInfoHolder = debugInfoHolder;
+            _fontSize = fontSize;
+            _textYOffset = textYOffset;
+            _displayMode = displayMode;
         }
     }
 
@@ -80,12 +86,15 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
             return textComponent;
         }
 
-        private static string GetCellDebugTextBasedOnMode(Cell cell, DisplayMode displayMode) => displayMode switch
+        private static string GetCellDebugTextBasedOnMode(Cell cell, DisplayMode displayMode)
         {
-            DisplayMode.CostField => cell.Cost.ToString(),
-            DisplayMode.IntegrationField => cell.BestCost.ToString(),
-            DisplayMode.FlowField => cell.BestDirection.Vector.ToString(),
-            _ => ""
-        };
+            return displayMode switch
+            {
+                DisplayMode.CostField => cell.Cost.ToString(),
+                DisplayMode.IntegrationField => cell.BestCost.ToString(),
+                DisplayMode.FlowField => cell.BestDirection.Vector.ToString(),
+                _ => ""
+            };
+        }
     }
 }

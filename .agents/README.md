@@ -5,6 +5,7 @@ This folder is the vendor-neutral operational source of truth for agent customiz
 ## Structure
 
 - context/: long-form architecture, technology, coding, and implementation context.
+- context/adr/: architecture decision records (ADRs).
 - context/game-systems/: game-system documentation.
 - context/implementations/plans/: implementation plans.
 - context/implementations/summaries/: implementation summaries.
@@ -15,9 +16,10 @@ This folder is the vendor-neutral operational source of truth for agent customiz
 1. Root AGENTS.md
 2. .agents/README.md
 3. .agents/context/
-4. .agents/context/game-systems/ for relevant system documentation
-5. .agents/skills/
-6. Optional vendor-specific descriptors nested under skills.
+4. .agents/context/adr/ for architecture decision records
+5. .agents/context/game-systems/ for relevant system documentation
+6. .agents/skills/
+7. Optional vendor-specific descriptors nested under skills.
 
 ## Source of Truth Policy
 

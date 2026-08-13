@@ -1,4 +1,5 @@
-﻿using Assets.Scripts.Storage;
+using Assets.Scripts.Settings.Constants;
+using Assets.Scripts.Storage;
 using UnityEngine;
 
 namespace Assets.Scripts.Settings
@@ -9,7 +10,7 @@ namespace Assets.Scripts.Settings
 
         public string GetKey()
         {
-            return "FullScreenMode";
+            return SettingsConstants.FULL_SCREEN_MODE_KEY;
         }
 
         public FullScreenMode GetValueOrStoredDefault()
@@ -34,3 +35,4 @@ namespace Assets.Scripts.Settings
         }
     }
 }
+

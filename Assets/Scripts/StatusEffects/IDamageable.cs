@@ -1,9 +1,9 @@
-﻿namespace Assets.Scripts.StatusEffects
+namespace Assets.Scripts.StatusEffects
 {
     public interface IDamageable
     {
-        public void TakeDamage(float damage);
-
-        public void TakeFullHpDamage();
+        void TakeDamage(float damage);
+        void TakeFullHpDamage();
     }
 }
+

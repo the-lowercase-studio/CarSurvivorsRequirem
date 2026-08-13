@@ -1,6 +1,5 @@
 using Assets.ScriptableObjects;
 using Assets.ScriptableObjects.Skills;
-using Assets.Scripts.Skills;
 using System;
 using UnityEngine;
 
@@ -11,6 +10,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
         [field: SerializeField] public override SkillInfoSO SkillInfo { get; protected set; }
         [field: SerializeField] protected override LasergunSkillSO _config { get; set; }
         [SerializeField] private LasergunTurret[] _turrets;
+
         private IItemsWithScriptableConfigsActivator<LasergunTurret, TurretConfigSO> _turretsActivator;
 
         public override void Initialize()
@@ -23,21 +23,40 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
             InitializeTurretsToConfiguredCount();
             ApplyNumberOfTargetsToInitializedTurrets();
 
-            _config.NumberOfTurrets.OnUpgrade += NumberOfTurrets_OnUpgrade;
-            _config.NumberOfTargets.OnUpgrade += NumberOfTargets_OnUpgrade;
+            if (_config is not null)
+            {
+                if (_config.NumberOfTurrets is not null)
+                {
+                    _config.NumberOfTurrets.OnUpgrade -= OnNumberOfTurretsUpgraded;
+                    _config.NumberOfTurrets.OnUpgrade += OnNumberOfTurretsUpgraded;
+                }
+
+                if (_config.NumberOfTargets is not null)
+                {
+                    _config.NumberOfTargets.OnUpgrade -= OnNumberOfTargetsUpgraded;
+                    _config.NumberOfTargets.OnUpgrade += OnNumberOfTargetsUpgraded;
+                }
+            }
 
             InvokeRepeating(nameof(ShootFromTurrets), 0f, _config.DelayBetweenShoots.Value);
         }
 
         private void OnDestroy()
         {
-            if (_config is null || _config.NumberOfTurrets is null || _config.NumberOfTargets is null)
+            if (_config is null)
             {
                 return;
             }
 
-            _config.NumberOfTurrets.OnUpgrade -= NumberOfTurrets_OnUpgrade;
-            _config.NumberOfTargets.OnUpgrade -= NumberOfTargets_OnUpgrade;
+            if (_config.NumberOfTurrets is not null)
+            {
+                _config.NumberOfTurrets.OnUpgrade -= OnNumberOfTurretsUpgraded;
+            }
+
+            if (_config.NumberOfTargets is not null)
+            {
+                _config.NumberOfTargets.OnUpgrade -= OnNumberOfTargetsUpgraded;
+            }
         }
 
         private void ShootFromTurrets()
@@ -62,14 +81,15 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
             }
         }
 
-        private void NumberOfTurrets_OnUpgrade(object sender, EventArgs e)
+        private void OnNumberOfTurretsUpgraded(object sender, EventArgs e)
         {
             InitializeTurretsToConfiguredCount();
         }
 
-        private void NumberOfTargets_OnUpgrade(object sender, EventArgs e)
+        private void OnNumberOfTargetsUpgraded(object sender, EventArgs e)
         {
             ApplyNumberOfTargetsToInitializedTurrets();
         }
     }
 }
+

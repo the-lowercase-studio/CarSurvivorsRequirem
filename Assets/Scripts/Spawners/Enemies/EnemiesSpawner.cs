@@ -40,10 +40,11 @@ namespace Assets.Scripts.Spawners.Enemies
         [Header("Spawn Distance & Occupancy Settings")]
         [SerializeField] private int _outerSpawnBufferCells = 8;
         [SerializeField] private int _maxEnemiesPerCell = 2;
+        [SerializeField] private float _currentRedistributionFactorBonus = 0f;
 
         private EnemiesSpawnChanceRedistributionSystem _enemiesSpawnChanceRedistributionSystem = new();
-        [SerializeField] private float _currentRedistributionFactorBonus = 0f;
         private Dictionary<EnemySpawnInfo, ObjectPool<Enemy>> _enemyPools = new();
+        private Dictionary<Enemy, ObjectPool<Enemy>> _instancePoolMap = new();
 
         public event EventHandler OnSpawnedEntityReleased;
 
@@ -93,7 +94,9 @@ namespace Assets.Scripts.Spawners.Enemies
                 List<Enemy> temp = new List<Enemy>(info.MaxAmount);
                 for (int i = 0; i < info.MaxAmount; i++)
                 {
-                    temp.Add(pool.Get());
+                    Enemy enemy = pool.Get();
+                    _instancePoolMap[enemy] = pool;
+                    temp.Add(enemy);
                 }
                 foreach (Enemy enemy in temp)
                 {
@@ -121,6 +124,8 @@ namespace Assets.Scripts.Spawners.Enemies
 
             enemy.gameObject.SetActive(false);
 
+            _instancePoolMap.Remove(enemy);
+
             OnSpawnedEntityReleased?.Invoke(enemy, EventArgs.Empty);
 
             CurrentlySpawnedObjectsCount--;
@@ -130,7 +135,14 @@ namespace Assets.Scripts.Spawners.Enemies
         {
             if (sender is Enemy enemy)
             {
-                OnEnemyRelease(enemy);
+                if (_instancePoolMap.TryGetValue(enemy, out ObjectPool<Enemy> pool))
+                {
+                    pool.Release(enemy);
+                }
+                else
+                {
+                    OnEnemyRelease(enemy);
+                }
             }
         }
 
@@ -151,9 +163,10 @@ namespace Assets.Scripts.Spawners.Enemies
                     if (!enumerator.MoveNext()) break;
 
                     EnemySpawnInfo currentEnemyToSpawnInfo = RandomEnemyInfoBasedOnSpawnChance();
-                    if (currentEnemyToSpawnInfo != null)
+                    if (currentEnemyToSpawnInfo != null && _enemyPools.TryGetValue(currentEnemyToSpawnInfo, out var pool))
                     {
-                        Enemy enemy = _enemyPools[currentEnemyToSpawnInfo].Get();
+                        Enemy enemy = pool.Get();
+                        _instancePoolMap[enemy] = pool;
                         enemy.transform.position = enumerator.Current.WorldPos;
                     }
                 }
@@ -192,6 +205,7 @@ namespace Assets.Scripts.Spawners.Enemies
                             if (_enemyPools.TryGetValue(enemyInfo, out ObjectPool<Enemy> currentPool))
                             {
                                 Enemy enemy = currentPool.Get();
+                                _instancePoolMap[enemy] = currentPool;
                                 enemy.transform.position = spawnPos;
                             }
                         };
@@ -199,6 +213,7 @@ namespace Assets.Scripts.Spawners.Enemies
                     else
                     {
                         Enemy enemy = pool.Get();
+                        _instancePoolMap[enemy] = pool;
                         enemy.transform.position = spawnPos;
                     }
                 }

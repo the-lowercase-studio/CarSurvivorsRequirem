@@ -1,17 +1,17 @@
+using System;
+using System.Collections.Generic;
 using Assets.Scripts.Audio;
+using Assets.Scripts.Audio.Constants;
 using Assets.Scripts.Common.Types;
 using Assets.Scripts.Extensions;
-using Assets.Scripts.Navigation.FlowFieldSystem;
 using Assets.Scripts.LayerMasks;
+using Assets.Scripts.Navigation.FlowFieldSystem;
 using Assets.Scripts.Player;
 using Assets.Scripts.Pooling;
 using Assets.Scripts.Providers;
 using DG.Tweening;
 using Reflex.Attributes;
-using System;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Assets.Scripts.LevelSystem.Exp
 {
@@ -43,24 +43,21 @@ namespace Assets.Scripts.LevelSystem.Exp
 
         [SerializeField] private float _movementSpeed;
         [SerializeField] private float _disapearingDuration = 0.1f;
-
         [SerializeField] private GameObject _visual;
         [SerializeField] private ExpParticleApearanceByTreshold[] _particleApearanceByTreshold;
+
+        private float _expAmount;
+        private bool _expCollected;
+        private Vector3 _startScale;
+        private IFlowFieldMovementController _flowFieldMovementController;
+        private IAudioClipPlayer _audioClipPlayer;
+        private Tween _shrinkTween;
+        private Action _pendingCallback;
 
         public GameObject GameObject => gameObject;
 
         public event EventHandler OnExpReachedTarget;
-
         public event EventHandler OnCanBeReleased;
-
-        private float _expAmount;
-        private bool _expCollected;
-
-        private Vector3 _startScale;
-
-        private IFlowFieldMovementController _flowFieldMovementController;
-
-        private IAudioClipPlayer _audioClipPlayer;
 
         private void Awake()
         {
@@ -68,9 +65,20 @@ namespace Assets.Scripts.LevelSystem.Exp
             _audioClipPlayer = GetComponentInChildren<IAudioClipPlayer>();
         }
 
+        private void Start()
+        {
+            _startScale = transform.localScale;
+        }
+
         private void FixedUpdate()
         {
             _flowFieldMovementController.MoveOnFlowFieldGrid(_movementSpeed);
+        }
+
+        private void OnDestroy()
+        {
+            _shrinkTween?.Kill();
+            _shrinkTween = null;
         }
 
         private void OnTriggerEnter(Collider other)
@@ -79,20 +87,6 @@ namespace Assets.Scripts.LevelSystem.Exp
             {
                 OnExpReachedTarget?.Invoke(this, EventArgs.Empty);
             }
-        }
-
-        private void Start()
-        {
-            _startScale = transform.localScale;
-        }
-
-        private Tween _shrinkTween;
-        private Action _pendingCallback;
-
-        private void OnDestroy()
-        {
-            _shrinkTween?.Kill();
-            _shrinkTween = null;
         }
 
         public void ReturnToPool()
@@ -105,9 +99,7 @@ namespace Assets.Scripts.LevelSystem.Exp
         public void OnGet()
         {
             _expCollected = false;
-
             _expAmount = 0;
-
             _pendingCallback = null;
         }
 
@@ -115,9 +107,7 @@ namespace Assets.Scripts.LevelSystem.Exp
         {
             _shrinkTween?.Kill();
             _shrinkTween = null;
-
             _pendingCallback = null;
-
             transform.localScale = _startScale;
         }
 
@@ -156,7 +146,7 @@ namespace Assets.Scripts.LevelSystem.Exp
 
             if (_audioClipPlayer != null)
             {
-                _audioClipPlayer.Play("ExpCollected");
+                _audioClipPlayer.Play(AudioConstants.EXP_COLLECTED_CLIP_NAME);
             }
 
             _shrinkTween?.Kill();
@@ -179,3 +169,4 @@ namespace Assets.Scripts.LevelSystem.Exp
         }
     }
 }
+

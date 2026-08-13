@@ -1,8 +1,8 @@
+using Assets.Scripts.Navigation.Constants;
 using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.LayerMasks;
 using Reflex.Attributes;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Assets.Scripts.Navigation.FlowFieldSystem
 {
@@ -13,17 +13,13 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
 
     public class FlowFieldMovementController : MonoBehaviour, IFlowFieldMovementController
     {
-        private const int SEPARATION_COLLIDER_BUFFER_SIZE = 32;
-
         [Inject] private readonly IGridManager _gridManager;
 
         [Header("Separating moving entities")]
-        [FormerlySerializedAs("separationRadius")]
         [SerializeField] private float _separationRadius = 1.2f;
-        [FormerlySerializedAs("separationStrength")]
         [SerializeField] private float _separationStrength = 0.5f;
 
-        private readonly Collider[] _separationColliderBuffer = new Collider[SEPARATION_COLLIDER_BUFFER_SIZE];
+        private readonly Collider[] _separationColliderBuffer = new Collider[FlowFieldConstants.SEPARATION_COLLIDER_BUFFER_SIZE];
         private Vector3 _separationVector;
 
         private Collider _selfCollider;

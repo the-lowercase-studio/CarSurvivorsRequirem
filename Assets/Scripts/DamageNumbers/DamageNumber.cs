@@ -1,6 +1,7 @@
+using System;
+using Assets.Scripts.DamageNumbers.Constants;
 using Assets.Scripts.Initializers;
 using DG.Tweening;
-using System;
 using TMPro;
 using UnityEngine;
 
@@ -21,10 +22,9 @@ namespace Assets.Scripts.DamageNumbers
     public class DamageNumber : MonoBehaviour, IInitializable<DamageNumberConfig>
     {
         [SerializeField] private TextMeshPro _textMeshPro;
-        private bool _isInitialized;
-        private const float RESIZING_ANIMATION_SPEED = 0.6f;
-        private DamageNumberConfig _config;
 
+        private bool _isInitialized;
+        private DamageNumberConfig _config;
         private Sequence _animationSequence;
 
         public event EventHandler OnLifeEnd;
@@ -53,8 +53,8 @@ namespace Assets.Scripts.DamageNumbers
             transform.localScale = Vector3.zero;
 
             _animationSequence = DOTween.Sequence()
-                .Append(transform.DOScale(targetScale, RESIZING_ANIMATION_SPEED).SetEase(Ease.InOutSine))
-                .Append(transform.DOScale(Vector3.zero, RESIZING_ANIMATION_SPEED).SetEase(Ease.InOutSine))
+                .Append(transform.DOScale(targetScale, DamageNumberConstants.RESIZING_ANIMATION_SPEED).SetEase(Ease.InOutSine))
+                .Append(transform.DOScale(Vector3.zero, DamageNumberConstants.RESIZING_ANIMATION_SPEED).SetEase(Ease.InOutSine))
                 .OnComplete(HandleAnimationComplete);
 
             _isInitialized = true;
@@ -88,3 +88,4 @@ namespace Assets.Scripts.DamageNumbers
         }
     }
 }
+

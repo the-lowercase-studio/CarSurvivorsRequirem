@@ -1,14 +1,24 @@
-﻿using Assets.Scripts.Storage;
-using System.Linq;
+using System.Collections.Generic;
+using Assets.Scripts.Settings.Constants;
+using Assets.Scripts.Storage;
 using UnityEngine;
 
 namespace Assets.Scripts.Settings.Resolution
 {
     public class ResolutionSetting : ISetting<ResolutionSetting, SerializableResolution>
     {
-        public SerializableResolution DefaultValue => ScreenSerializableResolutionHelper
-            .GetAvailableResolutions()
-            .FirstOrDefault();
+        public SerializableResolution DefaultValue
+        {
+            get
+            {
+                IEnumerable<SerializableResolution> available = ScreenSerializableResolutionHelper.GetAvailableResolutions();
+                foreach (SerializableResolution res in available)
+                {
+                    return res;
+                }
+                return default;
+            }
+        }
 
         private readonly ISetting<FullScreenSetting, FullScreenMode> _fullScreenSetting;
 
@@ -19,7 +29,7 @@ namespace Assets.Scripts.Settings.Resolution
 
         public string GetKey()
         {
-            return "Resolution";
+            return SettingsConstants.RESOLUTION_KEY;
         }
 
         public SerializableResolution GetValueOrStoredDefault()
@@ -39,11 +49,18 @@ namespace Assets.Scripts.Settings.Resolution
 
         public void Load()
         {
-            var storedValue = GetValueOrStoredDefault();
+            SerializableResolution storedValue = GetValueOrStoredDefault();
 
-            SerializableResolution resolution = ScreenSerializableResolutionHelper
-                .GetAvailableResolutions()
-                .FirstOrDefault(r => r.Equals(storedValue));
+            SerializableResolution resolution = default;
+            IEnumerable<SerializableResolution> available = ScreenSerializableResolutionHelper.GetAvailableResolutions();
+            foreach (SerializableResolution r in available)
+            {
+                if (r.Equals(storedValue))
+                {
+                    resolution = r;
+                    break;
+                }
+            }
 
             if (resolution.Equals(default(SerializableResolution)))
             {
@@ -57,3 +74,4 @@ namespace Assets.Scripts.Settings.Resolution
         }
     }
 }
+
