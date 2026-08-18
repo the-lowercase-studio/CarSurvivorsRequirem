@@ -1,53 +1,53 @@
 # <Topic / System Name>
 
-*Krótkie podsumowanie w 1-2 zdaniach: czym jest ten element i jaką rolę pełni w grze.*
+*Brief 1-2 sentence summary: what this element is and what role it plays in the game.*
 
 ---
 
-## 1. Wprowadzenie i Cel (Overview)
+## 1. Overview & Purpose
 
-Opis w przystępnym języku wyjaśniający:
-- Jaki problem rozwiązuje ten system / funkcja.
-- Jak wpływa na rozgrywkę z perspektywy gracza i developera.
-- Intuicyjne analogie ułatwiające zrozumienie.
+Accessible explanation covering:
+- What problem this system/feature solves.
+- How it affects gameplay from player and developer perspectives.
+- Intuitive analogies to aid understanding.
 
-## 2. Kluczowe Pojęcia (Key Concepts)
+## 2. Key Concepts
 
-Słowniczek najważniejszych terminów:
-- **Pojęcie A**: Wyjaśnienie proste i zwięzłe.
-- **Pojęcie B**: Wyjaśnienie proste i zwięzłe.
+Glossary of key terms:
+- **Concept A**: Simple and concise explanation.
+- **Concept B**: Simple and concise explanation.
 
-## 3. Schemat Działania (How It Works)
+## 3. How It Works
 
-Wizualny przepływ działania systemu:
+Visual flowchart of system operation:
 
 ```mermaid
 flowchart TD
-    A[Start / Zdarzenie] --> B[Przetwarzanie logiki]
-    B --> C{Warunek}
-    C -->|Tak| D[Efekt w grze / VFX / Audio]
-    C -->|Nie| E[Stan domyślny]
+    A[Start / Event] --> B[Logic Processing]
+    B --> C{Condition}
+    C -->|Yes| D[In-Game Effect / VFX / Audio]
+    C -->|No| E[Default State]
 ```
 
-Opis krok po kroku co dzieje się na poszczególnych etapach.
+Step-by-step description of what happens at each stage.
 
-## 4. Przewodnik Konfiguracji (Designer Guide)
+## 4. Designer & Configuration Guide
 
-Praktyczny poradnik dla projektanta / programisty:
-1. **Lokalizacja assetów**: Gdzie znajdują się prefabrykaty, ScriptableObjecty i sceny.
-2. **Krok po kroku**: Jak stworzyć nowy element (np. nową broń, typ wroga, ulepszenie).
-3. **Wskazówki i dobre praktyki**: Na co zwracać uwagę podczas konfiguracji w Inspektorze Unity.
+Practical guide for designers and developers:
+1. **Asset Locations**: Where prefabs, ScriptableObjects, and scenes are located.
+2. **Step-by-Step**: How to create a new element (e.g. new weapon, enemy type, upgrade).
+3. **Tips & Best Practices**: What to watch out for during Unity Inspector configuration.
 
-## 5. Tabela Parametrów i Balansu (Parameters)
+## 5. Parameter & Balance Table
 
-| Parametr w Inspektorze | Znaczenie | Wartości domyślne / Zalecany zakres |
+| Inspector Parameter | Description | Default Values / Recommended Range |
 | :--- | :--- | :--- |
-| `Przykład_Parametr1` | Opis parametru | np. 1.0 - 5.0 |
-| `Przykład_Parametr2` | Opis parametru | np. `True` / `False` |
+| `Example_Parameter1` | Parameter description | e.g. 1.0 - 5.0 |
+| `Example_Parameter2` | Parameter description | e.g. `True` / `False` |
 
-## 6. Najczęstsze Pytania i Rozwiązywanie Problemów (FAQ & Troubleshooting)
+## 6. FAQ & Troubleshooting
 
-- **P: Co zrobić, gdy [częsty problem]?**  
-  **O:** [Rozwiązanie krok po kroku].
-- **P: Czy mogę zmienić [parametr X] w trakcie gry?**  
-  **O:** [Wyjaśnienie zachowania w runtime].
+- **Q: What should I do when [common issue]?**  
+  **A:** [Step-by-step resolution].
+- **Q: Can I modify [parameter X] at runtime?**  
+  **A:** [Explanation of runtime behavior].

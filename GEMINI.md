@@ -25,3 +25,4 @@ This document defines high-priority operational rules and constraints specifical
 - Filenames for plans and summaries must use kebab-case without any date prefix (e.g. feature-name-plan.md). The date must be placed inside the document body.
 - File and directory paths in agent documentation must be written relative to the project root in plain text without markdown links and without backticks (e.g. - Assets/Scripts/Player/Car/CarController.cs).
 - Human-facing documentation belongs in .user-docs/ and must ONLY be created or modified upon explicit user request.
+- English Language Invariant: All files created or modified in the repository (including code, comments, inspector metadata, plans, summaries, and templates) must be in English. Multilingual responses are restricted to chat communication with the user.

@@ -69,6 +69,7 @@ Follow `.agents/context/project-coding-standards.md` for detailed rules. The hig
 - Prefer `[SerializeField] private` fields over public mutable inspector fields.
 - Treat warnings as errors during development.
 - Keep legacy cleanup incremental and scoped to touched code.
+- English Language Invariant: All repository files, code identifiers, comments, XML doc comments, inspector tooltips/headers, and agent operational files must be authored strictly in English. Multilingual communication is permitted exclusively in user-facing chat interactions.
 
 ## Gameplay Guardrails
 
@@ -181,3 +182,4 @@ For documentation-only changes, review links and paths for accuracy. A Unity Edi
 - When adding a new specialist domain, add or update the matching skill or agent file under `.agents/`.
 - Keep skill descriptions explicit with `Use when:` trigger language.
 - Update cross-references when docs move or filenames change.
+- Maintain all agent operational files, plans, summaries, and skill templates in English.

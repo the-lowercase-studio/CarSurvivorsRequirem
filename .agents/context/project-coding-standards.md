@@ -41,6 +41,10 @@ public class TurnManager : MonoBehaviour, ITurnManager
 
 ## 2) Naming Conventions
 
+### General Naming Rules
+
+- All identifiers (classes, structs, interfaces, methods, properties, fields, parameters, local variables, enum values, namespaces) must be in English.
+
 ### Constants
 
 - Use UPPER_SNAKE_CASE for all const fields.
@@ -146,7 +150,7 @@ Then keep methods in lifecycle and behavior order that reads clearly:
 ## 5) Unity and Inspector Conventions
 
 1. Prefer `[SerializeField] private` fields when inspector data does not need public access. When public read access is needed, prefer one-line serialized auto-properties: `[field: SerializeField] public Type Value { get; private set; }`. Use a private serialized field plus a public property when the accessor needs logic or existing serialized field names must be preserved. Avoid public mutable fields unless Unity/editor integration or serialized compatibility requires them.
-2. Keep inspector-facing names and tooltips clear when adding new designer-configurable values.
+2. Add `[Tooltip("...")]` to non-obvious serialized fields, written clearly and concisely in English. Keep inspector headers `[Header("...")]` in English.
 3. Preserve existing inspector workflows and serialized data compatibility.
 4. For required `[SerializeField]` references, do not add defensive null checks in `Awake` just to throw custom errors. If a required reference is unassigned, rely on Unity's default missing-reference behavior; assigning required inspector references is user/setup responsibility.
 5. Do not use `FormerlySerializedAs` when renaming serialized fields. Before changing serialized field names:
@@ -163,7 +167,7 @@ Then keep methods in lifecycle and behavior order that reads clearly:
 
 1. Use Debug.Log for meaningful runtime diagnostics only.
 2. Remove temporary noisy logs before finalizing unless they are intentional diagnostics.
-3. Add comments only for non-obvious intent or constraints.
+3. Write comments, XML docstrings, and log messages in English to explain non-obvious intent and architectural rationale. Do not restate what code does.
 
 ## 8) Legacy Style Migration
 
@@ -196,6 +200,7 @@ Before finalizing a change:
 6. LINQ is not used (System.Linq namespace/methods are banned).
 7. Functions/methods use block syntax ({}) instead of expression-bodied syntax (=>).
 8. Implementation plan (under .agents/context/implementations/plans/) and implementation summary (under .agents/context/implementations/summaries/) are created and tracked in the repository.
+9. All newly written or touched code identifiers, comments, tooltips, logs, templates, and markdown files are strictly in English.
 
 ## 12) Programming Guidelines and Constraints
 
@@ -204,3 +209,7 @@ Before finalizing a change:
 
 ### Syntax Rules
 - **Method Block Syntax**: Do not use expression-bodied arrow syntax (`=>`) for methods/functions. Always use standard block bodies with curly braces `{}` and explicit `return` statements where applicable. (Expression-bodied auto-properties remain acceptable).
+
+### Language Invariant
+- All repository files, source code, comments, inspector tooltips, templates, and agent documentation must be authored in English.
+- Multilingual communication is supported exclusively in direct user-facing chat, never in repository artifacts.

@@ -33,8 +33,10 @@ This folder is the vendor-neutral operational source of truth for agent customiz
 - Use .agents/context/implementations/templates/ for document structure.
 - Never write plans or summaries to external directories or IDE-specific artifact paths outside the repository.
 - .user-docs/ is reserved for human-facing documentation created only upon explicit user request; agents must not read .user-docs/ as an operational source of truth.
+- English Language Invariant: All files within `.agents/` (contexts, ADRs, system docs, skill definitions, templates, plans, summaries, and runtime artifacts) must be authored exclusively in English.
 
 ## Maintenance
 
 - When introducing a new specialist domain, add/update the corresponding skill under .agents/skills/ and any optional vendor descriptor nested under that skill.
 - Keep skill descriptions explicit with "Use when:" trigger phrases for better discovery.
+- Ensure all newly added or modified agent files, templates, and summaries strictly follow the English Language Invariant.

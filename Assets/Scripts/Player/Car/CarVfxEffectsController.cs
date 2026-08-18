@@ -13,26 +13,26 @@ namespace Assets.Scripts.Player.Car
         [SerializeField] private GameObject _carBackLightsHolder;
 
         [Header("Car Fast Effect")]
-        [Tooltip("Efekty śladów prędkości na tył pojazdu (aktywne przy szybkiej jeździe do przodu).")]
+        [Tooltip("Speed trail effects for the rear of the vehicle (active during high-speed forward driving).")]
         [SerializeField] private TrailRenderer[] _rearTrailRenderers;
 
-        [Tooltip("Efekty śladów prędkości na przód pojazdu (aktywne przy szybkiej jeździe w tył).")]
+        [Tooltip("Speed trail effects for the front of the vehicle (active during high-speed reversing).")]
         [SerializeField] private TrailRenderer[] _frontTrailRenderers;
 
-        [Tooltip("Czas znikania śladu prędkości.")]
+        [Tooltip("Fade-out time of the speed trail.")]
         [SerializeField] private float _trailDisappearingSpeed = 0.3f;
 
-        [Tooltip("Próg prędkości, po przekroczeniu którego włączają się ślady prędkości.")]
+        [Tooltip("Speed threshold above which speed trails are enabled.")]
         [SerializeField] private float _thresholdToStartSpeedTrail = 5f;
 
         [Header("Car Drift Effect")]
-        [Tooltip("Efekty śladów opon z driftu przypisane do 2 tylnych kół pojazdu (tylne lewe i tylne prawe).")]
+        [Tooltip("Drift tire skid mark effects assigned to the 2 rear wheels (rear left and rear right).")]
         [SerializeField] private TrailRenderer[] _rearDriftTrailRenderers;
 
-        [Tooltip("Czas w sekundach, przez jaki ślady opon z driftu pozostają widoczne na ziemi.")]
+        [Tooltip("Duration in seconds that drift skid marks remain visible on the ground.")]
         [SerializeField] private float _driftTrailLifetime = 3.0f;
 
-        [Tooltip("Czas w sekundach, przez jaki ślad opon z driftu płynnie zanika (fade out) pod koniec swojego czasu trwania.")]
+        [Tooltip("Duration in seconds over which drift skid marks smoothly fade out at the end of their lifetime.")]
         [SerializeField] private float _driftTrailFadeTime = 0.5f;
 
         private ICarController _carController;
