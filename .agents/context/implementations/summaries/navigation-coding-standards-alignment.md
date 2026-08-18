@@ -3,7 +3,7 @@
 **Date**: 2026-08-13
 
 ## Summary
-Przeprowadzono pełny audyt oraz dostosowanie kodu w module Navigation (Assets/Scripts/Navigation/) do standardów projektowych (ProjectLizard Coding Standards).
+Przeprowadzono pełny audyt oraz dostosowanie kodu w module Navigation (Assets/Scripts/Navigation/) do standardów projektowych (Car Survivors Coding Standards).
 
 ## Files Changed
 - Assets/Scripts/Navigation/Constants/GridConstants.cs: dodano stałą OCCUPANCY_BUFFER_SIZE.

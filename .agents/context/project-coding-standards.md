@@ -1,4 +1,4 @@
-# ProjectLizard Coding Standards
+# Car Survivors Coding Standards
 
 ## Purpose
 
@@ -46,20 +46,20 @@ public class TurnManager : MonoBehaviour, ITurnManager
 - Use UPPER_SNAKE_CASE for all const fields.
 - Constants must live in a `Constants` folder under the owning system root (for example Assets/Scripts/Skills/Constants/, Assets/Scripts/DamageNumbers/Constants/, Assets/Scripts/Editor/Constants/).
 - Avoid a single global constants root folder; keep constants close to the domain that owns them.
-- Do not keep reusable constants inside gameplay classes like `EnemyBase` or `PlayerParty`; reference constants classes instead.
+- Do not keep reusable constants inside gameplay classes like `EnemyBase` or `CarController`; reference constants classes instead.
 - Use `*Constants` naming for constants containers (for example `PositionConstants`, `DamageNumberConstants`).
 
 Examples:
 
 ```csharp
 private const float ROTATION_TWEEN_DURATION = 0.4f;
-public const int START_CARDS_NUMBER = 5;
+public const int MAX_ENEMIES_ALIVE = 50;
 ```
 
 Placement example:
 
 ```csharp
-namespace Assets.Cards.Constants
+namespace Assets.Scripts.Skills.Constants
 {
     public static class PositionConstants
     {
@@ -75,7 +75,7 @@ namespace Assets.Cards.Constants
 Examples:
 
 ```csharp
-IPlayerParty
+ICarController
 ITargetsProvider
 ```
 
@@ -152,11 +152,11 @@ Then keep methods in lifecycle and behavior order that reads clearly:
    - Always notify the user in advance that they will need to manually re-assign the serialized values in the Unity Editor.
    - Exception: If the serialized change is small and straightforward to update directly in a text-formatted prefab or asset file, the agent may apply this exception to edit the prefab/asset directly, but MUST still explicitly inform the user that this action was performed.
 
-## 6) Events and Turn-Flow Safety
+## 6) Events and Gameplay-Flow Safety
 
 1. Subscribe/unsubscribe in matching lifecycle methods.
-2. Avoid side effects in event callbacks that break turn ordering.
-3. For turn/combat logic changes, validate player/enemy turn transitions explicitly.
+2. Avoid side effects in event callbacks that break event ordering or game state transitions.
+3. For combat, wave, and spawner logic changes, validate spawn, damage, and death transitions explicitly.
 
 ## 7) Logging and Comments
 
@@ -191,7 +191,7 @@ Before finalizing a change:
 2. Const naming uses UPPER_SNAKE_CASE.
 3. Field ordering follows Inject -> SerializeField -> private.
 4. No singleton reintroduction.
-5. Turn flow and shield-first behavior remain intact.
+5. Gameplay flow, wave transitions, and combat behavior remain intact.
 6. LINQ is not used (System.Linq namespace/methods are banned).
 7. Functions/methods use block syntax ({}) instead of expression-bodied syntax (=>).
 

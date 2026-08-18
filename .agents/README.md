@@ -1,4 +1,4 @@
-# ProjectLizard Agent Operations (.agents)
+# Car Survivors Agent Operations (.agents)
 
 This folder is the vendor-neutral operational source of truth for agent customization files in this repository.
 
@@ -29,6 +29,7 @@ This folder is the vendor-neutral operational source of truth for agent customiz
 - Keep game-system documentation in .agents/context/game-systems/.
 - Keep implementation plans in .agents/context/implementations/plans/.
 - Keep implementation summaries in .agents/context/implementations/summaries/.
+- .user-docs/ is reserved for human-facing documentation created only upon explicit user request; agents must not read .user-docs/ as an operational source of truth.
 
 ## Maintenance
 

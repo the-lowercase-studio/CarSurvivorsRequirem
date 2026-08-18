@@ -11,8 +11,8 @@
 
 - DI/interfaces preserved: yes/no
 - No singleton reintroduction: yes/no
-- Shield-first semantics preserved: yes/no
-- Turn-event sequencing preserved: yes/no
+- Health/damage semantics preserved: yes/no
+- Gameplay event ordering preserved: yes/no
 - Inspector workflow preserved: yes/no
 
 ## 3. Findings and Opportunities
@@ -50,7 +50,7 @@
 
 1. Compile check.
 2. Scenario checks for changed logic.
-3. Event-order checks if turn/combat code is touched.
+3. Event-order checks if combat/wave code is touched.
 
 ## 6. Assumptions and Open Questions
 

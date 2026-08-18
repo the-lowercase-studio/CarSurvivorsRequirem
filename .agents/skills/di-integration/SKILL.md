@@ -1,11 +1,11 @@
 ---
 name: di-integration
-description: "Use when: adding, changing, or reviewing ProjectLizard runtime dependencies, Reflex bindings, injected services, interfaces, installers, or replacing direct scene/global lookups with DI-aligned access."
+description: "Use when: adding, changing, or reviewing Car Survivors runtime dependencies, Reflex bindings, injected services, interfaces, installers, or replacing direct scene/global lookups with DI-aligned access."
 ---
 
 # DI Integration Skill
 
-Use this skill to add or review dependency injection integration in ProjectLizard while preserving explicit ownership boundaries and Reflex-based service wiring.
+Use this skill to add or review dependency injection integration in Car Survivors while preserving explicit ownership boundaries and Reflex-based service wiring.
 
 ## Required Sources
 
@@ -51,23 +51,23 @@ Use official Reflex documentation from `.agents/context/technology-documentation
    - Do not add fallback global lookups that hide missing bindings.
 6. Validate integration boundaries.
    - Confirm consumers depend on interfaces, not concrete scene implementations, when an interface exists.
-   - Confirm turn-flow, combat, shield, and effect semantics are unchanged unless the task explicitly changes them.
+   - Confirm gameplay, car mechanics, combat, status effects, and damage semantics are unchanged unless the task explicitly changes them.
    - Confirm inspector workflows and serialized fields remain compatible.
 
-## Common ProjectLizard Cases
+## Common Car Survivors Cases
 
 - New manager or service:
   - Create or reuse an `I...` interface.
   - Implement it in the owning system.
-  - Bind it in `SceneInstaller`.
+  - Bind it in `SceneInstaller` or `BootInstaller`.
   - Inject the interface into consumers.
 - Replacing direct lookup:
   - Identify why the consumer currently uses `FindAnyObjectByType` or similar access.
   - Move access to an injected interface when the consumer is a scene runtime object.
-  - If the consumer is a `ScriptableObject`, prefer passing dependencies through an execution context or runtime adapter instead of injecting the asset directly.
-- Effect needing a service:
-  - Do not make the `EffectSO` find scene services directly.
-  - Prefer extending `CardEffectContext` or routing through a runtime effect executor when the effect needs scene-owned services.
+  - If the consumer is a `ScriptableObject`, prefer passing dependencies through an execution context or runtime runner instead of injecting the asset directly.
+- Status effect or skill needing a service:
+  - Do not make the ScriptableObject (`SkillData`, `StatusEffectData`) find scene services directly.
+  - Prefer passing dependencies through a runtime context or executor when the effect/skill needs scene-owned services.
 - UI presenter needing gameplay state:
   - Inject the state interface when the presenter is scene-owned.
   - Subscribe and unsubscribe events in matching lifecycle methods.
@@ -77,13 +77,13 @@ Use official Reflex documentation from `.agents/context/technology-documentation
 - Dependency owner is clear.
 - Existing interface was reused when available.
 - New interface is narrow and colocated when appropriate.
-- `SceneInstaller` binding exists for injected scene services.
+- `SceneInstaller` or `BootInstaller` binding exists for injected scene services.
 - `[Inject]` fields are ordered before serialized fields.
 - No new singleton, static mutable service, or scene search was introduced.
 - No hidden fallback path masks missing DI setup.
 - Inspector-configured references remain inspector-configured.
-- Turn-event subscriptions still unsubscribe correctly.
-- Combat invariants such as shield-first damage and card energy payment remain unchanged.
+- Event subscriptions still unsubscribe correctly in `OnDisable`/`OnDestroy`.
+- Combat invariants such as damage calculations, health pooling, and score tracking remain unchanged.
 
 ## Output
 
@@ -94,3 +94,4 @@ When implementing, summarize:
 - Consumers updated.
 - Any direct lookup removed or intentionally left in place.
 - Validation performed and remaining Unity Editor setup, if any.
+

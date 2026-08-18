@@ -1,4 +1,4 @@
-# AI Game Development Best Practices for ProjectLizard
+# AI Game Development Best Practices for Car Survivors
 
 ## Goal
 
@@ -14,8 +14,8 @@ Use AI to speed up delivery while preserving game feel, balance, and architectur
 ## Project-Specific Guardrails
 
 1. Do not reintroduce singleton access where DI interfaces exist.
-2. Keep turn-event sequencing intact when changing combat logic.
-3. Preserve shield-first damage semantics unless intentionally rebalanced.
+2. Keep gameplay event sequencing intact when changing combat, wave, or spawner logic.
+3. Preserve damage, health, and status effect semantics unless intentionally rebalanced.
 4. Keep inspector-driven workflows usable for designers.
 5. Reuse existing interfaces and systems before creating new abstractions.
 
@@ -23,20 +23,20 @@ Use AI to speed up delivery while preserving game feel, balance, and architectur
 
 ### 1. Content and Data Authoring
 
-- Generate initial enemy intention sets and action parameter ranges.
-- Propose card/effect combinations from existing effect vocabulary.
-- Draft encounter variants with explicit probability distributions.
+- Generate enemy wave configurations and spawner parameters.
+- Propose weapon/skill upgrades and projectile balance profiles.
+- Draft status effect variants and damage curve presets.
 
 Review checklist:
 
-1. Are probabilities normalized and intentional?
-2. Are effects and actions valid for available targets?
-3. Does the configuration avoid degenerate loops (stalling or one-shot patterns)?
+1. Are parameters normalized and intentional?
+2. Are skill targets and layers configured correctly?
+3. Does the configuration avoid degenerate balance spikes or unkillable states?
 
 ### 2. Boilerplate and Integration Code
 
-- Scaffold new enemy actions implementing the existing action interfaces.
-- Draft ScriptableObject data classes and editor helpers.
+- Scaffold new enemy types and movement behaviors utilizing the FlowField system.
+- Draft ScriptableObject data classes and editor inspectors.
 - Produce adapter code that binds to existing systems via interfaces.
 
 Review checklist:
@@ -47,9 +47,9 @@ Review checklist:
 
 ### 3. Test Case Drafting
 
-- Generate scenario tables for turn flow and combat resolution.
-- Propose edge-case tests for damage, shield overflow, and status effects.
-- Draft regression tests for intention selection and execution order.
+- Generate scenario tables for enemy spawning, wave progression, and combat resolution.
+- Propose edge-case tests for projectile collisions, damage numbers, and status effects.
+- Draft regression tests for score tracking, leveling, and death flow sequencing.
 
 Review checklist:
 
@@ -63,7 +63,7 @@ Review checklist:
 
 1. Define one task per prompt.
 2. Include exact target files and expected behavior changes.
-3. State constraints explicitly (DI only, shield-first, inspector compatibility).
+3. State constraints explicitly (DI only, zero GC allocations in update loops, inspector compatibility).
 
 ### Require Explainable Changes
 
@@ -79,60 +79,60 @@ Review checklist:
 
 ### Validate in Layers
 
-1. Compile validation.
+1. Compile validation (`dotnet build`).
 2. Unit or scenario checks for logic correctness.
-3. In-editor play validation for feel and UX.
+3. In-editor play validation for vehicle feel, camera responsiveness, and UX.
 4. Balance sanity check with a small metric set.
 
 ## Gameplay Quality Controls
 
 ### Determinism and State Safety
 
-1. Ensure combat state changes happen in predictable turn phases.
+1. Ensure combat state changes happen in predictable lifecycle phases.
 2. Avoid hidden side effects in event handlers.
-3. Ensure actions are idempotent where expected.
+3. Ensure actions and pooled resets are idempotent.
 
 ### Balance and Tuning
 
 1. Keep AI-generated values as starting points, not final balance.
-2. Tune with bounded ranges and compare against baseline encounters.
-3. Track time-to-kill, damage volatility, and defensive uptime.
+2. Tune with bounded ranges and compare against baseline enemy waves.
+3. Track time-to-kill, swarm density, and player survivability.
 
 ### Readability and Maintainability
 
 1. Prefer descriptive names over clever compact code.
-2. Keep methods short around turn or combat state transitions.
+2. Keep methods short around combat or wave state transitions.
 3. Add concise comments only for non-obvious intent.
 
 ## Common Failure Modes and Mitigations
 
 1. Failure mode: Architecture drift toward direct references.
    Mitigation: Enforce interface-based dependencies and installer bindings.
-2. Failure mode: Turn-order regressions.
-   Mitigation: Add event-order checks for player start, player end, enemy start, enemy end.
+2. Failure mode: Wave/combat sequence regressions.
+   Mitigation: Add event-order checks for wave start, wave end, unit death, and score updates.
 3. Failure mode: Hidden balance spikes.
-   Mitigation: Cap parameters and compare against known baseline encounters.
+   Mitigation: Cap parameters and compare against known baseline waves.
 4. Failure mode: Designer-unfriendly workflows.
    Mitigation: Keep key values inspector-exposed with clear defaults.
 
 ## Suggested Prompt Pattern for This Repo
 
 1. Context: Mention the exact system and target files.
-2. Constraints: DI via interfaces, no singleton reintroduction, shield-first damage.
+2. Constraints: DI via interfaces, no singleton reintroduction, zero GC allocations in hot paths.
 3. Requested output: Minimal diff plus reasoning and test plan.
 4. Validation ask: Compile check, regression risks, and manual test steps.
 
 ## Pull Request Review Checklist (AI-Related)
 
 1. Architecture: DI and interfaces respected.
-2. Mechanics: Turn flow and shield logic still correct.
+2. Mechanics: Combat flow, wave transitions, and damage logic still correct.
 3. Data: Inspector setup remains clear and editable.
 4. Testing: Includes edge cases and regression checks.
 5. Risk: Notes assumptions and unresolved uncertainties.
 
 ## When to Ask the User Instead of Guessing
 
-1. Ambiguous mechanic intent.
-2. Conflicting design goals (difficulty vs readability vs pacing).
+1. Ambiguous mechanic intent (vehicle handling, weapon firing behavior).
+2. Conflicting design goals (difficulty vs swarm density vs frame rate).
 3. Missing constraints for balancing or visual feedback.
 4. Any change that might alter player-facing combat semantics.

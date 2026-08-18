@@ -1,6 +1,6 @@
 ---
 name: document-system
-description: "Use when: creating or updating technical documentation for a specific gameplay system, such as the Player Party system, cards, intentions, or combat flow."
+description: "Use when: creating or updating technical documentation for a specific gameplay system, such as the Car Controller, FlowField Navigation, Waves/Spawners, Skills, Health, or UI flow."
 ---
 
 # Document System Skill
@@ -9,7 +9,7 @@ Use this skill to create clear, implementation-grounded documentation for a poin
 
 ## Inputs
 
-- Target system name (example: Player Party system).
+- Target system name (example: FlowField Navigation System, Car Controller, Wave Spawner).
 - Scope boundaries and key files.
 - Audience (contributors, gameplay designers, or agents).
 - Required sections or templates.
@@ -27,7 +27,6 @@ Use this skill to create clear, implementation-grounded documentation for a poin
 4. For both updates and new documentation, ensure you:
    - Add references to related systems and ownership boundaries.
    - Include known risks, assumptions, and open questions.
-
 
 ## Output
 

@@ -1,4 +1,4 @@
 interface:
   display_name: "Preserve Coding Standards"
   short_description: "Find and fix project coding-style drift."
-  default_prompt: "Use $preserve-coding-standards to audit this scope against ProjectLizard coding standards and apply safe fixes."
+  default_prompt: "Use $preserve-coding-standards to audit this scope against Car Survivors coding standards and apply safe fixes."

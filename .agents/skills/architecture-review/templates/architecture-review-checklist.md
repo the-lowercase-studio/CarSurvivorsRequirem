@@ -1,31 +1,45 @@
-# Architecture Review Checklist
+# Architecture Review Report
 
-## Scope
+**Target System / Feature:** [System / Feature Name]  
+**Date:** [YYYY-MM-DD]  
+**Verdict:** [APPROVE | REQUEST CHANGES]  
 
-- Target system:
-- Change summary:
-- Files reviewed:
+---
 
-## Dependency and Composition
+## 1. Scope & Touched Files
+- Files Audited:
+  - Assets/Scripts/...
 
-- Interface boundaries respected:
-- DI registration and consumption impact:
-- New coupling risks:
+---
 
-## Flow and Invariants
+## 2. Validation & Compilation Gate
+- `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`: [PASS / FAIL] (Exit code, warnings count)
 
-- Turn-flow safety:
-- Shield-before-health preserved:
-- Event sequencing impacts:
+---
 
-## Ownership and Integration
+## 3. Unity Breaking Change Assessment
+- [ ] **Serialized Data Safety:** (No unmapped field renames, inspector compatibility intact)
+- [ ] **Reflex DI Wiring:** (All `[Inject]` dependencies bound in installers under Assets/Scripts/ReflexDI/)
+- [ ] **Lifecycle & Invariants:** (Event order, gameplay flow, death flow, pooling safety preserved)
 
-- Primary owner agent:
-- Cross-domain dependencies:
-- Ownership conflicts:
+---
 
-## Risks and Actions
+## 4. Findings by Severity
 
-- High risks:
-- Medium risks:
+### 🔴 Blocker (Must fix before merge/completion)
+- [None / Finding list with file, line, rationale, and concrete fix]
+
+### 🟠 Major (Architecture or lifecycle flaws)
+- [None / Finding list with file, line, rationale, and concrete fix]
+
+### 🟡 Minor (Standards & non-blocking structural drift)
+- [None / Finding list with file, line, rationale, and concrete fix]
+
+### ⚪ Nit (Stylistic suggestions)
+- [None / Finding list with file, line, rationale, and concrete fix]
+
+---
+
+## 5. Summary & Next Actions
+- Summary of architecture health:
 - Required follow-up actions:

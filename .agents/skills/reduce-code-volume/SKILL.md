@@ -1,6 +1,6 @@
 ---
 name: reduce-code-volume
-description: "Use when: auditing and refactoring a provided ProjectLizard scope to reduce code volume, minimize lines of code, remove redundancy, and simplify logic while maintaining readability, safety, and compatibility. Triggers: reduce code volume, reduce code size, code reduction audit, audit code reduction, minimize lines of code, simplify code logic, remove code redundancy."
+description: "Use when: auditing and refactoring a provided Car Survivors scope to reduce code volume, minimize lines of code, remove redundancy, and simplify logic while maintaining readability, safety, and compatibility. Triggers: reduce code volume, reduce code size, code reduction audit, audit code reduction, minimize lines of code, simplify code logic, remove code redundancy."
 ---
 
 # Reduce Code Volume
@@ -28,15 +28,10 @@ Always read these before editing:
 Inspect the target scope for the following patterns to reduce code volume:
 
 ### 1. Modern C# Syntax Features
-- **Expression-bodied members**: Use `=>` for simple properties, indexers, operators, and single-statement methods.
+- **Expression-bodied properties**: Use `=>` for simple read-only properties and indexers. (Note: per project standards, methods/functions MUST use standard `{}` block syntax with explicit `return`).
   ```csharp
-  // Before
-  public float GetDamage()
-  {
-      return _baseDamage * _multiplier;
-  }
-  // After
-  public float GetDamage() => _baseDamage * _multiplier;
+  // Property (Allowed):
+  public float BaseDamage => _baseDamage * _multiplier;
   ```
 - **Null-coalescing and null-conditional operators**: Use `??`, `??=`, and `?.` to simplify null checks.
   ```csharp
@@ -63,21 +58,7 @@ Inspect the target scope for the following patterns to reduce code volume:
 - **Extract helper methods**: Identify duplicate or highly similar block patterns and consolidate them.
 - **Utilize existing extensions**: Check if utility or extension methods already exist (e.g., `TransformTweenExtensions.cs`) before writing custom DOTween/transform logic.
 - **Consolidate conditional branches**: Combine conditions using logical operators (`&&`, `||`) or switch expressions.
-- **Standard Library / LINQ**: Replace verbose loops that search, filter, or map collections with concise LINQ expressions (e.g., `Any()`, `All()`, `FirstOrDefault()`, `Select()`).
-  ```csharp
-  // Before
-  bool hasActive = false;
-  foreach (var item in items)
-  {
-      if (item.IsActive)
-      {
-          hasActive = true;
-          break;
-      }
-  }
-  // After
-  bool hasActive = items.Any(item => item.IsActive);
-  ```
+- **Loop Consolidation**: Consolidate redundant loops and early exits using clean helper methods while strictly adhering to the project's LINQ ban (no `System.Linq` methods like `Any()`, `Where()`, etc.).
 
 ### 3. Cleaning Up Boilerplate & Dead Code
 - Remove unused variables, imports (`using` statements), and private helper fields that are never read.
