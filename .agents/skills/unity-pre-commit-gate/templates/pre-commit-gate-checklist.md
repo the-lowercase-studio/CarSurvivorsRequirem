@@ -21,6 +21,7 @@
 | **3. Reflex DI & Field Order** | [PASS / FAIL] | Order: `[Inject]` -> `[SerializeField]` -> private. All bindings registered in installers. |
 | **4. Coding Standards** | [PASS / FAIL] | Constants in `Constants/`, `OnX` events, no GC allocations in hot loops, no singletons. |
 | **5. Git & Asset Consistency** | [PASS / FAIL] | Clean worktree in touched scope, no orphaned meta files. |
+| **6. Implementation Lifecycle** | [PASS / FAIL] | Summary created in `.agents/context/implementations/summaries/`, no external plans/summaries. |
 
 ---
 

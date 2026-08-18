@@ -9,11 +9,12 @@ This folder is the vendor-neutral operational source of truth for agent customiz
 - context/game-systems/: game-system documentation.
 - context/implementations/plans/: implementation plans.
 - context/implementations/summaries/: implementation summaries.
+- context/implementations/templates/: standard plan and summary markdown templates.
 - skills/: reusable multi-step workflows with templates and optional nested vendor descriptors.
 
 ## Discovery Order
 
-1. Root AGENTS.md
+1. Root AGENTS.md (and GEMINI.md when running under Gemini/Antigravity)
 2. .agents/README.md
 3. .agents/context/
 4. .agents/context/adr/ for architecture decision records
@@ -29,6 +30,8 @@ This folder is the vendor-neutral operational source of truth for agent customiz
 - Keep game-system documentation in .agents/context/game-systems/.
 - Keep implementation plans in .agents/context/implementations/plans/.
 - Keep implementation summaries in .agents/context/implementations/summaries/.
+- Use .agents/context/implementations/templates/ for document structure.
+- Never write plans or summaries to external directories or IDE-specific artifact paths outside the repository.
 - .user-docs/ is reserved for human-facing documentation created only upon explicit user request; agents must not read .user-docs/ as an operational source of truth.
 
 ## Maintenance

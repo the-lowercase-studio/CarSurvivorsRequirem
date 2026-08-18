@@ -115,9 +115,10 @@ public event EventHandler OnEnemyTurnEnd;
 - AI-facing project documentation under .agents/context/ uses kebab-case filenames.
 - Game-system documentation belongs under .agents/context/game-systems/ and uses kebab-case filenames ending in `-system.md`.
 - Implementation plans under .agents/context/implementations/plans/ and summaries under .agents/context/implementations/summaries/ must use kebab-case filenames without any date prefix (e.g., `description.md`). The date of the plan/summary must only be specified inside the file content, not in the filename.
+- Plans and summaries must be stored directly in the repository and never solely in external IDE/runtime directories.
 - File and directory paths in agent documentation must be written relative to the project root (e.g., `Assets/Scripts/Player/` or `Assets/Scripts/Audio/AudioClipConfig.cs`).
 - Paths must be written as plain text without markdown links and without backticks (e.g. `- Assets/Scripts/...`).
-- Reserved operational filenames keep their established uppercase or conventional names, including `AGENTS.md`, `README.md`, and `SKILL.md`.
+- Reserved operational filenames keep their established uppercase or conventional names, including `AGENTS.md`, `GEMINI.md`, `README.md`, and `SKILL.md`.
 - When renaming documentation, update all relative links and references in .agents/context/, .agents/skills/, and root agent entry-point files.
 
 ## 3) Member Ordering in Classes
@@ -194,6 +195,7 @@ Before finalizing a change:
 5. Gameplay flow, wave transitions, and combat behavior remain intact.
 6. LINQ is not used (System.Linq namespace/methods are banned).
 7. Functions/methods use block syntax ({}) instead of expression-bodied syntax (=>).
+8. Implementation plan (under .agents/context/implementations/plans/) and implementation summary (under .agents/context/implementations/summaries/) are created and tracked in the repository.
 
 ## 12) Programming Guidelines and Constraints
 

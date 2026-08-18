@@ -19,7 +19,7 @@ Always verify changes against:
 
 ## Verification Gates (Mandatory)
 
-All 5 gates must pass. Do not declare code ready if any gate fails.
+All 6 gates must pass. Do not declare code ready if any gate fails.
 
 ### Gate 1: Compilation & Warnings
 Run targeted project compilation:
@@ -53,6 +53,10 @@ dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
 ### Gate 5: Git & Asset Consistency
 - Check `git status --short` to ensure no orphaned files or untracked changes exist in touched scopes.
 - Protect user work in dirty worktrees; do not revert unrelated modifications.
+
+### Gate 6: Implementation Lifecycle & Summary
+- Verify that non-trivial changes, features, or refactors have a corresponding implementation summary under `.agents/context/implementations/summaries/[task-name].md`.
+- Verify that plans and summaries are saved in the project repository and not in external directories (e.g. `brain/`, `AppData`, `/tmp`).
 
 ## Workflow
 
