@@ -1,3 +1,4 @@
+using System;
 using Assets.Scripts.Audio;
 using Assets.Scripts.Enemies.Bosses.Golem.Animation;
 using Assets.Scripts.Enemies.Bosses.Golem.Arms;
@@ -18,8 +19,9 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         IGolemArmSocketController Arms { get; }
         IGolemAnimator Animator { get; }
         IAudioClipPlayer AudioClipPlayer { get; }
-        CircularTelegraphIndicator CircularTelegraph { get; }
-        RectangularTelegraphIndicator RectangularTelegraph { get; }
+        CircularTelegraphIndicator ShowCircularTelegraph(Vector3 position, float radius, float duration, Action onImpact = null);
+        RectangularTelegraphIndicator ShowRectangularTelegraph(Vector3 origin, Vector3 direction, float length, float width, float duration, Action onImpact = null);
+        void DismissAllTelegraphs();
         Vector3 PlayerPosition { get; }
         float DistanceToPlayer { get; }
         Vector3 DirectionToPlayer { get; }

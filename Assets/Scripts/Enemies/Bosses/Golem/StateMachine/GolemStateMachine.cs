@@ -47,5 +47,13 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine
             if (LinearFistCooldownTimer > 0f) LinearFistCooldownTimer -= deltaTime;
             if (SkyBarrageCooldownTimer > 0f) SkyBarrageCooldownTimer -= deltaTime;
         }
+
+        public void ResetCooldowns(float initialLeap, float initialStomp, float initialLinearFist, float initialSkyBarrage)
+        {
+            LeapCooldownTimer = initialLeap;
+            StompCooldownTimer = initialStomp;
+            LinearFistCooldownTimer = initialLinearFist;
+            SkyBarrageCooldownTimer = initialSkyBarrage;
+        }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using DG.Tweening;
+using Assets.Scripts.Indicators.Constants;
 using Assets.Scripts.Navigation.GridSystem;
 using UnityEngine;
 using Grid = Assets.Scripts.Navigation.GridSystem.Grid;
@@ -16,7 +17,14 @@ namespace Assets.Scripts.Indicators
         private Sequence _activeSequence;
         private Action _onImpactCallback;
 
+        public Vector3 SnappedPosition { get; private set; }
+
         private void OnDisable()
+        {
+            KillActiveSequence();
+        }
+
+        private void OnDestroy()
         {
             KillActiveSequence();
         }
@@ -32,7 +40,11 @@ namespace Assets.Scripts.Indicators
                 finalPosition = SnapToWalkableCell(worldPosition, worldGrid);
             }
 
-            transform.position = finalPosition;
+            SnappedPosition = finalPosition;
+            Vector3 spawnPosition = finalPosition;
+            spawnPosition.y += IndicatorConstants.GROUND_Y_OFFSET;
+
+            transform.position = spawnPosition;
             gameObject.SetActive(true);
 
             float targetDiameter = radius * 2f;
@@ -76,7 +88,7 @@ namespace Assets.Scripts.Indicators
         public void Dismiss()
         {
             KillActiveSequence();
-            gameObject.SetActive(false);
+            Destroy(gameObject);
         }
 
         private void PlayContractAndDismiss()
@@ -97,7 +109,7 @@ namespace Assets.Scripts.Indicators
 
             _activeSequence.OnComplete(() =>
             {
-                gameObject.SetActive(false);
+                Destroy(gameObject);
             });
         }
 

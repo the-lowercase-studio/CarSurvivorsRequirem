@@ -17,5 +17,10 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Constants
         public const string ANIM_TRIGGER_STOMP = "Stomp";
         public const string ANIM_TRIGGER_LINEAR_FIST = "LinearFist";
         public const string ANIM_TRIGGER_SKY_BARRAGE = "SkyBarrage";
+
+        public const float INITIAL_LINEAR_FIST_COOLDOWN = 2.5f;
+        public const float INITIAL_SKY_BARRAGE_COOLDOWN = 5.5f;
+        public const float INITIAL_LEAP_SLAM_COOLDOWN = 8.0f;
+        public const float INITIAL_STOMP_COOLDOWN = 1.0f;
     }
 }

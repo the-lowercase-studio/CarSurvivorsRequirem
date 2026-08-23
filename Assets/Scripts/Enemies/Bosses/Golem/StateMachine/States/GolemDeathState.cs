@@ -18,8 +18,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             _boss.Movement.Stop();
             _boss.Animator?.SetMoving(false, 0f);
 
-            _boss.CircularTelegraph?.Dismiss();
-            _boss.RectangularTelegraph?.Dismiss();
+            _boss.DismissAllTelegraphs();
             _boss.Arms?.ResetAllArms();
 
             _boss.AudioClipPlayer?.PlayOneShot(GolemBossConstants.DEATH_SFX_KEY);

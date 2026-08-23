@@ -197,7 +197,8 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Arms
             _currentDamage = damage;
             _hasDealtDamageThisFlight = false;
 
-            Vector3 skyPos = new Vector3(targetSlamPosition.x, transform.position.y, targetSlamPosition.z);
+            float skyY = Mathf.Max(transform.position.y, targetSlamPosition.y + 25f);
+            Vector3 skyPos = new Vector3(targetSlamPosition.x, skyY, targetSlamPosition.z);
             transform.position = skyPos;
             transform.rotation = Quaternion.LookRotation(Vector3.down, Vector3.forward);
 

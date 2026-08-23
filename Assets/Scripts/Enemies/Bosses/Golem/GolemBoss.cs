@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using DG.Tweening;
 using Assets.Scripts.Audio;
 using Assets.Scripts.DamageNumbers;
@@ -59,6 +60,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
 
         private MaterialPropertyBlock _materialPropertyBlock;
         private bool _isEnraged;
+        private readonly List<ITelegraphIndicator> _activeTelegraphs = new List<ITelegraphIndicator>();
 
         public event Action<IGolemBoss> OnBossDefeated;
 
@@ -68,8 +70,6 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         public IGolemArmSocketController Arms => _armSocketController;
         public IGolemAnimator Animator => _animator;
         public IAudioClipPlayer AudioClipPlayer => _audioClipPlayer;
-        public CircularTelegraphIndicator CircularTelegraph => _circularTelegraph;
-        public RectangularTelegraphIndicator RectangularTelegraph => _rectangularTelegraph;
         public Grid WorldGrid => _gridManager?.WorldGrid;
         public Transform Transform => transform;
 
@@ -149,6 +149,12 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
 
             CurrentPhase = 1;
             _isEnraged = false;
+            _stateMachine.ResetCooldowns(
+                GolemBossConstants.INITIAL_LEAP_SLAM_COOLDOWN,
+                GolemBossConstants.INITIAL_STOMP_COOLDOWN,
+                GolemBossConstants.INITIAL_LINEAR_FIST_COOLDOWN,
+                GolemBossConstants.INITIAL_SKY_BARRAGE_COOLDOWN
+            );
             _stateMachine.Initialize(_pursuitState);
         }
 
@@ -159,6 +165,13 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
                 Health.OnHealthChanged -= Health_OnHealthChanged;
                 Health.OnNoHealth -= Health_OnNoHealth;
             }
+
+            DismissAllTelegraphs();
+        }
+
+        private void OnDestroy()
+        {
+            DismissAllTelegraphs();
         }
 
         private void Update()
@@ -169,6 +182,45 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         private void FixedUpdate()
         {
             _stateMachine.FixedUpdate();
+        }
+
+        public CircularTelegraphIndicator ShowCircularTelegraph(Vector3 position, float radius, float duration, Action onImpact = null)
+        {
+            if (_circularTelegraph == null)
+            {
+                return null;
+            }
+
+            CircularTelegraphIndicator indicator = Instantiate(_circularTelegraph);
+            _activeTelegraphs.Add(indicator);
+            indicator.Show(position, radius, duration, WorldGrid, onImpact);
+            return indicator;
+        }
+
+        public RectangularTelegraphIndicator ShowRectangularTelegraph(Vector3 origin, Vector3 direction, float length, float width, float duration, Action onImpact = null)
+        {
+            if (_rectangularTelegraph == null)
+            {
+                return null;
+            }
+
+            RectangularTelegraphIndicator indicator = Instantiate(_rectangularTelegraph);
+            _activeTelegraphs.Add(indicator);
+            indicator.Show(origin, direction, length, width, duration, onImpact);
+            return indicator;
+        }
+
+        public void DismissAllTelegraphs()
+        {
+            for (int i = _activeTelegraphs.Count - 1; i >= 0; i--)
+            {
+                ITelegraphIndicator telegraph = _activeTelegraphs[i];
+                if (telegraph != null && telegraph is UnityEngine.Object unityObj && unityObj != null)
+                {
+                    telegraph.Dismiss();
+                }
+            }
+            _activeTelegraphs.Clear();
         }
 
         private void InitializeStateMachine()

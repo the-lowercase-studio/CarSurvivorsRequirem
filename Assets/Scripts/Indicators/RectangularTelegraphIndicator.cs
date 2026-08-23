@@ -1,5 +1,6 @@
 using System;
 using DG.Tweening;
+using Assets.Scripts.Indicators.Constants;
 using UnityEngine;
 
 namespace Assets.Scripts.Indicators
@@ -19,6 +20,11 @@ namespace Assets.Scripts.Indicators
             KillActiveSequence();
         }
 
+        private void OnDestroy()
+        {
+            KillActiveSequence();
+        }
+
         public void Show(Vector3 origin, Vector3 forwardDirection, float length, float width, float duration, Action onImpact = null)
         {
             KillActiveSequence();
@@ -31,22 +37,29 @@ namespace Assets.Scripts.Indicators
             }
             forwardDirection.Normalize();
 
-            transform.position = origin;
+            Vector3 spawnPosition = origin;
+            spawnPosition.y += IndicatorConstants.GROUND_Y_OFFSET;
+
+            transform.position = spawnPosition;
             transform.rotation = Quaternion.LookRotation(forwardDirection, Vector3.up);
             gameObject.SetActive(true);
 
-            Vector3 borderScale = new Vector3(width, 1f, length);
-            Vector3 startFillScale = new Vector3(width, 1f, 0f);
-            Vector3 targetFillScale = new Vector3(width, 1f, length);
+            float targetScaleX = width / IndicatorConstants.UNITY_PLANE_SIZE;
+            float targetScaleZ = length / IndicatorConstants.UNITY_PLANE_SIZE;
+            float halfLength = length * 0.5f;
+
+            Vector3 borderScale = new Vector3(targetScaleX, 1f, targetScaleZ);
 
             if (_outerBorder != null)
             {
-                _outerBorder.localScale = new Vector3(width, 1f, 0f);
+                _outerBorder.localPosition = new Vector3(0f, 0f, halfLength);
+                _outerBorder.localScale = new Vector3(targetScaleX, 1f, 0f);
             }
 
             if (_innerFill != null)
             {
-                _innerFill.localScale = startFillScale;
+                _innerFill.localPosition = new Vector3(0f, IndicatorConstants.FILL_Y_OFFSET, 0f);
+                _innerFill.localScale = new Vector3(targetScaleX, 1f, 0f);
             }
 
             _activeSequence = DOTween.Sequence();
@@ -58,7 +71,8 @@ namespace Assets.Scripts.Indicators
 
             if (_innerFill != null)
             {
-                _activeSequence.Join(_innerFill.DOScale(targetFillScale, duration).SetEase(Ease.Linear));
+                _activeSequence.Join(_innerFill.DOLocalMoveZ(halfLength, duration).SetEase(Ease.Linear));
+                _activeSequence.Join(_innerFill.DOScaleZ(targetScaleZ, duration).SetEase(Ease.Linear));
             }
             else
             {
@@ -75,7 +89,7 @@ namespace Assets.Scripts.Indicators
         public void Dismiss()
         {
             KillActiveSequence();
-            gameObject.SetActive(false);
+            Destroy(gameObject);
         }
 
         private void PlayContractAndDismiss()
@@ -96,7 +110,7 @@ namespace Assets.Scripts.Indicators
 
             _activeSequence.OnComplete(() =>
             {
-                gameObject.SetActive(false);
+                Destroy(gameObject);
             });
         }
 

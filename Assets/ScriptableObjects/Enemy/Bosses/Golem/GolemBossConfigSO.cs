@@ -47,15 +47,17 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Config
 
         [Header("Attack 4: Sky Arm Barrage")]
         [SerializeField] private float _skyBarrageCooldown = 10f;
-        [SerializeField] private int _skyBarrageCyclesPhase1 = 1;
+        [SerializeField] private int _skyBarrageCyclesPhase1 = 2;
         [SerializeField] private int _skyBarrageCyclesPhase2 = 2;
-        [SerializeField] private int _skyBarrageCyclesPhase3 = 4;
+        [SerializeField] private int _skyBarrageCyclesPhase3 = 3;
         [SerializeField] private float _skyArmLaunchAirTime = 1.0f;
         [SerializeField] private float _skyArmFallSpeed = 35f;
-        [SerializeField] private float _skyArmImpactRadius = 4.5f;
+        [SerializeField] private float _skyArmImpactRadius = 1.8f;
         [SerializeField] private float _skyArmDamage = 45f;
-        [SerializeField] private float _skyArmJitterMinDelay = 0.15f;
-        [SerializeField] private float _skyArmJitterMaxDelay = 0.40f;
+        [SerializeField] private float _skyArmTargetOffsetMinRadius = 1.5f;
+        [SerializeField] private float _skyArmTargetOffsetMaxRadius = 5.5f;
+        [SerializeField] private float _skyArmInitialStaggerDelay = 0.4f;
+        [SerializeField] private float _skyArmCycleResetDelay = 0.5f;
         [SerializeField] private float _skyArmWarningDuration = 1.0f;
 
         [Header("Enrage Settings")]
@@ -105,8 +107,10 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Config
         public float SkyArmFallSpeed => _skyArmFallSpeed;
         public float SkyArmImpactRadius => _skyArmImpactRadius;
         public float SkyArmDamage => _skyArmDamage;
-        public float SkyArmJitterMinDelay => _skyArmJitterMinDelay;
-        public float SkyArmJitterMaxDelay => _skyArmJitterMaxDelay;
+        public float SkyArmTargetOffsetMinRadius => _skyArmTargetOffsetMinRadius;
+        public float SkyArmTargetOffsetMaxRadius => _skyArmTargetOffsetMaxRadius;
+        public float SkyArmInitialStaggerDelay => _skyArmInitialStaggerDelay;
+        public float SkyArmCycleResetDelay => _skyArmCycleResetDelay;
         public float SkyArmWarningDuration => _skyArmWarningDuration;
 
         public Color EnrageColor => _enrageColor;

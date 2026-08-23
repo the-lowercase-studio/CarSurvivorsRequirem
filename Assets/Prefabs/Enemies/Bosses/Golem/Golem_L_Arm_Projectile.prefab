@@ -68,7 +68,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4db392d905342cc41b93cd9ebd365bad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Enemies.Bosses.Golem.Arms.GolemArmProjectile
-  _trailRenderer: {fileID: 0}
+  _trailRenderer: {fileID: 4526996934831387492}
   _impactVfx: {fileID: 0}
   _damageCollider: {fileID: 4070716985382433480}
   _rigArmVisual: {fileID: 0}

@@ -48,10 +48,12 @@ MonoBehaviour:
   _skyBarrageCyclesPhase3: 4
   _skyArmLaunchAirTime: 1
   _skyArmFallSpeed: 35
-  _skyArmImpactRadius: 4.5
+  _skyArmImpactRadius: 2.4
   _skyArmDamage: 45
-  _skyArmJitterMinDelay: 0.15
-  _skyArmJitterMaxDelay: 0.4
+  _skyArmTargetOffsetMinRadius: 1.5
+  _skyArmTargetOffsetMaxRadius: 5.5
+  _skyArmInitialStaggerDelay: 0.4
+  _skyArmCycleResetDelay: 0.5
   _skyArmWarningDuration: 1
   _enrageColor: {r: 1, g: 0, b: 0, a: 1}
   _enrageEmissionColor: {r: 2, g: 0.2, b: 0.2, a: 1}

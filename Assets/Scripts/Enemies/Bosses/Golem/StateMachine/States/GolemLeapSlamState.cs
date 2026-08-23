@@ -1,6 +1,7 @@
 using System;
 using DG.Tweening;
 using Assets.Scripts.Enemies.Bosses.Golem.Constants;
+using Assets.Scripts.Indicators;
 using Assets.Scripts.LayerMasks;
 using Assets.Scripts.StatusEffects;
 using UnityEngine;
@@ -13,6 +14,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
         private readonly GolemStateMachine _stateMachine;
         private GolemPursuitState _pursuitState;
         private Sequence _leapSequence;
+        private CircularTelegraphIndicator _activeTelegraph;
 
         public GolemLeapSlamState(IGolemBoss boss, GolemStateMachine stateMachine)
         {
@@ -41,11 +43,8 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             float slamRadius = _boss.Config.SlamRadius;
             float slamDamage = _boss.Config.SlamDamage;
 
-            Vector3 snappedTarget = targetLandingPos;
-            if (_boss.CircularTelegraph != null)
-            {
-                snappedTarget = _boss.CircularTelegraph.Show(targetLandingPos, slamRadius, warningDuration, _boss.WorldGrid);
-            }
+            _activeTelegraph = _boss.ShowCircularTelegraph(targetLandingPos, slamRadius, warningDuration, null);
+            Vector3 snappedTarget = _activeTelegraph != null ? _activeTelegraph.SnappedPosition : targetLandingPos;
 
             Vector3 apexPos = (startPos + snappedTarget) * 0.5f + Vector3.up * maxHeight;
 
@@ -75,9 +74,10 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             }
             _leapSequence = null;
 
-            if (_boss.CircularTelegraph != null)
+            if (_activeTelegraph != null)
             {
-                _boss.CircularTelegraph.Dismiss();
+                _activeTelegraph.Dismiss();
+                _activeTelegraph = null;
             }
         }
 

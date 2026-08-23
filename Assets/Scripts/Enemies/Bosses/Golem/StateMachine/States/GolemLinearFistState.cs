@@ -1,6 +1,7 @@
 using System;
 using DG.Tweening;
 using Assets.Scripts.Enemies.Bosses.Golem.Constants;
+using Assets.Scripts.Indicators;
 using UnityEngine;
 
 namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
@@ -11,6 +12,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
         private readonly GolemStateMachine _stateMachine;
         private GolemPursuitState _pursuitState;
         private Sequence _chargeSequence;
+        private RectangularTelegraphIndicator _activeTelegraph;
         private int _armsCompleted;
 
         public GolemLinearFistState(IGolemBoss boss, GolemStateMachine stateMachine)
@@ -47,14 +49,12 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             float maxDistance = _boss.Config.LinearFistMaxDistance;
             float width = _boss.Config.LinearFistWidth;
 
-            if (_boss.RectangularTelegraph != null)
+            _activeTelegraph = _boss.ShowRectangularTelegraph(bossPos, targetDir, maxDistance, width, warningDuration, () =>
             {
-                _boss.RectangularTelegraph.Show(bossPos, targetDir, maxDistance, width, warningDuration, () =>
-                {
-                    FireFists(targetDir);
-                });
-            }
-            else
+                FireFists(targetDir);
+            });
+
+            if (_activeTelegraph == null)
             {
                 _chargeSequence = DOTween.Sequence();
                 _chargeSequence.AppendInterval(warningDuration);
@@ -82,9 +82,10 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             }
             _chargeSequence = null;
 
-            if (_boss.RectangularTelegraph != null)
+            if (_activeTelegraph != null)
             {
-                _boss.RectangularTelegraph.Dismiss();
+                _activeTelegraph.Dismiss();
+                _activeTelegraph = null;
             }
         }
 

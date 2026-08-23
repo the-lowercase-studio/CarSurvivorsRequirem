@@ -1,20 +1,28 @@
 using System;
 using DG.Tweening;
+using Assets.Scripts.Enemies.Bosses.Golem.Arms;
 using Assets.Scripts.Enemies.Bosses.Golem.Constants;
+using Assets.Scripts.Indicators;
 using UnityEngine;
 
 namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 {
     public class GolemSkyBarrageState : IGolemState
     {
+        private const float SKY_LAUNCH_HEIGHT = 40f;
+        private const float RETURN_DOCK_DURATION = 0.8f;
+        private const float WARNING_FRACTION_BEFORE_DROP = 0.4f;
+
         private readonly IGolemBoss _boss;
         private readonly GolemStateMachine _stateMachine;
         private GolemPursuitState _pursuitState;
 
         private int _totalCycles;
-        private int _currentCycle;
-        private int _armsSlammedInCurrentCycle;
-        private Sequence _barrageSequence;
+        private int _totalArmsCount;
+        private int _armsFinishedCount;
+
+        private Sequence _leftArmSequence;
+        private Sequence _rightArmSequence;
 
         public GolemSkyBarrageState(IGolemBoss boss, GolemStateMachine stateMachine)
         {
@@ -30,11 +38,31 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
         public void Enter()
         {
             _boss.Movement.CanMove = true;
-            _currentCycle = 0;
             _totalCycles = GetTotalCyclesForCurrentPhase();
+            _armsFinishedCount = 0;
             _boss.Animator?.PlaySkyBarrage();
+            _boss.AudioClipPlayer?.PlayOneShot(GolemBossConstants.ROAR_SFX_KEY);
 
-            LaunchArmsIntoSky();
+            _totalArmsCount = 0;
+            if (_boss.Arms.LeftArm != null) _totalArmsCount++;
+            if (_boss.Arms.RightArm != null) _totalArmsCount++;
+
+            if (_totalArmsCount == 0)
+            {
+                FinishAttack();
+                return;
+            }
+
+            if (_boss.Arms.LeftArm != null)
+            {
+                StartArmLifecycle(_boss.Arms.LeftArm, initialDelay: 0f, isLeftArm: true);
+            }
+
+            if (_boss.Arms.RightArm != null)
+            {
+                float stagger = _boss.Config.SkyArmInitialStaggerDelay;
+                StartArmLifecycle(_boss.Arms.RightArm, initialDelay: stagger, isLeftArm: false);
+            }
         }
 
         public void Update()
@@ -59,7 +87,8 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         public void Exit()
         {
-            KillActiveSequence();
+            KillAllSequences();
+            _boss.DismissAllTelegraphs();
             _boss.Animator?.SetMoving(false, 0f);
         }
 
@@ -77,148 +106,150 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             }
         }
 
-        private void LaunchArmsIntoSky()
+        private void StartArmLifecycle(GolemArmProjectile arm, float initialDelay, bool isLeftArm)
         {
-            _boss.AudioClipPlayer?.PlayOneShot(GolemBossConstants.ROAR_SFX_KEY);
+            Sequence armSeq = DOTween.Sequence();
+            SetArmSequence(isLeftArm, armSeq);
 
-            float airTime = _boss.Config.SkyArmLaunchAirTime;
-            float launchHeight = 40f;
-            int armsLaunched = 0;
-
-            Action onLaunchComplete = () =>
+            if (initialDelay > 0f)
             {
-                armsLaunched++;
-                if (armsLaunched >= 2)
+                armSeq.AppendInterval(initialDelay);
+            }
+
+            float airTime = _boss.Config.SkyArmLaunchAirTime / Mathf.Max(_boss.CurrentArmSpeedMultiplier, 0.1f);
+
+            armSeq.AppendCallback(() =>
+            {
+                arm.LaunchToSky(SKY_LAUNCH_HEIGHT, airTime, () =>
                 {
-                    ExecuteDropCycle();
-                }
-            };
-
-            if (_boss.Arms.LeftArm != null)
-            {
-                _boss.Arms.LeftArm.LaunchToSky(launchHeight, airTime, onLaunchComplete);
-            }
-            else
-            {
-                armsLaunched++;
-            }
-
-            if (_boss.Arms.RightArm != null)
-            {
-                _boss.Arms.RightArm.LaunchToSky(launchHeight, airTime, onLaunchComplete);
-            }
-            else
-            {
-                armsLaunched++;
-            }
-        }
-
-        private void ExecuteDropCycle()
-        {
-            _armsSlammedInCurrentCycle = 0;
-            _currentCycle++;
-
-            float jitterDelay = UnityEngine.Random.Range(_boss.Config.SkyArmJitterMinDelay, _boss.Config.SkyArmJitterMaxDelay);
-
-            // Arm 1 drop
-            DropSingleArm(_boss.Arms.LeftArm, 0f);
-
-            // Arm 2 drop with jitter delay
-            DropSingleArm(_boss.Arms.RightArm, jitterDelay);
-        }
-
-        private void DropSingleArm(Arms.GolemArmProjectile arm, float delay)
-        {
-            if (arm == null)
-            {
-                OnArmSlamComplete();
-                return;
-            }
-
-            Sequence dropSeq = DOTween.Sequence();
-            dropSeq.AppendInterval(delay);
-            dropSeq.AppendCallback(() =>
-            {
-                Vector3 playerPos = _boss.PlayerPosition;
-                float radius = _boss.Config.SkyArmImpactRadius;
-                float warningDuration = _boss.Config.SkyArmWarningDuration;
-                float damage = _boss.Config.SkyArmDamage;
-                float fallSpeed = _boss.Config.SkyArmFallSpeed * _boss.CurrentArmSpeedMultiplier;
-
-                Vector3 targetPos = playerPos;
-                if (_boss.CircularTelegraph != null)
-                {
-                    targetPos = _boss.CircularTelegraph.Show(playerPos, radius, warningDuration, _boss.WorldGrid);
-                }
-
-                Sequence armFallSeq = DOTween.Sequence();
-                armFallSeq.AppendInterval(warningDuration * 0.4f);
-                armFallSeq.AppendCallback(() =>
-                {
-                    arm.DropFromSky(targetPos, fallSpeed, damage, radius, OnArmSlamComplete);
+                    ExecuteArmCycle(arm, currentCycle: 1, isLeftArm);
                 });
             });
         }
 
-        private void OnArmSlamComplete()
+        private void ExecuteArmCycle(GolemArmProjectile arm, int currentCycle, bool isLeftArm)
+        {
+            if (arm == null)
+            {
+                OnArmFinished();
+                return;
+            }
+
+            Vector3 targetOffsetPos = GetRandomOffsetTargetPosition();
+            float radius = _boss.Config.SkyArmImpactRadius;
+            float warningDuration = _boss.Config.SkyArmWarningDuration;
+            float damage = _boss.Config.SkyArmDamage;
+            float fallSpeed = _boss.Config.SkyArmFallSpeed * _boss.CurrentArmSpeedMultiplier;
+
+            CircularTelegraphIndicator telegraph = _boss.ShowCircularTelegraph(targetOffsetPos, radius, warningDuration, null);
+            Vector3 targetLandingPos = telegraph != null ? telegraph.SnappedPosition : targetOffsetPos;
+
+            Sequence dropSeq = DOTween.Sequence();
+            SetArmSequence(isLeftArm, dropSeq);
+
+            dropSeq.AppendInterval(warningDuration * WARNING_FRACTION_BEFORE_DROP);
+            dropSeq.AppendCallback(() =>
+            {
+                arm.DropFromSky(targetLandingPos, fallSpeed, damage, radius, () =>
+                {
+                    OnArmImpact(arm, currentCycle, isLeftArm);
+                });
+            });
+        }
+
+        private void OnArmImpact(GolemArmProjectile arm, int currentCycle, bool isLeftArm)
         {
             _boss.AudioClipPlayer?.PlayOneShot(GolemBossConstants.SLAM_SFX_KEY);
-            _armsSlammedInCurrentCycle++;
 
-            if (_armsSlammedInCurrentCycle >= 2)
+            if (currentCycle < _totalCycles)
             {
-                if (_currentCycle < _totalCycles)
-                {
-                    // Launch back up for next cycle
-                    LaunchArmsIntoSky();
-                }
-                else
-                {
-                    // Return and dock
-                    ReturnArmsAndFinish();
-                }
-            }
-        }
+                // Prepare for next cycle independently
+                Sequence resetSeq = DOTween.Sequence();
+                SetArmSequence(isLeftArm, resetSeq);
 
-        private void ReturnArmsAndFinish()
-        {
-            int armsDocked = 0;
-            Action onDocked = () =>
-            {
-                armsDocked++;
-                if (armsDocked >= 2)
-                {
-                    _stateMachine.SkyBarrageCooldownTimer = _boss.Config.SkyBarrageCooldown * _boss.CurrentCooldownMultiplier;
-                    _stateMachine.ChangeState(_pursuitState);
-                }
-            };
+                float resetDelay = _boss.Config.SkyArmCycleResetDelay;
+                float airTime = (_boss.Config.SkyArmLaunchAirTime * 0.75f) / Mathf.Max(_boss.CurrentArmSpeedMultiplier, 0.1f);
 
-            if (_boss.Arms.LeftArm != null)
-            {
-                _boss.Arms.LeftArm.ReturnAndDock(0.8f, onDocked);
+                resetSeq.AppendInterval(resetDelay);
+                resetSeq.AppendCallback(() =>
+                {
+                    arm.LaunchToSky(SKY_LAUNCH_HEIGHT, airTime, () =>
+                    {
+                        ExecuteArmCycle(arm, currentCycle + 1, isLeftArm);
+                    });
+                });
             }
             else
             {
-                armsDocked++;
-            }
-
-            if (_boss.Arms.RightArm != null)
-            {
-                _boss.Arms.RightArm.ReturnAndDock(0.8f, onDocked);
-            }
-            else
-            {
-                armsDocked++;
+                // Completed all cycles, return to socket and dock
+                arm.ReturnAndDock(RETURN_DOCK_DURATION, () =>
+                {
+                    OnArmFinished();
+                });
             }
         }
 
-        private void KillActiveSequence()
+        private void OnArmFinished()
         {
-            if (_barrageSequence != null && _barrageSequence.IsActive())
+            _armsFinishedCount++;
+            if (_armsFinishedCount >= _totalArmsCount)
             {
-                _barrageSequence.Kill();
+                FinishAttack();
             }
-            _barrageSequence = null;
+        }
+
+        private void FinishAttack()
+        {
+            _stateMachine.SkyBarrageCooldownTimer = _boss.Config.SkyBarrageCooldown * _boss.CurrentCooldownMultiplier;
+            _stateMachine.ChangeState(_pursuitState);
+        }
+
+        private Vector3 GetRandomOffsetTargetPosition()
+        {
+            Vector3 playerPos = _boss.PlayerPosition;
+            float minRadius = _boss.Config.SkyArmTargetOffsetMinRadius;
+            float maxRadius = _boss.Config.SkyArmTargetOffsetMaxRadius;
+
+            float randomAngle = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
+            float randomDistance = UnityEngine.Random.Range(minRadius, maxRadius);
+
+            Vector3 offset = new Vector3(Mathf.Cos(randomAngle) * randomDistance, 0f, Mathf.Sin(randomAngle) * randomDistance);
+            return playerPos + offset;
+        }
+
+        private void SetArmSequence(bool isLeftArm, Sequence seq)
+        {
+            if (isLeftArm)
+            {
+                if (_leftArmSequence != null && _leftArmSequence.IsActive())
+                {
+                    _leftArmSequence.Kill();
+                }
+                _leftArmSequence = seq;
+            }
+            else
+            {
+                if (_rightArmSequence != null && _rightArmSequence.IsActive())
+                {
+                    _rightArmSequence.Kill();
+                }
+                _rightArmSequence = seq;
+            }
+        }
+
+        private void KillAllSequences()
+        {
+            if (_leftArmSequence != null && _leftArmSequence.IsActive())
+            {
+                _leftArmSequence.Kill();
+            }
+            _leftArmSequence = null;
+
+            if (_rightArmSequence != null && _rightArmSequence.IsActive())
+            {
+                _rightArmSequence.Kill();
+            }
+            _rightArmSequence = null;
         }
     }
 }
