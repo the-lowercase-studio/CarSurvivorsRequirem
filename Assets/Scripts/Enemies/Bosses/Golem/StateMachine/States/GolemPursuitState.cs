@@ -9,19 +9,22 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
         private readonly GolemLeapSlamState _leapSlamState;
         private readonly GolemLinearFistState _linearFistState;
         private readonly GolemSkyBarrageState _skyBarrageState;
+        private readonly GolemStompState _stompState;
 
         public GolemPursuitState(
             IGolemBoss boss,
             GolemStateMachine stateMachine,
             GolemLeapSlamState leapSlamState,
             GolemLinearFistState linearFistState,
-            GolemSkyBarrageState skyBarrageState)
+            GolemSkyBarrageState skyBarrageState,
+            GolemStompState stompState)
         {
             _boss = boss;
             _stateMachine = stateMachine;
             _leapSlamState = leapSlamState;
             _linearFistState = linearFistState;
             _skyBarrageState = skyBarrageState;
+            _stompState = stompState;
         }
 
         public void Enter()
@@ -37,6 +40,13 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             // Attack 2: Melee Stomp Check (works anytime player is close, even during arm detachment)
             if (_boss.DistanceToPlayer <= _boss.Config.StompRadius && _stateMachine.StompCooldownTimer <= 0f)
             {
+                if (_stompState != null)
+                {
+                    _stompState.SetReturnState(this);
+                    _stateMachine.ChangeState(_stompState);
+                    return;
+                }
+
                 _boss.Animator?.PlayStomp();
                 _boss.TriggerStompDamage();
                 _stateMachine.StompCooldownTimer = _boss.Config.StompCooldown * _boss.CurrentCooldownMultiplier;
@@ -74,6 +84,13 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         public void FixedUpdate()
         {
+            if (!_boss.Movement.CanMove || (_boss.Animator != null && !_boss.Animator.IsMovingAnimationPlaying))
+            {
+                _boss.Movement.Stop();
+                _boss.Animator?.SetMoving(false, 0f);
+                return;
+            }
+
             float speed = _boss.Config.MoveSpeed * _boss.CurrentSpeedMultiplier;
             _boss.Movement.MoveTowards(_boss.PlayerPosition, speed, _boss.Config.RotationSpeed);
             _boss.Animator?.SetMoving(true, speed);

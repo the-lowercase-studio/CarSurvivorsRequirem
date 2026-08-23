@@ -56,6 +56,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         private GolemLeapSlamState _leapSlamState;
         private GolemLinearFistState _linearFistState;
         private GolemSkyBarrageState _skyBarrageState;
+        private GolemStompState _stompState;
         private GolemDeathState _deathState;
 
         private MaterialPropertyBlock _materialPropertyBlock;
@@ -230,13 +231,15 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
             _leapSlamState = new GolemLeapSlamState(this, _stateMachine);
             _linearFistState = new GolemLinearFistState(this, _stateMachine);
             _skyBarrageState = new GolemSkyBarrageState(this, _stateMachine);
+            _stompState = new GolemStompState(this, _stateMachine);
             _deathState = new GolemDeathState(this);
 
-            _pursuitState = new GolemPursuitState(this, _stateMachine, _leapSlamState, _linearFistState, _skyBarrageState);
+            _pursuitState = new GolemPursuitState(this, _stateMachine, _leapSlamState, _linearFistState, _skyBarrageState, _stompState);
 
             _leapSlamState.SetPursuitState(_pursuitState);
             _linearFistState.SetPursuitState(_pursuitState);
             _skyBarrageState.SetPursuitState(_pursuitState);
+            _skyBarrageState.SetStompState(_stompState);
         }
 
         public void TakeDamage(float damage)

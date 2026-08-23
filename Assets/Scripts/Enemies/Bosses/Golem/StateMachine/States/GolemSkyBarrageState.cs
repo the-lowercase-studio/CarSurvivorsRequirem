@@ -16,10 +16,13 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
         private readonly IGolemBoss _boss;
         private readonly GolemStateMachine _stateMachine;
         private GolemPursuitState _pursuitState;
+        private GolemStompState _stompState;
 
         private int _totalCycles;
         private int _totalArmsCount;
         private int _armsFinishedCount;
+        private bool _isLaunchingArms;
+        private float _launchTimer;
 
         private Sequence _leftArmSequence;
         private Sequence _rightArmSequence;
@@ -35,11 +38,22 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             _pursuitState = pursuitState;
         }
 
+        public void SetStompState(GolemStompState stompState)
+        {
+            _stompState = stompState;
+        }
+
         public void Enter()
         {
-            _boss.Movement.CanMove = true;
+            _boss.Movement.CanMove = false;
+            _boss.Movement.Stop();
+            _boss.Animator?.SetMoving(false, 0f);
+
             _totalCycles = GetTotalCyclesForCurrentPhase();
             _armsFinishedCount = 0;
+            _isLaunchingArms = true;
+            _launchTimer = GolemBossConstants.SKY_BARRAGE_LAUNCH_DURATION;
+
             _boss.Animator?.PlaySkyBarrage();
             _boss.AudioClipPlayer?.PlayOneShot(GolemBossConstants.ROAR_SFX_KEY);
 
@@ -69,9 +83,27 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
         {
             _stateMachine.TickCooldowns(Time.deltaTime);
 
+            if (_isLaunchingArms)
+            {
+                _launchTimer -= Time.deltaTime;
+                if (_launchTimer <= 0f)
+                {
+                    _isLaunchingArms = false;
+                    _boss.Movement.CanMove = true;
+                }
+                return;
+            }
+
             // Stomp check while arms are in the sky
             if (_boss.DistanceToPlayer <= _boss.Config.StompRadius && _stateMachine.StompCooldownTimer <= 0f)
             {
+                if (_stompState != null)
+                {
+                    _stompState.SetReturnState(this);
+                    _stateMachine.ChangeState(_stompState);
+                    return;
+                }
+
                 _boss.TriggerStompDamage();
                 _stateMachine.StompCooldownTimer = _boss.Config.StompCooldown * _boss.CurrentCooldownMultiplier;
             }
@@ -79,16 +111,25 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         public void FixedUpdate()
         {
-            // Body continues to pursue player while arms barrage
-            float speed = _boss.Config.MoveSpeed * _boss.CurrentSpeedMultiplier;
-            _boss.Movement.MoveTowards(_boss.PlayerPosition, speed, _boss.Config.RotationSpeed);
-            _boss.Animator?.SetMoving(true, speed);
+            if (!_isLaunchingArms && _boss.Movement.CanMove && (_boss.Animator == null || _boss.Animator.IsMovingAnimationPlaying))
+            {
+                // Body continues to pursue player while arms barrage
+                float speed = _boss.Config.MoveSpeed * _boss.CurrentSpeedMultiplier;
+                _boss.Movement.MoveTowards(_boss.PlayerPosition, speed, _boss.Config.RotationSpeed);
+                _boss.Animator?.SetMoving(true, speed);
+            }
+            else
+            {
+                _boss.Movement.Stop();
+                _boss.Animator?.SetMoving(false, 0f);
+            }
         }
 
         public void Exit()
         {
             KillAllSequences();
             _boss.DismissAllTelegraphs();
+            _boss.Movement.Stop();
             _boss.Animator?.SetMoving(false, 0f);
         }
 

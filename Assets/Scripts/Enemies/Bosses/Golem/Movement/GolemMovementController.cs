@@ -9,6 +9,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Movement
         void MoveTowards(Vector3 targetPosition, float moveSpeed, float rotationSpeed);
         void Stop();
         void SetPosition(Vector3 position);
+        void SetKinematic(bool isKinematic);
     }
 
     [RequireComponent(typeof(Rigidbody))]
@@ -90,6 +91,20 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Movement
             {
                 _rigidbody.position = position;
                 _rigidbody.linearVelocity = Vector3.zero;
+                _rigidbody.angularVelocity = Vector3.zero;
+            }
+        }
+
+        public void SetKinematic(bool isKinematic)
+        {
+            if (_rigidbody != null)
+            {
+                _rigidbody.isKinematic = isKinematic;
+                if (isKinematic)
+                {
+                    _rigidbody.linearVelocity = Vector3.zero;
+                    _rigidbody.angularVelocity = Vector3.zero;
+                }
             }
         }
 

@@ -5,6 +5,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
 {
     public interface IGolemAnimator
     {
+        bool IsMovingAnimationPlaying { get; }
         void SetMoving(bool isMoving, float speed = 0f);
         void PlayLeapSlam();
         void PlayStomp();
@@ -22,6 +23,27 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
         private int _stompHash;
         private int _linearFistHash;
         private int _skyBarrageHash;
+        private int _walkingStateHash;
+
+        public bool IsMovingAnimationPlaying
+        {
+            get
+            {
+                if (_animator == null)
+                {
+                    return true;
+                }
+
+                if (_animator.IsInTransition(0))
+                {
+                    AnimatorStateInfo nextState = _animator.GetNextAnimatorStateInfo(0);
+                    return nextState.shortNameHash == _walkingStateHash;
+                }
+
+                AnimatorStateInfo currentState = _animator.GetCurrentAnimatorStateInfo(0);
+                return currentState.shortNameHash == _walkingStateHash;
+            }
+        }
 
         private void Awake()
         {
@@ -36,6 +58,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
             _stompHash = Animator.StringToHash(GolemBossConstants.ANIM_TRIGGER_STOMP);
             _linearFistHash = Animator.StringToHash(GolemBossConstants.ANIM_TRIGGER_LINEAR_FIST);
             _skyBarrageHash = Animator.StringToHash(GolemBossConstants.ANIM_TRIGGER_SKY_BARRAGE);
+            _walkingStateHash = Animator.StringToHash("Walking");
         }
 
         public void SetMoving(bool isMoving, float speed = 0f)

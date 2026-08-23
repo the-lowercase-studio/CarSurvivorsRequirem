@@ -31,6 +31,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
         {
             _boss.Movement.CanMove = false;
             _boss.Movement.Stop();
+            _boss.Movement.SetKinematic(true);
             _boss.Animator?.SetMoving(false, 0f);
             _boss.Animator?.PlayLeapSlam();
 
@@ -45,6 +46,14 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
             _activeTelegraph = _boss.ShowCircularTelegraph(targetLandingPos, slamRadius, warningDuration, null);
             Vector3 snappedTarget = _activeTelegraph != null ? _activeTelegraph.SnappedPosition : targetLandingPos;
+            snappedTarget.y = startPos.y;
+
+            Vector3 jumpDir = snappedTarget - startPos;
+            jumpDir.y = 0f;
+            if (jumpDir.sqrMagnitude > 0.001f)
+            {
+                _boss.Transform.rotation = Quaternion.LookRotation(jumpDir.normalized, Vector3.up);
+            }
 
             Vector3 apexPos = (startPos + snappedTarget) * 0.5f + Vector3.up * maxHeight;
 
@@ -64,6 +73,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         public void FixedUpdate()
         {
+            _boss.Movement.Stop();
         }
 
         public void Exit()
@@ -79,10 +89,14 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
                 _activeTelegraph.Dismiss();
                 _activeTelegraph = null;
             }
+
+            _boss.Movement.SetKinematic(false);
         }
 
         private void OnSlamImpact(Vector3 impactPosition, float radius, float damage)
         {
+            _boss.Movement.SetPosition(impactPosition);
+            _boss.Movement.SetKinematic(false);
             _boss.AudioClipPlayer?.PlayOneShot(GolemBossConstants.SLAM_SFX_KEY);
 
             Collider[] hitColliders = Physics.OverlapSphere(impactPosition, radius, EntityLayers.Player);

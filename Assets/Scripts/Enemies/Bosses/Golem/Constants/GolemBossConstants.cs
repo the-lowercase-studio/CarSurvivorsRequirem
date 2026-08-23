@@ -22,5 +22,9 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Constants
         public const float INITIAL_SKY_BARRAGE_COOLDOWN = 5.5f;
         public const float INITIAL_LEAP_SLAM_COOLDOWN = 8.0f;
         public const float INITIAL_STOMP_COOLDOWN = 1.0f;
+
+        public const float STOMP_IMPACT_DELAY = 0.45f;
+        public const float STOMP_TOTAL_DURATION = 1.25f;
+        public const float SKY_BARRAGE_LAUNCH_DURATION = 1.4f;
     }
 }
