@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: d0b6a6af3210a944cb9ebbc1a0ead76a
+guid: 5972f055f2f36f14f9751fdc7263a179
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
@@ -7,32 +7,32 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: beton
+      name: beton.003
     second: {fileID: 2100000, guid: cf7f2677a9dd0f34ea100e539af34405, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: black
+      name: black.004
     second: {fileID: 2100000, guid: d0ef4e76136abdd42b4764b654ca9a54, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: rdza
+      name: rdza.003
     second: {fileID: 2100000, guid: ba28e41629fbe2c41bfb4c11ac09f961, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: rdza2
+      name: rdza2.003
     second: {fileID: 2100000, guid: ba28e41629fbe2c41bfb4c11ac09f961, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: red eyes
+      name: red eyes.003
     second: {fileID: 2100000, guid: 4e8b1a02391449a448426a1f5f179709, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: rura
+      name: rura.003
     second: {fileID: 2100000, guid: ba28e41629fbe2c41bfb4c11ac09f961, type: 2}
   materials:
     materialImportMode: 2

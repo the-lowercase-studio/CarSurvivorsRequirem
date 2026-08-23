@@ -35,6 +35,7 @@ Read agent guidance in this order:
 Use `.agents/context/` as the current documentation location for agent-facing project guidance.
 Use `.agents/context/adr/` for architecture decision records (ADRs).
 Use `.agents/context/game-systems/` for game-system documentation.
+Store brainstorming summaries under `.agents/context/brainstorming-summaries/`.
 Store implementation plans under `.agents/context/implementations/plans/` and implementation summaries under `.agents/context/implementations/summaries/`.
 Do not read `.user-docs/` as an operational source of truth for agent reasoning; operational truth derives strictly from the codebase and `.agents/`.
 
@@ -174,10 +175,11 @@ For documentation-only changes, review links and paths for accuracy. A Unity Edi
 - Keep agent operational guidance under `.agents/`.
 - Keep this root `AGENTS.md` as a short entry point, not a full replacement for `.agents/context/*`.
 - Keep game-system documentation in `.agents/context/game-systems/`.
+- Keep brainstorming session summaries in `.agents/context/brainstorming-summaries/`.
 - Keep implementation plans in `.agents/context/implementations/plans/` and summaries in `.agents/context/implementations/summaries/`.
 - Use `.agents/context/implementations/templates/` for plan and summary structure.
 - Keep human-facing project documentation in `.user-docs/`, creating or editing files there only upon explicit user request.
-- Do not prefix filenames for implementation plans and summaries with dates; specify the date inside the file content instead.
+- Do not prefix filenames for implementation plans, summaries, or brainstorm briefs with dates; specify the date inside the file content instead.
 - Write file and directory paths in agent documentation relative to the project root as plain text, without markdown links or backticks (e.g. `- Assets/Scripts/...`).
 - When adding a new specialist domain, add or update the matching skill or agent file under `.agents/`.
 - Keep skill descriptions explicit with `Use when:` trigger language.

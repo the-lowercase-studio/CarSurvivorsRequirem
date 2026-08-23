@@ -9,8 +9,8 @@ Use this skill for divergent gameplay, architecture, and design exploration befo
 
 ## Hard Gate (Read-Only)
 
-During the brainstorm phase, do not edit repository files, create runtime scripts, modify prefabs, alter ScriptableObjects, or begin implementation.
-The only file this skill produces is the final brainstorm brief when the user confirms the direction.
+During the brainstorm phase, do not edit runtime repository code, modify prefabs, alter ScriptableObjects, or begin implementation.
+The only persistent artifact this skill produces is the final, detail-rich brainstorm summary saved to `.agents/context/brainstorming-summaries/[feature-name]-brainstorm-summary.md` when the user confirms the direction or concludes the session.
 
 ## Required Sources
 
@@ -22,6 +22,7 @@ Ground the exploration in the project context:
 - .agents/context/project-coding-standards.md
 - .agents/context/project-scripts-folder-map.md
 - Relevant game system docs under .agents/context/game-systems/
+- Existing brainstorm summaries under .agents/context/brainstorming-summaries/
 
 ## Workflow
 
@@ -51,16 +52,17 @@ Ground the exploration in the project context:
      - unity-refactor-suggestions: for refactoring existing systems to accommodate the idea.
      - di-integration: for introducing new scene services or Reflex bindings.
 
-5. Produce the Brainstorm Brief
-   - Write a structured brief based on .agents/skills/game-brainstorm/templates/brainstorm-brief-template.md.
-   - Store the brief under .agents/context/implementations/plans/ or present it directly in conversation.
+5. Produce & Save the Brainstorm Summary
+   - When the brainstorm session concludes or is confirmed by the user, produce a comprehensive, detail-rich brief based on `.agents/skills/game-brainstorm/templates/brainstorm-brief-template.md`.
+   - Save the completed summary directly in the repository at `.agents/context/brainstorming-summaries/[feature-name]-brainstorm-summary.md` (use kebab-case without date prefix in the filename; specify the date inside the document body).
+   - Invariant: The summary must be **rich with technical and gameplay details** (concrete parameters, state transitions, architecture choices, Unity lifecycle/memory considerations, phase progressions, and exact target files rather than brief high-level summaries).
 
 ## Output
 
-Produce a completed brief following the template with:
+Produce and save a completed summary in `.agents/context/brainstorming-summaries/` following the template with:
 
-1. Topic & Problem Statement.
-2. Explored Alternatives & Trade-offs.
-3. Selected Approach & Rationale.
-4. Resolved Decisions & Remaining Open Questions.
-5. Recommended Next Skill & Target Scope.
+1. Context & Motivation: Detailed feature description, player-facing goals, and exhaustive breakdown of impacted systems.
+2. Explored Alternatives & Trade-offs: Detailed comparison of options with pros, cons, and architectural risks.
+3. Unity & Architecture Considerations: Specific data authoring, navigation/physics handling, VFX/audio/tweens, lifecycle & zero-GC allocations, UI presenters, and state flows.
+4. Key Decisions & Detailed Specifications: Deep-dive into combat/movement patterns, formulas, timing parameters, priority triggers, and phase structures.
+5. Next Steps & Target Scope: Recommended next skill and explicit list of target scripts, prefabs, ScriptableObjects, and scene assets.

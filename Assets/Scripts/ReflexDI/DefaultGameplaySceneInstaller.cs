@@ -1,11 +1,12 @@
 using Assets.Scripts.Enemies;
+using Assets.Scripts.Enemies.Bosses;
 using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.LevelSystem.Exp;
 using Assets.Scripts.Player;
-
 using Assets.Scripts.Skills.UpgradeFlow;
 using Assets.Scripts.Spawners.Enemies;
 using Assets.Scripts.Spawners.GridSpace;
+using Assets.Scripts.Spawners.Swarm;
 using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.UI.Death;
 using Assets.Scripts.UI.HUD;
@@ -32,6 +33,9 @@ namespace Assets.Scripts.ReflexDI
         [SerializeField] private DropAnimationConfiguration _dropAnimationConfiguration;
         [SerializeField] private WaveManager _waveManager;
         [SerializeField] private SwarmNotificationPresenter _swarmNotificationPresenter;
+        [SerializeField] private SwarmSpawner _swarmSpawner;
+        [SerializeField] private BossHUDPresenter _bossHUDPresenter;
+        [SerializeField] private BossManager _bossManager;
         [SerializeField] private Camera _mainCamera;
         [SerializeField] private Volume _postProcessVolume;
 
@@ -50,6 +54,10 @@ namespace Assets.Scripts.ReflexDI
             builder.AddSingleton(_playerLevelPresenter, typeof(IPlayerLevelPresenter));
             builder.AddSingleton(_skillsVisualPresenter, typeof(ISkillsVisualPresenter));
             builder.AddSingleton(_timerPresenter, typeof(ITimerPresenter));
+            if (_bossHUDPresenter != null)
+            {
+                builder.AddSingleton(_bossHUDPresenter, typeof(IBossHUDPresenter));
+            }
 
             //Grid System
             builder.AddSingleton(_gridManager, typeof(IGridManager));
@@ -65,8 +73,18 @@ namespace Assets.Scripts.ReflexDI
             builder.AddSingleton(_dropAnimationConfiguration);
             builder.AddSingleton(_expParticleSpawner, typeof(IInWorldSpaceSpawner<ExpParticleSpawner, float>));
 
-            //Waves
+            //Waves & Swarms
             builder.AddSingleton(_waveManager, typeof(IWaveFreezer));
+            if (_swarmSpawner != null)
+            {
+                builder.AddSingleton(_swarmSpawner, typeof(ISwarmFreezer));
+            }
+
+            //Boss Management
+            if (_bossManager != null)
+            {
+                builder.AddSingleton(_bossManager, typeof(IBossManager));
+            }
 
             //Swarm UI
             builder.AddSingleton(_swarmNotificationPresenter, typeof(ISwarmNotificationPresenter));

@@ -7,7 +7,12 @@ using UnityEngine;
 
 namespace Assets.Scripts.Spawners.Swarm
 {
-    public class SwarmSpawner : MonoBehaviour
+    public interface ISwarmFreezer
+    {
+        bool IsSuppressed { get; set; }
+    }
+
+    public class SwarmSpawner : MonoBehaviour, ISwarmFreezer
     {
         [Inject] private readonly ISwarmEnemySpawner _swarmEnemySpawner = null;
         [Inject] private readonly IWaveFreezer _waveFreezer = null;
@@ -30,6 +35,8 @@ namespace Assets.Scripts.Spawners.Swarm
         private int _currentSwarmIndex;
         private bool _isSwarmActive;
         private Coroutine _swarmCoroutine;
+
+        public bool IsSuppressed { get; set; }
 
         private void Start()
         {
@@ -55,7 +62,7 @@ namespace Assets.Scripts.Spawners.Swarm
 
         private void Update()
         {
-            if (_isSwarmActive) return;
+            if (_isSwarmActive || IsSuppressed) return;
 
             _nextSwarmTime -= Time.deltaTime;
 

@@ -17,6 +17,7 @@ Before writing a spec, load context from:
 - .agents/context/ai-game-dev-best-practices.md
 - .agents/context/technology-documentation.md
 - Relevant game system docs under .agents/context/game-systems/
+- Relevant brainstorm summaries under .agents/context/brainstorming-summaries/
 - Existing implementation plans under .agents/context/implementations/plans/
 
 ## Workflow
