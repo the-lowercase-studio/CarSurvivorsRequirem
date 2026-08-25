@@ -124,7 +124,7 @@ namespace Assets.Scripts.Projectiles
         private void HandleCollisions()
         {
             Collider[] colliders = Physics.OverlapSphere(transform.position + _sphereCollider.center, _sphereCollider.radius,
-                                         EntityLayers.Enemy | TerrainLayers.Impassable);
+                                         EntityLayers.Enemies | TerrainLayers.Impassable);
             foreach (Collider collider in colliders)
             {
                 if (collider == null)

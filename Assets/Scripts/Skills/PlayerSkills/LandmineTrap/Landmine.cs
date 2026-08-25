@@ -1,5 +1,6 @@
 using Assets.ScriptableObjects.Skills.PlayerSkills.LandmineSkill;
 using Assets.Scripts.Audio;
+using Assets.Scripts.Extensions;
 using Assets.Scripts.Initializers;
 using Assets.Scripts.LayerMasks;
 using Assets.Scripts.Skills.Constants;
@@ -25,7 +26,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.LandmineTrap
 
         private void OnTriggerEnter(Collider other)
         {
-            if (!_landmineVisual.activeSelf || 1 << other.gameObject.layer != EntityLayers.Enemy)
+            if (!_landmineVisual.activeSelf || !EntityLayers.Enemies.ContainsLayer(other.gameObject.layer))
             {
                 return;
             }
@@ -62,7 +63,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.LandmineTrap
 
         private void Explode()
         {
-            Collider[] colliders = Physics.OverlapSphere(transform.position, _config.ExplosionRadius.Value, EntityLayers.Enemy, QueryTriggerInteraction.Collide);
+            Collider[] colliders = Physics.OverlapSphere(transform.position, _config.ExplosionRadius.Value, EntityLayers.Enemies, QueryTriggerInteraction.Collide);
 
             if (colliders.Length == 0)
             {

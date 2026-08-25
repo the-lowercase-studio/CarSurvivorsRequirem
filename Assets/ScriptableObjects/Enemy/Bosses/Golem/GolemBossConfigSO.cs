@@ -27,7 +27,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Config
         [SerializeField] private float _leapCooldown = 8f;
         [SerializeField] private float _leapAirTime = 1.5f;
         [SerializeField] private float _leapMaxHeight = 35f;
-        [SerializeField] private float _slamRadius = 6.5f;
+        [SerializeField] private float _slamRadius = 13.0f;
         [SerializeField] private float _slamDamage = 50f;
         [SerializeField] private float _leapWarningDuration = 1.2f;
         [SerializeField] private float _leapTakeoffDuration = 0.57f;
@@ -59,7 +59,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Config
         [SerializeField] private int _skyBarrageCyclesPhase3 = 3;
         [SerializeField] private float _skyArmLaunchAirTime = 1.0f;
         [SerializeField] private float _skyArmFallSpeed = 35f;
-        [SerializeField] private float _skyArmImpactRadius = 1.8f;
+        [SerializeField] private float _skyArmImpactRadius = 4.8f;
         [SerializeField] private float _skyArmDamage = 45f;
         [SerializeField] private float _skyArmTargetOffsetMinRadius = 1.5f;
         [SerializeField] private float _skyArmTargetOffsetMaxRadius = 5.5f;

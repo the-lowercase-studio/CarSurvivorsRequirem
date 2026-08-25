@@ -21,7 +21,7 @@ namespace Assets.Scripts.Navigation.GridSystem
                 new Vector3(cellSize * 0.45f, 2f, cellSize * 0.45f),
                 _occupancyBuffer,
                 Quaternion.identity,
-                EntityLayers.Enemy
+                EntityLayers.Enemies
             );
 
             for (int i = 0; i < count; i++)

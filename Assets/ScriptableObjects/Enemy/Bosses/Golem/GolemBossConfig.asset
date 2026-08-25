@@ -29,7 +29,7 @@ MonoBehaviour:
   _leapCooldown: 8
   _leapAirTime: 1.5
   _leapMaxHeight: 35
-  _slamRadius: 6.5
+  _slamRadius: 13
   _slamDamage: 50
   _leapWarningDuration: 1.2
   _leapTakeoffDuration: 0.57
@@ -45,14 +45,17 @@ MonoBehaviour:
   _linearFistDamage: 40
   _linearFistWidth: 2
   _linearFistWarningDuration: 0.8
+  _linearFistHitboxHeight: 2.5
+  _linearFistHitboxDepth: 1.5
+  _linearFistHitboxVerticalOffset: 1
   _skyBarrageCooldown: 10
   _skyBarrageReleaseDelay: 1.5
-  _skyBarrageCyclesPhase1: 1
-  _skyBarrageCyclesPhase2: 2
-  _skyBarrageCyclesPhase3: 4
+  _skyBarrageCyclesPhase1: 2
+  _skyBarrageCyclesPhase2: 3
+  _skyBarrageCyclesPhase3: 5
   _skyArmLaunchAirTime: 1
   _skyArmFallSpeed: 35
-  _skyArmImpactRadius: 2.4
+  _skyArmImpactRadius: 4.8
   _skyArmDamage: 45
   _skyArmTargetOffsetMinRadius: 1.5
   _skyArmTargetOffsetMaxRadius: 5.5

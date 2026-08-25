@@ -47,8 +47,8 @@ namespace Assets.Scripts.Indicators
             transform.position = spawnPosition;
             gameObject.SetActive(true);
 
-            float targetDiameter = radius * 2f;
-            Vector3 targetScale = new Vector3(targetDiameter, 1f, targetDiameter);
+            float targetScaleFactor = radius / IndicatorConstants.CIRCLE_MESH_RADIUS;
+            Vector3 targetScale = new Vector3(targetScaleFactor, 1f, targetScaleFactor);
 
             if (_outerRing != null)
             {

@@ -1,5 +1,6 @@
 using Assets.ScriptableObjects.Skills.PlayerSkills.SawSkill;
 using Assets.Scripts.Audio;
+using Assets.Scripts.Extensions;
 using Assets.Scripts.Initializers;
 using Assets.Scripts.LayerMasks;
 using Assets.Scripts.Player;
@@ -25,7 +26,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
 
         private void OnTriggerEnter(Collider other)
         {
-            if ((1 << other.gameObject.layer) == EntityLayers.Enemy)
+            if (EntityLayers.Enemies.ContainsLayer(other.gameObject.layer))
             {
                 AttackCollidingEnemy(other);
             }
