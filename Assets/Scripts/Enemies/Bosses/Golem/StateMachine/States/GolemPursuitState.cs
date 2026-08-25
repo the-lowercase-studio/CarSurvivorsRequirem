@@ -37,7 +37,13 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
         {
             _stateMachine.TickCooldowns(Time.deltaTime);
 
-            // Attack 2: Melee Stomp Check (works anytime player is close, even during arm detachment)
+            // Attack Lock: Do not initiate any new attack while any non-moving/attack animation is active
+            if (_boss.Animator != null && !_boss.Animator.IsMovingAnimationPlaying)
+            {
+                return;
+            }
+
+            // Attack 2: Melee Stomp Check (works anytime player is close and arms are docked or moving)
             if (_boss.DistanceToPlayer <= _boss.Config.StompRadius && _stateMachine.StompCooldownTimer <= 0f)
             {
                 if (_stompState != null)

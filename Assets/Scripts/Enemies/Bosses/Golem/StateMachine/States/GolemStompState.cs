@@ -28,12 +28,18 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
         {
             _boss.Movement.CanMove = false;
             _boss.Movement.Stop();
+            _boss.Movement.SetKinematic(true);
             _boss.Animator?.SetMoving(false, 0f);
             _boss.Animator?.PlayStomp();
 
             _hasDealtDamage = false;
             _impactTimer = GolemBossConstants.STOMP_IMPACT_DELAY;
             _durationTimer = GolemBossConstants.STOMP_TOTAL_DURATION;
+
+            if (_boss.Animator != null)
+            {
+                _boss.Animator.OnStompImpact += HandleStompImpact;
+            }
         }
 
         public void Update()
@@ -43,8 +49,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             _impactTimer -= Time.deltaTime;
             if (_impactTimer <= 0f && !_hasDealtDamage)
             {
-                _hasDealtDamage = true;
-                _boss.TriggerStompDamage();
+                ApplyStomp();
             }
 
             _durationTimer -= Time.deltaTime;
@@ -62,8 +67,31 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         public void Exit()
         {
+            if (_boss.Animator != null)
+            {
+                _boss.Animator.OnStompImpact -= HandleStompImpact;
+            }
+
             _hasDealtDamage = false;
             _returnState = null;
+            _boss.Movement.SetKinematic(false);
+            _boss.Movement.CanMove = true;
+        }
+
+        private void HandleStompImpact()
+        {
+            ApplyStomp();
+        }
+
+        private void ApplyStomp()
+        {
+            if (_hasDealtDamage)
+            {
+                return;
+            }
+
+            _hasDealtDamage = true;
+            _boss.TriggerStompDamage();
         }
     }
 }

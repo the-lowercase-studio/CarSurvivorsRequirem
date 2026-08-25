@@ -2,6 +2,7 @@ using System;
 using Assets.Scripts.Audio;
 using Assets.Scripts.Enemies.Bosses.Golem.Animation;
 using Assets.Scripts.Enemies.Bosses.Golem.Arms;
+using Assets.Scripts.Enemies.Bosses.Golem.Combat;
 using Assets.Scripts.Enemies.Bosses.Golem.Config;
 using Assets.Scripts.Enemies.Bosses.Golem.Movement;
 using Assets.Scripts.HealthSystem;
@@ -17,6 +18,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         GolemBossConfigSO Config { get; }
         IGolemMovementController Movement { get; }
         IGolemArmSocketController Arms { get; }
+        IGolemLinearAttackHitbox LinearAttackHitbox { get; }
         IGolemAnimator Animator { get; }
         IAudioClipPlayer AudioClipPlayer { get; }
         CircularTelegraphIndicator ShowCircularTelegraph(Vector3 position, float radius, float duration, Action onImpact = null);

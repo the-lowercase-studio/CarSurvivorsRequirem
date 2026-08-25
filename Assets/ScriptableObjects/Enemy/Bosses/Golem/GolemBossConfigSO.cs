@@ -30,6 +30,8 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Config
         [SerializeField] private float _slamRadius = 6.5f;
         [SerializeField] private float _slamDamage = 50f;
         [SerializeField] private float _leapWarningDuration = 1.2f;
+        [SerializeField] private float _leapTakeoffDuration = 0.57f;
+        [SerializeField] private float _leapLandingDuration = 1.27f;
 
         [Header("Attack 2: Melee Foot Stomp")]
         [SerializeField] private float _stompRadius = 3.5f;
@@ -39,14 +41,19 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Config
         [Header("Attack 3: Linear Rocket Fists")]
         [SerializeField] private float _linearFistCooldown = 6f;
         [SerializeField] private float _linearFistChargeDuration = 0.8f;
+        [SerializeField] private float _linearFistReleaseDelay = 1.2f;
         [SerializeField] private float _linearFistSpeed = 30f;
         [SerializeField] private float _linearFistMaxDistance = 20f;
         [SerializeField] private float _linearFistDamage = 40f;
         [SerializeField] private float _linearFistWidth = 2f;
         [SerializeField] private float _linearFistWarningDuration = 0.8f;
+        [SerializeField] private float _linearFistHitboxHeight = 2.5f;
+        [SerializeField] private float _linearFistHitboxDepth = 1.5f;
+        [SerializeField] private float _linearFistHitboxVerticalOffset = 1.0f;
 
         [Header("Attack 4: Sky Arm Barrage")]
         [SerializeField] private float _skyBarrageCooldown = 10f;
+        [SerializeField] private float _skyBarrageReleaseDelay = 1.5f;
         [SerializeField] private int _skyBarrageCyclesPhase1 = 2;
         [SerializeField] private int _skyBarrageCyclesPhase2 = 2;
         [SerializeField] private int _skyBarrageCyclesPhase3 = 3;
@@ -86,6 +93,8 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Config
         public float SlamRadius => _slamRadius;
         public float SlamDamage => _slamDamage;
         public float LeapWarningDuration => _leapWarningDuration;
+        public float LeapTakeoffDuration => _leapTakeoffDuration;
+        public float LeapLandingDuration => _leapLandingDuration;
 
         public float StompRadius => _stompRadius;
         public float StompCooldown => _stompCooldown;
@@ -93,13 +102,18 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Config
 
         public float LinearFistCooldown => _linearFistCooldown;
         public float LinearFistChargeDuration => _linearFistChargeDuration;
+        public float LinearFistReleaseDelay => _linearFistReleaseDelay;
         public float LinearFistSpeed => _linearFistSpeed;
         public float LinearFistMaxDistance => _linearFistMaxDistance;
         public float LinearFistDamage => _linearFistDamage;
         public float LinearFistWidth => _linearFistWidth;
         public float LinearFistWarningDuration => _linearFistWarningDuration;
+        public float LinearFistHitboxHeight => _linearFistHitboxHeight;
+        public float LinearFistHitboxDepth => _linearFistHitboxDepth;
+        public float LinearFistHitboxVerticalOffset => _linearFistHitboxVerticalOffset;
 
         public float SkyBarrageCooldown => _skyBarrageCooldown;
+        public float SkyBarrageReleaseDelay => _skyBarrageReleaseDelay;
         public int SkyBarrageCyclesPhase1 => _skyBarrageCyclesPhase1;
         public int SkyBarrageCyclesPhase2 => _skyBarrageCyclesPhase2;
         public int SkyBarrageCyclesPhase3 => _skyBarrageCyclesPhase3;

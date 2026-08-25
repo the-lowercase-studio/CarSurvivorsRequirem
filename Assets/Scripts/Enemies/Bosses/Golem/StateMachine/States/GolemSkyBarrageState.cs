@@ -16,14 +16,18 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
         private readonly IGolemBoss _boss;
         private readonly GolemStateMachine _stateMachine;
         private GolemPursuitState _pursuitState;
-        private GolemStompState _stompState;
 
         private int _totalCycles;
         private int _totalArmsCount;
         private int _armsFinishedCount;
+        private bool _hasTriggeredRelease;
         private bool _isLaunchingArms;
-        private float _launchTimer;
+        private bool _isStomping;
+        private float _stompImpactTimer;
+        private float _stompDurationTimer;
+        private bool _hasDealtStompDamage;
 
+        private Sequence _releaseSequence;
         private Sequence _leftArmSequence;
         private Sequence _rightArmSequence;
 
@@ -40,22 +44,23 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         public void SetStompState(GolemStompState stompState)
         {
-            _stompState = stompState;
+            // Maintained for interface/instantiation compatibility
         }
 
         public void Enter()
         {
+            _isLaunchingArms = true;
+            _isStomping = false;
+            _hasDealtStompDamage = false;
+
             _boss.Movement.CanMove = false;
             _boss.Movement.Stop();
+            _boss.Movement.SetKinematic(true);
             _boss.Animator?.SetMoving(false, 0f);
 
             _totalCycles = GetTotalCyclesForCurrentPhase();
             _armsFinishedCount = 0;
-            _isLaunchingArms = true;
-            _launchTimer = GolemBossConstants.SKY_BARRAGE_LAUNCH_DURATION;
-
-            _boss.Animator?.PlaySkyBarrage();
-            _boss.AudioClipPlayer?.PlayOneShot(GolemBossConstants.ROAR_SFX_KEY);
+            _hasTriggeredRelease = false;
 
             _totalArmsCount = 0;
             if (_boss.Arms.LeftArm != null) _totalArmsCount++;
@@ -67,53 +72,72 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
                 return;
             }
 
-            if (_boss.Arms.LeftArm != null)
+            if (_boss.Animator != null)
             {
-                StartArmLifecycle(_boss.Arms.LeftArm, initialDelay: 0f, isLeftArm: true);
+                _boss.Animator.OnSkyBarrageRelease += HandleSkyBarrageRelease;
+                _boss.Animator.PlaySkyBarrage();
             }
 
-            if (_boss.Arms.RightArm != null)
+            _boss.AudioClipPlayer?.PlayOneShot(GolemBossConstants.ROAR_SFX_KEY);
+
+            float releaseDelay = _boss.Config.SkyBarrageReleaseDelay;
+            _releaseSequence = DOTween.Sequence();
+            _releaseSequence.AppendInterval(releaseDelay);
+            _releaseSequence.OnComplete(() =>
             {
-                float stagger = _boss.Config.SkyArmInitialStaggerDelay;
-                StartArmLifecycle(_boss.Arms.RightArm, initialDelay: stagger, isLeftArm: false);
-            }
+                TriggerArmLaunch();
+            });
         }
 
         public void Update()
         {
             _stateMachine.TickCooldowns(Time.deltaTime);
 
-            if (_isLaunchingArms)
+            if (_isStomping)
             {
-                _launchTimer -= Time.deltaTime;
-                if (_launchTimer <= 0f)
+                _stompImpactTimer -= Time.deltaTime;
+                if (_stompImpactTimer <= 0f && !_hasDealtStompDamage)
                 {
-                    _isLaunchingArms = false;
-                    _boss.Movement.CanMove = true;
+                    _hasDealtStompDamage = true;
+                    _boss.TriggerStompDamage();
+                }
+
+                _stompDurationTimer -= Time.deltaTime;
+                if (_stompDurationTimer <= 0f)
+                {
+                    _isStomping = false;
+                    _stateMachine.StompCooldownTimer = _boss.Config.StompCooldown * _boss.CurrentCooldownMultiplier;
+                    if (!_isLaunchingArms)
+                    {
+                        _boss.Movement.SetKinematic(false);
+                        _boss.Movement.CanMove = true;
+                    }
                 }
                 return;
             }
 
-            // Stomp check while arms are in the sky
-            if (_boss.DistanceToPlayer <= _boss.Config.StompRadius && _stateMachine.StompCooldownTimer <= 0f)
+            if (!_isLaunchingArms)
             {
-                if (_stompState != null)
+                if (_boss.DistanceToPlayer <= _boss.Config.StompRadius && _stateMachine.StompCooldownTimer <= 0f)
                 {
-                    _stompState.SetReturnState(this);
-                    _stateMachine.ChangeState(_stompState);
-                    return;
-                }
+                    _isStomping = true;
+                    _hasDealtStompDamage = false;
+                    _stompImpactTimer = GolemBossConstants.STOMP_IMPACT_DELAY;
+                    _stompDurationTimer = GolemBossConstants.STOMP_TOTAL_DURATION;
 
-                _boss.TriggerStompDamage();
-                _stateMachine.StompCooldownTimer = _boss.Config.StompCooldown * _boss.CurrentCooldownMultiplier;
+                    _boss.Movement.CanMove = false;
+                    _boss.Movement.Stop();
+                    _boss.Movement.SetKinematic(true);
+                    _boss.Animator?.SetMoving(false, 0f);
+                    _boss.Animator?.PlayStomp();
+                }
             }
         }
 
         public void FixedUpdate()
         {
-            if (!_isLaunchingArms && _boss.Movement.CanMove && (_boss.Animator == null || _boss.Animator.IsMovingAnimationPlaying))
+            if (!_isLaunchingArms && !_isStomping && _boss.Movement.CanMove)
             {
-                // Body continues to pursue player while arms barrage
                 float speed = _boss.Config.MoveSpeed * _boss.CurrentSpeedMultiplier;
                 _boss.Movement.MoveTowards(_boss.PlayerPosition, speed, _boss.Config.RotationSpeed);
                 _boss.Animator?.SetMoving(true, speed);
@@ -127,10 +151,57 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         public void Exit()
         {
+            if (_boss.Animator != null)
+            {
+                _boss.Animator.OnSkyBarrageRelease -= HandleSkyBarrageRelease;
+            }
+
             KillAllSequences();
             _boss.DismissAllTelegraphs();
+            _isLaunchingArms = false;
+            _isStomping = false;
             _boss.Movement.Stop();
+            _boss.Movement.SetKinematic(false);
+            _boss.Movement.CanMove = true;
             _boss.Animator?.SetMoving(false, 0f);
+        }
+
+        private void HandleSkyBarrageRelease()
+        {
+            TriggerArmLaunch();
+        }
+
+        private void TriggerArmLaunch()
+        {
+            if (_hasTriggeredRelease)
+            {
+                return;
+            }
+            _hasTriggeredRelease = true;
+
+            if (_releaseSequence != null && _releaseSequence.IsActive())
+            {
+                _releaseSequence.Kill();
+                _releaseSequence = null;
+            }
+
+            _isLaunchingArms = false;
+            if (!_isStomping)
+            {
+                _boss.Movement.SetKinematic(false);
+                _boss.Movement.CanMove = true;
+            }
+
+            if (_boss.Arms.LeftArm != null)
+            {
+                StartArmLifecycle(_boss.Arms.LeftArm, initialDelay: 0f, isLeftArm: true);
+            }
+
+            if (_boss.Arms.RightArm != null)
+            {
+                float stagger = _boss.Config.SkyArmInitialStaggerDelay;
+                StartArmLifecycle(_boss.Arms.RightArm, initialDelay: stagger, isLeftArm: false);
+            }
         }
 
         private int GetTotalCyclesForCurrentPhase()

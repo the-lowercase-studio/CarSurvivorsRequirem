@@ -32,17 +32,21 @@ MonoBehaviour:
   _slamRadius: 6.5
   _slamDamage: 50
   _leapWarningDuration: 1.2
+  _leapTakeoffDuration: 0.57
+  _leapLandingDuration: 1.27
   _stompRadius: 3.5
   _stompCooldown: 2.5
   _stompDamage: 30
   _linearFistCooldown: 6
   _linearFistChargeDuration: 0.8
+  _linearFistReleaseDelay: 1.2
   _linearFistSpeed: 30
   _linearFistMaxDistance: 20
   _linearFistDamage: 40
   _linearFistWidth: 2
   _linearFistWarningDuration: 0.8
   _skyBarrageCooldown: 10
+  _skyBarrageReleaseDelay: 1.5
   _skyBarrageCyclesPhase1: 1
   _skyBarrageCyclesPhase2: 2
   _skyBarrageCyclesPhase3: 4

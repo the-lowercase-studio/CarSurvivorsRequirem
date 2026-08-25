@@ -16,35 +16,18 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Arms
         Returning
     }
 
-    [RequireComponent(typeof(Collider))]
     public class GolemArmProjectile : MonoBehaviour
     {
         [SerializeField] private TrailRenderer _trailRenderer;
         [SerializeField] private VFXPlayer _impactVfx;
-        [SerializeField] private Collider _damageCollider;
         [SerializeField] private GameObject _rigArmVisual;
 
         private Transform _socketTransform;
         private GolemArmState _state = GolemArmState.Docked;
-        private float _currentDamage;
         private Sequence _activeSequence;
-        private bool _hasDealtDamageThisFlight;
 
         public GolemArmState State => _state;
         public bool IsDocked => _state == GolemArmState.Docked;
-
-        private void Awake()
-        {
-            if (_damageCollider == null)
-            {
-                _damageCollider = GetComponent<Collider>();
-            }
-            if (_damageCollider != null)
-            {
-                _damageCollider.isTrigger = true;
-                _damageCollider.enabled = false;
-            }
-        }
 
         private void OnDisable()
         {
@@ -65,11 +48,6 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Arms
         {
             KillActiveSequence();
             _state = GolemArmState.Docked;
-
-            if (_damageCollider != null)
-            {
-                _damageCollider.enabled = false;
-            }
 
             if (_trailRenderer != null)
             {
@@ -92,7 +70,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Arms
             }
         }
 
-        public void FireLinear(Vector3 targetDirection, float maxDistance, float speed, float damage, Action onComplete)
+        public void FireLinear(Vector3 targetDirection, float maxDistance, float speed, Action onComplete)
         {
             if (_rigArmVisual != null)
             {
@@ -102,14 +80,8 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Arms
 
             KillActiveSequence();
             _state = GolemArmState.LinearThrust;
-            _currentDamage = damage;
-            _hasDealtDamageThisFlight = false;
 
             transform.SetParent(null);
-            if (_damageCollider != null)
-            {
-                _damageCollider.enabled = true;
-            }
             if (_trailRenderer != null)
             {
                 _trailRenderer.Clear();
@@ -131,10 +103,6 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Arms
             _activeSequence.AppendCallback(() =>
             {
                 _state = GolemArmState.Returning;
-                if (_damageCollider != null)
-                {
-                    _damageCollider.enabled = false;
-                }
             });
             _activeSequence.Append(transform.DOMove(_socketTransform != null ? _socketTransform.position : startPos, returnTime)
                 .SetEase(Ease.InQuad)
@@ -164,10 +132,6 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Arms
             _state = GolemArmState.SkyAirborne;
 
             transform.SetParent(null);
-            if (_damageCollider != null)
-            {
-                _damageCollider.enabled = false;
-            }
             if (_trailRenderer != null)
             {
                 _trailRenderer.Clear();
@@ -194,18 +158,12 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Arms
 
             KillActiveSequence();
             _state = GolemArmState.SkyDropping;
-            _currentDamage = damage;
-            _hasDealtDamageThisFlight = false;
 
             float skyY = Mathf.Max(transform.position.y, targetSlamPosition.y + 25f);
             Vector3 skyPos = new Vector3(targetSlamPosition.x, skyY, targetSlamPosition.z);
             transform.position = skyPos;
             transform.rotation = Quaternion.LookRotation(Vector3.down, Vector3.forward);
 
-            if (_damageCollider != null)
-            {
-                _damageCollider.enabled = true;
-            }
             if (_trailRenderer != null)
             {
                 _trailRenderer.emitting = true;
@@ -218,21 +176,19 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Arms
             _activeSequence.Append(transform.DOMove(targetSlamPosition, fallDuration).SetEase(Ease.InQuad));
             _activeSequence.OnComplete(() =>
             {
-                if (_damageCollider != null)
-                {
-                    _damageCollider.enabled = false;
-                }
                 if (_impactVfx != null)
                 {
                     _impactVfx.Play(new VFXPlayConfig());
                 }
 
-                Collider[] colliders = Physics.OverlapSphere(targetSlamPosition, impactRadius, EntityLayers.Player);
+                Vector3 point1 = targetSlamPosition;
+                Vector3 point2 = targetSlamPosition + Vector3.up * 3.5f;
+                Collider[] colliders = Physics.OverlapCapsule(point1, point2, impactRadius, EntityLayers.Player, QueryTriggerInteraction.Collide);
                 foreach (Collider col in colliders)
                 {
-                    if (col.TryGetComponent<IDamageable>(out var damageable))
+                    if (col != null)
                     {
-                        damageable.TakeDamage(_currentDamage);
+                        EntityManipulationHelper.Damage(col, damage);
                     }
                 }
 
@@ -244,11 +200,6 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Arms
         {
             KillActiveSequence();
             _state = GolemArmState.Returning;
-
-            if (_damageCollider != null)
-            {
-                _damageCollider.enabled = false;
-            }
 
             if (_socketTransform == null)
             {
@@ -265,23 +216,6 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Arms
                 DockToSocket();
                 onDocked?.Invoke();
             });
-        }
-
-        private void OnTriggerEnter(Collider other)
-        {
-            if (_hasDealtDamageThisFlight)
-            {
-                return;
-            }
-
-            if ((1 << other.gameObject.layer & EntityLayers.Player) != 0)
-            {
-                if (other.TryGetComponent<IDamageable>(out var damageable))
-                {
-                    _hasDealtDamageThisFlight = true;
-                    damageable.TakeDamage(_currentDamage);
-                }
-            }
         }
 
         private void KillActiveSequence()

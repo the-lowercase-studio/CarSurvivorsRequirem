@@ -5,6 +5,7 @@ using Assets.Scripts.Audio;
 using Assets.Scripts.DamageNumbers;
 using Assets.Scripts.Enemies.Bosses.Golem.Animation;
 using Assets.Scripts.Enemies.Bosses.Golem.Arms;
+using Assets.Scripts.Enemies.Bosses.Golem.Combat;
 using Assets.Scripts.Enemies.Bosses.Golem.Config;
 using Assets.Scripts.Enemies.Bosses.Golem.Constants;
 using Assets.Scripts.Enemies.Bosses.Golem.Movement;
@@ -40,7 +41,9 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         [Header("Subsystems")]
         [SerializeField] private GolemMovementController _movementController;
         [SerializeField] private GolemArmSocketController _armSocketController;
+        [SerializeField] private GolemLinearAttackHitbox _linearAttackHitbox;
         [SerializeField] private GolemAnimator _animator;
+        [SerializeField] private GolemStompTrigger _stompLegTrigger;
         [SerializeField] private CircularTelegraphIndicator _circularTelegraph;
         [SerializeField] private RectangularTelegraphIndicator _rectangularTelegraph;
         [SerializeField] private AudioClipPlayer _audioClipPlayer;
@@ -69,6 +72,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         public GolemBossConfigSO Config => _config;
         public IGolemMovementController Movement => _movementController;
         public IGolemArmSocketController Arms => _armSocketController;
+        public IGolemLinearAttackHitbox LinearAttackHitbox => _linearAttackHitbox;
         public IGolemAnimator Animator => _animator;
         public IAudioClipPlayer AudioClipPlayer => _audioClipPlayer;
         public Grid WorldGrid => _gridManager?.WorldGrid;
@@ -136,6 +140,21 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
             Health = GetComponent<IHealth>();
             _materialPropertyBlock = new MaterialPropertyBlock();
 
+            if (_animator == null)
+            {
+                _animator = GetComponentInChildren<GolemAnimator>();
+            }
+
+            if (_stompLegTrigger == null)
+            {
+                _stompLegTrigger = GetComponentInChildren<GolemStompTrigger>();
+            }
+
+            if (_linearAttackHitbox == null)
+            {
+                _linearAttackHitbox = GetComponentInChildren<GolemLinearAttackHitbox>();
+            }
+
             InitializeStateMachine();
         }
 
@@ -167,11 +186,13 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
                 Health.OnNoHealth -= Health_OnNoHealth;
             }
 
+            _linearAttackHitbox?.Deactivate();
             DismissAllTelegraphs();
         }
 
         private void OnDestroy()
         {
+            _linearAttackHitbox?.Deactivate();
             DismissAllTelegraphs();
         }
 
@@ -281,12 +302,20 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         {
             _audioClipPlayer?.PlayOneShot(GolemBossConstants.STOMP_SFX_KEY);
 
-            Collider[] hitColliders = Physics.OverlapSphere(transform.position, _config.StompRadius, EntityLayers.Player);
+            if (_stompLegTrigger != null)
+            {
+                _stompLegTrigger.ApplyStompDamage(_config.StompDamage);
+                return;
+            }
+
+            Vector3 point1 = transform.position;
+            Vector3 point2 = transform.position + Vector3.up * 3.5f;
+            Collider[] hitColliders = Physics.OverlapCapsule(point1, point2, _config.StompRadius, EntityLayers.Player, QueryTriggerInteraction.Collide);
             foreach (Collider hit in hitColliders)
             {
-                if (hit.TryGetComponent<IDamageable>(out var damageable))
+                if (hit != null)
                 {
-                    damageable.TakeDamage(_config.StompDamage);
+                    EntityManipulationHelper.Damage(hit, _config.StompDamage);
                 }
             }
         }
@@ -358,17 +387,6 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
             }
 
             OnBossDefeated?.Invoke(this);
-        }
-
-        private void OnCollisionStay(Collision collision)
-        {
-            if ((1 << collision.gameObject.layer & EntityLayers.Player) != 0)
-            {
-                if (collision.gameObject.TryGetComponent<IDamageable>(out var damageable))
-                {
-                    damageable.TakeDamage(_config.BodyContactDamage * Time.fixedDeltaTime);
-                }
-            }
         }
     }
 }
