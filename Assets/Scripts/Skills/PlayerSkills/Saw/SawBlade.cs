@@ -1,5 +1,6 @@
 using Assets.ScriptableObjects.Skills.PlayerSkills.SawSkill;
 using Assets.Scripts.Audio;
+using Assets.Scripts.Extensions;
 using Assets.Scripts.Initializers;
 using Assets.Scripts.LayerMasks;
 using Assets.Scripts.Player;
@@ -25,7 +26,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
 
         private void OnTriggerEnter(Collider other)
         {
-            if ((1 << other.gameObject.layer) == EntityLayers.Enemy)
+            if (EntityLayers.Enemies.ContainsLayer(other.gameObject.layer))
             {
                 AttackCollidingEnemy(other);
             }
@@ -49,7 +50,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
         {
             _audioClipPlayer.Play("Attack");
 
-            if (other.TryGetComponent(out IDamageable damageable))
+            if (other.TryGetComponent(out IDamageable damageable) || (damageable = other.GetComponentInParent<IDamageable>()) != null)
             {
                 damageable.TakeDamage(_config.Damage.Value);
             }
@@ -59,7 +60,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
                 _config.KnockbackRange.Value * _playerManager.CarController.GetMovementSpeed()
             );
 
-            if (other.TryGetComponent(out IKnockable knockable))
+            if (other.TryGetComponent(out IKnockable knockable) || (knockable = other.GetComponentInParent<IKnockable>()) != null)
             {
                 Vector3 knockbackDirection = transform.forward;
                 knockbackDirection.y = 0;
@@ -69,7 +70,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
                     _config.TimeToArriveAtKnockbackLocation);
             }
 
-            if (other.TryGetComponent(out IStunnable stunnable))
+            if (other.TryGetComponent(out IStunnable stunnable) || (stunnable = other.GetComponentInParent<IStunnable>()) != null)
             {
                 stunnable.ApplyStun(_config.TimeToArriveAtKnockbackLocation);
             }

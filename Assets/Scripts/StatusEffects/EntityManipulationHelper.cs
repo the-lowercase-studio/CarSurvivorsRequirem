@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace Assets.Scripts.StatusEffects
 {
@@ -11,7 +11,7 @@ namespace Assets.Scripts.StatusEffects
                 return;
             }
 
-            if (target.TryGetComponent(out IDamageable damageable))
+            if (target.TryGetComponent(out IDamageable damageable) || (damageable = target.GetComponentInParent<IDamageable>()) != null)
             {
                 damageable.TakeDamage(damage);
             }
@@ -24,7 +24,7 @@ namespace Assets.Scripts.StatusEffects
                 return;
             }
 
-            if (target.TryGetComponent(out IKnockable knockable))
+            if (target.TryGetComponent(out IKnockable knockable) || (knockable = target.GetComponentInParent<IKnockable>()) != null)
             {
                 dir.y = 0;
                 knockable.ApplyKnockBack(dir, range, timeToArriveAtLocation);
@@ -38,7 +38,7 @@ namespace Assets.Scripts.StatusEffects
                 return;
             }
 
-            if (target.TryGetComponent(out IStunnable stunnable))
+            if (target.TryGetComponent(out IStunnable stunnable) || (stunnable = target.GetComponentInParent<IStunnable>()) != null)
             {
                 stunnable.ApplyStun(duration);
             }

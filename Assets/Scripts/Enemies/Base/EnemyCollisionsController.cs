@@ -60,11 +60,11 @@ namespace Assets.Scripts.Enemies.Base
                 Collider collider = hit.collider;
                 if (hit.collider != null && !_colliders.Contains(hit.collider))
                 {
-                    if (1 << collider.gameObject.layer == EntityLayers.Enemy)
+                    if (EntityLayers.Enemies.ContainsLayer(collider.gameObject.layer))
                     {
                         OnCollisionWithOtherEnemy?.Invoke(this, new CollisionEventArgs(collider));
                     }
-                    else if (1 << collider.gameObject.layer == EntityLayers.Player)
+                    else if (EntityLayers.Player.ContainsLayer(collider.gameObject.layer))
                     {
                         OnCollisionWithPlayer?.Invoke(this, new CollisionEventArgs(collider));
                     }

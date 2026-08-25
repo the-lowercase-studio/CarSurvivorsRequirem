@@ -1,4 +1,4 @@
-# Technology Documentation for ProjectLizard
+# Technology Documentation for Car Survivors
 
 ## Purpose
 

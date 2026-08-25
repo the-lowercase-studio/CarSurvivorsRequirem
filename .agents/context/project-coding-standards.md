@@ -1,4 +1,4 @@
-# ProjectLizard Coding Standards
+# Car Survivors Coding Standards
 
 ## Purpose
 
@@ -41,25 +41,29 @@ public class TurnManager : MonoBehaviour, ITurnManager
 
 ## 2) Naming Conventions
 
+### General Naming Rules
+
+- All identifiers (classes, structs, interfaces, methods, properties, fields, parameters, local variables, enum values, namespaces) must be in English.
+
 ### Constants
 
 - Use UPPER_SNAKE_CASE for all const fields.
 - Constants must live in a `Constants` folder under the owning system root (for example Assets/Scripts/Skills/Constants/, Assets/Scripts/DamageNumbers/Constants/, Assets/Scripts/Editor/Constants/).
 - Avoid a single global constants root folder; keep constants close to the domain that owns them.
-- Do not keep reusable constants inside gameplay classes like `EnemyBase` or `PlayerParty`; reference constants classes instead.
+- Do not keep reusable constants inside gameplay classes like `EnemyBase` or `CarController`; reference constants classes instead.
 - Use `*Constants` naming for constants containers (for example `PositionConstants`, `DamageNumberConstants`).
 
 Examples:
 
 ```csharp
 private const float ROTATION_TWEEN_DURATION = 0.4f;
-public const int START_CARDS_NUMBER = 5;
+public const int MAX_ENEMIES_ALIVE = 50;
 ```
 
 Placement example:
 
 ```csharp
-namespace Assets.Cards.Constants
+namespace Assets.Scripts.Skills.Constants
 {
     public static class PositionConstants
     {
@@ -75,7 +79,7 @@ namespace Assets.Cards.Constants
 Examples:
 
 ```csharp
-IPlayerParty
+ICarController
 ITargetsProvider
 ```
 
@@ -115,9 +119,10 @@ public event EventHandler OnEnemyTurnEnd;
 - AI-facing project documentation under .agents/context/ uses kebab-case filenames.
 - Game-system documentation belongs under .agents/context/game-systems/ and uses kebab-case filenames ending in `-system.md`.
 - Implementation plans under .agents/context/implementations/plans/ and summaries under .agents/context/implementations/summaries/ must use kebab-case filenames without any date prefix (e.g., `description.md`). The date of the plan/summary must only be specified inside the file content, not in the filename.
+- Plans and summaries must be stored directly in the repository and never solely in external IDE/runtime directories.
 - File and directory paths in agent documentation must be written relative to the project root (e.g., `Assets/Scripts/Player/` or `Assets/Scripts/Audio/AudioClipConfig.cs`).
 - Paths must be written as plain text without markdown links and without backticks (e.g. `- Assets/Scripts/...`).
-- Reserved operational filenames keep their established uppercase or conventional names, including `AGENTS.md`, `README.md`, and `SKILL.md`.
+- Reserved operational filenames keep their established uppercase or conventional names, including `AGENTS.md`, `GEMINI.md`, `README.md`, and `SKILL.md`.
 - When renaming documentation, update all relative links and references in .agents/context/, .agents/skills/, and root agent entry-point files.
 
 ## 3) Member Ordering in Classes
@@ -145,24 +150,24 @@ Then keep methods in lifecycle and behavior order that reads clearly:
 ## 5) Unity and Inspector Conventions
 
 1. Prefer `[SerializeField] private` fields when inspector data does not need public access. When public read access is needed, prefer one-line serialized auto-properties: `[field: SerializeField] public Type Value { get; private set; }`. Use a private serialized field plus a public property when the accessor needs logic or existing serialized field names must be preserved. Avoid public mutable fields unless Unity/editor integration or serialized compatibility requires them.
-2. Keep inspector-facing names and tooltips clear when adding new designer-configurable values.
+2. Add `[Tooltip("...")]` to non-obvious serialized fields, written clearly and concisely in English. Keep inspector headers `[Header("...")]` in English.
 3. Preserve existing inspector workflows and serialized data compatibility.
 4. For required `[SerializeField]` references, do not add defensive null checks in `Awake` just to throw custom errors. If a required reference is unassigned, rely on Unity's default missing-reference behavior; assigning required inspector references is user/setup responsibility.
 5. Do not use `FormerlySerializedAs` when renaming serialized fields. Before changing serialized field names:
    - Always notify the user in advance that they will need to manually re-assign the serialized values in the Unity Editor.
    - Exception: If the serialized change is small and straightforward to update directly in a text-formatted prefab or asset file, the agent may apply this exception to edit the prefab/asset directly, but MUST still explicitly inform the user that this action was performed.
 
-## 6) Events and Turn-Flow Safety
+## 6) Events and Gameplay-Flow Safety
 
 1. Subscribe/unsubscribe in matching lifecycle methods.
-2. Avoid side effects in event callbacks that break turn ordering.
-3. For turn/combat logic changes, validate player/enemy turn transitions explicitly.
+2. Avoid side effects in event callbacks that break event ordering or game state transitions.
+3. For combat, wave, and spawner logic changes, validate spawn, damage, and death transitions explicitly.
 
 ## 7) Logging and Comments
 
 1. Use Debug.Log for meaningful runtime diagnostics only.
 2. Remove temporary noisy logs before finalizing unless they are intentional diagnostics.
-3. Add comments only for non-obvious intent or constraints.
+3. Write comments, XML docstrings, and log messages in English to explain non-obvious intent and architectural rationale. Do not restate what code does.
 
 ## 8) Legacy Style Migration
 
@@ -191,9 +196,11 @@ Before finalizing a change:
 2. Const naming uses UPPER_SNAKE_CASE.
 3. Field ordering follows Inject -> SerializeField -> private.
 4. No singleton reintroduction.
-5. Turn flow and shield-first behavior remain intact.
+5. Gameplay flow, wave transitions, and combat behavior remain intact.
 6. LINQ is not used (System.Linq namespace/methods are banned).
 7. Functions/methods use block syntax ({}) instead of expression-bodied syntax (=>).
+8. Implementation plan (under .agents/context/implementations/plans/) and implementation summary (under .agents/context/implementations/summaries/) are created and tracked in the repository.
+9. All newly written or touched code identifiers, comments, tooltips, logs, templates, and markdown files are strictly in English.
 
 ## 12) Programming Guidelines and Constraints
 
@@ -202,3 +209,7 @@ Before finalizing a change:
 
 ### Syntax Rules
 - **Method Block Syntax**: Do not use expression-bodied arrow syntax (`=>`) for methods/functions. Always use standard block bodies with curly braces `{}` and explicit `return` statements where applicable. (Expression-bodied auto-properties remain acceptable).
+
+### Language Invariant
+- All repository files, source code, comments, inspector tooltips, templates, and agent documentation must be authored in English.
+- Multilingual communication is supported exclusively in direct user-facing chat, never in repository artifacts.

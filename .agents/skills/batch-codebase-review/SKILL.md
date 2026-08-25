@@ -5,69 +5,100 @@ description: "Use when: orchestrating or partitioning project-wide architecture 
 
 # Batch Codebase Review Skill
 
-Use this skill to orchestrate, partition, and execute a comprehensive `architecture-review` and `preserve-coding-standards` audit across all C# codebase scripts under `Assets/Scripts/`.
+Use this skill to orchestrate, partition, and execute a comprehensive `architecture-review` and `preserve-coding-standards` audit across all C# codebase scripts under Assets/Scripts/.
+
+It supports both **Parallel Subagent Execution** and **Sequential Loop Execution with Checkpoints and Handoff State**, inspired by enterprise agentic loop workflows.
 
 ## Required Sources
 
 Always read these before executing or partitioning:
 
-- `AGENTS.md`
-- `.agents/README.md`
-- `.agents/context/project-coding-standards.md`
-- `.agents/skills/architecture-review/SKILL.md`
-- `.agents/skills/preserve-coding-standards/SKILL.md`
+- AGENTS.md
+- .agents/README.md
+- .agents/context/project-coding-standards.md
+- .agents/skills/architecture-review/SKILL.md
+- .agents/skills/preserve-coding-standards/SKILL.md
+- .agents/skills/unity-pre-commit-gate/SKILL.md
 
-## Capability Assessment & Execution Branching
+## Codebase Domain Partitioning
 
-Before taking action, check whether the current agent environment supports **direct subagent spawning** (e.g. `invoke_subagent` tool or subagent delegation API).
+Divide Assets/Scripts/ into cohesive domain batches (10 to 30 files per batch):
 
----
-
-### Branch A: Direct Subagent Execution (Subagent Capabilities Available)
-
-If subagent spawning is supported in the toolset:
-
-1. **Partition Codebase**: Divide `Assets/Scripts/` into cohesive domain batches (10 to 30 files per batch):
-   - **Batch 1**: Core Boot, Reflex DI & Game Flow (`ReflexDI/`, `Initializers/`, `GameFlow/`, `Providers/`, `GameWindow/`)
-   - **Batch 2**: Player, Car Mechanics & Navigation (`Player/`, `Navigation/GridSystem/`, `Navigation/FlowFieldSystem/`, `Collisions/`)
-   - **Batch 3**: Enemies, Waves, Spawners & Object Lifecycle (`Enemies/`, `Waves/`, `Spawners/`, `Pooling/`, `ObjectLifecycle/`)
-   - **Batch 4**: Combat Systems (`Skills/`, `Projectiles/`)
-   - **Batch 5**: Health, Stats, Status Effects & Damage Numbers (`HealthSystem/`, `Stats/`, `StatusEffects/`, `DamageNumbers/`)
-   - **Batch 6**: UI Systems (`UI/`)
-   - **Batch 7A**: Progression, Audio, VFX, Settings & Storage (`Audio/`, `VFX/`, `Effects/`, `ScoreBoard/`, `LevelSystem/`, `Settings/`, `Storage/`, `Interactables/`)
-   - **Batch 7B**: Shared Infrastructure, Utilities & Editor Tools (`Shapes/`, `Volumes/`, `LayerMasks/`, `Utils/`, `Extensions/`, `Common/`, `Editor/`)
-
-2. **Spawn Specialized Subagents**: For each domain batch, invoke a dedicated subagent with an explicit prompt task instructing it to:
-   - Perform `architecture-review` (DI correctness, Reflex installer bindings, interface colocation, singleton removal).
-   - Perform `preserve-coding-standards` (field ordering `[Inject]` -> `[SerializeField]` -> `private`, `_camelCase` private fields, `UPPER_SNAKE_CASE` constants in `Constants/` subfolders, `[SerializeField] private` encapsulation, `OnX` event naming).
-   - Run compilation check: `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`.
-
-3. **Aggregate & Report**: Collect results from all subagents and present a unified summary of changes and compile validation results to the user.
+- Batch 1: Core Boot, Reflex DI & Game Flow
+  - Scopes: Assets/Scripts/ReflexDI/, Assets/Scripts/Initializers/, Assets/Scripts/GameFlow/, Assets/Scripts/Providers/, Assets/Scripts/GameWindow/
+- Batch 2: Player, Car Mechanics & Navigation
+  - Scopes: Assets/Scripts/Player/, Assets/Scripts/Navigation/GridSystem/, Assets/Scripts/Navigation/FlowFieldSystem/, Assets/Scripts/Collisions/
+- Batch 3: Enemies, Waves, Spawners & Object Lifecycle
+  - Scopes: Assets/Scripts/Enemies/, Assets/Scripts/Waves/, Assets/Scripts/Spawners/, Assets/Scripts/Pooling/, Assets/Scripts/ObjectLifecycle/
+- Batch 4: Combat Systems
+  - Scopes: Assets/Scripts/Skills/, Assets/Scripts/Projectiles/
+- Batch 5: Health, Stats, Status Effects & Damage Numbers
+  - Scopes: Assets/Scripts/HealthSystem/, Assets/Scripts/Stats/, Assets/Scripts/StatusEffects/, Assets/Scripts/DamageNumbers/
+- Batch 6: UI Systems
+  - Scopes: Assets/Scripts/UI/
+- Batch 7A: Progression, Audio, VFX, Settings & Storage
+  - Scopes: Assets/Scripts/Audio/, Assets/Scripts/VFX/, Assets/Scripts/Effects/, Assets/Scripts/ScoreBoard/, Assets/Scripts/LevelSystem/, Assets/Scripts/Settings/, Assets/Scripts/Storage/, Assets/Scripts/Interactables/
+- Batch 7B: Shared Infrastructure, Utilities & Editor Tools
+  - Scopes: Assets/Scripts/Shapes/, Assets/Scripts/Volumes/, Assets/Scripts/LayerMasks/, Assets/Scripts/Utils/, Assets/Scripts/Extensions/, Assets/Scripts/Common/, Assets/Scripts/Editor/
 
 ---
 
-### Branch B: Prompt Roadmap & Batch Plan (Subagent Capabilities Unavailable)
+## State Machine & Checkpoint Discipline
 
-If subagent spawning tools are **NOT available** in the current agent environment:
+For multi-batch execution, maintain a structured tracking state machine:
 
-1. **Partition Codebase**: Divide `Assets/Scripts/` into the baseline domain batches listed in Branch A.
-2. **Generate Implementation Plan**: Create or update `implementation_plan.md` detailing the file scope, file counts, and architectural review goals for each batch.
-3. **Generate Prompts Roadmap**: Create an `agent_prompts_roadmap.md` artifact containing ready-to-copy, self-contained prompt templates for each batch. Each prompt must instruct an external/parallel agent to:
-   - Read `AGENTS.md` and `.agents/context/project-coding-standards.md`.
-   - Apply both `architecture-review` and `preserve-coding-standards` on the specific folder scope.
-   - Run `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`.
-4. **Offer Execution Choices**: Ask the user whether to:
-   - Copy prompts to run parallel agent sessions in separate chat windows.
-   - Execute the batches sequentially in the current chat session, starting with Batch 1.
+1. Tracking Plan: Initialize `batch_review_plan.md` using the plan template.
+2. Handoff Document: Initialize `batch_review_handoff.md` with a Tasks Table tracking:
+   - Batch ID | Domain | Scope | Status (`PENDING`, `IN_PROGRESS`, `DONE`, `BLOCKED`) | Checkpoint Build (`PASS`/`FAIL`) | Notes
+3. Checkpoint Verification Gate:
+   - After completing each batch, run the compilation checkpoint:
+     ```powershell
+     dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
+     ```
+   - If build fails, fix immediately within the batch scope before marking as `DONE`.
+   - Update `batch_review_handoff.md` with findings and status.
+4. Resumption Protocol:
+   - When resuming an interrupted session, inspect `batch_review_handoff.md`.
+   - Identify the first non-`DONE` batch row and continue execution without re-auditing completed batches.
 
 ---
 
-## Verification
+## Execution Branches
 
-Every executed batch (whether run by a subagent, an external agent, or sequentially in-session) must be validated with:
+### Branch A: Direct Subagent Parallel Execution
+When subagent capabilities (`invoke_subagent`) are available:
+1. Initialize the batch review plan and handoff files.
+2. Launch dedicated subagents for independent batches.
+3. Each subagent audits its assigned scope, applies safe standard fixes, runs `dotnet build`, and reports back.
+4. The coordinator aggregates results, verifies overall project compilation, and finalizes the handoff report.
 
-```powershell
-dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
-```
+### Branch B: Sequential Loop Execution with Checkpoints
+When running in a single agent session:
+1. Initialize `batch_review_plan.md` and `batch_review_handoff.md`.
+2. Process batches sequentially:
+   - Batch 1 -> Fix standards & audit architecture -> Checkpoint compile -> Mark DONE.
+   - Batch 2 -> Fix standards & audit architecture -> Checkpoint compile -> Mark DONE.
+   - ... repeat through all batches.
+3. Maintain clean commits or diff summaries per batch.
 
-No batch refactor is complete until C# compilation succeeds cleanly without new build errors.
+### Branch C: Prompt Roadmap Generation
+When preparing instructions for external parallel agent sessions:
+1. Generate `agent_prompts_roadmap.md` with self-contained, copy-pasteable prompts for each batch.
+2. Each prompt includes full context references, scope boundaries, and the compilation verification command.
+
+---
+
+## Verification & Completion
+
+A batch codebase review is complete only when:
+1. All domain batches are marked `DONE` in `batch_review_handoff.md`.
+2. Whole-project compilation succeeds with zero warnings:
+   ```powershell
+   dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
+   ```
+3. A consolidated summary report is presented to the user.
+
+## Output Templates
+
+- .agents/skills/batch-codebase-review/templates/batch-review-plan-template.md
+- .agents/skills/batch-codebase-review/templates/batch-review-handoff-template.md

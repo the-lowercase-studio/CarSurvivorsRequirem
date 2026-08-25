@@ -46,10 +46,10 @@ namespace Assets.Scripts.Player.Car
         [Serializable]
         private struct Wheel
         {
-            [Tooltip("Model 3D koła w hierarchii Transform (używany do animacji obrotu i skrętu).")]
+            [Tooltip("3D wheel model in the Transform hierarchy (used for spin and steer animations).")]
             [SerializeField] private GameObject _wheelModel;
 
-            [Tooltip("Oś przednia (Front - skręca i obraca) lub tylna (Rear - tylko obraca).")]
+            [Tooltip("Front axle (Front - steers and spins) or rear axle (Rear - spins only).")]
             [SerializeField] private Axel _axel;
 
             public GameObject WheelModel => _wheelModel;
@@ -57,97 +57,97 @@ namespace Assets.Scripts.Player.Car
         }
 
         [Header("Engine & Acceleration")]
-        [Tooltip("Standardowa maksymalna prędkość liniowa jazdy do przodu na wprost w m/s (np. 16.0).")]
+        [Tooltip("Standard maximum forward linear speed in m/s (e.g., 16.0).")]
         [SerializeField] private float _maxForwardSpeed = 16f;
 
-        [Tooltip("Absolutna maksymalna prędkość ogólna osiągalna WYŁĄCZNIE podczas driftu i tuż po nim w m/s (np. 24.0).")]
+        [Tooltip("Absolute maximum overall speed reachable ONLY during and immediately after drifting in m/s (e.g., 24.0).")]
         [SerializeField] private float _maxOverallSpeed = 24f;
 
-        [Tooltip("Szybkość przyspieszania do przodu przy zwykłej jeździe na wprost w m/s². Niższa wartość (8-12) daje płynniejszy przyrost prędkości, wyższa (20-25) daje natychmiastowy zryw.")]
+        [Tooltip("Forward acceleration rate during straight driving in m/s². Lower values (8-12) provide smooth acceleration; higher values (20-25) give instant responsiveness.")]
         [SerializeField] private float _acceleration = 25f;
 
-        [Tooltip("Szybkość przyspieszania do przodu podczas poślizgu w drifcie w stronę _maxOverallSpeed w m/s².")]
+        [Tooltip("Forward acceleration rate while drifting toward _maxOverallSpeed in m/s².")]
         [SerializeField] private float _driftAcceleration = 18f;
 
-        [Tooltip("Wytracanie nadmiarowej prędkości po wyjściu z driftu na prostą (z _maxOverallSpeed z powrotem do _maxForwardSpeed) w m/s².")]
+        [Tooltip("Rate of bleeding off excess speed after exiting a drift back to _maxForwardSpeed in m/s².")]
         [SerializeField] private float _driftSpeedDecayRate = 5f;
 
-        [Tooltip("Minimalny czas trwania ciągłego poślizgu (w sekundach) wymagany do przekroczenia normalnego limitu prędkości i rozpędzania się do _maxOverallSpeed (zabezpieczenie przed snakingiem).")]
+        [Tooltip("Minimum continuous drift duration (in seconds) required to exceed normal speed limit and accelerate toward _maxOverallSpeed (anti-snaking guard).")]
         [SerializeField] private float _minDriftTimeToBoost = 0.25f;
 
-        [Tooltip("Maksymalna prędkość cofania do tyłu w m/s (np. 8.0).")]
+        [Tooltip("Maximum reverse speed in m/s (e.g., 8.0).")]
         [SerializeField] private float _reverseMaxSpeed = 8f;
 
-        [Tooltip("Szybkość przyspieszania do tyłu w m/s². Pozwala na osobne, płynne rozpędzanie się na biegu wstecznym.")]
+        [Tooltip("Reverse acceleration rate in m/s² for smooth reversing.")]
         [SerializeField] private float _reverseAcceleration = 12f;
 
-        [Tooltip("Siła hamowania przy przytrzymaniu przycisku hamulca w m/s². Wyższa wartość = szybsze zatrzymanie auta.")]
+        [Tooltip("Braking deceleration when holding the brake button in m/s². Higher values result in faster stopping.")]
         [SerializeField] private float _brakeDeceleration = 40f;
 
-        [Tooltip("Wytracanie prędkości po puszczeniu gazu i hamulca w m/s². Niższa wartość = dłuższe toczenie się auta.")]
+        [Tooltip("Natural coasting deceleration when neither throttle nor brake is pressed in m/s². Lower values result in longer coasting.")]
         [SerializeField] private float _naturalDeceleration = 15f;
 
         [Header("Steering & Responsiveness")]
-        [Tooltip("Szybkość obrotu auta w stopniach na sekundę. Wartości 90-110 dają płynniejsze, szersze łuki przy dużej prędkości.")]
+        [Tooltip("Car yaw rotation speed in degrees per second. Values around 90-110 produce wider, smoother arcs at high speed.")]
         [SerializeField] private float _turnSpeed = 160f;
 
-        [Tooltip("Maksymalny kąt skrętu wizualnych kół przedniej osi w stopniach.")]
+        [Tooltip("Maximum steering angle of visual front wheels in degrees.")]
         [SerializeField] private float _maxSteerAngle = 30f;
 
-        [Tooltip("Szybkość reakcji kierownicy na naciśnięcie/puszczenie klawisza. Wygładza wejście, eliminuje szarpnięcia (sugerowane: 8-12).")]
+        [Tooltip("Steering response speed when pressing/releasing steering inputs. Smooths input and prevents abrupt jerks (recommended: 8-12).")]
         [Range(1f, 50f)]
         [SerializeField] private float _steerResponseSpeed = 10f;
 
         [Header("Arcade Grip & Drift")]
-        [Tooltip("Przyczepność boczna przy zwykłej jeździe (0 = poślizg/lodowisko, 1 = idealna przyczepność). Sugerowane: 0.75 - 0.85.")]
+        [Tooltip("Lateral grip during normal driving (0 = icy slip, 1 = perfect traction). Recommended: 0.75 - 0.85.")]
         [Range(0f, 1f)]
         [SerializeField] private float _normalGrip = 0.90f;
 
-        [Tooltip("Przyczepność boczna podczas driftu po wciśnięciu hamulca w zakręcie. Niższa wartość = dłuższego uślizgu tyłu.")]
+        [Tooltip("Lateral grip during drift when braking into a turn. Lower values produce longer rear slide.")]
         [Range(0f, 1f)]
         [SerializeField] private float _driftGrip = 0.25f;
 
-        [Tooltip("Wytracanie prędkości podczas driftu w m/s² (zamiast gwałtownego zatrzymania awaryjnego), pozwalające utrzymać szybki poślizg arcade.")]
+        [Tooltip("Speed deceleration while drifting in m/s² (maintains fast arcade slides without emergency stopping).")]
         [SerializeField] private float _driftDeceleration = 5f;
 
-        [Tooltip("Minimalna prędkość auta (m/s) wymagana do wejścia w stan driftu.")]
+        [Tooltip("Minimum vehicle speed in m/s required to initiate a drift.")]
         [SerializeField] private float _minSpeedToDrift = 8f;
 
-        [Tooltip("Mnożnik prędkości skrętu w drifcie. Pozwala na ciasne i dynamiczne nawroty przy hamulcu ręcznym.")]
+        [Tooltip("Turn speed multiplier while drifting. Allows sharp, dynamic handbrake turns.")]
         [SerializeField] private float _driftTurnMultiplier = 1.3f;
 
         [Header("Initial D Sideways Drift")]
-        [Tooltip("Docelowy kąt obrotu karoserii w bok podczas driftu w stopniach (np. 40.0 dla wyrazistej jazdy bokiem w stylu Initial D).")]
+        [Tooltip("Target sideways car body yaw angle during drift in degrees (e.g., 40.0 for pronounced Initial D style slides).")]
         [SerializeField] private float _targetDriftAngle = 40f;
 
-        [Tooltip("Szybkość zarzucania tyłu/wchodzenia karoserii w kąt poślizgu.")]
+        [Tooltip("Response speed for snapping the car body into the target drift yaw angle.")]
         [SerializeField] private float _driftYawResponseSpeed = 12f;
 
-        [Tooltip("Wpływ kontry kierownicy na kąt driftu (skręcenie w stronę zakrętu pogłębia poślizg, kontra prostuje auto).")]
+        [Tooltip("Impact of counter-steering on drift angle (steering into turn deepens drift, counter-steering straightens the car).")]
         [SerializeField] private float _counterSteerImpact = 0.5f;
 
         [Header("Visual Wheels")]
-        [Tooltip("Lista kół auta wraz z ich modelami 3D oraz oznaczeniem osi (Przednia/Tylna).")]
+        [Tooltip("List of car wheels with their 3D models and axle assignments (Front/Rear).")]
         [SerializeField] private List<Wheel> _wheels;
 
-        [Tooltip("Promień wizualny kół w metrach, używany do wyliczania prędkości obrotowej modeli kół.")]
+        [Tooltip("Visual wheel radius in meters used to calculate wheel model rotation speed.")]
         [SerializeField] private float _wheelVisualRadius = 0.35f;
 
         [Header("Ground Check & Raycasts")]
-        [Tooltip("Długość promieni raycast skierowanych w dół z kół do szukania płaszczyzny terenu.")]
+        [Tooltip("Downward raycast distance from wheels to detect ground plane.")]
         [SerializeField] private float _groundCheckDistance = 2.0f;
 
-        [Tooltip("Offset wysokości Y podnoszący środek auta nad terenem (używany do dostrojenia zawieszenia).")]
+        [Tooltip("Y height offset to raise the car center above the ground (used for suspension tuning).")]
         [SerializeField] private float _groundTargetYOffset = 0.0f;
 
-        [Tooltip("Wysokość punktu startowego promieni raycast liczona od środka obiektu.")]
+        [Tooltip("Raycast origin height offset relative to the object center.")]
         [SerializeField] private float _raycastOriginYOffset = 1.0f;
 
-        [Tooltip("Maska warstw fizycznych uznawanych za przejezdny teren.")]
+        [Tooltip("Physics layer mask representing drivable ground.")]
         [SerializeField] private LayerMask _groundLayerMask;
 
         [Header("Physics Stability")]
-        [Tooltip("Lokalny środek ciężkości Rigidbody. Obniżona wartość Y (np. -0.5) zapobiega dachowaniu i poprawia stabilność.")]
+        [Tooltip("Local Rigidbody center of mass. Lower Y (e.g., -0.5) prevents rollovers and enhances stability.")]
         [SerializeField] private Vector3 _centerOfMass = new Vector3(0f, -0.5f, 0f);
 
         private Rigidbody _rb;

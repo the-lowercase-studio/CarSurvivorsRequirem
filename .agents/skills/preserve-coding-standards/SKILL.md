@@ -1,11 +1,11 @@
 ---
 name: preserve-coding-standards
-description: "Use when: auditing and fixing a provided ProjectLizard scope for practices that compile or work but drift from .agents/context/project-coding-standards.md. Triggers: preserve coding standards, coding standards cleanup, style drift, naming/order cleanup, fix standards violations, align scope with ProjectLizard standards."
+description: "Use when: auditing and fixing a provided Car Survivors scope for practices that compile or work but drift from .agents/context/project-coding-standards.md. Triggers: preserve coding standards, coding standards cleanup, style drift, naming/order cleanup, fix standards violations, align scope with Car Survivors standards."
 ---
 
-# Preserve Coding Standards
+# Preserve Coding Standards Skill
 
-Use this skill to inspect a user-provided scope, find code that is not behaviorally wrong but is misaligned with ProjectLizard coding standards, and apply safe incremental fixes.
+Use this skill to inspect a user-provided scope, identify code that drifts from Car Survivors coding standards, apply safe incremental fixes, and verify them with an automated compilation and self-correction loop.
 
 ## Required Sources
 
@@ -20,9 +20,9 @@ Use .agents/context/technology-documentation.md and official Unity or Reflex doc
 
 ## Scope Rules
 
-1. Work only inside the user-provided scope: files, folders, classes, or systems.
-2. If the user gives no scope, infer the narrowest active or mentioned file scope when available; otherwise ask for a scope.
-3. Exclude generated, cache, package, and Unity transient directories unless explicitly requested:
+1. Work strictly inside the user-provided scope: files, folders, classes, or systems.
+2. If no scope is provided, infer the narrowest active or mentioned scope; otherwise ask for clarification.
+3. Exclude generated and transient directories:
    - Library/
    - Temp/
    - Obj/
@@ -30,76 +30,57 @@ Use .agents/context/technology-documentation.md and official Unity or Reflex doc
    - Builds/
    - Packages/
    - UserSettings/
-4. Never edit .prefab files directly.
-5. Treat legacy style incrementally: fix touched or clearly local violations, not every unrelated issue nearby.
+4. Never edit .prefab or .unity files directly unless explicitly requested.
+5. Treat legacy style incrementally: fix touched and scoped violations without broadening into unrequested rewrites.
 
-## Audit Workflow
+## Standards Checklist & Rules
 
-1. Inventory candidate files with rg or rg --files.
-2. Read the relevant code before editing; do not rely on search hits alone.
-3. Compare candidates against project-coding-standards.md.
-4. Classify each issue:
-   - Safe fix now: naming/order/visibility cleanup with local references understood.
-   - Needs broader reference update: interface/type/member rename or serialized field rename.
-   - Needs user confirmation: any change that may alter gameplay behavior, inspector data, public API, turn flow, shield semantics, DI wiring, or prefab setup.
-5. Apply only safe fixes unless the user explicitly approved broader changes.
-6. Run a targeted validation command when available, or explain why validation could not be run.
+Apply the core Car Survivors coding rules:
 
-## Search Checklist
+1. Field Ordering in MonoBehaviours and runtime classes:
+   - `[Inject]` private fields first.
+   - `[SerializeField] private` fields second.
+   - Other private / protected fields third.
+2. Naming Conventions:
+   - Private and serialized fields: `_camelCase`.
+   - Constants: `UPPER_SNAKE_CASE`, placed inside a `Constants/` subfolder under the owning domain.
+   - Public properties, methods, types, and events: `PascalCase`.
+   - Events: `OnX` naming.
+   - Interfaces: prefixed with `I`, colocated above primary implementation when tightly owned.
+3. Encapsulation:
+   - Convert public mutable fields meant for inspector editing to `[SerializeField] private`.
+4. Clean Diagnostics:
+   - Remove temporary or noisy `Debug.Log` calls that are not intentional runtime diagnostics.
 
-Use targeted searches appropriate to the scope. Examples:
+## Audit & Automated Self-Correction Loop
 
-```bash
-rg --files <scope> -g '*.cs'
-rg "const .* [A-Z][A-Za-z0-9]* =" <scope> -g '*.cs'
-rg "public (int|float|bool|string|GameObject|Transform|.*) [a-z_][A-Za-z0-9_]*;" <scope> -g '*.cs'
-rg "private (?!readonly|const|static).* [a-z][A-Za-z0-9_]*;" <scope> -g '*.cs'
-rg "event .* [A-Z][A-Za-z0-9]*(?!;)" <scope> -g '*.cs'
-rg "FindObjectOfType|FindFirstObjectByType|FindAnyObjectByType|\\.Instance\\b|GetComponent<" <scope> -g '*.cs'
-```
+Follow this verified loop inspired by automated fix workflows:
 
-Treat search results as leads. Verify each hit against code context before changing it.
+1. Inventory Scope
+   - Search candidate files with ripgrep (`rg --files <scope> -g '*.cs'`).
+   - Read the relevant code context before modifying.
 
-## Safe Fix Patterns
+2. Classify & Apply Safe Fixes
+   - Safe to fix now: field reordering, private field `_camelCase` renaming, constant relocation to `Constants/`, `[SerializeField] private` encapsulation, `OnX` event naming.
+   - Needs user confirmation: renaming serialized fields that hold inspector data in prefabs/scenes, altering public API shapes, or changing DI lifetimes.
 
-Prefer these fixes when local references can be updated confidently:
+3. Automated Verification Gate (Mandatory)
+   - Run targeted C# compilation:
+     ```powershell
+     dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
+     ```
+   - Treat warnings as errors: exit code must be 0 with 0 warnings.
+   - If any compiler error or warning occurs, immediately analyze the diagnostic, apply a minimal correction, and re-run compilation until completely green.
 
-- Rename private non-serialized fields to `_camelCase`.
-- Rename new or non-serialized const fields to `UPPER_SNAKE_CASE`.
-- Reorder MonoBehaviour fields as `[Inject]`, then `[SerializeField]`, then other private fields.
-- Change public mutable inspector fields to `[SerializeField] private` only when no external code relies on field access.
-- Prefix newly introduced interfaces with `I` and colocate tightly owned interfaces above implementation.
-- Keep namespaces aligned with `Assets.<Domain>` folder structure when adding or touching files.
-- Remove temporary noisy `Debug.Log` calls that are not intentional diagnostics.
-- Keep event names in `OnX` form.
-
-## Serialized Data Safety
-
-Be conservative with serialized fields because renames can break Unity inspector data.
-
-- Do not use `FormerlySerializedAs` when renaming serialized fields.
-- Before changing serialized field names, notify the user first that they will need to manually re-assign the field values in the Unity Editor.
-- Exception: If the serialized change is small and straightforward to update directly in a text-formatted prefab or asset file, the agent may apply this exception to edit the prefab/asset directly, but MUST still explicitly inform the user that this action was performed.
-
-## Behavior Guardrails
-
-Do not make standards cleanup alter gameplay semantics.
-
-- Preserve DI through interfaces where established.
-- Do not reintroduce singleton access.
-- Preserve turn-event sequencing.
-- Preserve shield-first damage behavior.
-- Preserve card/effect execution order and target resolution.
-- Keep inspector workflows intact for designers.
-
-If a standards violation can only be fixed by changing behavior or architecture, stop and ask for confirmation with the smallest concrete option.
+4. Serialized Data Safety Check
+   - Confirm that no serialized fields were renamed without explicit user approval or without verifying inspector safety.
 
 ## Output
 
-After applying fixes, report:
+After completing the audit and verification loop, report:
 
-1. Scope audited.
-2. Files changed.
-3. Standards issues fixed.
-4. Issues intentionally left for confirmation or wider refactor.
-5. Validation performed or not performed.
+1. Audited Scope.
+2. Files Modified.
+3. Standards Violations Fixed (by rule category: Field Order, Naming, Constants, Visibility).
+4. Items Intentionally Preserved / Deferred.
+5. Automated Compilation Gate Result (`dotnet build` exit code and warnings count).

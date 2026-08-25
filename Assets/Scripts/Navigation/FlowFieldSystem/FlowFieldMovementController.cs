@@ -68,7 +68,7 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
                 transform.position,
                 _separationRadius,
                 _separationColliderBuffer,
-                EntityLayers.Enemy);
+                EntityLayers.Enemies);
 
             for (int hitIndex = 0; hitIndex < hitCount; hitIndex++)
             {

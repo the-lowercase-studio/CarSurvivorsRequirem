@@ -160,7 +160,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
                 turretPosition,
                 _config.Range,
                 _targetBuffer,
-                EntityLayers.Enemy
+                EntityLayers.Enemies
             );
 
             ClearTrackedTargets();

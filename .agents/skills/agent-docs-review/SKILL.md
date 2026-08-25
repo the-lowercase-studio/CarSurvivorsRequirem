@@ -1,6 +1,6 @@
 ---
 name: agent-docs-review
-description: "Use when: reviewing, trimming, restructuring, or updating a pointed ProjectLizard documentation file so it becomes accurate, current, and useful for AI agents. Trigger for requests to make docs agent-friendly, reduce documentation noise, verify docs against code, or keep only operationally important guidance in markdown files under .agents/context/ or other .agents/ operational files."
+description: "Use when: reviewing, trimming, restructuring, or updating a pointed Car Survivors documentation file so it becomes accurate, current, and useful for AI agents. Trigger for requests to make docs agent-friendly, reduce documentation noise, verify docs against code, or keep only operationally important guidance in markdown files under .agents/context/ or other .agents/ operational files."
 ---
 
 # Agent Docs Review

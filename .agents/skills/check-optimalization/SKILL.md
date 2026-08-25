@@ -1,11 +1,11 @@
 ---
 name: check-optimalization
-description: "Use when: checking current optimizations or performance risks for pointed ProjectLizard systems, scripts, methods, code parts, Unity components, combat flows, UI flows, allocations, update loops, events, DI usage, or data access before proposing and requesting approval to implement possible optimization changes. Also trigger for optimization/optimisation/optimalization review requests."
+description: "Use when: checking current optimizations or performance risks for pointed Car Survivors systems, scripts, methods, code parts, Unity components, combat flows, UI flows, allocations, update loops, events, DI usage, or data access before proposing and requesting approval to implement possible optimization changes. Also trigger for optimization/optimisation/optimalization review requests."
 ---
 
 # Check Optimalization Skill
 
-Use this skill to inspect a targeted ProjectLizard system, script, or code section for existing optimization choices, performance risks, and safe improvement opportunities before making changes.
+Use this skill to inspect a targeted Car Survivors system, script, or code section for performance risks, frame-rate bottlenecks, memory allocations (GC pressure), and safe optimization opportunities.
 
 ## Required Sources
 
@@ -14,74 +14,63 @@ Before reviewing code, ground the work in:
 - AGENTS.md
 - .agents/README.md
 - .agents/context/project-coding-standards.md
+- .agents/context/ai-game-dev-best-practices.md
 - .agents/context/technology-documentation.md
-- Relevant system summary under .agents/context/, if one exists.
-- The exact target files, systems, or code excerpts named by the user.
+- Relevant game system docs under .agents/context/game-systems/
 
-Use official Unity, Reflex, and DOTween documentation from `.agents/context/technology-documentation.md` when performance behavior depends on engine or package details.
+## Performance Gate & Severity Classification
 
-## Inputs
+Classify all performance findings into four severity tiers:
 
-- Target system, script, method, scene behavior, or code excerpt to inspect.
-- Performance concern, if the user named one.
-- Target runtime context when available, such as combat turn flow, UI feedback, card usage, enemy intention execution, editor tooling, or scene startup.
-- Whether the user wants a review only or is open to implementation after approval.
+- 🔴 Blocker (Unacceptable Hot-Path Cost / Memory Leak)
+  - Heap allocations (`new`, LINQ, string concatenation/formatting, closures, enum boxing) inside `Update()`, `FixedUpdate()`, physics callbacks, or high-frequency loops (e.g. FlowField calculations, bullet ticks).
+  - Runtime component searches (`FindAnyObjectByType`, `FindObjectOfType`, `GameObject.Find`, or uncached `GetComponent`) inside per-frame updates.
+  - Infinite or unkilled DOTween sequences / coroutines lingering after object deactivation or destruction.
 
-## Workflow
+- 🟠 Major (Scale & Pooling Bottlenecks)
+  - Spawning dynamic combat instances (`Instantiate`/`Destroy` on projectiles, damage numbers, enemy units, particle VFX) without using `Assets/Scripts/Pooling/`.
+  - Non-layer-masked physics raycasts, sphere casts, or overlap queries executed per unit per frame.
+  - Heavy UI canvas rebuilds triggered repeatedly every frame instead of event-driven updates.
 
-1. Identify the review boundary.
-   - Confirm which files and runtime paths are in scope.
-   - Follow call sites only far enough to understand performance behavior.
-   - Do not broaden into unrelated refactors.
-2. Establish current optimization state.
-   - Note existing caching, pooling, event-driven behavior, DI boundaries, serialized references, precomputed data, allocation avoidance, and batching.
-   - Identify intentional tradeoffs that should not be undone without evidence.
-3. Inspect likely Unity performance risks.
-   - Check frequent `Update`, `LateUpdate`, coroutine, tween, event, and UI rebuild paths.
-   - Look for repeated scene searches, component lookups, LINQ/enumerator allocations, per-frame string formatting, unnecessary allocations, repeated list resizing, expensive logging, and repeated ScriptableObject/data traversal in hot paths.
-   - Check object creation/destruction in combat feedback, VFX, damage numbers, cards, enemies, and UI.
-4. Inspect architecture-sensitive optimization risks.
-   - Do not propose singleton or global lookup shortcuts where DI interfaces already exist.
-   - Preserve turn-event ordering, shield-first damage behavior, effect execution semantics, and inspector workflows.
-   - Prefer narrow caching, pooling, data precomputation, or event-driven updates over broad rewrites.
-5. Rank possible optimizations.
-   - Label each item as `High`, `Medium`, or `Low` impact.
-   - Label confidence as `Observed`, `Likely`, or `Needs profiling`.
-   - Separate behavior-preserving changes from changes that could alter timing, ordering, balance, visuals, or designer workflow.
-6. Ask before implementation.
-   - After the review, present the proposed optimizations and explicitly ask the user which changes they approve.
-   - Do not implement optimization changes in the same pass unless the user has already clearly approved that specific implementation work.
-   - If an issue is a correctness bug rather than a pure optimization, call it out separately and still ask before changing behavior.
-7. Implement only approved changes.
-   - Keep edits scoped to approved items.
-   - Preserve project coding standards.
-   - Avoid prefab edits; any prefab setup must be left to the user in Unity Editor.
-   - Add or update focused validation only when it fits the changed area.
+- 🟡 Minor (Algorithmic & Math Inefficiencies)
+  - Missing transform or property caching in frequently called methods.
+  - Expensive distance calculations using `Vector3.Distance` instead of `sqrMagnitude` in tight comparisons.
+  - Redundant collection resizing (missing initial capacity in `List<T>` or `HashSet<T>`).
+
+- ⚪ Nit (Micro-Optimizations & Style)
+  - Using `Mathf.Pow(x, 2)` instead of `x * x`.
+  - Minor struct vs class data layout adjustments.
+
+## Performance Audit Workflow
+
+1. Identify Review Boundary
+   - Confirm in-scope files and runtime invocation paths (e.g. `Update`, event handlers, physics queries).
+   - Trace hot paths (methods called 60+ times per second or per-unit-per-frame).
+
+2. Profile & Identify Hot Spots
+   - Audit code against the Performance Gate checklist.
+   - Separate verified zero-allocation hot paths from risky allocation patterns.
+
+3. Formulate Optimization Proposals
+   - Label each proposal with Severity (`Blocker`, `Major`, `Minor`, `Nit`) and Expected Impact (`High`, `Medium`, `Low`).
+   - Ground every proposal in Car Survivors architecture:
+     - Preserve Reflex DI bindings (never replace DI with static singletons for "speed").
+     - Preserve inspector workflows and ScriptableObject configurability.
+     - Preserve deterministic combat invariants and event ordering.
+
+4. Obtain Approval Before Implementing
+   - Present the structured review report to the user.
+   - If the user approves implementation, proceed with atomic, behavior-preserving changes.
+
+5. Validation
+   - Run project compilation:
+     ```powershell
+     dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
+     ```
+   - Specify Unity Profiler / Deep Profile verification instructions for the user.
 
 ## Output
 
-For review-only work, produce:
+Produce a structured optimization report using:
 
-- Target reviewed.
-- Existing optimizations already present.
-- Proposed optimizations ranked by impact and confidence.
-- Risks or behavior-sensitive areas.
-- Recommended validation steps.
-- A direct approval question before implementation.
-
-For approved implementation work, summarize:
-
-- Approved optimizations implemented.
-- Files changed.
-- Behavior intentionally preserved.
-- Validation performed.
-- Remaining profiling or Unity Editor checks.
-
-## Approval Prompt Pattern
-
-End the review phase with a concrete question:
-
-```text
-I can implement these optimization changes next: [short list]. Do you approve all of them, or only specific items?
-```
-
+- .agents/skills/check-optimalization/templates/optimization-review-template.md
