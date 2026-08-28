@@ -8,6 +8,7 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
 {
     public interface IFlowFieldMovementController
     {
+        Vector3 CalculateDesiredMovementDirection();
         Vector3 MoveOnFlowFieldGrid(float movementSpeed);
     }
 
@@ -34,11 +35,32 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
             PreventEntitiesFromStackingOnEachOther();
         }
 
-        public Vector3 MoveOnFlowFieldGrid(float movementSpeed)
+        public Vector3 CalculateDesiredMovementDirection()
         {
             Vector3 gridDir = GetMoveDirectionBasedOnCurrentCell();
-            Vector3 moveDir = (gridDir + _separationVector).normalized;
-            Vector3 movement = movementSpeed * Time.deltaTime * moveDir;
+            Vector3 combinedDir;
+
+            if (gridDir != Vector3.zero)
+            {
+                combinedDir = (gridDir + _separationVector).normalized;
+            }
+            else if (_separationVector != Vector3.zero)
+            {
+                // When entity is directly on target or no direction exists, dampen separation to avoid jitter
+                combinedDir = _separationVector * 0.1f;
+            }
+            else
+            {
+                combinedDir = Vector3.zero;
+            }
+
+            return combinedDir;
+        }
+
+        public Vector3 MoveOnFlowFieldGrid(float movementSpeed)
+        {
+            Vector3 combinedDir = CalculateDesiredMovementDirection();
+            Vector3 movement = movementSpeed * Time.fixedDeltaTime * combinedDir;
             transform.position += movement;
 
             return movement;
@@ -46,14 +68,97 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
 
         private Vector3 GetMoveDirectionBasedOnCurrentCell()
         {
+            if (_gridManager == null || _gridManager.WorldGrid == null)
+            {
+                return Vector3.zero;
+            }
+
             Cell currentCell = WorldPosToCellConverter.GetCellFromGridByWorldPos(
                 _gridManager.WorldGrid, transform.position
             );
 
-            if (currentCell != null && currentCell.BestDirection != null)
+            if (currentCell != null && currentCell == _gridManager.DestinationCell)
+            {
+                Vector3 toDestination = _gridManager.DestinationCell.WorldPos - transform.position;
+                toDestination.y = 0f;
+                if (toDestination.sqrMagnitude > FlowFieldConstants.DESTINATION_ARRIVAL_DISTANCE_SQR)
+                {
+                    return toDestination.normalized;
+                }
+
+                return Vector3.zero;
+            }
+
+            if (currentCell != null && currentCell.BestDirection != null && currentCell.BestDirection != GridDirection.None)
             {
                 Vector2Int gridDirection = currentCell.BestDirection.Vector;
-                return new Vector3(gridDirection.x, 0, gridDirection.y);
+                if (gridDirection != Vector2Int.zero)
+                {
+                    return new Vector3(gridDirection.x, 0, gridDirection.y).normalized;
+                }
+            }
+
+            Vector3 borderNeighborDirection = TryGetBorderNeighborDirection(currentCell);
+            if (borderNeighborDirection != Vector3.zero)
+            {
+                return borderNeighborDirection;
+            }
+
+            // Fallback: When far outside chunk or on unintegrated cell, direct toward destination if beyond arrival distance
+            if (_gridManager.DestinationCell != null)
+            {
+                Vector3 toDestination = _gridManager.DestinationCell.WorldPos - transform.position;
+                toDestination.y = 0f;
+                float sqrDist = toDestination.sqrMagnitude;
+
+                if (sqrDist > FlowFieldConstants.DESTINATION_ARRIVAL_DISTANCE_SQR)
+                {
+                    return toDestination.normalized;
+                }
+
+                return Vector3.zero;
+            }
+
+            return Vector3.zero;
+        }
+
+        private Vector3 TryGetBorderNeighborDirection(Cell currentCell)
+        {
+            if (currentCell == null || _gridManager.WorldGrid == null || _gridManager.WorldGrid.Cells == null)
+            {
+                return Vector3.zero;
+            }
+
+            Vector2Int currentGridPos = currentCell.WorldGridPos;
+            Cell bestNeighbor = null;
+            ushort bestCost = ushort.MaxValue;
+
+            for (int i = 0; i < GridDirection.CardinalAndIntercardinalDirections.Count; i++)
+            {
+                Vector2Int neighborPos = currentGridPos + GridDirection.CardinalAndIntercardinalDirections[i].Vector;
+                if (neighborPos.x >= 0 && neighborPos.x < _gridManager.WorldGrid.Width &&
+                    neighborPos.y >= 0 && neighborPos.y < _gridManager.WorldGrid.Height)
+                {
+                    Cell neighbor = _gridManager.WorldGrid.Cells[neighborPos.x, neighborPos.y];
+                    if (neighbor != null
+                        && neighbor.Cost < FlowFieldConstants.IMPASSABLE_COST
+                        && neighbor.BestDirection != null
+                        && neighbor.BestDirection != GridDirection.None
+                        && neighbor.BestCost < bestCost)
+                    {
+                        bestCost = neighbor.BestCost;
+                        bestNeighbor = neighbor;
+                    }
+                }
+            }
+
+            if (bestNeighbor != null && bestNeighbor.BestDirection != null && bestNeighbor.BestDirection != GridDirection.None)
+            {
+                Vector2Int dir = bestNeighbor.BestDirection.Vector;
+                if (dir != Vector2Int.zero)
+                {
+                    return new Vector3(dir.x, 0, dir.y).normalized;
+                }
             }
 
             return Vector3.zero;

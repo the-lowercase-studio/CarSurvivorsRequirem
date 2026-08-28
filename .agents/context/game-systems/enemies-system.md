@@ -2,9 +2,9 @@
 
 ## Purpose
 
-The Enemies system owns runtime enemy entities, enemy pooling and spawning, enemy movement via flow fields, contact-based melee attacks, death presentation, experience particle payout, collectible item drop scattering, and recycling enemies back into their pools.
+The Enemies system owns runtime enemy entities, enemy object pooling and pre-warming, flow-field and off-grid movement, grounding and fall physics, contact-based arc melee attacks, damage reception and VFX, death presentation sequences, experience particle payout, collectible item drop scattering with walkable grid resolution, off-chunk enemy teleportation, and pool recycling.
 
-It does not own wave timing, grid generation, flow-field direction calculation, player health semantics, skill targeting, projectile behavior, or experience collection. Those systems consume enemy contracts or provide services that enemies depend on.
+It does not own wave timing, grid generation, flow-field vector computation, player health mechanics, projectile simulation, experience particle collection, or boss state machine logic. Those systems interact with enemies via explicit interfaces, events, and DI bindings.
 
 ## Reading Map
 
@@ -16,28 +16,41 @@ It does not own wave timing, grid generation, flow-field direction calculation, 
   - Assets/Scripts/Enemies/Base/EnemyAnimator.cs
   - Assets/Scripts/Enemies/Base/EnemyCollisionsController.cs
   - Assets/Scripts/Enemies/Base/EnemiesOutsidePlayerChunkTeleporter.cs
+  - Assets/Scripts/Enemies/Base/IAttackAnimationPlayer.cs
+  - Assets/Scripts/Enemies/Base/IMovementController.cs
   - Assets/Scripts/Enemies/EnemyDropHandler.cs
   - Assets/Scripts/Enemies/CollectibleDropNotifier.cs
+  - Assets/Scripts/Enemies/DropAnimationConfiguration.cs
+  - Assets/Scripts/Enemies/Constants/EnemyMovementConstants.cs
+  - Assets/Scripts/Enemies/Constants/EnemyCombatConstants.cs
+  - Assets/Scripts/Enemies/Bosses/BossManager.cs
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawnChanceRedistributionSystem.cs
   - Assets/Scripts/Spawners/Enemies/EnemySpawnInfo.cs
 - Designer-authored data:
   - Assets/ScriptableObjects/Enemy/EnemyConfigSO.cs
-  - Enemy prefabs referenced by `EnemiesSpawner._poolEnemiesInfo`
+  - Assets/Scripts/Enemies/DropAnimationConfiguration.cs
+  - Enemy prefabs configured with Enemy, EnemyMovementController, EnemyAttackController, EnemyDeathHandler, EnemyDropHandler, EnemyAnimator, EnemyCollisionsController, FlowFieldMovementController, Health/RegenativeHealth, StunController, Collider, Rigidbody, Audio, and VFX
 - Related systems:
-  - Wave timing: Assets/Scripts/Waves/WaveManager.cs
-  - Grid and off-camera spawn cells: Assets/Scripts/Navigation/GridSystem/
-  - Flow-field movement: Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldMovementController.cs
-  - Health: Assets/Scripts/HealthSystem/Health.cs
-  - Status effects: Assets/Scripts/StatusEffects/StunController.cs
-  - Damage numbers and VFX: Assets/Scripts/DamageNumbers/, Assets/Scripts/VFX/
+  - Wave orchestration: Assets/Scripts/Waves/WaveManager.cs
+  - Swarm events: Assets/Scripts/Spawners/Swarm/SwarmSpawner.cs
+  - Boss system: Assets/Scripts/Enemies/Bosses/Golem/ (documented in .agents/context/game-systems/golem-boss-system.md)
+  - Grid & off-camera cells: Assets/Scripts/Navigation/GridSystem/
+  - Flow-field navigation: Assets/Scripts/Navigation/FlowFieldSystem/
+  - Health & damage: Assets/Scripts/HealthSystem/
+  - Status effects: Assets/Scripts/StatusEffects/
+  - Damage numbers & VFX: Assets/Scripts/DamageNumbers/, Assets/Scripts/VFX/
   - Experience particles: Assets/Scripts/LevelSystem/Exp/
-  - Collectible items: Assets/Scripts/UI/Skills/ (e.g. `SkillUpgradeButton.cs`)
-  - DI installer: Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
+  - Collectible items: Assets/Scripts/Skills/ObjectsImpactingSkills/
+  - DI registration: Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
 - Related docs:
   - .agents/context/game-systems/flow-field-system.md
   - .agents/context/game-systems/spawners-system.md
-  - .agents/context/game-systems/project-coding-standards.md
+  - .agents/context/game-systems/golem-boss-system.md
+  - .agents/context/game-systems/health-system.md
+  - .agents/context/game-systems/collectibles-system.md
+  - .agents/context/game-systems/di-and-boot-flow-system.md
+  - .agents/context/project-coding-standards.md
 - Related agents or instructions:
   - .agents/skills/document-system/SKILL.md
   - .agents/skills/architecture-review/SKILL.md
@@ -47,82 +60,170 @@ It does not own wave timing, grid generation, flow-field direction calculation, 
 ## Architecture and Data Flow
 
 - Core components:
-  - `Enemy`: The aggregate runtime component. Implements `IHealthy`, `IDamageable`, `IKnockable`, `IStunnable`, and `IPoolable`. It exposes `Health`, `StunController`, `CollisionsController`, `MovementController`, `AudioClipPlayer`, `EnemyAnimator`, and `Config`. On `TakeDamage`, it spawns floating damage numbers via `_damageNumbersSpawner` (Hemisphere shape), reduces health, and plays blood VFX (`_bloodVfxPlayer`) if still alive.
-  - `EnemyMovementController`: Moves enemies along grid flow fields via `FlowFieldMovementController`. Handles knockbacks (`MoveToPositionInTimeIgnoringSpeed`) using DOTween (`SetEase(Ease.OutSine)`) and sphere-casting against `TerrainLayers.Impassable` with a safety buffer (`OBSTACLE_SAFETY_BUFFER` = 0.1f) to prevent wall clipping. Pauses movement during attack animations and for `_movementDelayAfterAttack` (0.2s) post-attack. Smoothly rotates facing toward movement direction (`_enemy.Config.RotationSpeed`).
-  - `EnemyCollisionsController`: Periodically sphere-casts against `EntityLayers.All` and emits `OnCollisionWithPlayer` events when player colliders are detected.
-  - `EnemyAttackController`: Listens to `OnCollisionWithPlayer`. Validates target range (`_attackRange`), attack arc angle (`_attackArcAngle`, default 60°), and line-of-sight raycast against `TerrainLayers.All`. Triggers attack animation via `EnemyAnimator` and applies `Enemy.Config.Damage` to the target on `OnAttackHitFrame`.
-  - `EnemyDeathHandler`: Implements `INeedToCompleteBeforeDisable`. Listens to `Health.OnNoHealth`. Disables collider and sets Rigidbody `isKinematic = true`, hides visual transform (`_visual`), plays death VFX (`_deathVfxPlayer`) and death SFX (`"Death"`), spawns experience particles via `_expParticleSpawner`, and raises `OnCompleted` when both VFX and audio finish (`_startEffectsToFinish` = 2).
-  - `EnemyDropHandler`: Attached to enemy prefabs. Listens to `Health.OnNoHealth`. Evaluates configured `CollectibleDropEntry` drop percentages. Calculates scattered target drop positions on walkable grid cells (verifying direct line steps or performing a spiral search on `WorldGrid` via `_gridManager`), and delegates drop spawning to `_dropNotifier.SpawnCollectible`.
-  - `EnemyAnimator`: Bridges Animator parameters and animation events into `IAttackAnimationPlayer` events (`OnAttackAnimationStart`, `OnAttackHitFrame`, `OnAttackAnimationEnd`).
-  - `EnemiesOutsidePlayerChunkTeleporter`: Periodically detects enemies outside the active player chunk and teleports them to random off-camera walkable cells.
-  - `EnemiesSpawner`: Manages Unity `ObjectPool<Enemy>` instances per `EnemySpawnInfo`, chooses enemy types via weighted probability, places enemies on off-camera walkable cells outside the player chunk during standard waves or inside the player chunk during swarms (with optional `_swarmSpawnVfxPrefab`), pre-warms pools during `Start`, and tracks `CurrentlySpawnedObjectsCount`.
-  - `EnemiesSpawnChanceRedistributionSystem`: Mutates `EnemySpawnInfo.SpawnChanceInfo.SpawnChance` after standard spawn batches so higher-difficulty enemies progressively increase in weight.
+  - Enemy: Aggregate root for standard enemy prefabs. Implements IHealthy, IDamageable, IKnockable, IStunnable, and IPoolable. Injects IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> via Reflex. Dispatches floating damage numbers on TakeDamage, reduces Health, plays blood VFX if alive, handles knockback delegation to MovementController, stuns via StunController, and triggers pool release via OnCanBeReleased when the death sequence completes.
+  - EnemyMovementController: Implements IMovementController. Drives grid movement via IFlowFieldMovementController, or handles off-grid movements (e.g. knockback) via MoveToPositionInTimeIgnoringSpeed with DOTween. Performs obstacle SphereCasts against TerrainLayers.Impassable using OBSTACLE_CHECK_RADIUS (0.4f) and OBSTACLE_SAFETY_BUFFER (0.1f) to prevent wall clipping. Handles grounding via SphereCast against TerrainLayers.Ground, applying FALL_GRAVITY (25f) and killing enemies falling below FALL_DEATH_Y_THRESHOLD (-10f). Pauses movement during attack animations and for a 0.2s post-attack delay. Rotates smoothly toward movement direction using Config.RotationSpeed.
+  - EnemyCollisionsController: Implements ICollisionsController. Periodically checks collisions (default every 0.05s) with a SphereCastAll on EntityLayers.All, emitting OnCollisionWithPlayer and OnCollisionWithOtherEnemy events while ignoring self triggers.
+  - EnemyAttackController: Subscribes to EnemyCollisionsController.OnCollisionWithPlayer. Verifies attack range (_attackRange) and attack cone angle (_attackArcAngle, default 60°), and executes a Physics.Raycast line-of-sight check against TerrainLayers.All to prevent attacking through walls. Triggers attack animation on EnemyAnimator, and inflicts EnemyConfigSO.Damage to IDamageable targets on OnAttackHitFrame.
+  - EnemyDeathHandler: Implements INeedToCompleteBeforeDisable. Subscribes to Health.OnNoHealth. Disables collider, marks Rigidbody isKinematic = true, hides visuals, plays death VFX, plays death SFX ("Death"), spawns EXP particles via IInWorldSpaceSpawner<ExpParticleSpawner, float>, and fires OnCompleted once both VFX and SFX finishes (_startEffectsToFinish = 2).
+  - EnemyDropHandler: Subscribes to Health.OnNoHealth. Evaluates configured CollectibleDropEntry drop chance percentages. Computes scattered target drop positions across 360° with jitter, verifies or finds walkable grid positions using direct ray stepping or a spiral search on IGridManager.WorldGrid, and delegates drop instantiation to ICollectibleDropNotifier.SpawnCollectible.
+  - CollectibleDropNotifier: Implements ICollectibleDropNotifier. Manages ObjectPool<GameObject> instances for collectible item prefabs. Animates item drop bounce with DOTween (DOScale with Ease.OutBack and DOJump) to the target walkable location. Listens to ICollectible.OnCollected and IPoolable.OnCanBeReleased.
+  - EnemyAnimator: Implements IAttackAnimationPlayer. Sets animator parameters ("Speed", "IsOnGround", "IsMovingByCrawling", "Attack") and bridges animation events into OnAttackAnimationStart, OnAttackHitFrame, and OnAttackAnimationEnd events.
+  - EnemiesOutsidePlayerChunkTeleporter: Periodic monitor that detects enemies drifting outside the active player chunk bounds and relocates them to hidden, walkable cells within the player chunk (using GridCellsNotVisibleByMainCamera.FillWalkableCells) and resets vertical velocity.
+  - EnemiesSpawner: Implements IOnRandomGridPosSpawner<EnemiesSpawner>, ISwarmEnemySpawner, and IEnemySpawnDifficultyController. Manages ObjectPool<Enemy> per configured EnemySpawnInfo. Pre-warms pools on Start. Spawns standard wave enemies on off-camera walkable cells outside the player chunk. Spawns swarm enemies inside the player chunk with optional spawn VFX. Coordinates dynamic spawn weight adjustments via EnemiesSpawnChanceRedistributionSystem.
+  - EnemiesSpawnChanceRedistributionSystem: Adjusts EnemySpawnInfo.SpawnChance values progressively after spawn batches, shifting spawn probability toward higher-tier enemies geometrically. Supports difficulty multipliers from totems or events via IncreaseSpawnChanceRedistributionFactor.
+  - BossManager: Implements IBossManager. Bridges boss spawning into the scene, instantiating GolemBoss, binding the boss health to IBossHUDPresenter, suppressing standard swarms via ISwarmFreezer, and spawning stage progression portals on defeat.
 - Key interfaces:
-  - `IOnRandomGridPosSpawner<EnemiesSpawner>`: DI-facing spawn contract used by `WaveManager`.
-  - `ISwarmEnemySpawner`: Injected into `SwarmSpawner` for retrieving enemy configurations and spawning targeted enemy types.
-  - `IEnemySpawnDifficultyController`: Allows map objects (e.g. `IncreaseDifficultyTotem`) to boost spawn chance redistribution speed.
-  - `IPoolable`: Defines enemy pool lifecycle (`OnGet`, `ReturnToPool`, `OnRelease`) and `OnCanBeReleased` signal.
-  - `IHealthy`, `IDamageable`, `IKnockable`, `IStunnable`: Target interfaces for damage, knockback, and status effects.
-  - `INeedToCompleteBeforeDisable`: Delays pool release until death presentation callbacks complete.
-- Runtime flow:
-  - **Spawn**: `EnemiesSpawner` retrieves an `Enemy` instance from its pool, calls `Enemy.OnGet`, subscribes to `Enemy.OnCanBeReleased`, positions the enemy on a walkable grid cell, activates its GameObject, and increments `CurrentlySpawnedObjectsCount`.
-  - **Movement & Attack**: The enemy follows flow-field vectors toward the player. When `EnemyCollisionsController` detects player contact, `EnemyAttackController` checks range, arc angle, and obstacle occlusion. If valid, it triggers an attack animation, halting movement. On the animation's hit frame, `Damage` is applied to the player.
-  - **Damage & Death**: Incoming damage spawns a floating damage number, decreases health, and plays blood VFX. On death (`Health.OnNoHealth`), `EnemyDeathHandler` disables colliders/physics, hides visuals, plays death VFX and audio, spawns EXP particles, while `EnemyDropHandler` calculates walkable drop positions and spawns collectible item drops. Once death VFX and SFX complete, `EnemyDeathHandler` raises `OnCompleted`, triggering `Enemy.OnCanBeReleased`.
-  - **Release**: `EnemiesSpawner` handles release by calling `Enemy.OnRelease`, deactivating the GameObject, raising `OnSpawnedEntityReleased`, and decrementing `CurrentlySpawnedObjectsCount`.
+  - IOnRandomGridPosSpawner<EnemiesSpawner>: Contract for wave manager spawning.
+  - ISwarmEnemySpawner: Contract for spawning targeted enemy counts during swarm events.
+  - IEnemySpawnDifficultyController: Contract for adjusting difficulty redistribution scalars.
+  - ICollectibleDropNotifier: Contract for spawning collectible items with drop physics/tweens.
+  - IBossManager: Contract for managing boss lifecycle and HUD.
+  - IPoolable: Pool lifecycle interface (OnGet, ReturnToPool, OnRelease, OnCanBeReleased).
+  - IHealthy, IDamageable, IKnockable, IStunnable: Health, combat, and crowd-control contracts.
+  - INeedToCompleteBeforeDisable: Contract delaying pool recycling until visual/audio death sequences complete.
+  - IMovementController: Movement and knockback interface for enemy locomotion.
+  - IAttackAnimationPlayer: Animation event interface for attack start, hit frame, and finish.
+  - ICollisionsController: Contact detection interface emitting player and enemy collision signals.
+- Constants:
+  - EnemyMovementConstants:
+    - GROUND_CHECK_ORIGIN_Y = 1.0f
+    - GROUND_CHECK_SPHERE_RADIUS = 0.3f
+    - GROUND_CHECK_DISTANCE = 3.0f
+    - GROUND_SNAP_LERP_SPEED = 20.0f
+    - FALL_GRAVITY = 25.0f
+    - FALL_DEATH_Y_THRESHOLD = -10.0f
+    - MOVING_TO_POSITION_ACCURACY = 0.02f
+    - OBSTACLE_CHECK_RADIUS = 0.4f
+    - OBSTACLE_SAFETY_BUFFER = 0.1f
+  - EnemyCombatConstants:
+    - ARC_DEBUG_SEGMENTS = 16
+    - CIRCLE_DEBUG_SEGMENTS = 16
+- Runtime flows:
+  - Standard Wave Spawning Flow:
+    1. WaveManager triggers EnemiesSpawner.SpawnAtRandomGridPos(count).
+    2. Spawner queries GridCellsNotVisibleByMainCamera.GetRandomWalkableCellsOutsidePlayerChunk.
+    3. For each cell, RandomEnemyInfoBasedOnSpawnChance selects an enemy type according to current weighted probabilities.
+    4. Spawner retrieves an instance from ObjectPool<Enemy>, calls Enemy.OnGet(), hooks OnCanBeReleased, positions the enemy, activates the GameObject, and increments CurrentlySpawnedObjectsCount.
+    5. EnemiesSpawnChanceRedistributionSystem.RedistributeSpawnChance() adjusts probability weights.
+  - Swarm Spawning Flow:
+    1. SwarmSpawner calls EnemiesSpawner.SpawnSpecificEnemy(enemyInfo, count).
+    2. GridCellsNotVisibleByMainCamera.GetRandomWalkableCells selects hidden walkable cells inside the player chunk.
+    3. If _swarmSpawnVfxPrefab is set, spawns a spawn VFX and waits for OnVFXFinished before activating the pooled enemy at the position.
+  - Movement, Grounding, and Knockback Flow:
+    1. In FixedUpdate, EnemyMovementController checks ground contact using SphereCast down to TerrainLayers.Ground.
+    2. If grounded, snaps Y smoothly to terrain point. If ungrounded, applies fall gravity until grounding or taking lethal void damage if Y < -10f.
+    3. If not attacking and no post-attack delay, moves along flow-field grid vectors via FlowFieldMovementController or along off-grid paths.
+    4. Knocks back on ApplyKnockBack, performing an obstacle check against TerrainLayers.Impassable to avoid clipping through obstacles, moving via DOTween OutSine.
+    5. Smoothly rotates facing toward movement vector with Config.RotationSpeed.
+  - Player Collision and Arc Attack Flow:
+    1. EnemyCollisionsController detects player layer in periodic SphereCastAll and raises OnCollisionWithPlayer.
+    2. EnemyAttackController verifies target is within _attackRange and within _attackArcAngle cone.
+    3. Raycasts against TerrainLayers.All to ensure line-of-sight is unobstructed.
+    4. If valid, triggers "Attack" on EnemyAnimator.
+    5. On animation hit frame (OnAttackHitFrame), inflicts Config.Damage to player IDamageable.
+    6. Movement resumes after animation completion plus _movementDelayAfterAttack (0.2s).
+  - Damage Feedback, Death Sequence, and EXP Payout Flow:
+    1. On TakeDamage(damage), Enemy spawns floating damage numbers (Hemisphere spread) via DamageNumbersSpawner.
+    2. Decreases Health. If still alive, plays blood VFX.
+    3. On fatal damage (Health.OnNoHealth), EnemyDeathHandler disables collider, makes Rigidbody kinematic, hides visuals, plays death VFX, plays "Death" SFX, and spawns EXP particles via ExpParticleSpawner.
+    4. EnemyDropHandler evaluates drop chances, resolves walkable grid landing positions, and calls CollectibleDropNotifier.SpawnCollectible.
+    5. When both death VFX and SFX finish playing, EnemyDeathHandler raises OnCompleted, signaling Enemy.OnCanBeReleased.
+  - Pool Recycling Flow:
+    1. EnemiesSpawner catches Enemy.OnCanBeReleased.
+    2. Calls Enemy.OnRelease(), deactivates the GameObject, releases the instance back to ObjectPool<Enemy>, emits OnSpawnedEntityReleased, and decrements CurrentlySpawnedObjectsCount.
 
 ## Rules and Invariants
 
 - Critical behavior rules:
-  - Spawned enemies must come from configured pool entries; prefabs are pre-warmed during `Start()`.
-  - Standard wave spawning places enemies on walkable cells outside the main camera view and outside the player chunk.
-  - Enemy health resets to `EnemyConfigSO.MaxHealth` upon retrieval from the pool.
-  - Enemy death presentation path (VFX + SFX) must complete before pool release occurs.
-  - Damage is applied on `EnemyAnimator.OnAttackHitFrame`, not on initial collision detection.
-  - `EnemyDropHandler` ensures collectible item drops land only on walkable grid cells by stepping along vectors or performing spiral cell searches.
+  - Prefabs for all configured enemies must be pre-warmed during Start() up to their MaxAmount pool capacity.
+  - Standard wave spawning must select walkable cells outside both camera visibility and player chunk boundary.
+  - Swarm wave spawning selects walkable cells hidden from the camera inside the player chunk.
+  - Enemy MaxHealth is restored from EnemyConfigSO upon pool retrieval (OnGet).
+  - Melee damage is strictly applied on EnemyAnimator.OnAttackHitFrame, not immediately on collision trigger.
+  - Attack line-of-sight must be clear of terrain obstacles before attack animations initiate.
+  - Collectible item drops scattered on enemy death must land on valid walkable cells (verified via step checking or spiral grid search).
+  - Pool release must never occur until both death VFX and death SFX have completed their callbacks.
 - Ordering or sequencing guarantees:
-  - Pools are created in `Awake` and pre-warmed in `Start` before wave spawning begins.
-  - `EnemyMovementController` pauses flow-field navigation during attack animations and for 0.2s post-attack.
-  - `EnemyDeathHandler` requires both VFX and audio completion events before invoking `OnCompleted`.
+  - ObjectPool<Enemy> instances are created in Awake() and pre-warmed in Start().
+  - Movement is halted immediately when attack animations start and remains locked for 0.2s post-attack.
+  - Death completion counter (_startEffectsToFinish = 2) must reach zero before OnCompleted is raised.
 - Constraints contributors must preserve:
-  - Keep the scene spawner bound through Reflex DI instead of static singletons or scene queries.
-  - Preserve inspector-driven setup for enemy configs, VFX, colliders, audio, and pool limits.
-  - Keep player-facing balance values in `EnemyConfigSO` or explicit serialized fields.
+  - EnemiesSpawner and CollectibleDropNotifier must be injected via Reflex DI interfaces, never through singletons or FindObjectOfType.
+  - Serialized configurations and tuning parameters belong in EnemyConfigSO, DropAnimationConfiguration, or serialized fields.
+  - All constants must remain centralized in EnemyMovementConstants and EnemyCombatConstants.
+  - Maintain the English language invariant across all code identifiers, comments, tooltips, and documentation.
 
 ## Extension Points
 
 - Safe extension areas:
-  - Add new enemy types by creating an enemy prefab with required components, configuring an `EnemyConfigSO`, and adding an `EnemySpawnInfo` entry in `EnemiesSpawner`.
-  - Add new item drops by adding `CollectibleDropEntry` rules to `EnemyDropHandler` on the enemy prefab.
-  - Tune movement speed, rotation speed, damage, max health, and EXP reward values in `EnemyConfigSO`.
+  - Add new enemy types: Create an enemy prefab with required components, author an EnemyConfigSO asset, and add an EnemySpawnInfo entry to EnemiesSpawner._poolEnemiesInfo in the scene.
+  - Add new collectible drops: Add CollectibleDropEntry items to the EnemyDropHandler component on enemy prefabs.
+  - Adjust combat and movement physics: Tune values in EnemyConfigSO, DropAnimationConfiguration, EnemyMovementConstants, or EnemyCombatConstants.
+  - Add custom boss encounters: Implement IBossManager extensions or state machine patterns modeled after GolemBoss.
 - Required dependencies and contracts:
-  - Enemy prefabs require `Enemy`, `EnemyMovementController`, `EnemyAttackController`, `EnemyDeathHandler`, `EnemyDropHandler`, `EnemyAnimator`, `EnemyCollisionsController`, `FlowFieldMovementController`, `RegenativeHealth` (or `Health`), `StunController`, `Collider`, `Rigidbody`, and visual/VFX components.
-  - `EnemyDeathHandler` requires Reflex injection for `IInWorldSpaceSpawner<ExpParticleSpawner, float>`.
-  - `Enemy` requires Reflex injection for `IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig>`.
-  - `EnemyDropHandler` requires Reflex injection for `ICollectibleDropNotifier`, `IGridManager`, and `DropAnimationConfiguration`.
+  - Standard enemy prefabs require:
+    - Enemy
+    - EnemyMovementController
+    - EnemyAttackController
+    - EnemyDeathHandler
+    - EnemyDropHandler
+    - EnemyAnimator
+    - EnemyCollisionsController
+    - FlowFieldMovementController
+    - Health or RegenativeHealth
+    - StunController
+    - Collider (trigger and physical setup)
+    - Rigidbody
+    - VFXPlayer (blood and death VFX)
+    - AudioClipPlayer
+  - Reflex DI bindings required in scene installer:
+    - IOnRandomGridPosSpawner<EnemiesSpawner> (EnemiesSpawner)
+    - ISwarmEnemySpawner (EnemiesSpawner)
+    - IEnemySpawnDifficultyController (EnemiesSpawner)
+    - ICollectibleDropNotifier (CollectibleDropNotifier)
+    - DropAnimationConfiguration
+    - IInWorldSpaceSpawner<ExpParticleSpawner, float> (ExpParticleSpawner)
+    - IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> (DamageNumbersSpawner)
+    - IGridManager (GridManager)
+    - Camera (MainCamera)
 - Testing implications:
-  - Compile changes via `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`.
-  - Validate pool pre-warming, off-camera spawn placement, flow-field movement, attack hit-frame damage, death VFX/SFX completion, EXP particle spawning, and item drop scattering in Unity Play Mode.
+  - Verify C# compilation:
+    dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
+  - Play Mode verification checklist:
+    - Pools pre-warm without runtime allocations on initial wave spawns.
+    - Standard wave enemies spawn off-camera outside player chunk.
+    - Swarm enemies spawn inside player chunk with optional VFX.
+    - Knockback stops safely at impassable obstacles without wall clipping.
+    - Attack raycast checks block attacks through walls.
+    - Damage numbers and blood VFX display properly on hit.
+    - Death sequence completes VFX and SFX before enemy pool release.
+    - Collectible drops scatter cleanly onto walkable grid cells.
+    - Enemies outside chunk boundary teleport smoothly to hidden cells.
 
 ## Integration Notes
 
 - Upstream dependencies:
-  - `WaveManager` drives standard enemy spawn batches via `IOnRandomGridPosSpawner<EnemiesSpawner>`.
-  - `SwarmSpawner` drives swarm event enemy spawns via `ISwarmEnemySpawner`.
-  - `IGridManager` supplies world grid state for spawning, flow fields, teleporters, and drop placement.
+  - WaveManager drives standard enemy wave batches.
+  - SwarmSpawner drives event-based swarm spawns.
+  - IGridManager supplies world and chunk grid geometry for navigation, spawning, and drop placement.
+  - IPlayerManager provides player position and transform references.
 - Downstream consumers:
-  - Player receives damage through `IDamageable`.
-  - Skills and projectiles detect enemies via `EntityLayers.Enemy`.
-  - `LevelController` receives XP from spawned experience particles.
-  - `CollectibleDropNotifier` handles collectible item drops.
-  - `WaveManager` monitors `CurrentlySpawnedObjectsCount`.
+  - Player car receives damage via IDamageable.
+  - Car weapons and projectile systems target enemies on EntityLayers.Enemy.
+  - LevelController consumes EXP particles spawned by EnemyDeathHandler.
+  - Skill upgrade UI and CollectibleDropNotifier consume dropped items.
+  - BossHUDPresenter receives boss health events from BossManager.
+- Cross-system coupling risks:
+  - If GridManager grid generation fails or returns zero walkable cells, spawning and drop resolution fall back or fail to find valid points.
+  - If death VFX or audio clips are misconfigured on a prefab and fail to fire completion events, the enemy instance will remain unreleased in the scene.
 
 ## Known Risks and Open Questions
 
 - Known limitations:
-  - In `EnemyMovementController`, `_isStunnable` defaults to `false` and is not toggled, meaning stun controller state is ignored during standard movement unless `_isStunnable` is updated.
-  - `EnemyDeathHandler` expects exactly two completion callbacks (`_startEffectsToFinish` = 2). If either VFX or SFX fails to complete, the enemy remains unreleased in active play.
-  - In `EnemiesSpawner`, `Enemy_OnRelease` calls `OnEnemyRelease` directly rather than invoking `pool.Release(enemy)`. While active flags and counters update correctly, Unity `ObjectPool` internal stack tracking should be noted.
+  - In EnemyMovementController, _isStunnable defaults to false and is not serialized or dynamically updated from IStunController, causing standard flow-field movement to ignore stun state unless modified.
+  - EnemyDeathHandler uses a hardcoded _startEffectsToFinish = 2. If a prefab lacks either a death VFX player or a death audio clip, OnCompleted will never be reached.
+  - CollectibleDropNotifier relies on GameObject pooling rather than strongly-typed component pools, requiring TryGetComponent checks upon retrieval and release.
 - Open design questions:
-  - Should `_isStunnable` in `EnemyMovementController` be serialized or linked dynamically to `IStunController`?
-  - Should spawn chance redistribution operate on runtime copies so inspector asset values remain pristine across Play Mode sessions?
-
+  - Should _isStunnable be removed in favor of directly querying _enemy.StunController.IsStunned?
+  - Should EnemyDeathHandler dynamically count configured finishable components (e.g. check if death audio/VFX are assigned) rather than hardcoding _startEffectsToFinish = 2?
+  - Should spawn chance redistribution operate on cloned runtime data to ensure editor ScriptableObject assets remain unmodified during testing?

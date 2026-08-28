@@ -49,6 +49,7 @@ namespace Assets.Scripts.Enemies.Base
                 Cell randomCell = _hiddenWalkableCells[cellIndex];
 
                 enemy.transform.position = randomCell.WorldPos;
+                enemy.MovementController?.ResetVerticalVelocity();
 
                 cellIndex = (cellIndex + 1) % _hiddenWalkableCells.Count;
             }
@@ -67,6 +68,11 @@ namespace Assets.Scripts.Enemies.Base
 
             foreach (Transform child in _enemiesHolder)
             {
+                if (!child.gameObject.activeInHierarchy)
+                {
+                    continue;
+                }
+
                 if (child.TryGetComponent(out Enemy enemy))
                 {
                     Vector3 enemyPos = enemy.transform.position;
