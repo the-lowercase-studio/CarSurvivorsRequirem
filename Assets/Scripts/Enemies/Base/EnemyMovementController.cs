@@ -2,7 +2,6 @@ using Assets.Scripts.Enemies.Constants;
 using Assets.Scripts.Navigation.FlowFieldSystem;
 using Assets.Scripts.LayerMasks;
 using DG.Tweening;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace Assets.Scripts.Enemies.Base
@@ -10,13 +9,13 @@ namespace Assets.Scripts.Enemies.Base
     [RequireComponent(typeof(Enemy), typeof(FlowFieldMovementController))]
     public class EnemyMovementController : MonoBehaviour, IMovementController
     {
-        private readonly Vector3 _groundCheckOffset = new(0, 0.1f, 0);
         private readonly Vector3 _obstacleCheckOffset = new(0, 0.5f, 0);
 
         private Enemy _enemy;
         private IFlowFieldMovementController _flowFieldMovementController;
 
         private float _verticalPosOffset;
+        private float _verticalVelocity;
         private bool _isStunnable = false;
 
         private bool _isMovingToPositionUnrelatedToGrid;
@@ -39,6 +38,7 @@ namespace Assets.Scripts.Enemies.Base
             _enemy.EnemyAnimator.OnAttackAnimationEnd += EnemyAnimator_OnAttackAnimationEnd;
 
             _verticalPosOffset = transform.position.y;
+            _verticalVelocity = 0f;
 
             _currentMovementDelayAfterAttack = 0;
         }
@@ -54,6 +54,7 @@ namespace Assets.Scripts.Enemies.Base
             }
 
             _isMovingToPositionUnrelatedToGrid = false;
+            _verticalVelocity = 0f;
 
             transform.position = new Vector3(0, _verticalPosOffset, 0);
         }
@@ -74,14 +75,18 @@ namespace Assets.Scripts.Enemies.Base
 
         private void OnDrawGizmos()
         {
-            Vector3 endPos = transform.position + _groundCheckOffset - Vector3.up * EnemyMovementConstants.GROUND_CHECK_DISTANCE;
+            Vector3 origin = new(
+                transform.position.x,
+                Mathf.Max(transform.position.y, _verticalPosOffset) + EnemyMovementConstants.GROUND_CHECK_ORIGIN_Y,
+                transform.position.z);
+            Vector3 endPos = origin + (Vector3.down * EnemyMovementConstants.GROUND_CHECK_DISTANCE);
             if (IsOnGround())
             {
-                Debug.DrawLine(transform.position, endPos, Color.green);
+                Debug.DrawLine(origin, endPos, Color.green);
             }
             else
             {
-                Debug.DrawLine(transform.position, endPos, Color.red);
+                Debug.DrawLine(origin, endPos, Color.red);
             }
         }
 
@@ -127,23 +132,71 @@ namespace Assets.Scripts.Enemies.Base
                 });
         }
 
+        public void ResetVerticalVelocity()
+        {
+            _verticalVelocity = 0f;
+        }
+
         public bool IsOnGround()
         {
-            RaycastHit hitInfo;
+            Vector3 origin = new(
+                transform.position.x,
+                Mathf.Max(transform.position.y, _verticalPosOffset) + EnemyMovementConstants.GROUND_CHECK_ORIGIN_Y,
+                transform.position.z);
 
-            Physics.Raycast(
-                transform.position + _groundCheckOffset,
-                -Vector3.up,
-                out hitInfo,
+            return Physics.SphereCast(
+                origin,
+                EnemyMovementConstants.GROUND_CHECK_SPHERE_RADIUS,
+                Vector3.down,
+                out _,
+                EnemyMovementConstants.GROUND_CHECK_DISTANCE,
+                TerrainLayers.Ground);
+        }
+
+        private bool HandleVerticalPositionAndGrounding()
+        {
+            Vector3 origin = new(
+                transform.position.x,
+                Mathf.Max(transform.position.y, _verticalPosOffset) + EnemyMovementConstants.GROUND_CHECK_ORIGIN_Y,
+                transform.position.z);
+
+            bool isGrounded = Physics.SphereCast(
+                origin,
+                EnemyMovementConstants.GROUND_CHECK_SPHERE_RADIUS,
+                Vector3.down,
+                out RaycastHit hitInfo,
                 EnemyMovementConstants.GROUND_CHECK_DISTANCE,
                 TerrainLayers.Ground);
 
-            return hitInfo.collider is not null;
+            if (isGrounded)
+            {
+                _verticalVelocity = 0f;
+                float targetY = hitInfo.point.y;
+                float newY = Mathf.MoveTowards(transform.position.y, targetY, EnemyMovementConstants.GROUND_SNAP_LERP_SPEED * Time.fixedDeltaTime);
+
+                Vector3 currentPosition = transform.position;
+                currentPosition.y = newY;
+                transform.position = currentPosition;
+
+                return true;
+            }
+
+            _verticalVelocity += EnemyMovementConstants.FALL_GRAVITY * Time.fixedDeltaTime;
+            transform.position += Vector3.down * (_verticalVelocity * Time.fixedDeltaTime);
+
+            if (transform.position.y < EnemyMovementConstants.FALL_DEATH_Y_THRESHOLD)
+            {
+                _enemy.TakeFullHpDamage();
+            }
+
+            return false;
         }
 
         private void MovementHandler()
         {
-            if (!IsOnGround())
+            bool isGrounded = HandleVerticalPositionAndGrounding();
+
+            if (!isGrounded && transform.position.y < _verticalPosOffset - 1.0f)
             {
                 return;
             }

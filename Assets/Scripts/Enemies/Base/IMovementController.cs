@@ -9,6 +9,8 @@ namespace Assets.Scripts.Enemies.Base
 
         public bool IsOnGround();
 
+        public void ResetVerticalVelocity();
+
         public Tween MoveToPositionInTimeIgnoringSpeed(Vector3 pos, float time);
     }
 }

@@ -37,8 +37,23 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
         public Vector3 MoveOnFlowFieldGrid(float movementSpeed)
         {
             Vector3 gridDir = GetMoveDirectionBasedOnCurrentCell();
-            Vector3 moveDir = (gridDir + _separationVector).normalized;
-            Vector3 movement = movementSpeed * Time.deltaTime * moveDir;
+            Vector3 combinedDir;
+
+            if (gridDir != Vector3.zero)
+            {
+                combinedDir = (gridDir + _separationVector).normalized;
+            }
+            else if (_separationVector != Vector3.zero)
+            {
+                // When entity is directly on target or no direction exists, dampen separation to avoid jitter
+                combinedDir = _separationVector * 0.1f;
+            }
+            else
+            {
+                combinedDir = Vector3.zero;
+            }
+
+            Vector3 movement = movementSpeed * Time.deltaTime * combinedDir;
             transform.position += movement;
 
             return movement;
@@ -46,14 +61,34 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
 
         private Vector3 GetMoveDirectionBasedOnCurrentCell()
         {
+            if (_gridManager == null || _gridManager.WorldGrid == null)
+            {
+                return Vector3.zero;
+            }
+
             Cell currentCell = WorldPosToCellConverter.GetCellFromGridByWorldPos(
                 _gridManager.WorldGrid, transform.position
             );
 
-            if (currentCell != null && currentCell.BestDirection != null)
+            if (currentCell != null && currentCell.BestDirection != null && currentCell.BestDirection != GridDirection.None)
             {
                 Vector2Int gridDirection = currentCell.BestDirection.Vector;
-                return new Vector3(gridDirection.x, 0, gridDirection.y);
+                if (gridDirection != Vector2Int.zero)
+                {
+                    return new Vector3(gridDirection.x, 0, gridDirection.y).normalized;
+                }
+            }
+
+            // Fallback: When inside destination cell, outside chunk, or on unintegrated cell, direct toward destination
+            if (_gridManager.DestinationCell != null)
+            {
+                Vector3 toDestination = _gridManager.DestinationCell.WorldPos - transform.position;
+                toDestination.y = 0f;
+
+                if (toDestination.sqrMagnitude > 0.0001f)
+                {
+                    return toDestination.normalized;
+                }
             }
 
             return Vector3.zero;

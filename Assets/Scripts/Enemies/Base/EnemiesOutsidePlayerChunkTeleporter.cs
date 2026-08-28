@@ -49,6 +49,7 @@ namespace Assets.Scripts.Enemies.Base
                 Cell randomCell = _hiddenWalkableCells[cellIndex];
 
                 enemy.transform.position = randomCell.WorldPos;
+                enemy.MovementController?.ResetVerticalVelocity();
 
                 cellIndex = (cellIndex + 1) % _hiddenWalkableCells.Count;
             }

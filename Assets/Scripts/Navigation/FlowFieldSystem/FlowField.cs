@@ -14,7 +14,15 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
 
         public void CreateCostField(NavigationGrid grid)
         {
-            Vector3 halfExtents = Vector3.one * (grid.CellSize / 2 + FlowFieldConstants.EDGES_OFFSET);
+            if (grid == null || grid.Cells == null)
+            {
+                return;
+            }
+
+            Vector3 halfExtents = new(
+                grid.CellSize * 0.49f,
+                FlowFieldConstants.QUERY_BOX_VERTICAL_HALF_EXTENT,
+                grid.CellSize * 0.49f);
 
             for (int i = 0; i < grid.Cells.GetLength(0); i++)
             {
@@ -35,39 +43,46 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
 
                     cell.ResetCosts();
 
-                    int maxCost = 0;
+                    bool hasGround = false;
+                    bool isImpassable = false;
+                    bool isRough = false;
+
                     if (obstacleCount > 0)
                     {
                         // A full NonAlloc buffer may have truncated colliders, so block the cell conservatively.
                         if (obstacleCount == _terrainColliderBuffer.Length)
                         {
-                            maxCost = FlowFieldConstants.IMPASSABLE_COST;
+                            isImpassable = true;
                         }
 
                         for (int obstacleIndex = 0; obstacleIndex < obstacleCount; obstacleIndex++)
                         {
                             Collider obstacle = _terrainColliderBuffer[obstacleIndex];
                             int layerValue = 1 << obstacle.gameObject.layer;
-                            if (maxCost < FlowFieldConstants.IMPASSABLE_COST
-                                && (layerValue & TerrainLayers.Impassable.value) == TerrainLayers.Impassable.value)
+                            if ((layerValue & TerrainLayers.Impassable.value) != 0)
                             {
-                                maxCost = FlowFieldConstants.IMPASSABLE_COST;
+                                isImpassable = true;
+                                break;
                             }
-                            else if (maxCost < FlowFieldConstants.ROUGH_TERRAIN_COST
-                                && (layerValue & TerrainLayers.Rough.value) == TerrainLayers.Rough.value)
+                            if ((layerValue & TerrainLayers.Ground.value) != 0)
                             {
-                                maxCost = FlowFieldConstants.ROUGH_TERRAIN_COST;
+                                hasGround = true;
                             }
-                        }
-
-                        if (maxCost > FlowFieldConstants.DEFAULT_FIELD_COST)
-                        {
-                            cell.IncreaseCost(maxCost);
+                            else if ((layerValue & TerrainLayers.Rough.value) != 0)
+                            {
+                                isRough = true;
+                                hasGround = true;
+                            }
                         }
                     }
-                    else
+
+                    if (isImpassable || !hasGround)
                     {
                         cell.IncreaseCost(FlowFieldConstants.IMPASSABLE_COST);
+                    }
+                    else if (isRough)
+                    {
+                        cell.IncreaseCost(FlowFieldConstants.ROUGH_TERRAIN_COST);
                     }
                 }
             }
@@ -75,7 +90,12 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
 
         public void CreateIntegrationField(NavigationGrid grid, Cell destinationCell)
         {
-            if (destinationCell == null)
+            if (grid == null || grid.Cells == null || destinationCell == null)
+            {
+                return;
+            }
+
+            if (!TryGetCellGridPosition(grid, destinationCell, out _))
             {
                 return;
             }
@@ -107,6 +127,11 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
 
         public void CreateFlowField(NavigationGrid grid)
         {
+            if (grid == null || grid.Cells == null)
+            {
+                return;
+            }
+
             foreach (Cell currentCell in grid.Cells)
             {
                 if (currentCell == null)
@@ -135,24 +160,60 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
                     currentCell.BestDirection =
                         GridDirection.GetDirectionFromV2I(bestCostCell.WorldGridPos - currentCell.WorldGridPos);
                 }
+                else
+                {
+                    currentCell.BestDirection = GridDirection.None;
+                }
             }
         }
 
         private Cell GetNeighbourCell(NavigationGrid grid, Cell currentCell, GridDirection gridDirection)
         {
-            Vector2Int gridPos = currentCell.ChunkGridPos;
-            Vector2Int positionToCheck = gridPos + gridDirection.Vector;
-            bool isCellOnPositionExistingInGrid = positionToCheck.x >= 0
-                                                  && positionToCheck.y >= 0
-                                                  && positionToCheck.x < grid.Cells.GetLength(0)
-                                                  && positionToCheck.y < grid.Cells.GetLength(1);
+            if (!TryGetCellGridPosition(grid, currentCell, out Vector2Int gridPos))
+            {
+                return null;
+            }
 
-            if (isCellOnPositionExistingInGrid)
+            Vector2Int positionToCheck = gridPos + gridDirection.Vector;
+            if (positionToCheck.x >= 0
+                && positionToCheck.y >= 0
+                && positionToCheck.x < grid.Cells.GetLength(0)
+                && positionToCheck.y < grid.Cells.GetLength(1))
             {
                 return grid.Cells[positionToCheck.x, positionToCheck.y];
             }
 
             return null;
+        }
+
+        private bool TryGetCellGridPosition(NavigationGrid grid, Cell cell, out Vector2Int position)
+        {
+            if (cell == null || grid == null || grid.Cells == null)
+            {
+                position = Vector2Int.zero;
+                return false;
+            }
+
+            Vector2Int chunkPos = cell.ChunkGridPos;
+            if (chunkPos.x >= 0 && chunkPos.x < grid.Cells.GetLength(0)
+                && chunkPos.y >= 0 && chunkPos.y < grid.Cells.GetLength(1)
+                && grid.Cells[chunkPos.x, chunkPos.y] == cell)
+            {
+                position = chunkPos;
+                return true;
+            }
+
+            Vector2Int worldPos = cell.WorldGridPos;
+            if (worldPos.x >= 0 && worldPos.x < grid.Cells.GetLength(0)
+                && worldPos.y >= 0 && worldPos.y < grid.Cells.GetLength(1)
+                && grid.Cells[worldPos.x, worldPos.y] == cell)
+            {
+                position = worldPos;
+                return true;
+            }
+
+            position = Vector2Int.zero;
+            return false;
         }
     }
 }

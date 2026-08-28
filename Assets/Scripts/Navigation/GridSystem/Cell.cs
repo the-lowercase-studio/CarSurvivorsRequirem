@@ -19,6 +19,7 @@ namespace Assets.Scripts.Navigation.GridSystem
             ChunkGridPos = chunkGridPos;
             Cost = GridConstants.DEFAULT_FIELD_COST;
             BestCost = ushort.MaxValue;
+            BestDirection = GridDirection.None;
         }
 
         public void IncreaseCost(int amount)
@@ -42,6 +43,7 @@ namespace Assets.Scripts.Navigation.GridSystem
         {
             Cost = GridConstants.DEFAULT_FIELD_COST;
             BestCost = ushort.MaxValue;
+            BestDirection = GridDirection.None;
         }
     }
 }
