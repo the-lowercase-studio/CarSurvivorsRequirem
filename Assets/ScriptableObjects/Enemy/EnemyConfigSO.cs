@@ -7,6 +7,7 @@ public class EnemyConfigSO : ScriptableObject
 
     public float MovementSpeed;
     public float RotationSpeed;
+    public float Acceleration;
 
     public float Damage;
 

@@ -32,7 +32,7 @@ namespace Assets.Scripts.Enemies.Base
 
         private void OnEnable()
         {
-            _rb.isKinematic = false;
+            _rb.isKinematic = true;
             _collider.enabled = true;
             _effectsToFinish = _startEffectsToFinish;
 

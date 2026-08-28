@@ -107,7 +107,6 @@ namespace Assets.Scripts.Navigation.GridSystem
         {
             int chunkWidth = _playerGridConfiguration.Width;
             int chunkHeight = _playerGridConfiguration.Height;
-            ClearPlayerChunkCells();
 
             Cell cellClosestToPlayer = WorldPosToCellConverter.GetCellFromGridByWorldPos(
                 WorldGrid,
@@ -125,33 +124,36 @@ namespace Assets.Scripts.Navigation.GridSystem
             int minGridX = Mathf.Clamp(cellClosestToPlayer.WorldGridPos.x - halfWidth, 0, Mathf.Max(0, WorldGrid.Width - chunkWidth));
             int minGridY = Mathf.Clamp(cellClosestToPlayer.WorldGridPos.y - halfHeight, 0, Mathf.Max(0, WorldGrid.Height - chunkHeight));
 
+            ClearDepartingChunkCells(minGridX, minGridY, chunkWidth, chunkHeight);
+
             for (int chunkX = 0; chunkX < chunkWidth; chunkX++)
             {
                 int worldX = minGridX + chunkX;
-                if (worldX < 0 || worldX >= WorldGrid.Width)
-                {
-                    continue;
-                }
+                bool isWorldXValid = worldX >= 0 && worldX < WorldGrid.Width;
 
                 for (int chunkY = 0; chunkY < chunkHeight; chunkY++)
                 {
                     int worldY = minGridY + chunkY;
-                    if (worldY < 0 || worldY >= WorldGrid.Height)
-                    {
-                        continue;
-                    }
+                    bool isWorldYValid = worldY >= 0 && worldY < WorldGrid.Height;
 
-                    Cell cell = WorldGrid.Cells[worldX, worldY];
-                    if (cell != null)
+                    if (isWorldXValid && isWorldYValid)
                     {
+                        Cell cell = WorldGrid.Cells[worldX, worldY];
                         _playerChunkCells[chunkX, chunkY] = cell;
-                        cell.ChunkGridPos = new Vector2Int(chunkX, chunkY);
+                        if (cell != null)
+                        {
+                            cell.ChunkGridPos = new Vector2Int(chunkX, chunkY);
+                        }
+                    }
+                    else
+                    {
+                        _playerChunkCells[chunkX, chunkY] = null;
                     }
                 }
             }
         }
 
-        private void ClearPlayerChunkCells()
+        private void ClearDepartingChunkCells(int newMinGridX, int newMinGridY, int chunkWidth, int chunkHeight)
         {
             int width = _playerChunkCells.GetLength(0);
             int height = _playerChunkCells.GetLength(1);
@@ -160,12 +162,18 @@ namespace Assets.Scripts.Navigation.GridSystem
             {
                 for (int y = 0; y < height; y++)
                 {
-                    Cell cell = _playerChunkCells[x, y];
-                    if (cell != null)
+                    Cell oldCell = _playerChunkCells[x, y];
+                    if (oldCell != null)
                     {
-                        cell.ChunkGridPos = Assets.Scripts.Navigation.Constants.GridConstants.INVALID_CHUNK_GRID_POS;
-                        cell.BestDirection = GridDirection.None;
-                        _playerChunkCells[x, y] = null;
+                        int newChunkX = oldCell.WorldGridPos.x - newMinGridX;
+                        int newChunkY = oldCell.WorldGridPos.y - newMinGridY;
+
+                        if (newChunkX < 0 || newChunkX >= chunkWidth || newChunkY < 0 || newChunkY >= chunkHeight)
+                        {
+                            oldCell.ChunkGridPos = Assets.Scripts.Navigation.Constants.GridConstants.INVALID_CHUNK_GRID_POS;
+                            oldCell.BestDirection = GridDirection.None;
+                            _playerChunkCells[x, y] = null;
+                        }
                     }
                 }
             }

@@ -111,7 +111,7 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
                 foreach (GridDirection gridDirection in GridDirection.CardinalDirections)
                 {
                     Cell currentNeighbour = GetNeighbourCell(grid, currentCell, gridDirection);
-                    if (currentNeighbour == null)
+                    if (currentNeighbour == null || currentNeighbour.Cost >= FlowFieldConstants.IMPASSABLE_COST)
                     {
                         continue;
                     }
@@ -139,6 +139,12 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
                     continue;
                 }
 
+                if (currentCell.Cost >= FlowFieldConstants.IMPASSABLE_COST)
+                {
+                    currentCell.BestDirection = GridDirection.None;
+                    continue;
+                }
+
                 Cell bestCostCell = currentCell;
 
                 foreach (GridDirection gridDirection in GridDirection.AllDirections)
@@ -149,7 +155,8 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
                         continue;
                     }
 
-                    if (currentNeighbour.BestCost < bestCostCell.BestCost)
+                    if (currentNeighbour.Cost < FlowFieldConstants.IMPASSABLE_COST
+                        && currentNeighbour.BestCost < bestCostCell.BestCost)
                     {
                         bestCostCell = currentNeighbour;
                     }

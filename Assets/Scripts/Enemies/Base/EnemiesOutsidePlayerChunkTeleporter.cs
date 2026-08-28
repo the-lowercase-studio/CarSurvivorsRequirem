@@ -68,6 +68,11 @@ namespace Assets.Scripts.Enemies.Base
 
             foreach (Transform child in _enemiesHolder)
             {
+                if (!child.gameObject.activeInHierarchy)
+                {
+                    continue;
+                }
+
                 if (child.TryGetComponent(out Enemy enemy))
                 {
                     Vector3 enemyPos = enemy.transform.position;

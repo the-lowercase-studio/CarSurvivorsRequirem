@@ -1,4 +1,5 @@
 using Assets.Scripts.Enemies.Constants;
+using Assets.Scripts.Navigation.Constants;
 using Assets.Scripts.Navigation.FlowFieldSystem;
 using Assets.Scripts.LayerMasks;
 using DG.Tweening;
@@ -14,13 +15,14 @@ namespace Assets.Scripts.Enemies.Base
         private Enemy _enemy;
         private IFlowFieldMovementController _flowFieldMovementController;
 
-        private float _verticalPosOffset;
+        private float _lastGroundedY;
         private float _verticalVelocity;
         private bool _isStunnable = false;
 
         private bool _isMovingToPositionUnrelatedToGrid;
         private Vector3 _currentMovementPositionUnrelatedToGrid;
         private Vector3 _lastPos;
+        private Vector3 _currentVelocity;
 
         private Tween _movementUnrelatedToSpeedTween;
 
@@ -37,8 +39,9 @@ namespace Assets.Scripts.Enemies.Base
         {
             _enemy.EnemyAnimator.OnAttackAnimationEnd += EnemyAnimator_OnAttackAnimationEnd;
 
-            _verticalPosOffset = transform.position.y;
+            _lastGroundedY = transform.position.y;
             _verticalVelocity = 0f;
+            _currentVelocity = Vector3.zero;
 
             _currentMovementDelayAfterAttack = 0;
         }
@@ -55,8 +58,7 @@ namespace Assets.Scripts.Enemies.Base
 
             _isMovingToPositionUnrelatedToGrid = false;
             _verticalVelocity = 0f;
-
-            transform.position = new Vector3(0, _verticalPosOffset, 0);
+            _currentVelocity = Vector3.zero;
         }
 
         private void OnDestroy()
@@ -75,10 +77,7 @@ namespace Assets.Scripts.Enemies.Base
 
         private void OnDrawGizmos()
         {
-            Vector3 origin = new(
-                transform.position.x,
-                Mathf.Max(transform.position.y, _verticalPosOffset) + EnemyMovementConstants.GROUND_CHECK_ORIGIN_Y,
-                transform.position.z);
+            Vector3 origin = transform.position + (Vector3.up * EnemyMovementConstants.GROUND_CHECK_ORIGIN_Y);
             Vector3 endPos = origin + (Vector3.down * EnemyMovementConstants.GROUND_CHECK_DISTANCE);
             if (IsOnGround())
             {
@@ -92,7 +91,23 @@ namespace Assets.Scripts.Enemies.Base
 
         public float GetCurrentMovementSpeed()
         {
-            return Vector3.Distance(transform.position, _lastPos) / Time.deltaTime;
+            if (_isMovingToPositionUnrelatedToGrid)
+            {
+                float distance = Vector3.Distance(transform.position, _lastPos);
+                if (distance < 0.001f)
+                {
+                    return 0f;
+                }
+
+                return distance / Time.fixedDeltaTime;
+            }
+
+            if (_currentVelocity.magnitude < FlowFieldConstants.MIN_MOVEMENT_SPEED_THRESHOLD)
+            {
+                return 0f;
+            }
+
+            return _currentVelocity.magnitude;
         }
 
         public Tween MoveToPositionInTimeIgnoringSpeed(Vector3 pos, float time)
@@ -101,6 +116,8 @@ namespace Assets.Scripts.Enemies.Base
             {
                 _movementUnrelatedToSpeedTween.Kill();
             }
+
+            _currentVelocity = Vector3.zero;
 
             Vector3 startPos = transform.position;
             Vector3 direction = pos - startPos;
@@ -128,6 +145,7 @@ namespace Assets.Scripts.Enemies.Base
                 .OnComplete(() =>
                 {
                     _isMovingToPositionUnrelatedToGrid = false;
+                    _currentVelocity = Vector3.zero;
                     _movementUnrelatedToSpeedTween = null;
                 });
         }
@@ -139,38 +157,31 @@ namespace Assets.Scripts.Enemies.Base
 
         public bool IsOnGround()
         {
-            Vector3 origin = new(
-                transform.position.x,
-                Mathf.Max(transform.position.y, _verticalPosOffset) + EnemyMovementConstants.GROUND_CHECK_ORIGIN_Y,
-                transform.position.z);
+            Vector3 origin = transform.position + (Vector3.up * EnemyMovementConstants.GROUND_CHECK_ORIGIN_Y);
 
-            return Physics.SphereCast(
+            return Physics.Raycast(
                 origin,
-                EnemyMovementConstants.GROUND_CHECK_SPHERE_RADIUS,
                 Vector3.down,
                 out _,
                 EnemyMovementConstants.GROUND_CHECK_DISTANCE,
-                TerrainLayers.Ground);
+                TerrainLayers.Walkable);
         }
 
         private bool HandleVerticalPositionAndGrounding()
         {
-            Vector3 origin = new(
-                transform.position.x,
-                Mathf.Max(transform.position.y, _verticalPosOffset) + EnemyMovementConstants.GROUND_CHECK_ORIGIN_Y,
-                transform.position.z);
+            Vector3 origin = transform.position + (Vector3.up * EnemyMovementConstants.GROUND_CHECK_ORIGIN_Y);
 
-            bool isGrounded = Physics.SphereCast(
+            bool isGrounded = Physics.Raycast(
                 origin,
-                EnemyMovementConstants.GROUND_CHECK_SPHERE_RADIUS,
                 Vector3.down,
                 out RaycastHit hitInfo,
                 EnemyMovementConstants.GROUND_CHECK_DISTANCE,
-                TerrainLayers.Ground);
+                TerrainLayers.Walkable);
 
             if (isGrounded)
             {
                 _verticalVelocity = 0f;
+                _lastGroundedY = hitInfo.point.y;
                 float targetY = hitInfo.point.y;
                 float newY = Mathf.MoveTowards(transform.position.y, targetY, EnemyMovementConstants.GROUND_SNAP_LERP_SPEED * Time.fixedDeltaTime);
 
@@ -196,7 +207,7 @@ namespace Assets.Scripts.Enemies.Base
         {
             bool isGrounded = HandleVerticalPositionAndGrounding();
 
-            if (!isGrounded && transform.position.y < _verticalPosOffset - 1.0f)
+            if (!isGrounded && transform.position.y < _lastGroundedY - EnemyMovementConstants.FALL_SUPPRESSION_Y_OFFSET)
             {
                 return;
             }
@@ -212,24 +223,40 @@ namespace Assets.Scripts.Enemies.Base
             {
                 _lastPos = transform.position;
 
-                Vector3? movement;
                 if (_isMovingToPositionUnrelatedToGrid)
                 {
-                    movement = MoveToPosition(_currentMovementPositionUnrelatedToGrid);
+                    Vector3? movement = MoveToPosition(_currentMovementPositionUnrelatedToGrid);
+                    if (movement.HasValue)
+                    {
+                        RotateTowardsMovementDirection(movement.Value - _lastPos);
+                    }
                 }
                 else
                 {
-                    movement = _flowFieldMovementController.MoveOnFlowFieldGrid(_enemy.Config.MovementSpeed);
-                }
+                    Vector3 desiredDirection = _flowFieldMovementController.CalculateDesiredMovementDirection();
+                    Vector3 targetVelocity = desiredDirection * _enemy.Config.MovementSpeed;
 
-                if (movement.HasValue)
-                {
-                    RotateTowardsMovementDirection(movement.Value);
+                    float effectiveAcceleration = _enemy.Config.Acceleration > 0f
+                        ? _enemy.Config.Acceleration
+                        : _enemy.Config.MovementSpeed * EnemyMovementConstants.DEFAULT_ACCELERATION_SPEED_MULTIPLIER;
+
+                    _currentVelocity = Vector3.MoveTowards(_currentVelocity, targetVelocity, effectiveAcceleration * Time.fixedDeltaTime);
+                    transform.position += _currentVelocity * Time.fixedDeltaTime;
+
+                    if (_currentVelocity.sqrMagnitude > EnemyMovementConstants.MIN_VELOCITY_FOR_ROTATION_SQR)
+                    {
+                        RotateTowardsMovementDirection(_currentVelocity);
+                    }
                 }
             }
-            else if (_currentMovementDelayAfterAttack > 0)
+            else
             {
-                _currentMovementDelayAfterAttack -= Time.deltaTime;
+                _currentVelocity = Vector3.zero;
+
+                if (_currentMovementDelayAfterAttack > 0)
+                {
+                    _currentMovementDelayAfterAttack -= Time.fixedDeltaTime;
+                }
             }
         }
 
@@ -261,20 +288,20 @@ namespace Assets.Scripts.Enemies.Base
 
         private Vector3 Move(Vector3 pos)
         {
-            Vector3 movement = Vector3.Lerp(transform.position, pos, _enemy.Config.MovementSpeed * Time.deltaTime);
+            Vector3 movement = Vector3.Lerp(transform.position, pos, _enemy.Config.MovementSpeed * Time.fixedDeltaTime);
             transform.position = movement;
             return movement;
         }
 
-        private void RotateTowardsMovementDirection(Vector3 movement)
+        private void RotateTowardsMovementDirection(Vector3 direction)
         {
-            if (GetCurrentMovementSpeed() > 0)
+            if (direction.sqrMagnitude > EnemyMovementConstants.MIN_VELOCITY_FOR_ROTATION_SQR)
             {
-                Quaternion targetRotation = Quaternion.LookRotation(movement.normalized);
+                Quaternion targetRotation = Quaternion.LookRotation(direction.normalized);
                 transform.rotation = Quaternion.Slerp(
                     transform.rotation,
                     targetRotation,
-                    _enemy.Config.RotationSpeed * Time.deltaTime
+                    _enemy.Config.RotationSpeed * Time.fixedDeltaTime
                 );
             }
         }
