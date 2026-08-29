@@ -38,6 +38,7 @@ jobs:
           projectPath: .
           unityVersion: 6000.4.5f1
           testMode: editMode
+          extraArguments: -disable-audio
           githubToken: ${{ secrets.GITHUB_TOKEN }}
 
   test-playmode:
@@ -67,4 +68,5 @@ jobs:
           projectPath: .
           unityVersion: 6000.4.5f1
           testMode: playMode
+          extraArguments: -disable-audio
           githubToken: ${{ secrets.GITHUB_TOKEN }}

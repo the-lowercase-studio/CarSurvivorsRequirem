@@ -55,7 +55,7 @@ jobs:
           unityVersion: 6000.4.5f1
           targetPlatform: ${{ matrix.targetPlatform }}
           buildName: CarSurvivors
-          customParameters: -Development -AllowDebugging
+          customParameters: -disable-audio -Development -AllowDebugging
 
       - name: Get Version
         id: version
