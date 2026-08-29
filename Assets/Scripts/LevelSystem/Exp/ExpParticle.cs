@@ -9,7 +9,6 @@ using Assets.Scripts.Navigation.FlowFieldSystem;
 using Assets.Scripts.Player;
 using Assets.Scripts.Pooling;
 using Assets.Scripts.Providers;
-using DG.Tweening;
 using Reflex.Attributes;
 using UnityEngine;
 
@@ -44,6 +43,7 @@ namespace Assets.Scripts.LevelSystem.Exp
         [SerializeField] private float _movementSpeed;
         [SerializeField] private float _disapearingDuration = 0.1f;
         [SerializeField] private GameObject _visual;
+        [SerializeField] private MeshRenderer _meshRenderer;
         [SerializeField] private ExpParticleApearanceByTreshold[] _particleApearanceByTreshold;
 
         private float _expAmount;
@@ -51,7 +51,9 @@ namespace Assets.Scripts.LevelSystem.Exp
         private Vector3 _startScale;
         private IFlowFieldMovementController _flowFieldMovementController;
         private IAudioClipPlayer _audioClipPlayer;
-        private Tween _shrinkTween;
+        private bool _isCollecting;
+        private float _collectElapsed;
+        private Vector3 _collectStartScale;
         private Action _pendingCallback;
 
         public GameObject GameObject => gameObject;
@@ -63,6 +65,18 @@ namespace Assets.Scripts.LevelSystem.Exp
         {
             _flowFieldMovementController = GetComponent<IFlowFieldMovementController>();
             _audioClipPlayer = GetComponentInChildren<IAudioClipPlayer>();
+
+            if (_meshRenderer == null)
+            {
+                if (_visual != null)
+                {
+                    _meshRenderer = _visual.GetComponent<MeshRenderer>();
+                }
+                else
+                {
+                    _meshRenderer = GetComponentInChildren<MeshRenderer>();
+                }
+            }
         }
 
         private void Start()
@@ -70,15 +84,30 @@ namespace Assets.Scripts.LevelSystem.Exp
             _startScale = transform.localScale;
         }
 
-        private void FixedUpdate()
+        private void Update()
         {
-            _flowFieldMovementController.MoveOnFlowFieldGrid(_movementSpeed);
+            if (_isCollecting)
+            {
+                _collectElapsed += Time.deltaTime;
+                float duration = Mathf.Max(0.0001f, _disapearingDuration);
+                float t = Mathf.Clamp01(_collectElapsed / duration);
+                transform.localScale = Vector3.Lerp(_collectStartScale, Vector3.zero, t);
+
+                if (t >= 1f)
+                {
+                    _isCollecting = false;
+                    transform.localScale = Vector3.zero;
+                    HandleCollectShrinkComplete();
+                }
+            }
         }
 
-        private void OnDestroy()
+        private void FixedUpdate()
         {
-            _shrinkTween?.Kill();
-            _shrinkTween = null;
+            if (!_isCollecting)
+            {
+                _flowFieldMovementController.MoveOnFlowFieldGrid(_movementSpeed);
+            }
         }
 
         private void OnTriggerEnter(Collider other)
@@ -99,14 +128,16 @@ namespace Assets.Scripts.LevelSystem.Exp
         public void OnGet()
         {
             _expCollected = false;
+            _isCollecting = false;
+            _collectElapsed = 0f;
             _expAmount = 0;
             _pendingCallback = null;
         }
 
         public void OnRelease()
         {
-            _shrinkTween?.Kill();
-            _shrinkTween = null;
+            _isCollecting = false;
+            _collectElapsed = 0f;
             _pendingCallback = null;
             transform.localScale = _startScale;
         }
@@ -124,8 +155,11 @@ namespace Assets.Scripts.LevelSystem.Exp
             {
                 if (_particleApearanceByTreshold[i].Treshold <= exp)
                 {
-                    MeshRenderer meshRenderer = _visual.GetComponent<MeshRenderer>();
-                    meshRenderer.SetMaterials(new List<Material>() { _particleApearanceByTreshold[i].Material });
+                    if (_meshRenderer != null)
+                    {
+                        _meshRenderer.sharedMaterial = _particleApearanceByTreshold[i].Material;
+                    }
+
                     transform.localScale =
                         Vector3.one * _particleApearanceByTreshold[i].ScaleValueRange.GetRandomValueInRange();
 
@@ -143,22 +177,18 @@ namespace Assets.Scripts.LevelSystem.Exp
 
             _expCollected = true;
             _pendingCallback = callback;
+            _isCollecting = true;
+            _collectElapsed = 0f;
+            _collectStartScale = transform.localScale;
 
             if (_audioClipPlayer != null)
             {
                 _audioClipPlayer.Play(AudioConstants.EXP_COLLECTED_CLIP_NAME);
             }
-
-            _shrinkTween?.Kill();
-            _shrinkTween = transform.DOScale(Vector3.zero, _disapearingDuration)
-                .SetEase(Ease.Flash)
-                .OnComplete(HandleCollectShrinkComplete);
         }
 
         private void HandleCollectShrinkComplete()
         {
-            _shrinkTween = null;
-
             _playerManager.LevelController.AddExp(_expAmount);
 
             Action cb = _pendingCallback;

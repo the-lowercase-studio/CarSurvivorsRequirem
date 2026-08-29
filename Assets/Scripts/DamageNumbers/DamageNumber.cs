@@ -1,7 +1,6 @@
 using System;
 using Assets.Scripts.DamageNumbers.Constants;
 using Assets.Scripts.Initializers;
-using DG.Tweening;
 using TMPro;
 using UnityEngine;
 
@@ -25,38 +24,66 @@ namespace Assets.Scripts.DamageNumbers
 
         private bool _isInitialized;
         private DamageNumberConfig _config;
-        private Sequence _animationSequence;
+        private Vector3 _startPosition;
+        private Vector3 _targetPosition;
+        private Vector3 _targetScale;
+        private float _duration;
+        private float _elapsedTime;
+        private bool _isAnimating;
 
         public event EventHandler OnLifeEnd;
 
-        private void OnDisable()
+        private void Update()
         {
-            KillAnimation();
+            if (!_isAnimating)
+            {
+                return;
+            }
+
+            _elapsedTime += Time.deltaTime;
+            float duration = Mathf.Max(0.0001f, _duration);
+            float t = Mathf.Clamp01(_elapsedTime / duration);
+
+            float positionT = -(Mathf.Cos(Mathf.PI * t) - 1f) * 0.5f;
+            transform.position = Vector3.Lerp(_startPosition, _targetPosition, positionT);
+
+            transform.localScale = _targetScale * Mathf.Sin(t * Mathf.PI);
+
+            if (t >= 1f)
+            {
+                _isAnimating = false;
+                transform.position = _targetPosition;
+                transform.localScale = Vector3.zero;
+                OnLifeEnd?.Invoke(this, EventArgs.Empty);
+            }
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
-            KillAnimation();
+            _isAnimating = false;
         }
 
         public void Initialize(DamageNumberConfig config)
         {
-            KillAnimation();
+            Initialize(config, transform.position, transform.position, DamageNumberConstants.RESIZING_ANIMATION_SPEED * 2f);
+        }
 
+        public void Initialize(DamageNumberConfig config, Vector3 startPos, Vector3 targetPos, float duration)
+        {
             _config = config;
+            _startPosition = startPos;
+            _targetPosition = targetPos;
+            _duration = duration;
+            _elapsedTime = 0f;
 
             SetTextApearance(config);
 
             var (_, growScaleMultiplier, _) = _config.DamagePopupApearance;
-            Vector3 targetScale = Vector3.one * growScaleMultiplier;
+            _targetScale = Vector3.one * growScaleMultiplier;
 
+            transform.position = startPos;
             transform.localScale = Vector3.zero;
-
-            _animationSequence = DOTween.Sequence()
-                .Append(transform.DOScale(targetScale, DamageNumberConstants.RESIZING_ANIMATION_SPEED).SetEase(Ease.InOutSine))
-                .Append(transform.DOScale(Vector3.zero, DamageNumberConstants.RESIZING_ANIMATION_SPEED).SetEase(Ease.InOutSine))
-                .OnComplete(HandleAnimationComplete);
-
+            _isAnimating = true;
             _isInitialized = true;
         }
 
@@ -68,23 +95,9 @@ namespace Assets.Scripts.DamageNumbers
         private void SetTextApearance(DamageNumberConfig config)
         {
             var (fontSize, _, color) = config.DamagePopupApearance;
-            _textMeshPro.text = config.Damage.ToString();
+            _textMeshPro.SetText("{0:0}", config.Damage);
             _textMeshPro.color = color;
             _textMeshPro.fontSize = fontSize;
-        }
-
-        private void HandleAnimationComplete()
-        {
-            OnLifeEnd?.Invoke(this, EventArgs.Empty);
-        }
-
-        private void KillAnimation()
-        {
-            if (_animationSequence != null && _animationSequence.IsActive())
-            {
-                _animationSequence.Kill();
-                _animationSequence = null;
-            }
         }
     }
 }

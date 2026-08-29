@@ -26,15 +26,15 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
     {
         [SerializeField] private Animator _animator;
 
-        private int _isMovingHash;
-        private int _speedHash;
-        private int _leapTakeoffHash;
-        private int _leapLandHash;
-        private int _leapSlamLegacyHash;
-        private int _stompHash;
-        private int _linearFistHash;
-        private int _skyBarrageHash;
-        private int _walkingStateHash;
+        private static readonly int _isMovingHash = Animator.StringToHash(GolemBossConstants.ANIM_PARAM_IS_MOVING);
+        private static readonly int _speedHash = Animator.StringToHash(GolemBossConstants.ANIM_PARAM_SPEED);
+        private static readonly int _leapTakeoffHash = Animator.StringToHash(GolemBossConstants.ANIM_TRIGGER_LEAP_TAKEOFF);
+        private static readonly int _leapLandHash = Animator.StringToHash(GolemBossConstants.ANIM_TRIGGER_LEAP_LAND);
+        private static readonly int _leapSlamLegacyHash = Animator.StringToHash(GolemBossConstants.ANIM_TRIGGER_LEAP_SLAM);
+        private static readonly int _stompHash = Animator.StringToHash(GolemBossConstants.ANIM_TRIGGER_STOMP);
+        private static readonly int _linearFistHash = Animator.StringToHash(GolemBossConstants.ANIM_TRIGGER_LINEAR_FIST);
+        private static readonly int _skyBarrageHash = Animator.StringToHash(GolemBossConstants.ANIM_TRIGGER_SKY_BARRAGE);
+        private static readonly int _walkingStateHash = Animator.StringToHash(GolemBossConstants.ANIM_STATE_WALKING);
 
         public event Action OnLinearFistRelease;
         public event Action OnSkyBarrageRelease;
@@ -46,6 +46,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
         {
             get
             {
+                EnsureAnimator();
                 if (_animator == null)
                 {
                     return true;
@@ -66,6 +67,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
         {
             get
             {
+                EnsureAnimator();
                 if (_animator == null)
                 {
                     return false;
@@ -77,24 +79,12 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
 
         private void Awake()
         {
-            if (_animator == null)
-            {
-                _animator = GetComponentInChildren<Animator>();
-            }
-
-            _isMovingHash = Animator.StringToHash(GolemBossConstants.ANIM_PARAM_IS_MOVING);
-            _speedHash = Animator.StringToHash(GolemBossConstants.ANIM_PARAM_SPEED);
-            _leapTakeoffHash = Animator.StringToHash(GolemBossConstants.ANIM_TRIGGER_LEAP_TAKEOFF);
-            _leapLandHash = Animator.StringToHash(GolemBossConstants.ANIM_TRIGGER_LEAP_LAND);
-            _leapSlamLegacyHash = Animator.StringToHash(GolemBossConstants.ANIM_TRIGGER_LEAP_SLAM);
-            _stompHash = Animator.StringToHash(GolemBossConstants.ANIM_TRIGGER_STOMP);
-            _linearFistHash = Animator.StringToHash(GolemBossConstants.ANIM_TRIGGER_LINEAR_FIST);
-            _skyBarrageHash = Animator.StringToHash(GolemBossConstants.ANIM_TRIGGER_SKY_BARRAGE);
-            _walkingStateHash = Animator.StringToHash(GolemBossConstants.ANIM_STATE_WALKING);
+            EnsureAnimator();
         }
 
         public void SetMoving(bool isMoving, float speed = 0f)
         {
+            EnsureAnimator();
             if (_animator == null)
             {
                 return;
@@ -106,6 +96,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
 
         public void PlayLeapTakeoff()
         {
+            EnsureAnimator();
             if (_animator == null)
             {
                 return;
@@ -118,6 +109,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
 
         public void PlayLeapLand()
         {
+            EnsureAnimator();
             if (_animator == null)
             {
                 return;
@@ -130,6 +122,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
 
         public void PlayStomp()
         {
+            EnsureAnimator();
             if (_animator == null)
             {
                 return;
@@ -140,6 +133,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
 
         public void PlayLinearFist()
         {
+            EnsureAnimator();
             if (_animator == null)
             {
                 return;
@@ -150,12 +144,21 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
 
         public void PlaySkyBarrage()
         {
+            EnsureAnimator();
             if (_animator == null)
             {
                 return;
             }
 
             _animator.SetTrigger(_skyBarrageHash);
+        }
+
+        private void EnsureAnimator()
+        {
+            if (_animator == null)
+            {
+                _animator = GetComponentInChildren<Animator>();
+            }
         }
 
         public void Call_OnLinearFistRelease()

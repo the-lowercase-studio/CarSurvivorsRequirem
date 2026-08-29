@@ -253,7 +253,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             float damage = _boss.Config.SkyArmDamage;
             float fallSpeed = _boss.Config.SkyArmFallSpeed * _boss.CurrentArmSpeedMultiplier;
 
-            CircularTelegraphIndicator telegraph = _boss.ShowCircularTelegraph(targetOffsetPos, radius, warningDuration, null);
+            CircularTelegraphIndicator telegraph = _boss.ShowCircularTelegraph(targetOffsetPos, radius, warningDuration, null, autoContractOnFillComplete: false);
             Vector3 targetLandingPos = telegraph != null ? telegraph.SnappedPosition : targetOffsetPos;
 
             Sequence dropSeq = DOTween.Sequence();
@@ -264,6 +264,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             {
                 arm.DropFromSky(targetLandingPos, fallSpeed, damage, radius, () =>
                 {
+                    telegraph?.ContractAndDismiss();
                     OnArmImpact(arm, currentCycle, isLeftArm);
                 });
             });

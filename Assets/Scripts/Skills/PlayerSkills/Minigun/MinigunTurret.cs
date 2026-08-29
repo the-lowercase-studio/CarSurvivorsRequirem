@@ -1,11 +1,9 @@
 using Assets.ScriptableObjects;
 using Assets.Scripts.Audio;
-using Assets.Scripts.Extensions;
 using Assets.Scripts.Projectiles;
 using Assets.Scripts.Projectiles.Constants;
 using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.VFX;
-using DG.Tweening;
 using System;
 using UnityEngine;
 using UnityEngine.Pool;
@@ -17,7 +15,6 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
     {
         [SerializeField] private bool _inverseRotation;
 
-        private Tween _rotationTween;
         private IVFXPlayer _muzzleFlashVFXPlayer;
         private IAudioClipPlayer _audioClipPlayer;
         private IObjectPool<Projectile> _projectilePool;
@@ -42,23 +39,27 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
             );
         }
 
+        private void Update()
+        {
+            if (_config == null || _config.RotationDuration <= 0f || _visual == null)
+            {
+                return;
+            }
+
+            float halfAngle = _config.RotationAngle * 0.5f;
+            float currentYAngle = (_inverseRotation ? 1f : -1f) * halfAngle * Mathf.Cos(Time.time * Mathf.PI / _config.RotationDuration);
+            _visual.localRotation = Quaternion.Euler(0f, currentYAngle, 0f);
+        }
+
         public override void Initialize(TurretConfigSO config)
         {
             base.Initialize(config);
 
-            _visual.localRotation = Quaternion.Euler(0, (_inverseRotation ? _config.RotationAngle : -_config.RotationAngle) * 0.5f, 0);
-
-            StartInYAngleRotation();
-        }
-
-        private void StartInYAngleRotation()
-        {
-            if (_rotationTween != null)
+            if (_config != null && _visual != null)
             {
-                _rotationTween.Kill();
+                float halfAngle = _config.RotationAngle * 0.5f;
+                _visual.localRotation = Quaternion.Euler(0f, (_inverseRotation ? 1f : -1f) * halfAngle, 0f);
             }
-
-            _rotationTween = _visual.StartYAngleLocalRotationLoopTween(_config.RotationAngle, _config.RotationDuration, _inverseRotation);
         }
 
         public void Spawn(Vector3 pos, ProjectileSpawnConfig projectileSpawnConfig, int count = 1)

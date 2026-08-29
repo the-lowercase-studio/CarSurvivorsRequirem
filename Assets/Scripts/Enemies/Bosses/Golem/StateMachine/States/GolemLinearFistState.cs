@@ -53,7 +53,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             float maxDistance = _boss.Config.LinearFistMaxDistance;
             float width = _boss.Config.LinearFistWidth;
 
-            _activeTelegraph = _boss.ShowRectangularTelegraph(bossPos, _attackDirection, maxDistance, width, warningDuration, null);
+            _activeTelegraph = _boss.ShowRectangularTelegraph(bossPos, _attackDirection, maxDistance, width, warningDuration, null, autoContractOnFillComplete: false);
 
             // 3. Start forward attack animation and listen for release trigger
             if (_boss.Animator != null)
@@ -196,6 +196,12 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         private void FinishAttack()
         {
+            if (_activeTelegraph != null)
+            {
+                _activeTelegraph.ContractAndDismiss();
+                _activeTelegraph = null;
+            }
+
             _stateMachine.LinearFistCooldownTimer = _boss.Config.LinearFistCooldown * _boss.CurrentCooldownMultiplier;
             _stateMachine.ChangeState(_pursuitState);
         }
