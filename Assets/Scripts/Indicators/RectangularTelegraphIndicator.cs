@@ -25,7 +25,7 @@ namespace Assets.Scripts.Indicators
             KillActiveSequence();
         }
 
-        public void Show(Vector3 origin, Vector3 forwardDirection, float length, float width, float duration, Action onImpact = null)
+        public void Show(Vector3 origin, Vector3 forwardDirection, float length, float width, float duration, Action onImpact = null, bool autoContractOnFillComplete = false)
         {
             KillActiveSequence();
             _onImpactCallback = onImpact;
@@ -82,8 +82,16 @@ namespace Assets.Scripts.Indicators
             _activeSequence.OnComplete(() =>
             {
                 _onImpactCallback?.Invoke();
-                PlayContractAndDismiss();
+                if (autoContractOnFillComplete)
+                {
+                    PlayContractAndDismiss();
+                }
             });
+        }
+
+        public void ContractAndDismiss()
+        {
+            PlayContractAndDismiss();
         }
 
         public void Dismiss()
@@ -106,6 +114,12 @@ namespace Assets.Scripts.Indicators
             if (_innerFill != null)
             {
                 _activeSequence.Join(_innerFill.DOScale(new Vector3(0f, 1f, _innerFill.localScale.z), _contractDuration).SetEase(Ease.InQuad));
+            }
+
+            if (_outerBorder == null && _innerFill == null)
+            {
+                Destroy(gameObject);
+                return;
             }
 
             _activeSequence.OnComplete(() =>

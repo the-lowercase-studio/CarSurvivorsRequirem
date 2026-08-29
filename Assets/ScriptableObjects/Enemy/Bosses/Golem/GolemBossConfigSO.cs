@@ -45,7 +45,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Config
         [SerializeField] private float _linearFistSpeed = 30f;
         [SerializeField] private float _linearFistMaxDistance = 20f;
         [SerializeField] private float _linearFistDamage = 40f;
-        [SerializeField] private float _linearFistWidth = 2f;
+        [SerializeField] private float _linearFistWidth = 3.2f;
         [SerializeField] private float _linearFistWarningDuration = 0.8f;
         [SerializeField] private float _linearFistHitboxHeight = 2.5f;
         [SerializeField] private float _linearFistHitboxDepth = 1.5f;

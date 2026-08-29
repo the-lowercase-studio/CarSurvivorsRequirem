@@ -2,7 +2,6 @@ using Assets.Scripts.Enemies.Constants;
 using Assets.Scripts.Navigation.Constants;
 using Assets.Scripts.Navigation.FlowFieldSystem;
 using Assets.Scripts.LayerMasks;
-using DG.Tweening;
 using UnityEngine;
 
 namespace Assets.Scripts.Enemies.Base
@@ -24,7 +23,11 @@ namespace Assets.Scripts.Enemies.Base
         private Vector3 _lastPos;
         private Vector3 _currentVelocity;
 
-        private Tween _movementUnrelatedToSpeedTween;
+        private bool _isKnockbackActive;
+        private Vector3 _knockbackStartPos;
+        private Vector3 _knockbackTargetPos;
+        private float _knockbackDuration;
+        private float _knockbackElapsed;
 
         private float _movementDelayAfterAttack = 0.2f;
         private float _currentMovementDelayAfterAttack;
@@ -44,30 +47,17 @@ namespace Assets.Scripts.Enemies.Base
             _currentVelocity = Vector3.zero;
 
             _currentMovementDelayAfterAttack = 0;
+            _isKnockbackActive = false;
         }
 
         private void OnDisable()
         {
             _enemy.EnemyAnimator.OnAttackAnimationEnd -= EnemyAnimator_OnAttackAnimationEnd;
 
-            if (_movementUnrelatedToSpeedTween != null)
-            {
-                _movementUnrelatedToSpeedTween.Kill();
-                _movementUnrelatedToSpeedTween = null;
-            }
-
+            _isKnockbackActive = false;
             _isMovingToPositionUnrelatedToGrid = false;
             _verticalVelocity = 0f;
             _currentVelocity = Vector3.zero;
-        }
-
-        private void OnDestroy()
-        {
-            if (_movementUnrelatedToSpeedTween != null)
-            {
-                _movementUnrelatedToSpeedTween.Kill();
-                _movementUnrelatedToSpeedTween = null;
-            }
         }
 
         private void FixedUpdate()
@@ -110,13 +100,8 @@ namespace Assets.Scripts.Enemies.Base
             return _currentVelocity.magnitude;
         }
 
-        public Tween MoveToPositionInTimeIgnoringSpeed(Vector3 pos, float time)
+        public void MoveToPositionInTimeIgnoringSpeed(Vector3 pos, float time)
         {
-            if (_movementUnrelatedToSpeedTween != null)
-            {
-                _movementUnrelatedToSpeedTween.Kill();
-            }
-
             _currentVelocity = Vector3.zero;
 
             Vector3 startPos = transform.position;
@@ -137,17 +122,12 @@ namespace Assets.Scripts.Enemies.Base
                 }
             }
 
+            _knockbackStartPos = startPos;
+            _knockbackTargetPos = pos;
+            _knockbackDuration = Mathf.Max(0.001f, adjustedTime);
+            _knockbackElapsed = 0f;
+            _isKnockbackActive = true;
             _isMovingToPositionUnrelatedToGrid = true;
-
-            return _movementUnrelatedToSpeedTween = transform
-                .DOMove(pos, adjustedTime)
-                .SetEase(Ease.OutSine)
-                .OnComplete(() =>
-                {
-                    _isMovingToPositionUnrelatedToGrid = false;
-                    _currentVelocity = Vector3.zero;
-                    _movementUnrelatedToSpeedTween = null;
-                });
         }
 
         public void ResetVerticalVelocity()
@@ -212,17 +192,33 @@ namespace Assets.Scripts.Enemies.Base
                 return;
             }
 
+            _lastPos = transform.position;
+
+            if (_isKnockbackActive)
+            {
+                _knockbackElapsed += Time.fixedDeltaTime;
+                float t = Mathf.Clamp01(_knockbackElapsed / _knockbackDuration);
+                float easedT = Mathf.Sin(t * Mathf.PI * 0.5f);
+                transform.position = Vector3.Lerp(_knockbackStartPos, _knockbackTargetPos, easedT);
+
+                if (t >= 1f)
+                {
+                    _isKnockbackActive = false;
+                    _isMovingToPositionUnrelatedToGrid = false;
+                    _currentVelocity = Vector3.zero;
+                }
+
+                return;
+            }
+
             bool isStunned = _isStunnable && _enemy.StunController.IsStunned;
 
-            bool canMoveOnGrid = _movementUnrelatedToSpeedTween is null
-                && !isStunned
+            bool canMoveOnGrid = !isStunned
                 && !_enemy.EnemyAnimator.IsPlayingAttackAnimation
                 && _currentMovementDelayAfterAttack <= 0;
 
             if (canMoveOnGrid)
             {
-                _lastPos = transform.position;
-
                 if (_isMovingToPositionUnrelatedToGrid)
                 {
                     Vector3? movement = MoveToPosition(_currentMovementPositionUnrelatedToGrid);

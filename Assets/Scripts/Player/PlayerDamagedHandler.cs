@@ -21,6 +21,27 @@ namespace Assets.Scripts.Player
         [SerializeField] private float _strength = 0.1f;
 
         private Tween _shakeTween;
+        private Vector3 _originalScale;
+        private bool _hasOriginalScale;
+
+        private void Awake()
+        {
+            if (_carVisual != null)
+            {
+                _originalScale = _carVisual.transform.localScale;
+                _hasOriginalScale = true;
+            }
+        }
+
+        private void OnDisable()
+        {
+            KillShakeTween();
+        }
+
+        private void OnDestroy()
+        {
+            KillShakeTween();
+        }
 
         public void TakeDamage(float damage)
         {
@@ -28,18 +49,31 @@ namespace Assets.Scripts.Player
             _playerManager.AudioClipPlayer.PlayOneShot(PlayerAudioConstants.DAMAGED_AUDIO_KEY);
             _damageVfxPlayer.Play(new());
 
-            if (_shakeTween?.IsPlaying() ?? false)
+            if (_carVisual != null)
             {
-                _shakeTween.Complete();
-                _shakeTween.Kill();
+                KillShakeTween();
+                _shakeTween = _carVisual.transform.DOShakeScale(_duration, _strength);
             }
-
-            _shakeTween = _carVisual.transform.DOShakeScale(_duration, _strength);
         }
 
         public void TakeFullHpDamage()
         {
             _playerManager.Health.DecreaseHealth(_playerManager.Health.MaxHealth);
+        }
+
+        private void KillShakeTween()
+        {
+            if (_shakeTween != null && _shakeTween.IsActive())
+            {
+                _shakeTween.Kill();
+            }
+
+            _shakeTween = null;
+
+            if (_carVisual != null && _hasOriginalScale)
+            {
+                _carVisual.transform.localScale = _originalScale;
+            }
         }
     }
 }

@@ -47,11 +47,11 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
             _startPosition = _boss.Transform.position;
             Vector3 targetLandingPos = _boss.PlayerPosition;
-            float warningDuration = _boss.Config.LeapWarningDuration;
+            float fillDuration = _boss.Config.LeapTakeoffDuration + (_boss.Config.LeapAirTime * 0.5f);
             _slamRadius = _boss.Config.SlamRadius;
             _slamDamage = _boss.Config.SlamDamage;
 
-            _activeTelegraph = _boss.ShowCircularTelegraph(targetLandingPos, _slamRadius, warningDuration, null);
+            _activeTelegraph = _boss.ShowCircularTelegraph(targetLandingPos, _slamRadius, fillDuration, null, autoContractOnFillComplete: false);
             _snappedTarget = _activeTelegraph != null ? _activeTelegraph.SnappedPosition : targetLandingPos;
             _snappedTarget.y = _startPosition.y;
 
@@ -156,6 +156,12 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
             // Perform circular area of effect damage check on ground impact
             ApplyAreaImpactDamage(_snappedTarget, _slamRadius, _slamDamage);
+
+            if (_activeTelegraph != null)
+            {
+                _activeTelegraph.ContractAndDismiss();
+                _activeTelegraph = null;
+            }
 
             float landingRecovery = _boss.Config.LeapLandingDuration;
             _phaseSequence = DOTween.Sequence();

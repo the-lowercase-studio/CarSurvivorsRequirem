@@ -206,7 +206,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
             _stateMachine.FixedUpdate();
         }
 
-        public CircularTelegraphIndicator ShowCircularTelegraph(Vector3 position, float radius, float duration, Action onImpact = null)
+        public CircularTelegraphIndicator ShowCircularTelegraph(Vector3 position, float radius, float duration, Action onImpact = null, bool autoContractOnFillComplete = false)
         {
             if (_circularTelegraph == null)
             {
@@ -215,11 +215,11 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
 
             CircularTelegraphIndicator indicator = Instantiate(_circularTelegraph);
             _activeTelegraphs.Add(indicator);
-            indicator.Show(position, radius, duration, WorldGrid, onImpact);
+            indicator.Show(position, radius, duration, WorldGrid, onImpact, autoContractOnFillComplete);
             return indicator;
         }
 
-        public RectangularTelegraphIndicator ShowRectangularTelegraph(Vector3 origin, Vector3 direction, float length, float width, float duration, Action onImpact = null)
+        public RectangularTelegraphIndicator ShowRectangularTelegraph(Vector3 origin, Vector3 direction, float length, float width, float duration, Action onImpact = null, bool autoContractOnFillComplete = false)
         {
             if (_rectangularTelegraph == null)
             {
@@ -228,7 +228,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
 
             RectangularTelegraphIndicator indicator = Instantiate(_rectangularTelegraph);
             _activeTelegraphs.Add(indicator);
-            indicator.Show(origin, direction, length, width, duration, onImpact);
+            indicator.Show(origin, direction, length, width, duration, onImpact, autoContractOnFillComplete);
             return indicator;
         }
 

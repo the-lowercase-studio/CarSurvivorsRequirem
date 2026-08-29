@@ -6,7 +6,6 @@ using Assets.Scripts.ObjectLifecycle.Actions;
 using Assets.Scripts.Shapes;
 using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.Utils;
-using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -108,7 +107,6 @@ namespace Assets.Scripts.DamageNumbers
             for (int i = 0; i < count; i++)
             {
                 DamageNumber damageNumber = _damageNumberPool.Get();
-                InitializeCameraFacingEffects(damageNumber);
                 damageNumber.transform.position = pos;
                 damageNumber.transform.rotation = Quaternion.identity;
 
@@ -123,15 +121,10 @@ namespace Assets.Scripts.DamageNumbers
                     return;
                 }
 
-                damageNumber.Initialize(new DamageNumberConfig(damage, visualApearanceByDamageTreshold.Value.DamagePopupApearance));
+                Vector3 dest = GetDestinationBasedOnSpawnShapeMode(pos, spawnShapeMode);
+                damageNumber.Initialize(new DamageNumberConfig(damage, visualApearanceByDamageTreshold.Value.DamagePopupApearance), pos, dest, _damagePopupVisibilityDuration);
 
                 damageNumber.OnLifeEnd += DamageNumber_OnLifeEnd;
-
-                Vector3 dest = GetDestinationBasedOnSpawnShapeMode(pos, spawnShapeMode);
-                damageNumber
-                    .transform
-                    .DOMove(dest, _damagePopupVisibilityDuration)
-                    .SetEase(Ease.InOutSine);
 
                 CurrentlySpawnedObjectsCount++;
             }
@@ -167,7 +160,6 @@ namespace Assets.Scripts.DamageNumbers
             {
                 CurrentlySpawnedObjectsCount--;
                 damageNumber.OnLifeEnd -= DamageNumber_OnLifeEnd;
-                damageNumber.transform.DOKill();
                 _damageNumberPool.Release(damageNumber);
                 OnSpawnedEntityReleased?.Invoke(damageNumber, EventArgs.Empty);
             }

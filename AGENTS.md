@@ -37,6 +37,7 @@ Use `.agents/context/adr/` for architecture decision records (ADRs).
 Use `.agents/context/game-systems/` for game-system documentation.
 Store brainstorming summaries under `.agents/context/brainstorming-summaries/`.
 Store implementation plans under `.agents/context/implementations/plans/` and implementation summaries under `.agents/context/implementations/summaries/`.
+Store all temporary multi-agent exchange files, prompt roadmaps, and scratch data exclusively under `.agents/context/tmp/`.
 Do not read `.user-docs/` as an operational source of truth for agent reasoning; operational truth derives strictly from the codebase and `.agents/`.
 
 ## Technology Baseline
@@ -146,6 +147,12 @@ For every non-trivial task, feature, or refactor, follow this two-phase reposito
 - **NEVER** save implementation plans or summaries exclusively to external IDE directories (e.g. `brain/`, `AppData`, `/tmp`, or user profile folders).
 - If an IDE environment (such as Antigravity) generates an artifact for UI preview, the authoritative in-repo markdown file under `.agents/context/implementations/` must ALWAYS be created/updated first.
 
+## Multi-Agent & Temporary Files Invariant
+
+- **Designated Workspace Location**: All temporary files, scratch scripts, inter-agent handoff state documents (such as `batch_review_handoff.md`), agent prompt roadmaps (`agent_prompts_roadmap.md`), and raw intermediate data produced during multi-agent orchestration or task execution MUST be stored strictly under `.agents/context/tmp/` (or the IDE session scratch directory).
+- **Strict Negative Constraint**: Agents are **STRICTLY FORBIDDEN** from creating temporary files, scratch scripts, handoff files, intermediate notes, `.tmp`, `.txt`, `.json`, or temporary `.md` files in the repository root (`/`), `Assets/`, `Packages/`, `ProjectSettings/`, or any other workspace directory outside `.agents/context/tmp/`.
+- **Git Hygiene**: `.agents/context/tmp/` is ignored in `.gitignore` (preserving `.gitkeep`), keeping git status clean during parallel and sequential multi-agent operations.
+
 ## Work Workflow
 
 1. Identify the requested scope and the smallest relevant files.
@@ -177,6 +184,7 @@ For documentation-only changes, review links and paths for accuracy. A Unity Edi
 - Keep game-system documentation in `.agents/context/game-systems/`.
 - Keep brainstorming session summaries in `.agents/context/brainstorming-summaries/`.
 - Keep implementation plans in `.agents/context/implementations/plans/` and summaries in `.agents/context/implementations/summaries/`.
+- Keep all temporary agent runtime data, scratch files, and multi-agent handoff files in `.agents/context/tmp/`.
 - Use `.agents/context/implementations/templates/` for plan and summary structure.
 - Keep human-facing project documentation in `.user-docs/`, creating or editing files there only upon explicit user request.
 - Do not prefix filenames for implementation plans, summaries, or brainstorm briefs with dates; specify the date inside the file content instead.

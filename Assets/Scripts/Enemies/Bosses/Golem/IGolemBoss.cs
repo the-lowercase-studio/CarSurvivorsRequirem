@@ -21,8 +21,8 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         IGolemLinearAttackHitbox LinearAttackHitbox { get; }
         IGolemAnimator Animator { get; }
         IAudioClipPlayer AudioClipPlayer { get; }
-        CircularTelegraphIndicator ShowCircularTelegraph(Vector3 position, float radius, float duration, Action onImpact = null);
-        RectangularTelegraphIndicator ShowRectangularTelegraph(Vector3 origin, Vector3 direction, float length, float width, float duration, Action onImpact = null);
+        CircularTelegraphIndicator ShowCircularTelegraph(Vector3 position, float radius, float duration, Action onImpact = null, bool autoContractOnFillComplete = false);
+        RectangularTelegraphIndicator ShowRectangularTelegraph(Vector3 origin, Vector3 direction, float length, float width, float duration, Action onImpact = null, bool autoContractOnFillComplete = false);
         void DismissAllTelegraphs();
         Vector3 PlayerPosition { get; }
         float DistanceToPlayer { get; }

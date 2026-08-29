@@ -34,6 +34,11 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Movement
 
         private void FixedUpdate()
         {
+            if (_rigidbody.isKinematic)
+            {
+                return;
+            }
+
             if (!CanMove || !_hasMovementTarget)
             {
                 _rigidbody.linearVelocity = new Vector3(0f, _rigidbody.linearVelocity.y, 0f);
@@ -78,7 +83,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Movement
         {
             _hasMovementTarget = false;
             _desiredVelocity = Vector3.zero;
-            if (_rigidbody != null)
+            if (_rigidbody != null && !_rigidbody.isKinematic)
             {
                 _rigidbody.linearVelocity = new Vector3(0f, _rigidbody.linearVelocity.y, 0f);
             }
@@ -90,8 +95,11 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Movement
             if (_rigidbody != null)
             {
                 _rigidbody.position = position;
-                _rigidbody.linearVelocity = Vector3.zero;
-                _rigidbody.angularVelocity = Vector3.zero;
+                if (!_rigidbody.isKinematic)
+                {
+                    _rigidbody.linearVelocity = Vector3.zero;
+                    _rigidbody.angularVelocity = Vector3.zero;
+                }
             }
         }
 
@@ -99,12 +107,13 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Movement
         {
             if (_rigidbody != null)
             {
-                _rigidbody.isKinematic = isKinematic;
-                if (isKinematic)
+                if (isKinematic && !_rigidbody.isKinematic)
                 {
                     _rigidbody.linearVelocity = Vector3.zero;
                     _rigidbody.angularVelocity = Vector3.zero;
                 }
+
+                _rigidbody.isKinematic = isKinematic;
             }
         }
 

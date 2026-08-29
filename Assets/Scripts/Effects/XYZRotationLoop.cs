@@ -1,6 +1,3 @@
-using Assets.Scripts.Extensions;
-using DG.Tweening;
-using System;
 using UnityEngine;
 
 namespace Assets.Scripts.Effects
@@ -14,42 +11,24 @@ namespace Assets.Scripts.Effects
         [SerializeField] private bool _useLocalRotation;
         [SerializeField] private float _tweenIterationTime = 2.5f;
         [SerializeField] private bool _unscaleWithTime;
+
         private Vector3 _maxTweenRotation;
-        private Tween _rotationTween;
+        private Vector3 _angularVelocity;
 
         private void OnEnable()
         {
             SetMaxRotationTween();
-
-            if (_rotationTween == null)
-            {
-                _rotationTween = _useLocalRotation
-                    ? transform.StartLocalRotateLoopTween(_maxTweenRotation, _tweenIterationTime)
-                    : transform.StartRotateLoopTween(_maxTweenRotation, _tweenIterationTime);
-
-                _rotationTween.SetUpdate(_unscaleWithTime);
-            }
-            else
-            {
-                _rotationTween.Restart();
-            }
         }
 
-        private void OnDisable()
+        private void Update()
         {
-            if (_rotationTween != null)
+            if (_tweenIterationTime <= 0f)
             {
-                _rotationTween.Pause();
+                return;
             }
-        }
 
-        private void OnDestroy()
-        {
-            if (_rotationTween != null)
-            {
-                _rotationTween.Kill();
-                _rotationTween = null;
-            }
+            float dt = _unscaleWithTime ? Time.unscaledDeltaTime : Time.deltaTime;
+            transform.Rotate(_angularVelocity * dt, _useLocalRotation ? Space.Self : Space.World);
         }
 
         private void SetMaxRotationTween()
@@ -59,6 +38,7 @@ namespace Assets.Scripts.Effects
                 _rotateY ? _maxRotationOnAxis : 0f,
                 _rotateZ ? _maxRotationOnAxis : 0f
             );
+            _angularVelocity = _tweenIterationTime > 0f ? _maxTweenRotation / _tweenIterationTime : Vector3.zero;
         }
     }
 }

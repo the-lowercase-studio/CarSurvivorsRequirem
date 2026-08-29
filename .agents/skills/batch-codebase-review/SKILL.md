@@ -45,10 +45,10 @@ Divide Assets/Scripts/ into cohesive domain batches (10 to 30 files per batch):
 
 ## State Machine & Checkpoint Discipline
 
-For multi-batch execution, maintain a structured tracking state machine:
+For multi-batch execution, maintain a structured tracking state machine inside `.agents/context/tmp/`:
 
-1. Tracking Plan: Initialize `batch_review_plan.md` using the plan template.
-2. Handoff Document: Initialize `batch_review_handoff.md` with a Tasks Table tracking:
+1. Tracking Plan: Initialize `.agents/context/tmp/batch_review_plan.md` using the plan template.
+2. Handoff Document: Initialize `.agents/context/tmp/batch_review_handoff.md` with a Tasks Table tracking:
    - Batch ID | Domain | Scope | Status (`PENDING`, `IN_PROGRESS`, `DONE`, `BLOCKED`) | Checkpoint Build (`PASS`/`FAIL`) | Notes
 3. Checkpoint Verification Gate:
    - After completing each batch, run the compilation checkpoint:
@@ -56,9 +56,9 @@ For multi-batch execution, maintain a structured tracking state machine:
      dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
      ```
    - If build fails, fix immediately within the batch scope before marking as `DONE`.
-   - Update `batch_review_handoff.md` with findings and status.
+   - Update `.agents/context/tmp/batch_review_handoff.md` with findings and status.
 4. Resumption Protocol:
-   - When resuming an interrupted session, inspect `batch_review_handoff.md`.
+   - When resuming an interrupted session, inspect `.agents/context/tmp/batch_review_handoff.md`.
    - Identify the first non-`DONE` batch row and continue execution without re-auditing completed batches.
 
 ---
@@ -67,14 +67,14 @@ For multi-batch execution, maintain a structured tracking state machine:
 
 ### Branch A: Direct Subagent Parallel Execution
 When subagent capabilities (`invoke_subagent`) are available:
-1. Initialize the batch review plan and handoff files.
+1. Initialize `.agents/context/tmp/batch_review_plan.md` and `.agents/context/tmp/batch_review_handoff.md`.
 2. Launch dedicated subagents for independent batches.
 3. Each subagent audits its assigned scope, applies safe standard fixes, runs `dotnet build`, and reports back.
 4. The coordinator aggregates results, verifies overall project compilation, and finalizes the handoff report.
 
 ### Branch B: Sequential Loop Execution with Checkpoints
 When running in a single agent session:
-1. Initialize `batch_review_plan.md` and `batch_review_handoff.md`.
+1. Initialize `.agents/context/tmp/batch_review_plan.md` and `.agents/context/tmp/batch_review_handoff.md`.
 2. Process batches sequentially:
    - Batch 1 -> Fix standards & audit architecture -> Checkpoint compile -> Mark DONE.
    - Batch 2 -> Fix standards & audit architecture -> Checkpoint compile -> Mark DONE.
@@ -83,7 +83,7 @@ When running in a single agent session:
 
 ### Branch C: Prompt Roadmap Generation
 When preparing instructions for external parallel agent sessions:
-1. Generate `agent_prompts_roadmap.md` with self-contained, copy-pasteable prompts for each batch.
+1. Generate `.agents/context/tmp/agent_prompts_roadmap.md` with self-contained, copy-pasteable prompts for each batch.
 2. Each prompt includes full context references, scope boundaries, and the compilation verification command.
 
 ---
@@ -91,7 +91,7 @@ When preparing instructions for external parallel agent sessions:
 ## Verification & Completion
 
 A batch codebase review is complete only when:
-1. All domain batches are marked `DONE` in `batch_review_handoff.md`.
+1. All domain batches are marked `DONE` in `.agents/context/tmp/batch_review_handoff.md`.
 2. Whole-project compilation succeeds with zero warnings:
    ```powershell
    dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false

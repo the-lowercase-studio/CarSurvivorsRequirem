@@ -76,3 +76,7 @@ crashlytics-build.properties
 .vscode
 /Data
 /Assets/Data
+
+# Agent runtime temporary and multi-agent exchange files
+/.agents/context/tmp/*
+!/.agents/context/tmp/.gitkeep

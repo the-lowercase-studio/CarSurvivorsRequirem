@@ -40,7 +40,7 @@ namespace Assets.Scripts.UI.Pause
 
         private void OnPausePerformed(InputAction.CallbackContext obj)
         {
-            ToogleActivation();
+            ToggleActivation();
         }
     }
 }

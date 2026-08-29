@@ -21,6 +21,11 @@ This document defines high-priority operational rules and constraints specifical
    - Step 2 (Execution): Execute the approved code changes according to project coding standards.
    - Step 3 (Verification & Summary): Verify compilation and gameplay safety, then create an implementation summary under .agents/context/implementations/summaries/ documenting changes made, validation performed, and manual check instructions. Use .agents/context/implementations/templates/summary-template.md as reference.
 
+4. Multi-Agent & Temporary Files Invariant:
+   - All scratch files, inter-agent handoff files (e.g. batch_review_handoff.md), temporary prompt roadmaps, and intermediate data files MUST be stored exclusively in .agents/context/tmp/ (or the IDE session scratch directory).
+   - NEVER create temporary, scratch, handoff, or intermediate files in the repository root, Assets/, Packages/, or any other workspace directory outside .agents/context/tmp/.
+   - .agents/context/tmp/ is gitignored (except .gitkeep) to preserve clean version control state during multi-agent orchestration.
+
 ## Documentation Formatting Constraints
 
 - Filenames for brainstorm summaries, plans, and summaries must use kebab-case without any date prefix (e.g. feature-name-brainstorm-summary.md or feature-name-plan.md). The date must be placed inside the document body.

@@ -1,4 +1,3 @@
-using DG.Tweening;
 using UnityEngine;
 
 namespace Assets.Scripts.Enemies.Base
@@ -11,6 +10,6 @@ namespace Assets.Scripts.Enemies.Base
 
         public void ResetVerticalVelocity();
 
-        public Tween MoveToPositionInTimeIgnoringSpeed(Vector3 pos, float time);
+        public void MoveToPositionInTimeIgnoringSpeed(Vector3 pos, float time);
     }
 }

@@ -4,7 +4,6 @@ using Assets.Scripts.Initializers;
 using Assets.Scripts.LayerMasks;
 using Assets.Scripts.Pooling;
 using Assets.Scripts.StatusEffects;
-using DG.Tweening;
 using System;
 using UnityEngine;
 
@@ -21,7 +20,9 @@ namespace Assets.Scripts.Projectiles
         private float _distanceTraveled;
         private Vector3 _movementDir;
         private Vector3 _startScale;
-        private Tween _shrinkTween;
+        private bool _isShrinking;
+        private float _shrinkElapsed;
+        private Vector3 _initialShrinkScale;
 
         public event EventHandler OnLifeEnd;
         public event EventHandler OnCanBeReleased;
@@ -33,6 +34,23 @@ namespace Assets.Scripts.Projectiles
 
         private void FixedUpdate()
         {
+            if (_isShrinking)
+            {
+                _shrinkElapsed += Time.fixedDeltaTime;
+                float duration = Mathf.Max(0.0001f, _config != null ? _config.DisapearingDuration : 0.1f);
+                float t = Mathf.Clamp01(_shrinkElapsed / duration);
+                transform.localScale = Vector3.Lerp(_initialShrinkScale, Vector3.zero, t);
+
+                if (t >= 1f)
+                {
+                    _isShrinking = false;
+                    transform.localScale = Vector3.zero;
+                    OnLifeEnd?.Invoke(this, EventArgs.Empty);
+                }
+
+                return;
+            }
+
             if (!_isAlive || !_isInitialized)
             {
                 return;
@@ -51,23 +69,18 @@ namespace Assets.Scripts.Projectiles
             HandleCollisions();
         }
 
-        private void OnDestroy()
-        {
-            _shrinkTween?.Kill();
-            _shrinkTween = null;
-        }
-
         public void OnGet()
         {
             _distanceTraveled = 0f;
             _isAlive = true;
+            _isShrinking = false;
+            _shrinkElapsed = 0f;
         }
 
         public void OnRelease()
         {
-            _shrinkTween?.Kill();
-            _shrinkTween = null;
-
+            _isShrinking = false;
+            _shrinkElapsed = 0f;
             _isInitialized = false;
 
             transform.localScale = _startScale;
@@ -148,16 +161,9 @@ namespace Assets.Scripts.Projectiles
 
         private void PlayEndLifeAnimation()
         {
-            _shrinkTween?.Kill();
-            _shrinkTween = transform.DOScale(Vector3.zero, _config.DisapearingDuration)
-                .SetEase(Ease.Flash)
-                .OnComplete(HandleShrinkComplete);
-        }
-
-        private void HandleShrinkComplete()
-        {
-            _shrinkTween = null;
-            OnLifeEnd?.Invoke(this, EventArgs.Empty);
+            _isShrinking = true;
+            _shrinkElapsed = 0f;
+            _initialShrinkScale = transform.localScale;
         }
     }
 }

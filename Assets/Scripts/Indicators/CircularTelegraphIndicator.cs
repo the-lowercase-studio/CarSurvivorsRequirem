@@ -29,7 +29,7 @@ namespace Assets.Scripts.Indicators
             KillActiveSequence();
         }
 
-        public Vector3 Show(Vector3 worldPosition, float radius, float duration, Grid worldGrid = null, Action onImpact = null)
+        public Vector3 Show(Vector3 worldPosition, float radius, float duration, Grid worldGrid = null, Action onImpact = null, bool autoContractOnFillComplete = false)
         {
             KillActiveSequence();
             _onImpactCallback = onImpact;
@@ -79,10 +79,18 @@ namespace Assets.Scripts.Indicators
             _activeSequence.OnComplete(() =>
             {
                 _onImpactCallback?.Invoke();
-                PlayContractAndDismiss();
+                if (autoContractOnFillComplete)
+                {
+                    PlayContractAndDismiss();
+                }
             });
 
             return finalPosition;
+        }
+
+        public void ContractAndDismiss()
+        {
+            PlayContractAndDismiss();
         }
 
         public void Dismiss()
@@ -105,6 +113,12 @@ namespace Assets.Scripts.Indicators
             if (_innerFill != null)
             {
                 _activeSequence.Join(_innerFill.DOScale(Vector3.zero, _contractDuration).SetEase(Ease.InQuad));
+            }
+
+            if (_outerRing == null && _innerFill == null)
+            {
+                Destroy(gameObject);
+                return;
             }
 
             _activeSequence.OnComplete(() =>

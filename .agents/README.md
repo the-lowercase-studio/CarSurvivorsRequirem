@@ -11,6 +11,7 @@ This folder is the vendor-neutral operational source of truth for agent customiz
 - context/implementations/plans/: implementation plans.
 - context/implementations/summaries/: implementation summaries.
 - context/implementations/templates/: standard plan and summary markdown templates.
+- context/tmp/: designated workspace folder for temporary files, scratch scripts, prompt roadmaps, and multi-agent handoff files (gitignored).
 - skills/: reusable multi-step workflows with templates and optional nested vendor descriptors.
 
 ## Discovery Order
@@ -33,8 +34,10 @@ This folder is the vendor-neutral operational source of truth for agent customiz
 - Keep brainstorming session summaries in .agents/context/brainstorming-summaries/.
 - Keep implementation plans in .agents/context/implementations/plans/.
 - Keep implementation summaries in .agents/context/implementations/summaries/.
+- Keep all temporary agent runtime data, scratch files, and multi-agent handoff files in .agents/context/tmp/.
 - Use .agents/context/implementations/templates/ for document structure.
 - Never write plans or summaries to external directories or IDE-specific artifact paths outside the repository.
+- Never write temporary or scratch files to the repository root or Assets/ folders; use .agents/context/tmp/.
 - .user-docs/ is reserved for human-facing documentation created only upon explicit user request; agents must not read .user-docs/ as an operational source of truth.
 - English Language Invariant: All files within `.agents/` (contexts, ADRs, system docs, skill definitions, templates, plans, summaries, and runtime artifacts) must be authored exclusively in English.
 
