@@ -11,21 +11,33 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Combat
 
         private readonly HashSet<Collider> _overlappingPlayers = new HashSet<Collider>();
 
-        public Collider StompCollider => _stompCollider;
-        public bool HasPlayerInside => _overlappingPlayers.Count > 0;
-        public IReadOnlyCollection<Collider> OverlappingPlayers => _overlappingPlayers;
+        public Collider StompCollider
+        {
+            get
+            {
+                return _stompCollider;
+            }
+        }
+
+        public bool HasPlayerInside
+        {
+            get
+            {
+                return _overlappingPlayers.Count > 0;
+            }
+        }
+
+        public IReadOnlyCollection<Collider> OverlappingPlayers
+        {
+            get
+            {
+                return _overlappingPlayers;
+            }
+        }
 
         private void Awake()
         {
-            if (_stompCollider == null)
-            {
-                _stompCollider = GetComponent<Collider>();
-            }
-
-            if (_stompCollider != null)
-            {
-                _stompCollider.isTrigger = true;
-            }
+            _stompCollider.isTrigger = true;
         }
 
         private void OnTriggerEnter(Collider other)
@@ -60,22 +72,19 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Combat
                 return;
             }
 
-            if (_stompCollider != null)
-            {
-                Collider[] hits = Physics.OverlapBox(
-                    _stompCollider.bounds.center,
-                    _stompCollider.bounds.extents,
-                    Quaternion.identity,
-                    EntityLayers.Player,
-                    QueryTriggerInteraction.Collide
-                );
+            Collider[] hits = Physics.OverlapBox(
+                _stompCollider.bounds.center,
+                _stompCollider.bounds.extents,
+                Quaternion.identity,
+                EntityLayers.Player,
+                QueryTriggerInteraction.Collide
+            );
 
-                foreach (Collider hit in hits)
+            foreach (Collider hit in hits)
+            {
+                if (hit != null)
                 {
-                    if (hit != null)
-                    {
-                        EntityManipulationHelper.Damage(hit, damage);
-                    }
+                    EntityManipulationHelper.Damage(hit, damage);
                 }
             }
         }

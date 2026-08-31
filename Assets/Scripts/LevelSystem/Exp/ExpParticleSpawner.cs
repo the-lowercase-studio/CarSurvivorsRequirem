@@ -27,8 +27,21 @@ namespace Assets.Scripts.LevelSystem.Exp
             [SerializeField] private float _treshold;
             [SerializeField] private float _divider;
 
-            public float Treshold => _treshold;
-            public float Divider => _divider;
+            public float Treshold
+            {
+                get
+                {
+                    return _treshold;
+                }
+            }
+
+            public float Divider
+            {
+                get
+                {
+                    return _divider;
+                }
+            }
         }
 
         private const float CHECK_QUEUED_EXP_SPAWNS_DELAY = 0.2f;
@@ -48,6 +61,16 @@ namespace Assets.Scripts.LevelSystem.Exp
 
         private void Awake()
         {
+            if (_expParticlePrefab == null)
+            {
+                Debug.LogError($"[{nameof(ExpParticleSpawner)}] ExpParticlePrefab is not assigned on '{name}'!");
+            }
+
+            if (_expTresholdDeviders == null || _expTresholdDeviders.Length == 0)
+            {
+                Debug.LogError($"[{nameof(ExpParticleSpawner)}] ExpTresholdDeviders is empty on '{name}'!");
+            }
+
             _expParticlePool = new ObjectPool<ExpParticle>(
                 createFunc: () => Instantiate(_expParticlePrefab, transform),
                 actionOnGet: OnGet,
@@ -106,12 +129,6 @@ namespace Assets.Scripts.LevelSystem.Exp
 
         private void SpawnParticlesBasedOnExpAmount()
         {
-            if (_expTresholdDeviders == null || _expTresholdDeviders.Length == 0)
-            {
-                Debug.LogError("Exp treshold deviders not set for: " + transform.name);
-                return;
-            }
-
             if (_queuedExpSpawns.Count == 0)
             {
                 return;

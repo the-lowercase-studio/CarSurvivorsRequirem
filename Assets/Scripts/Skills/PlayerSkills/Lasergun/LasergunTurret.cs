@@ -59,12 +59,18 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
 
         private void OnEnable()
         {
-            _laserCumulatingVFX.OnVFXFinished += OnLaserCumulatingVfxFinished;
+            if (_laserCumulatingVFX != null)
+            {
+                _laserCumulatingVFX.OnVFXFinished += OnLaserCumulatingVfxFinished;
+            }
         }
 
         private void OnDisable()
         {
-            _laserCumulatingVFX.OnVFXFinished -= OnLaserCumulatingVfxFinished;
+            if (_laserCumulatingVFX != null)
+            {
+                _laserCumulatingVFX.OnVFXFinished -= OnLaserCumulatingVfxFinished;
+            }
             ClearLaserLines();
             ClearTrackedTargets();
         }
@@ -84,7 +90,14 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
                 return;
             }
 
-            _laserCumulatingVFX.Play(new VFXPlayConfig(simulationSpeed: shootPreparingAnimationSpeed));
+            if (_laserCumulatingVFX != null)
+            {
+                _laserCumulatingVFX.Play(new VFXPlayConfig(simulationSpeed: shootPreparingAnimationSpeed));
+            }
+            else
+            {
+                FireLaserBeam();
+            }
         }
 
         private void OnLaserCumulatingVfxFinished(object sender, System.EventArgs e)
@@ -116,7 +129,10 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
             }
 
             StartCoroutine(ShootingLaserEffect());
-            _audioClipPlayer.Play("Shoot");
+            if (_audioClipPlayer != null)
+            {
+                _audioClipPlayer.Play("Shoot");
+            }
 
             DamageHitTargets();
         }

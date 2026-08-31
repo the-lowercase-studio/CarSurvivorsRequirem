@@ -47,13 +47,7 @@ namespace Assets.Scripts.UI.HUD
         private void Awake()
         {
             _defaultScale = _swarmText.rectTransform.localScale;
-
-            GameObject visual = GetVisual();
-            if (visual != null)
-            {
-                visual.SetActive(false);
-            }
-
+            _visual.SetActive(false);
             _swarmText.gameObject.SetActive(false);
         }
 
@@ -90,10 +84,9 @@ namespace Assets.Scripts.UI.HUD
             string text = string.Format(_incomingTemplateMessage, secondsRemaining);
             _swarmText.text = text;
 
-            GameObject visual = GetVisual();
-            if (visual != null && !visual.activeSelf)
+            if (!_visual.activeSelf)
             {
-                visual.SetActive(true);
+                _visual.SetActive(true);
             }
 
             if (!_swarmText.gameObject.activeSelf)
@@ -126,10 +119,9 @@ namespace Assets.Scripts.UI.HUD
         {
             _swarmText.text = _ongoingMessage;
 
-            GameObject visual = GetVisual();
-            if (visual != null && !visual.activeSelf)
+            if (!_visual.activeSelf)
             {
-                visual.SetActive(true);
+                _visual.SetActive(true);
             }
 
             if (!_swarmText.gameObject.activeSelf)
@@ -157,27 +149,8 @@ namespace Assets.Scripts.UI.HUD
                 .OnComplete(() =>
                 {
                     _swarmText.gameObject.SetActive(false);
-                    GameObject visual = GetVisual();
-                    if (visual != null)
-                    {
-                        visual.SetActive(false);
-                    }
+                    _visual.SetActive(false);
                 });
-        }
-
-        private GameObject GetVisual()
-        {
-            if (_visual != null)
-            {
-                return _visual;
-            }
-
-            if (_swarmText != null && _swarmText.transform.parent != null)
-            {
-                return _swarmText.transform.parent.gameObject;
-            }
-
-            return null;
         }
 
         private void PunchText()

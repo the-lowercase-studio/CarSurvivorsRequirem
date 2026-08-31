@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -23,8 +23,21 @@ namespace Assets.Scripts.Audio
 
             [SerializeField] private AudioClipConfig[] _clipVariants;
 
-            public string Name => _name;
-            public AudioClipConfig[] ClipVariants => _clipVariants;
+            public string Name
+            {
+                get
+                {
+                    return _name;
+                }
+            }
+
+            public AudioClipConfig[] ClipVariants
+            {
+                get
+                {
+                    return _clipVariants;
+                }
+            }
         }
 
         [SerializeField] private AudioClipPlayerConfig[] _audioClipPlayerConfigs;
@@ -91,10 +104,28 @@ namespace Assets.Scripts.Audio
 
         private void CacheConfigsByName()
         {
+            if (_audioClipPlayerConfigs == null)
+            {
+                return;
+            }
+
             foreach (AudioClipPlayerConfig config in _audioClipPlayerConfigs)
             {
-                if (config is null || _configsByName.ContainsKey(config.Name))
+                if (config is null)
                 {
+                    Debug.LogError($"[{nameof(AudioClipPlayer)}] Null config entry found in configs array on '{name}'.");
+                    continue;
+                }
+
+                if (string.IsNullOrEmpty(config.Name))
+                {
+                    Debug.LogError($"[{nameof(AudioClipPlayer)}] Config entry has empty name on '{name}'.");
+                    continue;
+                }
+
+                if (_configsByName.ContainsKey(config.Name))
+                {
+                    Debug.LogError($"[{nameof(AudioClipPlayer)}] Duplicate config entry for '{config.Name}' on '{name}'.");
                     continue;
                 }
 

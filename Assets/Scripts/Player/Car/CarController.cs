@@ -52,8 +52,21 @@ namespace Assets.Scripts.Player.Car
             [Tooltip("Front axle (Front - steers and spins) or rear axle (Rear - spins only).")]
             [SerializeField] private Axel _axel;
 
-            public GameObject WheelModel => _wheelModel;
-            public Axel Axel => _axel;
+            public GameObject WheelModel
+            {
+                get
+                {
+                    return _wheelModel;
+                }
+            }
+
+            public Axel Axel
+            {
+                get
+                {
+                    return _axel;
+                }
+            }
         }
 
         [Header("Engine & Acceleration")]
@@ -218,7 +231,7 @@ namespace Assets.Scripts.Player.Car
 
             if (_groundLayerMask.value == 0)
             {
-                _groundLayerMask = Assets.Scripts.LayerMasks.TerrainLayers.All;
+                throw new InvalidOperationException($"[{nameof(CarController)}] GroundLayerMask is unassigned on '{name}'!");
             }
         }
 

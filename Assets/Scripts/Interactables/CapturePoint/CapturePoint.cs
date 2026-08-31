@@ -9,8 +9,8 @@ namespace Assets.Scripts.Interactables.CapturePoint
 {
     public class CapturePoint : MonoBehaviour
     {
-        [Inject] private readonly IPlayerManager _playerManager;
-        [Inject] private readonly ISkillUpgradeFlow _skillUpgradeFlow;
+        [Inject] private readonly IPlayerManager _playerManager = null;
+        [Inject] private readonly ISkillUpgradeFlow _skillUpgradeFlow = null;
 
         [Header("Capture Settings")]
         [SerializeField] private float _captureRadius = 5f;
@@ -47,10 +47,7 @@ namespace Assets.Scripts.Interactables.CapturePoint
 
         private void Awake()
         {
-            if (_outlineCirclePlane != null)
-            {
-                _outlineCirclePlane.gameObject.SetActive(false);
-            }
+            _outlineCirclePlane.gameObject.SetActive(false);
         }
 
         private void Update()

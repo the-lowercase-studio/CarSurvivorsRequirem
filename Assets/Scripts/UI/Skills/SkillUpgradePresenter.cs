@@ -22,11 +22,11 @@ namespace Assets.Scripts.UI.Skills
 
     public class SkillUpgradePresenter : MonoBehaviour, ISkillUpgradePresenter
     {
-        [Inject] private readonly IPlayerManager _playerManager;
-        [Inject] private readonly IPlayerLevelPresenter _playerLevelPresenter;
-        [Inject] private readonly ICollectibleDropNotifier _collectibleDropNotifier;
-        [Inject] private readonly ISkillUpgradeFlow _skillUpgradeFlow;
-        [Inject] private readonly ISkillsVisualPresenter _skillsVisualPresenter;
+        [Inject] private readonly IPlayerManager _playerManager = null;
+        [Inject] private readonly IPlayerLevelPresenter _playerLevelPresenter = null;
+        [Inject] private readonly ICollectibleDropNotifier _collectibleDropNotifier = null;
+        [Inject] private readonly ISkillUpgradeFlow _skillUpgradeFlow = null;
+        [Inject] private readonly ISkillsVisualPresenter _skillsVisualPresenter = null;
 
         [Header("Upgrade Skill")]
         [SerializeField] private GameObject _upgradeSkillSection;
@@ -53,7 +53,7 @@ namespace Assets.Scripts.UI.Skills
 
         private void Awake()
         {
-            _audioClipPlayer = GetComponentInChildren<IAudioClipPlayer>();
+            _audioClipPlayer = _buttonsAudioPlayer != null ? _buttonsAudioPlayer : GetComponentInChildren<IAudioClipPlayer>();
         }
 
         private void Start()
@@ -147,7 +147,10 @@ namespace Assets.Scripts.UI.Skills
                     ShowStatsUpgradeSection(request);
                 }
 
-                _audioClipPlayer.Play("Show");
+                if (_audioClipPlayer != null)
+                {
+                    _audioClipPlayer.Play("Show");
+                }
             }
             else
             {
@@ -274,7 +277,10 @@ namespace Assets.Scripts.UI.Skills
             _lastHandledInputFrame = Time.frameCount;
             option.Apply();
             HandleUpgradeableOrInitializableSkillsShowing();
-            _buttonsAudioPlayer.Play("Click");
+            if (_audioClipPlayer != null)
+            {
+                _audioClipPlayer.Play("Click");
+            }
         }
 
         private void HandleContinueButtonClicked()

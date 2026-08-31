@@ -152,7 +152,16 @@ Then keep methods in lifecycle and behavior order that reads clearly:
 1. Prefer `[SerializeField] private` fields when inspector data does not need public access. When public read access is needed, prefer one-line serialized auto-properties: `[field: SerializeField] public Type Value { get; private set; }`. Use a private serialized field plus a public property when the accessor needs logic or existing serialized field names must be preserved. Avoid public mutable fields unless Unity/editor integration or serialized compatibility requires them.
 2. Add `[Tooltip("...")]` to non-obvious serialized fields, written clearly and concisely in English. Keep inspector headers `[Header("...")]` in English.
 3. Preserve existing inspector workflows and serialized data compatibility.
-4. For required `[SerializeField]` references, do not add defensive null checks in `Awake` just to throw custom errors. If a required reference is unassigned, rely on Unity's default missing-reference behavior; assigning required inspector references is user/setup responsibility.
+4. **Fail-Fast & Explicit Dependency Rule**:
+   - Do not add defensive fallback searches in `Awake()` (e.g., `if (_field == null) _field = GetComponentInChildren<T>();` or `transform.GetChild(0)`).
+   - If a dependency is authored on the prefab or inspector, serialize it via `[SerializeField] private T _field;` and assign it in the editor.
+   - If a dependency resides on the same GameObject, use `[RequireComponent(typeof(T))]` and assign it directly in `Awake()` (`_field = GetComponent<T>();`) without null checks.
+   - Do not add silent null-guards in `Awake()` (e.g. `if (_visual != null) _visual.SetActive(false);`) or downstream silent null-swallowings in gameplay methods (`_animator?.Play()` or `if (_hitbox == null) return;`) for required mechanical dependencies. Missing mechanical references must fail fast loudly in the Unity console.
+   - **Authorized Exceptions**: Null checks in `Awake()` or runtime methods are permitted strictly for:
+     1. Cosmetic & sensory components (`VFXPlayer`, `IAudioClipPlayer`, particle systems, trail renderers) so missing visuals/sounds do not break mechanics.
+     2. Genuinely optional visual polish elements (e.g. secondary visual indicators).
+     3. DI dependencies with optional inspector overrides (e.g., `if (_inspectorOverride != null) _service = _inspectorOverride;`).
+   - Unassigned configuration masks (such as `_groundLayerMask` in `CarController`) must validate in `Awake()` and throw an explicit `System.InvalidOperationException` if unassigned (`value == 0`).
 5. Do not use `FormerlySerializedAs` when renaming serialized fields. Before changing serialized field names:
    - Always notify the user in advance that they will need to manually re-assign the serialized values in the Unity Editor.
    - Exception: If the serialized change is small and straightforward to update directly in a text-formatted prefab or asset file, the agent may apply this exception to edit the prefab/asset directly, but MUST still explicitly inform the user that this action was performed.
@@ -201,11 +210,13 @@ Before finalizing a change:
 7. Functions/methods use block syntax ({}) instead of expression-bodied syntax (=>).
 8. Implementation plan (under .agents/context/implementations/plans/) and implementation summary (under .agents/context/implementations/summaries/) are created and tracked in the repository.
 9. All newly written or touched code identifiers, comments, tooltips, logs, templates, and markdown files are strictly in English.
+10. Fail-Fast null-check policy is followed (no fallback searches or silent null-swallowing for mechanical dependencies; see ADR-005).
 
 ## 12) Programming Guidelines and Constraints
 
 ### Banned Patterns
 - **LINQ Ban**: Do not use LINQ (`System.Linq` namespace or methods like `.Any()`, `.Sum()`, `.Where()`, `.ToList()`, etc.) in gameplay, spawning, or general logic, to avoid extra allocations and keep control flow explicit.
+- **Defensive Fallback Lookups & Silent Null-Guards**: Do not perform fallback `GetComponentInChildren` queries in `Awake()` or use `?.` / early returns to silently swallow missing required mechanical components, hitboxes, animators, or configs. See ADR-005.
 
 ### Syntax Rules
 - **Method Block Syntax**: Do not use expression-bodied arrow syntax (`=>`) for methods/functions. Always use standard block bodies with curly braces `{}` and explicit `return` statements where applicable. (Expression-bodied auto-properties remain acceptable).

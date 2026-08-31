@@ -16,7 +16,7 @@ namespace Assets.Scripts.Enemies.Base
 {
     public class Enemy : MonoBehaviour, IHealthy, IDamageable, IKnockable, IStunnable, IPoolable
     {
-        [Inject] private readonly IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> _damageNumbersSpawner;
+        [Inject] private readonly IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> _damageNumbersSpawner = null;
 
         [field: SerializeField] public EnemyConfigSO Config { get; private set; }
         [SerializeField] private VFXPlayer _bloodVfxPlayer;
@@ -77,8 +77,10 @@ namespace Assets.Scripts.Enemies.Base
 
         public void TakeDamage(float damage)
         {
+            Vector3 spawnPos = _bloodVfxPlayer != null ? _bloodVfxPlayer.transform.position : transform.position + Vector3.up;
+
             _damageNumbersSpawner.Spawn(
-                _bloodVfxPlayer.transform.position,
+                spawnPos,
                 new DamageNubmersSpawnerConfig(
                     damage,
                     ShapeModes.Hemisphere
@@ -87,7 +89,7 @@ namespace Assets.Scripts.Enemies.Base
 
             Health.DecreaseHealth(damage);
 
-            if (Health.IsAlive())
+            if (Health.IsAlive() && _bloodVfxPlayer != null)
             {
                 _bloodVfxPlayer.Play(new VFXPlayConfig());
             }

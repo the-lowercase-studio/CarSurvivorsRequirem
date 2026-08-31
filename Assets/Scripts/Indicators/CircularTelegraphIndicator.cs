@@ -96,7 +96,10 @@ namespace Assets.Scripts.Indicators
         public void Dismiss()
         {
             KillActiveSequence();
-            Destroy(gameObject);
+            if (this != null && gameObject != null)
+            {
+                Destroy(gameObject);
+            }
         }
 
         private void PlayContractAndDismiss()
@@ -117,13 +120,19 @@ namespace Assets.Scripts.Indicators
 
             if (_outerRing == null && _innerFill == null)
             {
-                Destroy(gameObject);
+                if (this != null && gameObject != null)
+                {
+                    Destroy(gameObject);
+                }
                 return;
             }
 
             _activeSequence.OnComplete(() =>
             {
-                Destroy(gameObject);
+                if (this != null && gameObject != null)
+                {
+                    Destroy(gameObject);
+                }
             });
         }
 

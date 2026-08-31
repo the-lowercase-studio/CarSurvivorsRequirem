@@ -41,7 +41,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
 
         private void Update()
         {
-            if (_config == null || _config.RotationDuration <= 0f || _visual == null)
+            if (_config == null || _config.RotationDuration <= 0f)
             {
                 return;
             }
@@ -55,7 +55,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
         {
             base.Initialize(config);
 
-            if (_config != null && _visual != null)
+            if (_config != null)
             {
                 float halfAngle = _config.RotationAngle * 0.5f;
                 _visual.localRotation = Quaternion.Euler(0f, (_inverseRotation ? 1f : -1f) * halfAngle, 0f);
@@ -86,9 +86,15 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
 
             projectile.Initialize(_config.ProjectileStatsSO);
 
-            _muzzleFlashVFXPlayer.Play(new());
+            if (_muzzleFlashVFXPlayer != null)
+            {
+                _muzzleFlashVFXPlayer.Play(new());
+            }
 
-            _audioClipPlayer.Play("Shoot");
+            if (_audioClipPlayer != null)
+            {
+                _audioClipPlayer.Play("Shoot");
+            }
         }
 
         private Projectile SpawnProjectile(ProjectileSpawnConfig projectileSpawnConfig)

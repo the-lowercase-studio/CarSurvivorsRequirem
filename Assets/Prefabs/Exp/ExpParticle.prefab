@@ -296,6 +296,7 @@ MonoBehaviour:
   _movementSpeed: 8.8
   _disapearingDuration: 0.1
   _visual: {fileID: 2497718662250730421}
+  _meshRenderer: {fileID: 5670474245223251586}
   _particleApearanceByTreshold:
   - _treshold: 0
     _material: {fileID: 2100000, guid: a4d8d66ba61208a43b2ca2d38a43b042, type: 2}

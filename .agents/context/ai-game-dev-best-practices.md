@@ -18,6 +18,7 @@ Use AI to speed up delivery while preserving game feel, balance, and architectur
 3. Preserve damage, health, and status effect semantics unless intentionally rebalanced.
 4. Keep inspector-driven workflows usable for designers.
 5. Reuse existing interfaces and systems before creating new abstractions.
+6. Enforce fail-fast component validation: do not mask missing inspector/prefab dependencies with defensive fallback searches (e.g., `GetComponentInChildren` in `Awake()`) or silent null-swallowing for mechanical systems (see ADR-005).
 
 ## High-Value AI Use Cases
 
@@ -43,7 +44,7 @@ Review checklist:
 
 1. Uses existing interface contracts.
 2. Avoids duplicate logic that already exists elsewhere.
-3. Handles nulls and missing optional components safely.
+3. Handles nulls and missing optional components (VFX/audio) safely while allowing required mechanical dependencies to fail fast.
 
 ### 3. Test Case Drafting
 
