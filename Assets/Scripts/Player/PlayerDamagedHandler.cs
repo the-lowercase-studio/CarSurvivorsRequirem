@@ -10,7 +10,7 @@ namespace Assets.Scripts.Player
     [RequireComponent(typeof(PlayerManager))]
     public class PlayerDamagedHandler : MonoBehaviour, IDamageable
     {
-        [Inject] private readonly IPlayerManager _playerManager;
+        [Inject] private readonly IPlayerManager _playerManager = null;
 
         [Header("Needed references")]
         [SerializeField] private VFXPlayer _damageVfxPlayer;
@@ -26,11 +26,8 @@ namespace Assets.Scripts.Player
 
         private void Awake()
         {
-            if (_carVisual != null)
-            {
-                _originalScale = _carVisual.transform.localScale;
-                _hasOriginalScale = true;
-            }
+            _originalScale = _carVisual.transform.localScale;
+            _hasOriginalScale = true;
         }
 
         private void OnDisable()
@@ -47,13 +44,13 @@ namespace Assets.Scripts.Player
         {
             _playerManager.Health.DecreaseHealth(damage);
             _playerManager.AudioClipPlayer.PlayOneShot(PlayerAudioConstants.DAMAGED_AUDIO_KEY);
-            _damageVfxPlayer.Play(new());
-
-            if (_carVisual != null)
+            if (_damageVfxPlayer != null)
             {
-                KillShakeTween();
-                _shakeTween = _carVisual.transform.DOShakeScale(_duration, _strength);
+                _damageVfxPlayer.Play(new());
             }
+
+            KillShakeTween();
+            _shakeTween = _carVisual.transform.DOShakeScale(_duration, _strength);
         }
 
         public void TakeFullHpDamage()
@@ -70,7 +67,7 @@ namespace Assets.Scripts.Player
 
             _shakeTween = null;
 
-            if (_carVisual != null && _hasOriginalScale)
+            if (_hasOriginalScale)
             {
                 _carVisual.transform.localScale = _originalScale;
             }

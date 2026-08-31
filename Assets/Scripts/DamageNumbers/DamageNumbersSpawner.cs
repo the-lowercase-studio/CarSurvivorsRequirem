@@ -39,8 +39,21 @@ namespace Assets.Scripts.DamageNumbers
             [SerializeField] private float _treshold;
             [SerializeField] private DamageNumberApearance _damagePopupApearance;
 
-            public float Treshold => _treshold;
-            public DamageNumberApearance DamagePopupApearance => _damagePopupApearance;
+            public float Treshold
+            {
+                get
+                {
+                    return _treshold;
+                }
+            }
+
+            public DamageNumberApearance DamagePopupApearance
+            {
+                get
+                {
+                    return _damagePopupApearance;
+                }
+            }
 
             public VisualApearanceByDamageTreshold(float treshold, DamageNumberApearance damagePopupApearance)
             {
@@ -65,6 +78,16 @@ namespace Assets.Scripts.DamageNumbers
 
         private void Awake()
         {
+            if (_damagePopupPrefab == null)
+            {
+                Debug.LogError($"[{nameof(DamageNumbersSpawner)}] DamagePopupPrefab is not assigned on '{name}'!");
+            }
+
+            if (_visualApearanceByDamageTresholds == null || _visualApearanceByDamageTresholds.Length == 0)
+            {
+                Debug.LogError($"[{nameof(DamageNumbersSpawner)}] VisualApearanceByDamageTresholds is empty on '{name}'!");
+            }
+
             _damageNumberPool = new ObjectPool<DamageNumber>(
                 createFunc: CreateDamageNumber,
                 actionOnGet: (obj) => obj.gameObject.SetActive(true),
@@ -95,12 +118,6 @@ namespace Assets.Scripts.DamageNumbers
         {
             if (!_isPopupsEnabled)
             {
-                return;
-            }
-
-            if (_visualApearanceByDamageTresholds.Length == 0)
-            {
-                Debug.LogError("There is 0 colors by damage tresholds entries in: " + transform.name);
                 return;
             }
 

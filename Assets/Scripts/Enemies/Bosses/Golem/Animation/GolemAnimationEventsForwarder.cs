@@ -6,47 +6,29 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
     {
         [SerializeField] private GolemAnimator _golemAnimator;
 
-        private void Awake()
-        {
-            EnsureAnimatorReference();
-        }
-
         public void Call_OnLinearFistRelease()
         {
-            EnsureAnimatorReference();
-            _golemAnimator?.Call_OnLinearFistRelease();
+            _golemAnimator.Call_OnLinearFistRelease();
         }
 
         public void Call_OnSkyBarrageRelease()
         {
-            EnsureAnimatorReference();
-            _golemAnimator?.Call_OnSkyBarrageRelease();
+            _golemAnimator.Call_OnSkyBarrageRelease();
         }
 
         public void Call_OnLeapTakeoffComplete()
         {
-            EnsureAnimatorReference();
-            _golemAnimator?.Call_OnLeapTakeoffComplete();
+            _golemAnimator.Call_OnLeapTakeoffComplete();
         }
 
         public void Call_OnLeapLandComplete()
         {
-            EnsureAnimatorReference();
-            _golemAnimator?.Call_OnLeapLandComplete();
+            _golemAnimator.Call_OnLeapLandComplete();
         }
 
         public void Call_OnStompImpact()
         {
-            EnsureAnimatorReference();
-            _golemAnimator?.Call_OnStompImpact();
-        }
-
-        private void EnsureAnimatorReference()
-        {
-            if (_golemAnimator == null)
-            {
-                _golemAnimator = GetComponent<GolemAnimator>() ?? GetComponentInParent<GolemAnimator>() ?? GetComponentInChildren<GolemAnimator>();
-            }
+            _golemAnimator.Call_OnStompImpact();
         }
     }
 }

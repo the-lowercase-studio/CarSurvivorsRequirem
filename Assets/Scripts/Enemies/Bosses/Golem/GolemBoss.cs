@@ -139,22 +139,6 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         {
             Health = GetComponent<IHealth>();
             _materialPropertyBlock = new MaterialPropertyBlock();
-
-            if (_animator == null)
-            {
-                _animator = GetComponentInChildren<GolemAnimator>();
-            }
-
-            if (_stompLegTrigger == null)
-            {
-                _stompLegTrigger = GetComponentInChildren<GolemStompTrigger>();
-            }
-
-            if (_linearAttackHitbox == null)
-            {
-                _linearAttackHitbox = GetComponentInChildren<GolemLinearAttackHitbox>();
-            }
-
             InitializeStateMachine();
         }
 
@@ -186,13 +170,15 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
                 Health.OnNoHealth -= Health_OnNoHealth;
             }
 
-            _linearAttackHitbox?.Deactivate();
+            if (_linearAttackHitbox != null)
+            {
+                _linearAttackHitbox.Deactivate();
+            }
             DismissAllTelegraphs();
         }
 
         private void OnDestroy()
         {
-            _linearAttackHitbox?.Deactivate();
             DismissAllTelegraphs();
         }
 
@@ -301,23 +287,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         public void TriggerStompDamage()
         {
             _audioClipPlayer?.PlayOneShot(GolemBossConstants.STOMP_SFX_KEY);
-
-            if (_stompLegTrigger != null)
-            {
-                _stompLegTrigger.ApplyStompDamage(_config.StompDamage);
-                return;
-            }
-
-            Vector3 point1 = transform.position;
-            Vector3 point2 = transform.position + Vector3.up * 3.5f;
-            Collider[] hitColliders = Physics.OverlapCapsule(point1, point2, _config.StompRadius, EntityLayers.Player, QueryTriggerInteraction.Collide);
-            foreach (Collider hit in hitColliders)
-            {
-                if (hit != null)
-                {
-                    EntityManipulationHelper.Damage(hit, _config.StompDamage);
-                }
-            }
+            _stompLegTrigger.ApplyStompDamage(_config.StompDamage);
         }
 
         private void Health_OnHealthChanged(object sender, EventArgs e)

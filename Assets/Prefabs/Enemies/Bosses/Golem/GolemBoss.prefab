@@ -365,8 +365,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f5865fa590d4e5f4cba5442837713570, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Enemies.Bosses.Golem.Combat.GolemLinearAttackHitbox
-  _boxCollider: {fileID: 0}
-  _rigidbody: {fileID: 0}
+  _boxCollider: {fileID: 4358434864371976992}
+  _rigidbody: {fileID: 3342149085466191073}
 --- !u!65 &4358434864371976992
 BoxCollider:
   m_ObjectHideFlags: 0

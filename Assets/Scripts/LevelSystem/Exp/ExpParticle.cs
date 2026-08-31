@@ -33,12 +33,32 @@ namespace Assets.Scripts.LevelSystem.Exp
             [SerializeField] private Material _material;
             [SerializeField] private FloatValueRange _scaleValueRange;
 
-            public float Treshold => _treshold;
-            public Material Material => _material;
-            public FloatValueRange ScaleValueRange => _scaleValueRange;
+            public float Treshold
+            {
+                get
+                {
+                    return _treshold;
+                }
+            }
+
+            public Material Material
+            {
+                get
+                {
+                    return _material;
+                }
+            }
+
+            public FloatValueRange ScaleValueRange
+            {
+                get
+                {
+                    return _scaleValueRange;
+                }
+            }
         }
 
-        [Inject] private readonly IPlayerManager _playerManager;
+        [Inject] private readonly IPlayerManager _playerManager = null;
 
         [SerializeField] private float _movementSpeed;
         [SerializeField] private float _disapearingDuration = 0.1f;
@@ -56,7 +76,13 @@ namespace Assets.Scripts.LevelSystem.Exp
         private Vector3 _collectStartScale;
         private Action _pendingCallback;
 
-        public GameObject GameObject => gameObject;
+        public GameObject GameObject
+        {
+            get
+            {
+                return gameObject;
+            }
+        }
 
         public event EventHandler OnExpReachedTarget;
         public event EventHandler OnCanBeReleased;
@@ -65,18 +91,6 @@ namespace Assets.Scripts.LevelSystem.Exp
         {
             _flowFieldMovementController = GetComponent<IFlowFieldMovementController>();
             _audioClipPlayer = GetComponentInChildren<IAudioClipPlayer>();
-
-            if (_meshRenderer == null)
-            {
-                if (_visual != null)
-                {
-                    _meshRenderer = _visual.GetComponent<MeshRenderer>();
-                }
-                else
-                {
-                    _meshRenderer = GetComponentInChildren<MeshRenderer>();
-                }
-            }
         }
 
         private void Start()
@@ -155,10 +169,7 @@ namespace Assets.Scripts.LevelSystem.Exp
             {
                 if (_particleApearanceByTreshold[i].Treshold <= exp)
                 {
-                    if (_meshRenderer != null)
-                    {
-                        _meshRenderer.sharedMaterial = _particleApearanceByTreshold[i].Material;
-                    }
+                    _meshRenderer.sharedMaterial = _particleApearanceByTreshold[i].Material;
 
                     transform.localScale =
                         Vector3.one * _particleApearanceByTreshold[i].ScaleValueRange.GetRandomValueInRange();

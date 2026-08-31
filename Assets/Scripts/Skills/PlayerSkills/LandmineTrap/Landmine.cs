@@ -33,7 +33,10 @@ namespace Assets.Scripts.Skills.PlayerSkills.LandmineTrap
 
             Explode();
 
-            _audioClipPlayer.Play("Explosion");
+            if (_audioClipPlayer != null)
+            {
+                _audioClipPlayer.Play("Explosion");
+            }
         }
 
         private void OnDrawGizmos()
@@ -47,13 +50,20 @@ namespace Assets.Scripts.Skills.PlayerSkills.LandmineTrap
 
         private void OnEnable()
         {
-            _deathVfxPlayer.OnVFXFinished += OnDeathVfxFinished;
+            if (_deathVfxPlayer != null)
+            {
+                _deathVfxPlayer.OnVFXFinished += OnDeathVfxFinished;
+            }
+
             _landmineVisual.SetActive(true);
         }
 
         private void OnDisable()
         {
-            _deathVfxPlayer.OnVFXFinished -= OnDeathVfxFinished;
+            if (_deathVfxPlayer != null)
+            {
+                _deathVfxPlayer.OnVFXFinished -= OnDeathVfxFinished;
+            }
         }
 
         private void OnDeathVfxFinished(object sender, System.EventArgs e)
@@ -70,7 +80,14 @@ namespace Assets.Scripts.Skills.PlayerSkills.LandmineTrap
                 return;
             }
 
-            _deathVfxPlayer.Play(new VFXPlayConfig(scale: _config.ExplosionRadius.Value));
+            if (_deathVfxPlayer != null)
+            {
+                _deathVfxPlayer.Play(new VFXPlayConfig(scale: _config.ExplosionRadius.Value));
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
 
             foreach (Collider collider in colliders)
             {

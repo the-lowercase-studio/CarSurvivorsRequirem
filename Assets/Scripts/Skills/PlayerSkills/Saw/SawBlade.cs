@@ -13,7 +13,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
 {
     public class SawBlade : MonoBehaviour, IInitializableWithScriptableConfig<SawSkillUpgradeableConfigSO>
     {
-        [Inject] private readonly IPlayerManager _playerManager;
+        [Inject] private readonly IPlayerManager _playerManager = null;
 
         private SawSkillUpgradeableConfigSO _config;
         private IAudioClipPlayer _audioClipPlayer;
@@ -48,7 +48,10 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
 
         private void AttackCollidingEnemy(Collider other)
         {
-            _audioClipPlayer.Play("Attack");
+            if (_audioClipPlayer != null)
+            {
+                _audioClipPlayer.Play("Attack");
+            }
 
             if (other.TryGetComponent(out IDamageable damageable) || (damageable = other.GetComponentInParent<IDamageable>()) != null)
             {

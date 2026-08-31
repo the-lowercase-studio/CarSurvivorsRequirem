@@ -26,15 +26,7 @@ namespace Assets.Scripts.UI.HUD
 
         private void Awake()
         {
-            if (_visual == null && transform.childCount > 0)
-            {
-                _visual = transform.GetChild(0).gameObject;
-            }
-
-            if (_visual != null)
-            {
-                _visual.SetActive(false);
-            }
+            _visual.SetActive(false);
         }
 
         private void OnDisable()
@@ -74,10 +66,7 @@ namespace Assets.Scripts.UI.HUD
                 _activeHealth.OnNoHealth += Health_OnNoHealth;
             }
 
-            if (_visual != null)
-            {
-                _visual.SetActive(true);
-            }
+            _visual.SetActive(true);
         }
 
         public void Hide()
@@ -85,10 +74,7 @@ namespace Assets.Scripts.UI.HUD
             UnsubscribeHealth();
             KillTweens();
 
-            if (_visual != null)
-            {
-                _visual.SetActive(false);
-            }
+            _visual.SetActive(false);
         }
 
         private void Health_OnHealthChanged(object sender, EventArgs e)

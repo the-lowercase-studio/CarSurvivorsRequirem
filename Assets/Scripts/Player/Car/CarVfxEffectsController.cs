@@ -54,7 +54,7 @@ namespace Assets.Scripts.Player.Car
 
         private void Start()
         {
-            if (_carMeshRenderer != null && _carMeshRenderer.materials != null)
+            if (_carMeshRenderer.materials != null)
             {
                 foreach (Material mat in _carMeshRenderer.materials)
                 {

@@ -24,11 +24,24 @@ namespace Assets.Scripts.Audio
 
             [SerializeField] private GameScene _scene;
 
-            public AudioClipConfig ClipConfig => _clipConfig;
-            public GameScene Scene => _scene;
+            public AudioClipConfig ClipConfig
+            {
+                get
+                {
+                    return _clipConfig;
+                }
+            }
+
+            public GameScene Scene
+            {
+                get
+                {
+                    return _scene;
+                }
+            }
         }
 
-        [Inject] private readonly IGameSceneLoader _gameSceneLoader;
+        [Inject] private readonly IGameSceneLoader _gameSceneLoader = null;
 
         [SerializeField] private AudioClipInSceneConfig[] _clipConfigInScenes;
         [SerializeField] private float _deathAudioPitch = AudioConstants.DEATH_AUDIO_PITCH;
@@ -89,6 +102,7 @@ namespace Assets.Scripts.Audio
         {
             if (_clipConfigInScenes == null)
             {
+                Debug.LogWarning($"[{nameof(BackgroundAudioManager)}] No scene music configurations assigned on '{name}'.");
                 return null;
             }
 
@@ -100,6 +114,7 @@ namespace Assets.Scripts.Audio
                 }
             }
 
+            Debug.LogWarning($"[{nameof(BackgroundAudioManager)}] No background audio clip configured for scene '{scene}'.");
             return null;
         }
     }

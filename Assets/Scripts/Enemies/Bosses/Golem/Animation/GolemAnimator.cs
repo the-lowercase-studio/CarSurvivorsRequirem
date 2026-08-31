@@ -46,12 +46,6 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
         {
             get
             {
-                EnsureAnimator();
-                if (_animator == null)
-                {
-                    return true;
-                }
-
                 if (_animator.IsInTransition(0))
                 {
                     AnimatorStateInfo nextState = _animator.GetNextAnimatorStateInfo(0);
@@ -67,41 +61,18 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
         {
             get
             {
-                EnsureAnimator();
-                if (_animator == null)
-                {
-                    return false;
-                }
-
                 return !IsMovingAnimationPlaying;
             }
         }
 
-        private void Awake()
-        {
-            EnsureAnimator();
-        }
-
         public void SetMoving(bool isMoving, float speed = 0f)
         {
-            EnsureAnimator();
-            if (_animator == null)
-            {
-                return;
-            }
-
             _animator.SetBool(_isMovingHash, isMoving);
             _animator.SetFloat(_speedHash, speed);
         }
 
         public void PlayLeapTakeoff()
         {
-            EnsureAnimator();
-            if (_animator == null)
-            {
-                return;
-            }
-
             _animator.ResetTrigger(_leapLandHash);
             _animator.SetTrigger(_leapTakeoffHash);
             _animator.SetTrigger(_leapSlamLegacyHash);
@@ -109,12 +80,6 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
 
         public void PlayLeapLand()
         {
-            EnsureAnimator();
-            if (_animator == null)
-            {
-                return;
-            }
-
             _animator.ResetTrigger(_leapTakeoffHash);
             _animator.ResetTrigger(_leapSlamLegacyHash);
             _animator.SetTrigger(_leapLandHash);
@@ -122,43 +87,17 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
 
         public void PlayStomp()
         {
-            EnsureAnimator();
-            if (_animator == null)
-            {
-                return;
-            }
-
             _animator.SetTrigger(_stompHash);
         }
 
         public void PlayLinearFist()
         {
-            EnsureAnimator();
-            if (_animator == null)
-            {
-                return;
-            }
-
             _animator.SetTrigger(_linearFistHash);
         }
 
         public void PlaySkyBarrage()
         {
-            EnsureAnimator();
-            if (_animator == null)
-            {
-                return;
-            }
-
             _animator.SetTrigger(_skyBarrageHash);
-        }
-
-        private void EnsureAnimator()
-        {
-            if (_animator == null)
-            {
-                _animator = GetComponentInChildren<Animator>();
-            }
         }
 
         public void Call_OnLinearFistRelease()

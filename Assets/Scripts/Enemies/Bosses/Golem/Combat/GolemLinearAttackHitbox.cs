@@ -14,6 +14,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Combat
         void Deactivate();
     }
 
+    [RequireComponent(typeof(BoxCollider), typeof(Rigidbody))]
     public class GolemLinearAttackHitbox : MonoBehaviour, IGolemLinearAttackHitbox
     {
         [SerializeField] private BoxCollider _boxCollider;
@@ -30,42 +31,40 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Combat
         private float _depth;
         private bool _isActive;
 
-        public bool IsActive => _isActive;
+        public bool IsActive
+        {
+            get
+            {
+                return _isActive;
+            }
+        }
 
         private void Awake()
         {
             _initialParent = transform.parent;
-
-            if (_boxCollider == null)
-            {
-                _boxCollider = GetComponent<BoxCollider>();
-            }
-
-            if (_boxCollider != null)
-            {
-                _boxCollider.isTrigger = true;
-                _boxCollider.enabled = false;
-            }
-
-            if (_rigidbody == null)
-            {
-                _rigidbody = GetComponent<Rigidbody>();
-            }
-
-            if (_rigidbody != null)
-            {
-                _rigidbody.isKinematic = true;
-            }
+            _boxCollider = GetComponent<BoxCollider>();
+            _rigidbody = GetComponent<Rigidbody>();
+            _boxCollider.isTrigger = true;
+            _boxCollider.enabled = false;
+            _rigidbody.isKinematic = true;
         }
 
         private void OnDisable()
         {
-            Deactivate();
+            KillActiveSequence();
+            _isActive = false;
+            _hitColliders.Clear();
+            if (_boxCollider != null)
+            {
+                _boxCollider.enabled = false;
+            }
         }
 
         private void OnDestroy()
         {
-            Deactivate();
+            KillActiveSequence();
+            _isActive = false;
+            _hitColliders.Clear();
         }
 
         public void Activate(
@@ -96,6 +95,11 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Combat
                 direction = transform.forward;
             }
             direction.Normalize();
+
+            if (_initialParent == null)
+            {
+                _initialParent = transform.parent;
+            }
 
             transform.SetParent(null);
             transform.position = origin;
@@ -137,36 +141,43 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Combat
         public void Deactivate()
         {
             _isActive = false;
-
-            if (_activeSequence != null && _activeSequence.IsActive())
-            {
-                _activeSequence.Kill();
-            }
-            _activeSequence = null;
+            KillActiveSequence();
 
             if (_boxCollider != null)
             {
                 _boxCollider.enabled = false;
             }
 
-            if (_initialParent != null && transform.parent != _initialParent)
+            if (_initialParent != null && transform != null && transform.parent != _initialParent)
             {
-                transform.SetParent(_initialParent);
-                transform.localPosition = Vector3.zero;
-                transform.localRotation = Quaternion.identity;
+                if (gameObject.activeInHierarchy && _initialParent.gameObject.activeInHierarchy)
+                {
+                    transform.SetParent(_initialParent);
+                    transform.localPosition = Vector3.zero;
+                    transform.localRotation = Quaternion.identity;
+                }
             }
 
             _hitColliders.Clear();
         }
 
+        private void KillActiveSequence()
+        {
+            if (_activeSequence != null && _activeSequence.IsActive())
+            {
+                _activeSequence.Kill();
+            }
+            _activeSequence = null;
+        }
+
         private void CheckOverlap()
         {
-            if (!_isActive)
+            if (!_isActive || _boxCollider == null)
             {
                 return;
             }
 
-            Vector3 center = _boxCollider != null ? transform.TransformPoint(_boxCollider.center) : transform.position + new Vector3(0f, _verticalOffset, 0f);
+            Vector3 center = transform.TransformPoint(_boxCollider.center);
             Vector3 halfExtents = new Vector3(_width * 0.5f, _height * 0.5f, _depth * 0.5f);
 
             int hitCount = Physics.OverlapBoxNonAlloc(center, halfExtents, _overlapBuffer, transform.rotation, EntityLayers.Player, QueryTriggerInteraction.Collide);
