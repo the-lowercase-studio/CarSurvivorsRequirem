@@ -14,7 +14,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Enemies.Base
 {
-    public class Enemy : MonoBehaviour, IHealthy, IDamageable, IKnockable, IStunnable, IPoolable
+    public class Enemy : MonoBehaviour, IHealthy, IDamageable, IKnockable, IPoolable
     {
         [Inject] private readonly IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> _damageNumbersSpawner = null;
 
@@ -23,7 +23,6 @@ namespace Assets.Scripts.Enemies.Base
         [SerializeField] private GameObject _visual;
 
         public IHealth Health { get; private set; }
-        public IStunController StunController { get; private set; }
         public ICollisionsController CollisionsController { get; private set; }
         public IMovementController MovementController { get; private set; }
         public IAudioClipPlayer AudioClipPlayer { get; private set; }
@@ -36,7 +35,6 @@ namespace Assets.Scripts.Enemies.Base
         private void Awake()
         {
             Health = GetComponent<IHealth>();
-            StunController = GetComponent<IStunController>();
             CollisionsController = GetComponent<ICollisionsController>();
             MovementController = GetComponent<IMovementController>();
             AudioClipPlayer = GetComponentInChildren<IAudioClipPlayer>();
@@ -93,11 +91,6 @@ namespace Assets.Scripts.Enemies.Base
             {
                 _bloodVfxPlayer.Play(new VFXPlayConfig());
             }
-        }
-
-        public void ApplyStun(float duration)
-        {
-            StunController.PerformStun(duration);
         }
 
         private void EnemyDeathSequence_OnCompleted(object sender, EventArgs e)

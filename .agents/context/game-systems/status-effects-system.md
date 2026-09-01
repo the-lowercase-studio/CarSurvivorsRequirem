@@ -2,12 +2,11 @@
 
 ## Purpose
 
-The Status Effects system defines shared combat capability interfaces for damage, stun, and knockback, plus the reusable stun timer controller.
+The Status Effects system defines shared combat capability interfaces for damage and knockback, along with helper utilities for effect application.
 
 It is responsible for:
-- Exposing target capabilities through Assets/Scripts/StatusEffects/IDamageable.cs, Assets/Scripts/StatusEffects/IStunnable.cs, and Assets/Scripts/StatusEffects/IKnockable.cs.
-- Providing `IStunController` and Assets/Scripts/StatusEffects/StunController.cs for timed stun state.
-- Supporting helper-based effect application without depending on concrete enemy or player types.
+- Exposing target capabilities through Assets/Scripts/StatusEffects/IDamageable.cs and Assets/Scripts/StatusEffects/IKnockable.cs.
+- Supporting helper-based effect application without depending on concrete enemy or player types via Assets/Scripts/StatusEffects/EntityManipulationHelper.cs.
 
 It is not responsible for:
 - Health value storage, regeneration, or health bar presentation.
@@ -19,15 +18,13 @@ It is not responsible for:
 
 - Primary code locations:
   - Assets/Scripts/StatusEffects/IDamageable.cs
-  - Assets/Scripts/StatusEffects/IStunnable.cs
   - Assets/Scripts/StatusEffects/IKnockable.cs
-  - Assets/Scripts/StatusEffects/StunController.cs
+  - Assets/Scripts/StatusEffects/EntityManipulationHelper.cs
 - Current concrete users:
   - Assets/Scripts/Enemies/Base/Enemy.cs
   - Assets/Scripts/Enemies/Base/EnemyMovementController.cs
   - Assets/Scripts/Enemies/Base/EnemyAttackController.cs
   - Assets/Scripts/Player/PlayerDamagedHandler.cs
-  - Assets/Scripts/StatusEffects/EntityManipulationHelper.cs
   - Assets/Scripts/Volumes/DeathVolume.cs
   - Assets/Scripts/Skills/PlayerSkills/Saw/SawBlade.cs
   - Assets/Scripts/Skills/PlayerSkills/LandmineTrap/Landmine.cs
@@ -46,35 +43,25 @@ It is not responsible for:
 
 - Core components:
   - Assets/Scripts/StatusEffects/IDamageable.cs exposes `TakeDamage(float damage)` and `TakeFullHpDamage()`.
-  - Assets/Scripts/StatusEffects/IStunnable.cs exposes `ApplyStun(float duration)`.
   - Assets/Scripts/StatusEffects/IKnockable.cs exposes `ApplyKnockBack(Vector3 direction, float power, float timeToArriveAtLocation)` and is currently `internal`.
-  - `IStunController` exposes `IsStunned`, stun lifecycle events, and `PerformStun(float duration)`.
-  - Assets/Scripts/StatusEffects/StunController.cs is a `MonoBehaviour` that stores stun state and counts down in `Update`.
-  - Assets/Scripts/StatusEffects/EntityManipulationHelper.cs applies damage, knockback, and stun through collider `TryGetComponent` capability checks.
+  - Assets/Scripts/StatusEffects/EntityManipulationHelper.cs applies damage and knockback through collider `TryGetComponent` and `GetComponentInParent` capability checks.
 - Runtime flow:
   - Skills, projectiles, enemy attacks, or volumes detect a target collider.
   - Callers either use Assets/Scripts/StatusEffects/EntityManipulationHelper.cs or directly query a capability interface.
   - Damage flows into the target's Assets/Scripts/StatusEffects/IDamageable.cs implementation.
   - Knockback flows into the target's Assets/Scripts/StatusEffects/IKnockable.cs implementation.
-  - Stun flows into Assets/Scripts/StatusEffects/IStunnable.cs.ApplyStun, which current enemies forward to `StunController.PerformStun`.
-  - `StunController.PerformStun` starts stun and raises `OnStunStart`, or extends only when the new duration is longer than the remaining timer and raises `OnStunExtended`.
-  - `StunController.Update` decrements the timer and raises `OnStunEnd` when the timer reaches zero.
 
 ## Rules and Invariants
 
 - Critical behavior rules:
   - Effect callers should depend on capability interfaces, not concrete enemy or player classes.
-  - Stun duration extension only replaces the timer when the new duration is longer than the current remaining stun.
-  - `OnStunStart`, `OnStunExtended`, and `OnStunEnd` are synchronous state-change events from Assets/Scripts/StatusEffects/StunController.cs.
   - `TakeFullHpDamage` represents an immediate lethal/full-health damage path and is used by Assets/Scripts/Volumes/DeathVolume.cs.
-  - Knockback direction should be flattened by helpers before application when using Assets/Scripts/StatusEffects/EntityManipulationHelper.cs.Knockback.
+  - Knockback direction should be flattened (`dir.y = 0`) by helpers before application when using Assets/Scripts/StatusEffects/EntityManipulationHelper.cs.Knockback.
 - Ordering or sequencing guarantees:
-  - `OnStunStart` fires after `IsStunned` becomes true.
-  - `OnStunEnd` fires after `IsStunned` becomes false.
-  - `OnStunExtended` fires only when an active stun receives a longer remaining duration.
+  - Knockback calculation precedes movement updates in enemy movement handlers.
 - Constraints contributors must preserve:
   - Keep effect APIs narrow and capability-based.
-  - Treat damage, stun duration, knockback range, and knockback travel time as player-facing balance.
+  - Treat damage, knockback range, and knockback travel time as player-facing balance.
   - Preserve target layer/collider assumptions in callers before changing capability lookup.
   - Do not move health storage or visual feedback into status capability interfaces.
 
@@ -83,14 +70,12 @@ It is not responsible for:
 - Safe extension areas:
   - Add a new targetable entity by implementing the relevant capability interfaces.
   - Add a new skill effect by applying capabilities through Assets/Scripts/StatusEffects/EntityManipulationHelper.cs or direct `TryGetComponent`.
-  - Add a new status controller when the state has behavior beyond the current stun timer.
 - Required dependencies and contracts:
-  - Enemy prefabs that should be stunned need an `IStunController` implementation and an Assets/Scripts/StatusEffects/IStunnable.cs forwarding path.
   - Knockback callers outside the current assembly may need visibility changes because Assets/Scripts/StatusEffects/IKnockable.cs is internal.
   - Damage callers require colliders to be on objects that expose Assets/Scripts/StatusEffects/IDamageable.cs or have the capability on a queried parent/object as implemented by the caller.
 - Testing implications:
   - Compile after interface or visibility changes.
-  - In Unity, validate damage, full HP damage, stun start/end/extension, knockback direction, and enemy movement/attack behavior while stunned.
+  - In Unity, validate damage, full HP damage, knockback direction, and enemy movement behavior.
   - For new targets, validate component placement matches the collider queried by effect callers.
 
 ## Integration Notes
@@ -101,24 +86,19 @@ It is not responsible for:
   - Assets/Scripts/Volumes/DeathVolume.cs applies full HP damage or pool return.
 - Downstream consumers:
   - Health systems receive damage through concrete Assets/Scripts/StatusEffects/IDamageable.cs implementations.
-  - Enemy movement can consume `IStunController.IsStunned`.
-  - Skills rely on enemy capability interfaces for damage, knockback, and stun.
+  - Enemy movement handles knockback through concrete Assets/Scripts/StatusEffects/IKnockable.cs implementations.
+  - Skills rely on enemy capability interfaces for damage and knockback.
 - Cross-system coupling risks:
-  - Component placement matters because most effect application uses collider `TryGetComponent`.
-  - Stun state only affects behavior when concrete consumers check `IStunController.IsStunned`.
+  - Component placement matters because most effect application uses collider `TryGetComponent` with parent fallback.
   - Changing Assets/Scripts/StatusEffects/IKnockable.cs visibility or signature affects helper and enemy implementation boundaries.
 
 ## Known Risks and Open Questions
 
 - Known limitations:
   - Assets/Scripts/StatusEffects/IKnockable.cs is `internal`, which limits use outside the current assembly.
-  - Assets/Scripts/StatusEffects/StunController.cs has no stacking model beyond replacing the timer with a longer duration.
-  - Existing enemy movement has a documented issue where stun may not stop movement because the movement controller gates stun checks behind `_isStunable`.
-  - Capability lookup currently uses `TryGetComponent` on the collider object, so child-collider setups may need explicit forwarding components.
+  - Capability lookup currently uses `TryGetComponent` on the collider object with a single parent fallback.
 - Open design questions:
-  - Should stun affect attacking as well as movement for all enemies?
   - Should knockback be public API if future systems outside the assembly need to apply it?
-  - Should status effects support immunity, resistance, stacking, or source tracking?
+  - Should status effects support damage-over-time (DOT), slow, or debuffs in the future?
 - Suggested follow-up tasks:
-  - Review enemy stun movement blocking in a focused bugfix.
   - Add a prefab/component placement checklist for targetable entities if collider forwarding issues recur.

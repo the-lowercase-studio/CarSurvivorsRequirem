@@ -16,7 +16,6 @@ namespace Assets.Scripts.Enemies.Base
 
         private float _lastGroundedY;
         private float _verticalVelocity;
-        private bool _isStunnable = false;
 
         private bool _isMovingToPositionUnrelatedToGrid;
         private Vector3 _currentMovementPositionUnrelatedToGrid;
@@ -211,10 +210,7 @@ namespace Assets.Scripts.Enemies.Base
                 return;
             }
 
-            bool isStunned = _isStunnable && _enemy.StunController.IsStunned;
-
-            bool canMoveOnGrid = !isStunned
-                && !_enemy.EnemyAnimator.IsPlayingAttackAnimation
+            bool canMoveOnGrid = !_enemy.EnemyAnimator.IsPlayingAttackAnimation
                 && _currentMovementDelayAfterAttack <= 0;
 
             if (canMoveOnGrid)

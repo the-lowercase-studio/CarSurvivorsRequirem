@@ -59,8 +59,8 @@ GameObject:
   - component: {fileID: 7587162170289287785}
   - component: {fileID: 4005377031019995928}
   - component: {fileID: 9102361029957876162}
-  - component: {fileID: 7970101048238213037}
   - component: {fileID: 3678914623537164431}
+  - component: {fileID: 7970101048238213037}
   m_Layer: 18
   m_Name: GolemBoss
   m_TagString: Untagged
@@ -207,6 +207,19 @@ Rigidbody:
   m_Interpolate: 1
   m_Constraints: 112
   m_CollisionDetection: 1
+--- !u!114 &3678914623537164431
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2737085141949152271}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20620ae30fdd0164c9bb5bdc717d3ada, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Reflex::Reflex.Components.GameObjectSelfInjector
+  _injectionStrategy: 0
 --- !u!136 &7970101048238213037
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -230,19 +243,6 @@ CapsuleCollider:
   m_Height: 4.4897447
   m_Direction: 1
   m_Center: {x: 0, y: 2.2596943, z: 0}
---- !u!114 &3678914623537164431
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2737085141949152271}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 20620ae30fdd0164c9bb5bdc717d3ada, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Reflex::Reflex.Components.GameObjectSelfInjector
-  _injectionStrategy: 0
 --- !u!1 &4636031633190306756
 GameObject:
   m_ObjectHideFlags: 0
