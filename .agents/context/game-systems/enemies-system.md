@@ -30,7 +30,7 @@ It does not own wave timing, grid generation, flow-field vector computation, pla
 - Designer-authored data:
   - Assets/ScriptableObjects/Enemy/EnemyConfigSO.cs
   - Assets/Scripts/Enemies/DropAnimationConfiguration.cs
-  - Enemy prefabs configured with Enemy, EnemyMovementController, EnemyAttackController, EnemyDeathHandler, EnemyDropHandler, EnemyAnimator, EnemyCollisionsController, FlowFieldMovementController, Health/RegenativeHealth, StunController, Collider, Rigidbody, Audio, and VFX
+  - Enemy prefabs configured with Enemy, EnemyMovementController, EnemyAttackController, EnemyDeathHandler, EnemyDropHandler, EnemyAnimator, EnemyCollisionsController, FlowFieldMovementController, Health/RegenativeHealth, Collider, Rigidbody, Audio, and VFX
 - Related systems:
   - Wave orchestration: Assets/Scripts/Waves/WaveManager.cs
   - Swarm events: Assets/Scripts/Spawners/Swarm/SwarmSpawner.cs
@@ -60,7 +60,7 @@ It does not own wave timing, grid generation, flow-field vector computation, pla
 ## Architecture and Data Flow
 
 - Core components:
-  - Enemy: Aggregate root for standard enemy prefabs. Implements IHealthy, IDamageable, IKnockable, IStunnable, and IPoolable. Injects IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> via Reflex. Dispatches floating damage numbers on TakeDamage, reduces Health, plays blood VFX if alive, handles knockback delegation to MovementController, stuns via StunController, and triggers pool release via OnCanBeReleased when the death sequence completes.
+  - Enemy: Aggregate root for standard enemy prefabs. Implements IHealthy, IDamageable, IKnockable, and IPoolable. Injects IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> via Reflex. Dispatches floating damage numbers on TakeDamage, reduces Health, plays blood VFX if alive, handles knockback delegation to MovementController, and triggers pool release via OnCanBeReleased when the death sequence completes.
   - EnemyMovementController: Implements IMovementController. Drives grid movement via IFlowFieldMovementController, or handles off-grid movements (e.g. knockback) via MoveToPositionInTimeIgnoringSpeed with DOTween. Performs obstacle SphereCasts against TerrainLayers.Impassable using OBSTACLE_CHECK_RADIUS (0.4f) and OBSTACLE_SAFETY_BUFFER (0.1f) to prevent wall clipping. Handles grounding via SphereCast against TerrainLayers.Ground, applying FALL_GRAVITY (25f) and killing enemies falling below FALL_DEATH_Y_THRESHOLD (-10f). Pauses movement during attack animations and for a 0.2s post-attack delay. Rotates smoothly toward movement direction using Config.RotationSpeed.
   - EnemyCollisionsController: Implements ICollisionsController. Periodically checks collisions (default every 0.05s) with a SphereCastAll on EntityLayers.All, emitting OnCollisionWithPlayer and OnCollisionWithOtherEnemy events while ignoring self triggers.
   - EnemyAttackController: Subscribes to EnemyCollisionsController.OnCollisionWithPlayer. Verifies attack range (_attackRange) and attack cone angle (_attackArcAngle, default 60°), and executes a Physics.Raycast line-of-sight check against TerrainLayers.All to prevent attacking through walls. Triggers attack animation on EnemyAnimator, and inflicts EnemyConfigSO.Damage to IDamageable targets on OnAttackHitFrame.
@@ -79,7 +79,7 @@ It does not own wave timing, grid generation, flow-field vector computation, pla
   - ICollectibleDropNotifier: Contract for spawning collectible items with drop physics/tweens.
   - IBossManager: Contract for managing boss lifecycle and HUD.
   - IPoolable: Pool lifecycle interface (OnGet, ReturnToPool, OnRelease, OnCanBeReleased).
-  - IHealthy, IDamageable, IKnockable, IStunnable: Health, combat, and crowd-control contracts.
+  - IHealthy, IDamageable, IKnockable: Health, combat, and crowd-control contracts.
   - INeedToCompleteBeforeDisable: Contract delaying pool recycling until visual/audio death sequences complete.
   - IMovementController: Movement and knockback interface for enemy locomotion.
   - IAttackAnimationPlayer: Animation event interface for attack start, hit frame, and finish.
@@ -171,7 +171,6 @@ It does not own wave timing, grid generation, flow-field vector computation, pla
     - EnemyCollisionsController
     - FlowFieldMovementController
     - Health or RegenativeHealth
-    - StunController
     - Collider (trigger and physical setup)
     - Rigidbody
     - VFXPlayer (blood and death VFX)
@@ -220,10 +219,8 @@ It does not own wave timing, grid generation, flow-field vector computation, pla
 ## Known Risks and Open Questions
 
 - Known limitations:
-  - In EnemyMovementController, _isStunnable defaults to false and is not serialized or dynamically updated from IStunController, causing standard flow-field movement to ignore stun state unless modified.
   - EnemyDeathHandler uses a hardcoded _startEffectsToFinish = 2. If a prefab lacks either a death VFX player or a death audio clip, OnCompleted will never be reached.
   - CollectibleDropNotifier relies on GameObject pooling rather than strongly-typed component pools, requiring TryGetComponent checks upon retrieval and release.
 - Open design questions:
-  - Should _isStunnable be removed in favor of directly querying _enemy.StunController.IsStunned?
   - Should EnemyDeathHandler dynamically count configured finishable components (e.g. check if death audio/VFX are assigned) rather than hardcoding _startEffectsToFinish = 2?
   - Should spawn chance redistribution operate on cloned runtime data to ensure editor ScriptableObject assets remain unmodified during testing?

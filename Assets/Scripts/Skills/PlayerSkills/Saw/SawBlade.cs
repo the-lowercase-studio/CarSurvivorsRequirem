@@ -72,11 +72,6 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
                     knockback,
                     _config.TimeToArriveAtKnockbackLocation);
             }
-
-            if (other.TryGetComponent(out IStunnable stunnable) || (stunnable = other.GetComponentInParent<IStunnable>()) != null)
-            {
-                stunnable.ApplyStun(_config.TimeToArriveAtKnockbackLocation);
-            }
         }
     }
 }

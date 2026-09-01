@@ -96,8 +96,6 @@ namespace Assets.Scripts.Skills.PlayerSkills.LandmineTrap
                 float timeToArriveAtLocation = _config.KnockbackRange.Value * SkillConstants.TIME_TO_ARRIVE_AT_LOCATION_MULTIPLIER;
 
                 ApplyExplosionKnockbackOnKnockableEntity(collider, timeToArriveAtLocation);
-
-                EntityManipulationHelper.Stun(collider, timeToArriveAtLocation);
             }
 
             _landmineVisual.SetActive(false);

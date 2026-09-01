@@ -30,18 +30,5 @@ namespace Assets.Scripts.StatusEffects
                 knockable.ApplyKnockBack(dir, range, timeToArriveAtLocation);
             }
         }
-
-        public static void Stun(Collider target, float duration)
-        {
-            if (target is null)
-            {
-                return;
-            }
-
-            if (target.TryGetComponent(out IStunnable stunnable) || (stunnable = target.GetComponentInParent<IStunnable>()) != null)
-            {
-                stunnable.ApplyStun(duration);
-            }
-        }
     }
 }
