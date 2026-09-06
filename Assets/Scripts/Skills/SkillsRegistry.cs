@@ -1,4 +1,5 @@
 using Assets.Scripts.Initializers;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,18 +7,24 @@ namespace Assets.Scripts.Skills
 {
     public interface ISkillsRegistry
     {
-        public IReadOnlyList<ISkillBase> Skills { get; }
-        public int UninitializedSkillsCount { get; }
+        IReadOnlyList<ISkillBase> Skills { get; }
+        int UninitializedSkillsCount { get; }
+        int InitializedSkillsCount { get; }
 
-        public IReadOnlyList<ISkillBase> GetUninitializedSkills();
+        IReadOnlyList<ISkillBase> GetInitializedSkills();
+        IReadOnlyList<ISkillBase> GetUninitializedSkills();
 
-        public ISkillBase InitializeSkill(ISkillBase skill);
+        ISkillBase InitializeSkill(ISkillBase skill);
+        event Action<ISkillBase> OnSkillInitialized;
     }
 
     public class SkillsRegistry : MonoBehaviour, ISkillsRegistry
     {
+        public event Action<ISkillBase> OnSkillInitialized;
+
         public IReadOnlyList<ISkillBase> Skills { get; private set; }
         public int UninitializedSkillsCount { get; private set; }
+        public int InitializedSkillsCount { get; private set; }
 
         private void Awake()
         {
@@ -29,11 +36,31 @@ namespace Assets.Scripts.Skills
             ResetUpgradeableSkillConfigs();
 
             UninitializedSkillsCount = GetUninitializedSkills().Count;
+            InitializedSkillsCount = GetInitializedSkills().Count;
 
             if (Skills != null && Skills.Count > 0)
             {
                 InitializeSkill(Skills[0]);
             }
+        }
+
+        public IReadOnlyList<ISkillBase> GetInitializedSkills()
+        {
+            var initializedSkills = new List<ISkillBase>();
+
+            if (Skills != null)
+            {
+                for (int i = 0; i < Skills.Count; i++)
+                {
+                    ISkillBase skill = Skills[i];
+                    if (skill is IInitializable initializableSkill && initializableSkill.IsInitialized())
+                    {
+                        initializedSkills.Add(skill);
+                    }
+                }
+            }
+
+            return initializedSkills;
         }
 
         public IReadOnlyList<ISkillBase> GetUninitializedSkills()
@@ -65,6 +92,10 @@ namespace Assets.Scripts.Skills
                 {
                     UninitializedSkillsCount--;
                 }
+
+                InitializedSkillsCount++;
+
+                OnSkillInitialized?.Invoke(skill);
 
                 return skill;
             }

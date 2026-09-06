@@ -5,6 +5,7 @@ namespace Assets.Scripts.UI.Skills
 {
     public interface ISkillsVisualPresenter
     {
+        void ShowSkillVisual(SkillInfoSO skillInfoSO, int slotIndex = 0);
         void ShowSkillVisualBasedOnSkillInfo(SkillInfoSO skillInfoSO);
         void HideAll();
     }
@@ -12,17 +13,27 @@ namespace Assets.Scripts.UI.Skills
     public class SkillsVisualPresenter : MonoBehaviour, ISkillsVisualPresenter
     {
         [SerializeField] private GameObject[] _skillsVisuals;
+        [SerializeField] private GameObject[] _secondarySkillsVisuals;
 
-        public void ShowSkillVisualBasedOnSkillInfo(SkillInfoSO skillInfoSO)
+        public void ShowSkillVisual(SkillInfoSO skillInfoSO, int slotIndex = 0)
         {
-            GameObject skillVisual = null;
-            if (_skillsVisuals != null)
+            if (skillInfoSO == null)
             {
-                for (int i = 0; i < _skillsVisuals.Length; i++)
+                return;
+            }
+
+            GameObject[] targetVisuals = (slotIndex == 1 && _secondarySkillsVisuals != null && _secondarySkillsVisuals.Length > 0)
+                ? _secondarySkillsVisuals
+                : _skillsVisuals;
+
+            GameObject skillVisual = null;
+            if (targetVisuals != null)
+            {
+                for (int i = 0; i < targetVisuals.Length; i++)
                 {
-                    if (_skillsVisuals[i] != null && _skillsVisuals[i].name == skillInfoSO.Name)
+                    if (targetVisuals[i] != null && targetVisuals[i].name == skillInfoSO.Name)
                     {
-                        skillVisual = _skillsVisuals[i];
+                        skillVisual = targetVisuals[i];
                         break;
                     }
                 }
@@ -30,18 +41,40 @@ namespace Assets.Scripts.UI.Skills
 
             if (skillVisual == null)
             {
-                Debug.LogWarning($"Skill visual for {skillInfoSO.Name} was not found.", this);
+                Debug.LogWarning($"Skill visual for {skillInfoSO.Name} at slot {slotIndex} was not found.", this);
                 return;
             }
 
             skillVisual.SetActive(true);
         }
 
+        public void ShowSkillVisualBasedOnSkillInfo(SkillInfoSO skillInfoSO)
+        {
+            ShowSkillVisual(skillInfoSO, 0);
+        }
+
         public void HideAll()
         {
-            foreach (GameObject skillVisual in _skillsVisuals)
+            if (_skillsVisuals != null)
             {
-                skillVisual.SetActive(false);
+                for (int i = 0; i < _skillsVisuals.Length; i++)
+                {
+                    if (_skillsVisuals[i] != null)
+                    {
+                        _skillsVisuals[i].SetActive(false);
+                    }
+                }
+            }
+
+            if (_secondarySkillsVisuals != null)
+            {
+                for (int i = 0; i < _secondarySkillsVisuals.Length; i++)
+                {
+                    if (_secondarySkillsVisuals[i] != null)
+                    {
+                        _secondarySkillsVisuals[i].SetActive(false);
+                    }
+                }
             }
         }
     }

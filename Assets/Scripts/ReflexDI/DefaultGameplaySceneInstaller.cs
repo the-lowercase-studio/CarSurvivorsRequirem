@@ -28,6 +28,7 @@ namespace Assets.Scripts.ReflexDI
         [SerializeField] private GridManager _gridManager;
         [SerializeField] private EnemiesSpawner _enemiesSpawner;
         [SerializeField] private TimerPresenter _timerPresenter;
+        [SerializeField] private PlayerSkillsHUDPresenter _playerSkillsHUDPresenter;
         [SerializeField] private ExpParticleSpawner _expParticleSpawner;
         [SerializeField] private CollectibleDropNotifier _collectibleDropNotifier;
         [SerializeField] private DropAnimationConfiguration _dropAnimationConfiguration;
@@ -57,6 +58,10 @@ namespace Assets.Scripts.ReflexDI
             if (_bossHUDPresenter != null)
             {
                 builder.AddSingleton(_bossHUDPresenter, typeof(IBossHUDPresenter));
+            }
+            if (_playerSkillsHUDPresenter != null)
+            {
+                builder.AddSingleton(_playerSkillsHUDPresenter, typeof(IPlayerSkillsHUDPresenter));
             }
 
             //Grid System

@@ -4,7 +4,7 @@ namespace Assets.Scripts.Skills.UpgradeFlow
 {
     public enum SkillUpgradeRequestType
     {
-        NewSkill,
+        NewSkillChoice,
         UpgradeSkill
     }
 
@@ -12,24 +12,24 @@ namespace Assets.Scripts.Skills.UpgradeFlow
     {
         private SkillUpgradeRequest(
             SkillUpgradeRequestType requestType,
-            ISkillBase newSkill,
+            IReadOnlyList<ISkillBase> skillChoices,
             IUpgradeableSkill upgradeableSkill,
             IReadOnlyList<SkillUpgradeOption> upgradeOptions)
         {
             RequestType = requestType;
-            NewSkill = newSkill;
+            SkillChoices = skillChoices;
             UpgradeableSkill = upgradeableSkill;
             UpgradeOptions = upgradeOptions;
         }
 
         public SkillUpgradeRequestType RequestType { get; }
-        public ISkillBase NewSkill { get; }
+        public IReadOnlyList<ISkillBase> SkillChoices { get; }
         public IUpgradeableSkill UpgradeableSkill { get; }
         public IReadOnlyList<SkillUpgradeOption> UpgradeOptions { get; }
 
-        public static SkillUpgradeRequest ForNewSkill(ISkillBase skill)
+        public static SkillUpgradeRequest ForNewSkillChoice(IReadOnlyList<ISkillBase> skillChoices)
         {
-            return new SkillUpgradeRequest(SkillUpgradeRequestType.NewSkill, skill, null, null);
+            return new SkillUpgradeRequest(SkillUpgradeRequestType.NewSkillChoice, skillChoices, null, null);
         }
 
         public static SkillUpgradeRequest ForUpgradeSkill(

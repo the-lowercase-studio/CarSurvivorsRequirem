@@ -3,6 +3,7 @@ using Assets.Scripts.Common.EventArgs;
 using Assets.Scripts.LevelSystem;
 using Assets.Scripts.Player;
 using Assets.Scripts.Skills;
+using Assets.Scripts.Skills.Constants;
 using Assets.Scripts.Skills.ObjectsImpactingSkills.Crate;
 using Assets.Scripts.Skills.UpgradeFlow;
 using Assets.Scripts.Enemies;
@@ -33,10 +34,14 @@ namespace Assets.Scripts.UI.Skills
         [SerializeField] private GameObject _upgradeButtonPrefab;
         [SerializeField] private Transform _buttonsHolder;
 
-        [Header("New Skill")]
+        [Header("New Skill Choice")]
         [SerializeField] private GameObject _newSkillSection;
+        [SerializeField] private GameObject _firstSkillCard;
         [SerializeField] private TextMeshProUGUI _newSkillName;
         [SerializeField] private TextMeshProUGUI _newSkillDescription;
+        [SerializeField] private GameObject _secondSkillCard;
+        [SerializeField] private TextMeshProUGUI _secondSkillName;
+        [SerializeField] private TextMeshProUGUI _secondSkillDescription;
 
         [Header("New Skill Rewards")]
         [SerializeField] private int _newSkillLevelInterval = 3;
@@ -46,10 +51,10 @@ namespace Assets.Scripts.UI.Skills
         private const string SKILL_NAME_TEMPLATE = "New Skill: {0}";
 
         private bool _isShowingAnySection;
-
         private IAudioClipPlayer _audioClipPlayer;
         private readonly List<SkillUpgradeButton> _upgradeButtons = new();
         private int _lastHandledInputFrame = -1;
+        private IReadOnlyList<ISkillBase> _currentSkillChoices;
 
         private void Awake()
         {
@@ -70,10 +75,20 @@ namespace Assets.Scripts.UI.Skills
                 return;
             }
 
-            if (_newSkillSection.activeSelf && Keyboard.current.fKey.wasPressedThisFrame)
+            if (_newSkillSection.activeSelf)
             {
-                HandleContinueButtonClicked();
-                return;
+                if (Keyboard.current.digit1Key.wasPressedThisFrame || Keyboard.current.numpad1Key.wasPressedThisFrame)
+                {
+                    SelectNewSkillChoice(0);
+                    return;
+                }
+
+                if ((Keyboard.current.digit2Key.wasPressedThisFrame || Keyboard.current.numpad2Key.wasPressedThisFrame)
+                    && _currentSkillChoices != null && _currentSkillChoices.Count > 1)
+                {
+                    SelectNewSkillChoice(1);
+                    return;
+                }
             }
 
             if (_upgradeSkillSection.activeSelf)
@@ -126,6 +141,7 @@ namespace Assets.Scripts.UI.Skills
             return _newSkillLevelInterval > 0
                 && level > 1
                 && (level - 1) % _newSkillLevelInterval == 0
+                && _playerManager.SkillsRegistry.InitializedSkillsCount < SkillConstants.MAX_ACTIVE_SKILLS
                 && _playerManager.SkillsRegistry.UninitializedSkillsCount > 0;
         }
 
@@ -138,9 +154,9 @@ namespace Assets.Scripts.UI.Skills
                 _newSkillSection.SetActive(false);
                 _upgradeSkillSection.SetActive(false);
 
-                if (request.RequestType == SkillUpgradeRequestType.NewSkill)
+                if (request.RequestType == SkillUpgradeRequestType.NewSkillChoice)
                 {
-                    ShowNewSkillSection(request.NewSkill);
+                    ShowNewSkillChoiceSection(request.SkillChoices);
                 }
                 else
                 {
@@ -160,12 +176,48 @@ namespace Assets.Scripts.UI.Skills
             }
         }
 
-        private void ShowNewSkillSection(ISkillBase skillBase)
+        private void ShowNewSkillChoiceSection(IReadOnlyList<ISkillBase> choices)
         {
-            _newSkillName.text = string.Format(SKILL_NAME_TEMPLATE, skillBase.SkillInfo.Name);
-            _newSkillDescription.text = skillBase.SkillInfo.Description;
+            _currentSkillChoices = choices;
 
-            _skillsVisualPresenter.ShowSkillVisualBasedOnSkillInfo(skillBase.SkillInfo);
+            if (choices == null || choices.Count == 0)
+            {
+                HandleUpgradeableOrInitializableSkillsShowing();
+                return;
+            }
+
+            if (_firstSkillCard != null)
+            {
+                _firstSkillCard.SetActive(true);
+            }
+
+            _newSkillName.text = string.Format(SKILL_NAME_TEMPLATE, choices[0].SkillInfo.Name);
+            _newSkillDescription.text = choices[0].SkillInfo.Description;
+            _skillsVisualPresenter.ShowSkillVisual(choices[0].SkillInfo, 0);
+
+            if (choices.Count > 1)
+            {
+                if (_secondSkillCard != null)
+                {
+                    _secondSkillCard.SetActive(true);
+                }
+                if (_secondSkillName != null)
+                {
+                    _secondSkillName.text = string.Format(SKILL_NAME_TEMPLATE, choices[1].SkillInfo.Name);
+                }
+                if (_secondSkillDescription != null)
+                {
+                    _secondSkillDescription.text = choices[1].SkillInfo.Description;
+                }
+                _skillsVisualPresenter.ShowSkillVisual(choices[1].SkillInfo, 1);
+            }
+            else
+            {
+                if (_secondSkillCard != null)
+                {
+                    _secondSkillCard.SetActive(false);
+                }
+            }
 
             _newSkillSection.SetActive(true);
         }
@@ -187,7 +239,7 @@ namespace Assets.Scripts.UI.Skills
 
             DisplayNewButtons(skillStatsUpgradeButtonsData);
 
-            _skillsVisualPresenter.ShowSkillVisualBasedOnSkillInfo(request.UpgradeableSkill.SkillInfo);
+            _skillsVisualPresenter.ShowSkillVisual(request.UpgradeableSkill.SkillInfo, 0);
 
             _upgradeSkillSection.SetActive(true);
         }
@@ -283,14 +335,30 @@ namespace Assets.Scripts.UI.Skills
             }
         }
 
-        private void HandleContinueButtonClicked()
+        private void SelectNewSkillChoice(int choiceIndex)
         {
             if (_lastHandledInputFrame == Time.frameCount)
             {
                 return;
             }
 
+            if (_currentSkillChoices == null || choiceIndex < 0 || choiceIndex >= _currentSkillChoices.Count)
+            {
+                return;
+            }
+
             _lastHandledInputFrame = Time.frameCount;
+
+            ISkillBase chosenSkill = _currentSkillChoices[choiceIndex];
+            _currentSkillChoices = null;
+
+            _playerManager.SkillsRegistry.InitializeSkill(chosenSkill);
+
+            if (_audioClipPlayer != null)
+            {
+                _audioClipPlayer.Play("Click");
+            }
+
             HandleUpgradeableOrInitializableSkillsShowing();
         }
     }

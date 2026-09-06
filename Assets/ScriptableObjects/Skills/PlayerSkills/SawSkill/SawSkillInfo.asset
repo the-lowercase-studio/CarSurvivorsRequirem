@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <Name>k__BackingField: Saw
   <Description>k__BackingField: Spinning blades that will slice your enemies to pieces.
+  <Icon>k__BackingField: {fileID: 21300000, guid: 554735ba424e4774482180d597ab7ba5, type: 3}
