@@ -186,6 +186,8 @@ namespace Assets.Scripts.UI.Skills
                 return;
             }
 
+            _skillsVisualPresenter.SetContext(SkillVisualContext.NewSkillUnlocked);
+
             if (_firstSkillCard != null)
             {
                 _firstSkillCard.SetActive(true);
@@ -239,6 +241,7 @@ namespace Assets.Scripts.UI.Skills
 
             DisplayNewButtons(skillStatsUpgradeButtonsData);
 
+            _skillsVisualPresenter.SetContext(SkillVisualContext.StatUpgrade);
             _skillsVisualPresenter.ShowSkillVisual(request.UpgradeableSkill.SkillInfo, 0);
 
             _upgradeSkillSection.SetActive(true);

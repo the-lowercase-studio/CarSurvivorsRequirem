@@ -111,7 +111,7 @@ GameObject:
   - component: {fileID: 7269429457841287245}
   - component: {fileID: 9024519706062476340}
   m_Layer: 0
-  m_Name: SkillsPresenterCamera
+  m_Name: SkillsPresenterCameraFirst
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -273,6 +273,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65547c9e433a5fd438420761bd8fc3a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _primaryCamera: {fileID: 7269429457841287245}
+  _secondaryCamera: {fileID: 1894780351686747415}
+  _statUpgradeBackgroundColor: {r: 0.5372549, g: 0, b: 0, a: 1}
+  _newSkillUnlockedBackgroundColor: {r: 1, g: 1, b: 1, a: 1}
   _skillsVisuals:
   - {fileID: 1231245169951899976}
   - {fileID: 8371366563410183276}
@@ -510,7 +514,7 @@ GameObject:
   - component: {fileID: 1894780351686747415}
   - component: {fileID: 4972592697876165696}
   m_Layer: 0
-  m_Name: SkillsPresenterCamera (1)
+  m_Name: SkillsPresenterCameraSecond
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

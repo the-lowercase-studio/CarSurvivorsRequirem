@@ -307,6 +307,28 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: INCREASE_TARGETS
+      rect:
+        serializedVersion: 2
+        x: 787
+        y: 778
+        width: 268
+        height: 253
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: df16a963ba1586445944673e8bdb920a
+      internalID: 146317675
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -326,6 +348,7 @@ TextureImporter:
       COOLDOWN: -1115999999
       DAMAGE: -838568848
       FIRERATE: 1497706563
+      INCREASE_TARGETS: 146317675
       KNOCKBACK: -84506236
       PIERCING: 1540327766
       PLUS_WEAPON: 387773495
