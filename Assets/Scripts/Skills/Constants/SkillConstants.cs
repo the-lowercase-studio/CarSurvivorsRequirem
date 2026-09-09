@@ -2,6 +2,8 @@ namespace Assets.Scripts.Skills.Constants
 {
     public static class SkillConstants
     {
+        public const int MAX_ACTIVE_SKILLS = 3;
+        public const int NEW_SKILL_CHOICE_COUNT = 2;
         public const int MAX_SKILL_UPGRADE_OPTIONS = 3;
         public const float RARE_THRESHOLD = 0.5f;
         public const float ULTRA_RARE_THRESHOLD = 0.8f;

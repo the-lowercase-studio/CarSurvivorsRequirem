@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <Name>k__BackingField: Lasergun
   <Description>k__BackingField: Shoot enemies with precise laser.
+  <Icon>k__BackingField: {fileID: 21300000, guid: fffd5b577730d7f46b2598ae01c2d326, type: 3}

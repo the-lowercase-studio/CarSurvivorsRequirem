@@ -5,6 +5,22 @@ namespace Assets.Scripts.Extensions
 {
     public static class ListExtensions
     {
+        public static void ShuffleInPlace<T>(this IList<T> list)
+        {
+            if (list == null)
+            {
+                return;
+            }
+
+            int count = list.Count;
+            while (count > 1)
+            {
+                count--;
+                int randomIndex = Random.Range(0, count + 1);
+                (list[randomIndex], list[count]) = (list[count], list[randomIndex]);
+            }
+        }
+
         public static List<T> Shuffle<T>(this IList<T> list)
         {
             if (list == null)
@@ -13,14 +29,7 @@ namespace Assets.Scripts.Extensions
             }
 
             List<T> shuffled = new(list);
-            int count = shuffled.Count;
-            while (count > 1)
-            {
-                count--;
-                int randomIndex = Random.Range(0, count + 1);
-                (shuffled[randomIndex], shuffled[count]) = (shuffled[count], shuffled[randomIndex]);
-            }
-
+            shuffled.ShuffleInPlace();
             return shuffled;
         }
 

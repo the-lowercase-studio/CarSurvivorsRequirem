@@ -15,3 +15,4 @@ MonoBehaviour:
   <Name>k__BackingField: Landmine
   <Description>k__BackingField: Place landmines that will explode after enemy steps
     on it
+  <Icon>k__BackingField: {fileID: 21300000, guid: 9e94bad3ba343e14abc788dd8057eb8e, type: 3}
