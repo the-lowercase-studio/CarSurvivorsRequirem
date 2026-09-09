@@ -13,5 +13,7 @@ namespace Assets.Scripts.Enemies.Base
         public event EventHandler OnAttackHitFrame;
 
         public void PlayAttackAnimation();
+
+        public void ResetAttackAnimationState();
     }
 }
