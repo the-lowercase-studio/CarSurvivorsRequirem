@@ -49,6 +49,8 @@ namespace Assets.Scripts.Enemies.Base
             _visual.SetActive(true);
 
             Health.MaxHealth = Config.MaxHealth;
+
+            EnemyAnimator.ResetAttackAnimationState();
         }
 
         public void ReturnToPool()
@@ -61,6 +63,8 @@ namespace Assets.Scripts.Enemies.Base
         public void OnRelease()
         {
             _enemyDeathSequence.OnCompleted -= EnemyDeathSequence_OnCompleted;
+
+            EnemyAnimator.ResetAttackAnimationState();
         }
 
         public void ApplyKnockBack(Vector3 direction, float power, float timeToArriveAtLocation)

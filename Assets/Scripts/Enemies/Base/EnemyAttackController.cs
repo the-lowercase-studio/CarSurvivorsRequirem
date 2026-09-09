@@ -34,6 +34,7 @@ namespace Assets.Scripts.Enemies.Base
         {
             _enemy.CollisionsController.OnCollisionWithPlayer -= EnemyCollisions_OnCollisionWithPlayer;
             _attackAnimationPlayer.OnAttackHitFrame -= AttackAnimationPlayer_OnAttackHitFrame;
+            _currentAttackedTarget = null;
         }
 
         private void EnemyCollisions_OnCollisionWithPlayer(object sender, CollisionEventArgs e)
@@ -62,8 +63,9 @@ namespace Assets.Scripts.Enemies.Base
                 && _currentAttackedTarget.TryGetComponent(out IDamageable damageable))
             {
                 damageable.TakeDamage(_enemy.Config.Damage);
-                _currentAttackedTarget = null;
             }
+
+            _currentAttackedTarget = null;
         }
 
         private bool CanAttackCurrentAttackTarget()
@@ -77,7 +79,7 @@ namespace Assets.Scripts.Enemies.Base
 
             if (attackedTarget == _currentAttackedTarget)
             {
-                Vector3 toTarget = GetComponent<Collider>().ClosestPoint(transform.position) - transform.position;
+                Vector3 toTarget = _currentAttackedTarget.ClosestPoint(transform.position) - transform.position;
                 toTarget.y = 0f;
 
                 if (toTarget.sqrMagnitude < 0.001f)
