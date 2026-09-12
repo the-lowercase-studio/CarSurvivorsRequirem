@@ -37,6 +37,8 @@ namespace Assets.Scripts.ReflexDI
         [SerializeField] private SwarmSpawner _swarmSpawner;
         [SerializeField] private BossHUDPresenter _bossHUDPresenter;
         [SerializeField] private BossManager _bossManager;
+        [SerializeField] private Assets.Scripts.Cameras.CinemachineCombatFollowOffsetController _cinemachineCombatFollowOffsetController;
+        [SerializeField] private ArenaLeashWarningPresenter _arenaLeashWarningPresenter;
         [SerializeField] private Camera _mainCamera;
         [SerializeField] private Volume _postProcessVolume;
 
@@ -46,6 +48,10 @@ namespace Assets.Scripts.ReflexDI
         {
             //Camera
             builder.AddSingleton(_mainCamera);
+            if (_cinemachineCombatFollowOffsetController != null)
+            {
+                builder.AddSingleton(_cinemachineCombatFollowOffsetController, typeof(Assets.Scripts.Cameras.ICinemachineCombatFollowOffsetController));
+            }
 
             //Player
             builder.AddSingleton(_playerManager, typeof(IPlayerManager));
@@ -58,6 +64,10 @@ namespace Assets.Scripts.ReflexDI
             if (_bossHUDPresenter != null)
             {
                 builder.AddSingleton(_bossHUDPresenter, typeof(IBossHUDPresenter));
+            }
+            if (_arenaLeashWarningPresenter != null)
+            {
+                builder.AddSingleton(_arenaLeashWarningPresenter, typeof(IArenaLeashWarningPresenter));
             }
             if (_playerSkillsHUDPresenter != null)
             {
