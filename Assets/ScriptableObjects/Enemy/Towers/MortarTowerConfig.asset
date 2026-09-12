@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b8381ed036e184448f0e3495c0c6c75, type: 3}
+  m_Name: MortarTowerConfig
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.ScriptableObjects.Enemies.Bosses.MortarTowerConfigSO
+  _maxHealth: 5000
+  _enrageHealthPercent: 0.4
+  _expReward: 500
+  _enrageColor: {r: 1, g: 0.2, b: 0.1, a: 1}
+  _enrageEmissionColor: {r: 2, g: 0.4, b: 0.1, a: 1}
+  _arenaRadius: 22
+  _leashGracePeriodSeconds: 2.5
+  _combatFollowOffset: {x: 0, y: 17, z: -13}
+  _cameraTransitionDuration: 0.8
+  _attack1InitialWarning: 1.2
+  _attack1CenterExplosionRadius: 2.5
+  _attack1CenterDamage: 30
+  _attack1SubShellCount: 6
+  _attack1SubShellScatterRadius: 6
+  _attack1SubShellJumpPower: 4
+  _attack1SubShellDuration: 0.6
+  _attack1SubShellExplosionRadius: 2
+  _attack1SubShellDamage: 20
+  _attack1EnrageSecondWaveRadius: 11
+  _attack2CenterMinOffset: 6
+  _attack2CenterMaxOffset: 10
+  _attack2InitialWarning: 0.9
+  _attack2BounceStepCount: 3
+  _attack2BounceStepDistance: 3.5
+  _attack2BounceJumpPower: 3
+  _attack2BounceDurationPerStep: 0.45
+  _attack2BounceExplosionRadius: 1.8
+  _attack2BounceDamage: 22
+  _attack2EnrageSalvoCount: 3
+  _attack2EnrageSalvoInterval: 0.4
+  _attack3DropWarningDuration: 1
+  _attack3RollTelegraphLength: 20
+  _attack3RollTelegraphWidth: 2.5
+  _attack3RollSpeed: 16
+  _attack3EnrageRollSpeed: 22
+  _attack3RollDamage: 35
+  _cooldownMin: 3.5
+  _cooldownMax: 4.5
+  _enrageCooldownMin: 2
+  _enrageCooldownMax: 2.5
