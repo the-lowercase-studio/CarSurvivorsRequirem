@@ -58,6 +58,13 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.Projectiles
 
             transform.position = startPosition;
 
+            Vector3 initialDir = targetPosition - startPosition;
+            initialDir.y += jumpPower * 2f;
+            if (initialDir.sqrMagnitude > 0.001f)
+            {
+                transform.rotation = Quaternion.LookRotation(initialDir.normalized, Vector3.up);
+            }
+
             if (_visualModel != null)
             {
                 _visualModel.SetActive(true);
@@ -72,8 +79,19 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.Projectiles
 
             gameObject.SetActive(true);
 
+            Vector3 previousPosition = startPosition;
+
             _flightTween = transform.DOJump(targetPosition, jumpPower, 1, duration)
                 .SetEase(Ease.Linear)
+                .OnUpdate(() =>
+                {
+                    Vector3 delta = transform.position - previousPosition;
+                    if (delta.sqrMagnitude > 0.00001f)
+                    {
+                        transform.rotation = Quaternion.LookRotation(delta.normalized, Vector3.up);
+                    }
+                    previousPosition = transform.position;
+                })
                 .OnComplete(() =>
                 {
                     onLanded?.Invoke();

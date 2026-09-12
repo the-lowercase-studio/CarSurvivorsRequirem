@@ -26,6 +26,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
             var telegraph = _boss.ShowCircularTelegraph(playerPos, centerRadius, warningDuration);
             Vector3 targetPosition = telegraph != null ? telegraph.SnappedPosition : playerPos;
 
+            _boss.SnapTurretAim(targetPosition);
             _boss.PlayFireRecoil();
 
             MortarShellProjectile centerShell = _boss.ShellPool.Get();

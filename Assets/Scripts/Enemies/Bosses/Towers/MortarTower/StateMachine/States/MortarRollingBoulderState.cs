@@ -48,22 +48,28 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
         {
             // Calculate drop position in front of tower towards player
             Vector3 towerPos = _boss.Transform.position;
+            towerPos.y = 0f;
             Vector3 playerPos = _boss.PlayerPosition;
+            playerPos.y = 0f;
             Vector3 toPlayer = playerPos - towerPos;
             toPlayer.y = 0f;
 
             if (toPlayer.sqrMagnitude < 0.01f)
             {
                 toPlayer = _boss.Transform.forward;
+                toPlayer.y = 0f;
             }
             toPlayer.Normalize();
 
             Vector3 dropPos = towerPos + toPlayer * 4.5f;
+            dropPos.y = 0f;
 
             float dropWarning = _boss.Config.Attack3DropWarningDuration;
             var dropTelegraph = _boss.ShowCircularTelegraph(dropPos, 2.5f, dropWarning);
             Vector3 snappedDropPos = dropTelegraph != null ? dropTelegraph.SnappedPosition : dropPos;
+            snappedDropPos.y = 0f;
 
+            _boss.SnapTurretAim(snappedDropPos);
             _boss.PlayFireRecoil();
 
             MortarShellProjectile dropShell = _boss.ShellPool.Get();
@@ -99,7 +105,9 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
             }
 
             // Direction towards current player position
-            Vector3 rollDir = _boss.PlayerPosition - snappedDropPos;
+            Vector3 targetPlayerPos = _boss.PlayerPosition;
+            targetPlayerPos.y = 0f;
+            Vector3 rollDir = targetPlayerPos - snappedDropPos;
             rollDir.y = 0f;
             if (rollDir.sqrMagnitude < 0.01f)
             {
@@ -129,6 +137,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
             float speed = _boss.IsEnraged ? _boss.Config.Attack3EnrageRollSpeed : _boss.Config.Attack3RollSpeed;
             float damage = _boss.Config.Attack3RollDamage;
             Vector3 endPos = snappedDropPos + rollDir * rollLength;
+            endPos.y = 0f;
 
             bool rollFinished = false;
 

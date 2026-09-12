@@ -24,15 +24,13 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
         event Action<float> OnLeashCountdownTick;
         event Action OnEncounterReset;
         event Action OnEncounterCompleted;
+        void NotifyDirectCombatEngaged();
     }
 
     public class EncounterArenaController : MonoBehaviour, IEncounterArenaController
     {
-        [Inject] private readonly IPlayerManager _playerManager = null;
-        [Inject] private readonly ICinemachineCombatFollowOffsetController _cameraController = null;
-        [Inject] private readonly IArenaLeashWarningPresenter _leashWarningPresenter = null;
-        [Inject] private readonly IBossHUDPresenter _bossHUDPresenter = null;
-        [Inject] private readonly ISwarmFreezer _swarmFreezer = null;
+        [Inject] private readonly Reflex.Core.Container _container = null;
+        [Inject] private IPlayerManager _playerManager = null;
 
         [Tooltip("Reference to the stationary mortar tower boss.")]
         [SerializeField] private MortarTowerBoss _boss;
@@ -45,6 +43,10 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
         [Tooltip("Grace period in seconds for returning to the arena before encounter resets.")]
         [SerializeField] private float _leashGracePeriodSeconds = MortarTowerConstants.DEFAULT_LEASH_TIME;
 
+        private ICinemachineCombatFollowOffsetController _cameraController;
+        private IArenaLeashWarningPresenter _leashWarningPresenter;
+        private IBossHUDPresenter _bossHUDPresenter;
+        private ISwarmFreezer _swarmFreezer;
         private bool _isEncounterActive;
         private bool _isEncounterCompleted;
         private bool _isLeashCountdownActive;
@@ -98,8 +100,28 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
             }
         }
 
+        private void Awake()
+        {
+            if (_boss == null)
+            {
+                _boss = GetComponent<MortarTowerBoss>();
+            }
+
+            ResolveOptionalDependencies();
+        }
+
         private void OnEnable()
         {
+            if (_boss == null)
+            {
+                _boss = GetComponent<MortarTowerBoss>();
+            }
+
+            if (_playerManager == null)
+            {
+                ResolveOptionalDependencies();
+            }
+
             if (_boss != null)
             {
                 _boss.OnBossDefeated += Boss_OnBossDefeated;
@@ -113,6 +135,14 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
             if (_perimeterBorder != null)
             {
                 _perimeterBorder.localScale = Vector3.zero;
+            }
+        }
+
+        public void NotifyDirectCombatEngaged()
+        {
+            if (!_isEncounterActive && !_isEncounterCompleted)
+            {
+                StartCombatEncounter();
             }
         }
 
@@ -395,6 +425,42 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
                 _perimeterPulseTween.Kill();
             }
             _perimeterPulseTween = null;
+        }
+
+        private void ResolveOptionalDependencies()
+        {
+            if (_container != null)
+            {
+                if (_playerManager == null && _container.HasBinding<IPlayerManager>())
+                {
+                    _playerManager = _container.Resolve<IPlayerManager>();
+                }
+
+                if (_cameraController == null && _container.HasBinding<ICinemachineCombatFollowOffsetController>())
+                {
+                    _cameraController = _container.Resolve<ICinemachineCombatFollowOffsetController>();
+                }
+
+                if (_leashWarningPresenter == null && _container.HasBinding<IArenaLeashWarningPresenter>())
+                {
+                    _leashWarningPresenter = _container.Resolve<IArenaLeashWarningPresenter>();
+                }
+
+                if (_bossHUDPresenter == null && _container.HasBinding<IBossHUDPresenter>())
+                {
+                    _bossHUDPresenter = _container.Resolve<IBossHUDPresenter>();
+                }
+
+                if (_swarmFreezer == null && _container.HasBinding<ISwarmFreezer>())
+                {
+                    _swarmFreezer = _container.Resolve<ISwarmFreezer>();
+                }
+            }
+
+            if (_playerManager == null)
+            {
+                _playerManager = FindAnyObjectByType<PlayerManager>();
+            }
         }
     }
 }

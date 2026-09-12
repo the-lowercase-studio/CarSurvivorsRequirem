@@ -4,6 +4,7 @@ using DG.Tweening;
 using Assets.ScriptableObjects.Enemies.Bosses;
 using Assets.Scripts.Audio;
 using Assets.Scripts.DamageNumbers;
+using Assets.Scripts.Enemies.Bosses.Towers.Arena;
 using Assets.Scripts.Enemies.Bosses.Towers.MortarTower.Combat;
 using Assets.Scripts.Enemies.Bosses.Towers.MortarTower.Constants;
 using Assets.Scripts.Enemies.Bosses.Towers.MortarTower.Projectiles;
@@ -29,18 +30,21 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
         IHealth Health { get; }
         MortarTowerConfigSO Config { get; }
         Transform Transform { get; }
+        Transform TurretHousing { get; }
         bool IsEnraged { get; }
         event Action<IMortarTowerBoss> OnBossDefeated;
         void StartEncounter();
         void ResetEncounter();
+        void SnapTurretAim(Vector3 worldTarget);
+        void UpdateTurretAim(float deltaTime, float turnSpeed = 5f);
     }
 
     [RequireComponent(typeof(Health))]
     public class MortarTowerBoss : MonoBehaviour, IMortarTowerBoss
     {
-        [Inject] private readonly IPlayerManager _playerManager = null;
+        [Inject] private IPlayerManager _playerManager = null;
         [Inject] private readonly IGridManager _gridManager = null;
-        [Inject] private readonly IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> _damageNumbersSpawner = null;
+        [Inject] private readonly Reflex.Core.Container _container = null;
         [Inject] private readonly IInWorldSpaceSpawner<ExpParticleSpawner, float> _expParticleSpawner = null;
 
         [Header("Configuration")]
@@ -64,6 +68,9 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
         [SerializeField] private Renderer[] _renderersForEnrage;
 
         private readonly List<ITelegraphIndicator> _activeTelegraphs = new List<ITelegraphIndicator>();
+        private IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> _damageNumbersSpawner;
+        private EncounterArenaController _arenaController;
+        private Vector3 _initialHousingLocalPosition;
         private MortarTowerStateMachine _stateMachine;
         private MortarIdleState _idleState;
         private MortarClusterBurstState _clusterBurstState;
@@ -93,6 +100,14 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
             get
             {
                 return transform;
+            }
+        }
+
+        public Transform TurretHousing
+        {
+            get
+            {
+                return _turretHousing;
             }
         }
 
@@ -199,8 +214,40 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
         private void Awake()
         {
             Health = GetComponent<IHealth>();
+            _arenaController = GetComponent<EncounterArenaController>();
             _materialPropertyBlock = new MaterialPropertyBlock();
+
+            _initialHousingLocalPosition = _turretHousing != null ? _turretHousing.localPosition : Vector3.zero;
+
+            if (_boulderHitbox != null && !_boulderHitbox.gameObject.scene.IsValid())
+            {
+                _boulderHitbox = Instantiate(_boulderHitbox, transform);
+                _boulderHitbox.gameObject.SetActive(false);
+            }
+
+            ResolveOptionalDependencies();
             InitializeStateMachine();
+        }
+
+        private void ResolveOptionalDependencies()
+        {
+            if (_container != null)
+            {
+                if (_damageNumbersSpawner == null && _container.HasBinding<IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig>>())
+                {
+                    _damageNumbersSpawner = _container.Resolve<IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig>>();
+                }
+
+                if (_playerManager == null && _container.HasBinding<IPlayerManager>())
+                {
+                    _playerManager = _container.Resolve<IPlayerManager>();
+                }
+            }
+
+            if (_playerManager == null)
+            {
+                _playerManager = FindAnyObjectByType<PlayerManager>();
+            }
         }
 
         private void Start()
@@ -252,6 +299,23 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
         private void Update()
         {
             _stateMachine.Update();
+
+            if (_stateMachine.CurrentState != null && _stateMachine.CurrentState != _idleState && _stateMachine.CurrentState != _defeatedState)
+            {
+                UpdateTurretAim(Time.deltaTime);
+            }
+            else if (_stateMachine.CurrentState == _idleState && _arenaController == null)
+            {
+                if (_playerManager != null && _playerManager.GameObject != null)
+                {
+                    Vector3 diff = _playerManager.GameObject.transform.position - transform.position;
+                    diff.y = 0f;
+                    if (diff.sqrMagnitude <= MortarTowerConstants.DEFAULT_ARENA_RADIUS * MortarTowerConstants.DEFAULT_ARENA_RADIUS)
+                    {
+                        StartEncounter();
+                    }
+                }
+            }
         }
 
         private void FixedUpdate()
@@ -280,6 +344,11 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
             ResetMaterials();
             DismissAllTelegraphs();
 
+            if (_turretHousing != null)
+            {
+                _turretHousing.localPosition = _initialHousingLocalPosition;
+            }
+
             if (_boulderHitbox != null && _boulderHitbox.IsRolling)
             {
                 _boulderHitbox.Stop();
@@ -304,6 +373,18 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
             if (Health == null || !Health.IsAlive())
             {
                 return;
+            }
+
+            if (_stateMachine.CurrentState == _idleState)
+            {
+                if (_arenaController != null)
+                {
+                    _arenaController.NotifyDirectCombatEngaged();
+                }
+                else
+                {
+                    StartEncounter();
+                }
             }
 
             Vector3 spawnPos = transform.position + Vector3.up * 2f;
@@ -404,9 +485,9 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
             {
                 _housingRecoilSequence?.Kill(true);
                 _housingRecoilSequence = DOTween.Sequence();
-                Vector3 recoilOffset = -_turretHousing.forward * 0.35f;
+                Vector3 recoilOffset = _initialHousingLocalPosition - _turretHousing.forward * 0.35f;
                 _housingRecoilSequence.Append(_turretHousing.DOLocalMove(recoilOffset, 0.1f).SetEase(Ease.OutQuad));
-                _housingRecoilSequence.Append(_turretHousing.DOLocalMove(Vector3.zero, 0.4f).SetEase(Ease.InOutSine));
+                _housingRecoilSequence.Append(_turretHousing.DOLocalMove(_initialHousingLocalPosition, 0.4f).SetEase(Ease.InOutSine));
             }
 
             if (_fireVfxPlayer != null)
@@ -566,6 +647,44 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
                 _housingRecoilSequence.Kill();
             }
             _housingRecoilSequence = null;
+
+            if (_turretHousing != null)
+            {
+                _turretHousing.localPosition = _initialHousingLocalPosition;
+            }
+        }
+
+        public void UpdateTurretAim(float deltaTime, float turnSpeed = 5f)
+        {
+            if (_turretHousing == null)
+            {
+                return;
+            }
+
+            Vector3 targetDir = PlayerPosition - _turretHousing.position;
+            targetDir.y = 0f;
+
+            if (targetDir.sqrMagnitude > 0.001f)
+            {
+                Quaternion targetRot = Quaternion.LookRotation(targetDir, Vector3.up);
+                _turretHousing.rotation = Quaternion.Slerp(_turretHousing.rotation, targetRot, turnSpeed * deltaTime);
+            }
+        }
+
+        public void SnapTurretAim(Vector3 worldTarget)
+        {
+            if (_turretHousing == null)
+            {
+                return;
+            }
+
+            Vector3 targetDir = worldTarget - _turretHousing.position;
+            targetDir.y = 0f;
+
+            if (targetDir.sqrMagnitude > 0.001f)
+            {
+                _turretHousing.rotation = Quaternion.LookRotation(targetDir, Vector3.up);
+            }
         }
     }
 }
