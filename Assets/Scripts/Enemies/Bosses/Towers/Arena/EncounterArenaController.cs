@@ -4,6 +4,7 @@ using Assets.Scripts.Cameras;
 using Assets.Scripts.Enemies.Bosses.Towers.Arena.Constants;
 using Assets.Scripts.Enemies.Bosses.Towers.MortarTower;
 using Assets.Scripts.Enemies.Bosses.Towers.MortarTower.Constants;
+using Assets.Scripts.Indicators.Constants;
 using Assets.Scripts.Player;
 using Assets.Scripts.Spawners.Swarm;
 using Assets.Scripts.UI.HUD;
@@ -108,6 +109,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
             }
 
             ResolveOptionalDependencies();
+            SyncConfigWithBoss();
         }
 
         private void OnEnable()
@@ -121,6 +123,8 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
             {
                 ResolveOptionalDependencies();
             }
+
+            SyncConfigWithBoss();
 
             if (_boss != null)
             {
@@ -375,8 +379,8 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
                 return;
             }
 
-            float diameter = _arenaRadius * 2f;
-            Vector3 baseScale = new Vector3(diameter, 1f, diameter);
+            float targetScale = _arenaRadius / IndicatorConstants.CIRCLE_MESH_RADIUS;
+            Vector3 baseScale = new Vector3(targetScale, 1f, targetScale);
 
             _perimeterBorder.localScale = Vector3.zero;
             _perimeterBorder.gameObject.SetActive(true);
@@ -460,6 +464,15 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
             if (_playerManager == null)
             {
                 _playerManager = FindAnyObjectByType<PlayerManager>();
+            }
+        }
+
+        private void SyncConfigWithBoss()
+        {
+            if (_boss != null && _boss.Config != null)
+            {
+                _arenaRadius = _boss.Config.ArenaRadius;
+                _leashGracePeriodSeconds = _boss.Config.LeashGracePeriodSeconds;
             }
         }
     }
