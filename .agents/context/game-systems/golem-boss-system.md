@@ -45,6 +45,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
   - Audio: Assets/Scripts/Audio/AudioClipPlayer.cs
   - DI installer: Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
 - Related docs:
+  - .agents/context/game-systems/tower-boss-system.md
   - .agents/context/game-systems/enemies-system.md
   - .agents/context/game-systems/enemy-spawning-and-waves-system.md
   - .agents/context/game-systems/health-system.md
@@ -127,6 +128,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
   - Adding new boss attacks: Create a new IGolemState class in Assets/Scripts/Enemies/Bosses/Golem/StateMachine/States/, add a cooldown timer to GolemStateMachine, add animation triggers to GolemAnimator and GolemBossConstants, and configure balance parameters in GolemBossConfigSO.
   - Tuning combat balance: Modify GolemBossConfig.asset in the Unity Inspector to adjust health, movement speed, cooldowns, telegraph warning times, damage, and phase multipliers without touching code.
   - Expanding multi-boss encounters: Extend IBossManager to accept specific boss prefab IDs or configurations.
+  - Multi-stage tower boss progression: In the planned stage loop, the Golem Boss encounter is triggered automatically by BossManager once the player defeats 2 stationary Tower Bosses located across the map.
 - Required dependencies and contracts:
   - GolemBoss requires Health, Rigidbody, Collider, GolemMovementController, GolemArmSocketController, GolemAnimator, AudioClipPlayer, and telegraph indicator references on its prefab hierarchy.
   - GolemBoss requires Reflex dependency injection for IPlayerManager, IGridManager, IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig>, and IInWorldSpaceSpawner<ExpParticleSpawner, float>.

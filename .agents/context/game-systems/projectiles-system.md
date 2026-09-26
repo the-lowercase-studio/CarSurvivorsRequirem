@@ -52,10 +52,10 @@ It is not responsible for:
 - Runtime flow:
   - A projectile owner gets a projectile from its pool and calls `Projectile.OnGet()`.
   - The owner positions and rotates the projectile, then calls `SetMovementDirection`.
-  - The owner calls `Initialize(config)`, which assigns config, resets pierce count (`_piercedCounter = config.MaxPiercing`), scales the projectile (`new Vector3(config.Size, config.Size, transform.localScale.y)`), and marks it initialized.
+  - The owner calls `Initialize(config)`, which assigns config, resets pierce count (`_piercedCounter = config.MaxPiercing`), scales the projectile (`new Vector3(config.Size, config.Size, config.Size)`), and marks it initialized.
   - `FixedUpdate` moves only while `_isAlive` and `_isInitialized` are true.
-  - `OnTriggerEnter` delegates to `HandleCollisions`, which performs `Physics.OverlapSphere` at `transform.position + _sphereCollider.center` using `_sphereCollider.radius` against `EntityLayers.Enemy | TerrainLayers.Impassable`.
-  - Each non-null overlap target is passed to `EntityManipulationHelper.Damage`.
+  - `OnTriggerEnter` forwards the triggering collider to `HandleCollisions`, which scales `Physics.OverlapSphere` radius by `lossyScale`, queries against `EntityLayers.Enemies | TerrainLayers.Impassable`, and includes the triggering collider.
+  - Targets are deduplicated per projectile life via `_hitEntities` (`HashSet<IDamageable>`) and `hitObstacles` (`HashSet<GameObject>`), guaranteeing single hits against multi-collider enemies and bosses while decrementing pierce count properly.
   - Piercing decrements until it reaches zero; then the projectile marks `_isAlive = false` and raises `OnLifeEnd`.
   - Range expiration plays a shrink animation using `transform.DOScale(Vector3.zero, _config.DisapearingDuration).SetEase(Ease.Flash)` and raises `OnLifeEnd` upon completion.
   - Pool owners listen to `OnLifeEnd` and `OnCanBeReleased`, release the projectile, and call `OnRelease`.
@@ -71,7 +71,7 @@ It is not responsible for:
   - Projectile size, speed, range, damage, and piercing are player-facing balance values.
   - Damage and max piercing are no longer byte-limited in code; validate asset values and UI assumptions before relying on byte-size bounds.
 - Ordering or sequencing guarantees:
-  - `_startScale` is captured in `Start`; pooled prefabs should have their expected starting scale before first release.
+  - `_startScale` is captured in `Awake`; pooled prefabs should have their expected starting scale before first release.
   - `OnLifeEnd` is raised before the current pool owner releases the projectile.
   - `OnCanBeReleased` is the forced pool-return signal used by `DeathVolume` and direct `ReturnToPool` paths.
 - Constraints contributors must preserve:
@@ -115,7 +115,6 @@ It is not responsible for:
 - Known limitations:
   - `ProjectileSpawnConfig.ProjectileConfigSO` is populated by `MinigunTurret` but `Projectile.Initialize` currently receives `_config.ProjectileStatsSO` directly.
   - `Projectile.MoveProjectileInDirection(Vector3 direction)` ignores its `direction` parameter and uses `_movementDir`.
-  - `Projectile.OnTriggerEnter` does not use the `other` collider directly; it runs a fresh overlap sphere at `transform.position + _sphereCollider.center`.
   - `ProjectileConfigSO.DisapearingDuration` contains a spelling error that is part of the current public API.
   - `Projectile.OnLifeEnd` and `OnCanBeReleased` can both be subscribed to the same release handler by current pool owners; double-release paths should be reviewed when changing lifecycle.
 - Open design questions:

@@ -5,6 +5,7 @@ using Assets.Scripts.LayerMasks;
 using Assets.Scripts.Pooling;
 using Assets.Scripts.StatusEffects;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Assets.Scripts.Projectiles
@@ -14,6 +15,7 @@ namespace Assets.Scripts.Projectiles
         [SerializeField] private ProjectileConfigSO _config;
         [SerializeField] private SphereCollider _sphereCollider;
 
+        private readonly HashSet<IDamageable> _hitEntities = new HashSet<IDamageable>();
         private int _piercedCounter;
         private bool _isInitialized;
         private bool _isAlive = true;
@@ -27,9 +29,13 @@ namespace Assets.Scripts.Projectiles
         public event EventHandler OnLifeEnd;
         public event EventHandler OnCanBeReleased;
 
-        private void Start()
+        private void Awake()
         {
-            _startScale = transform.localScale;
+            _startScale = transform.localScale != Vector3.zero ? transform.localScale : Vector3.one;
+            if (_sphereCollider == null)
+            {
+                _sphereCollider = GetComponent<SphereCollider>();
+            }
         }
 
         private void FixedUpdate()
@@ -61,16 +67,17 @@ namespace Assets.Scripts.Projectiles
 
         private void OnTriggerEnter(Collider other)
         {
-            if (!_isAlive || !_isInitialized)
+            if (!_isAlive || !_isInitialized || other == null)
             {
                 return;
             }
 
-            HandleCollisions();
+            HandleCollisions(other);
         }
 
         public void OnGet()
         {
+            _hitEntities.Clear();
             _distanceTraveled = 0f;
             _isAlive = true;
             _isShrinking = false;
@@ -79,6 +86,7 @@ namespace Assets.Scripts.Projectiles
 
         public void OnRelease()
         {
+            _hitEntities.Clear();
             _isShrinking = false;
             _shrinkElapsed = 0f;
             _isInitialized = false;
@@ -99,7 +107,7 @@ namespace Assets.Scripts.Projectiles
 
             _piercedCounter = _config.MaxPiercing;
 
-            transform.localScale = new Vector3(_config.Size, _config.Size, transform.localScale.y);
+            transform.localScale = new Vector3(_config.Size, _config.Size, _config.Size);
 
             _isInitialized = true;
         }
@@ -134,18 +142,55 @@ namespace Assets.Scripts.Projectiles
             }
         }
 
-        private void HandleCollisions()
+        private void HandleCollisions(Collider hitCollider)
         {
-            Collider[] colliders = Physics.OverlapSphere(transform.position + _sphereCollider.center, _sphereCollider.radius,
-                                         EntityLayers.Enemies | TerrainLayers.Impassable);
-            foreach (Collider collider in colliders)
+            float maxScale = Mathf.Max(transform.lossyScale.x, Mathf.Max(transform.lossyScale.y, transform.lossyScale.z));
+            float worldRadius = _sphereCollider != null
+                ? _sphereCollider.radius * maxScale
+                : (_config != null ? _config.Size : 0.12f);
+
+            Vector3 sphereCenter = _sphereCollider != null
+                ? transform.TransformPoint(_sphereCollider.center)
+                : transform.position;
+
+            LayerMask targetLayers = EntityLayers.Enemies | TerrainLayers.Impassable;
+
+            Collider[] colliders = Physics.OverlapSphere(sphereCenter, worldRadius, targetLayers);
+
+            HashSet<Collider> targetColliders = new HashSet<Collider>(colliders);
+            if (hitCollider != null && targetLayers.ContainsLayer(hitCollider.gameObject.layer))
+            {
+                targetColliders.Add(hitCollider);
+            }
+
+            HashSet<GameObject> hitObstacles = new HashSet<GameObject>();
+
+            foreach (Collider collider in targetColliders)
             {
                 if (collider == null)
                 {
                     continue;
                 }
 
-                EntityManipulationHelper.Damage(collider, _config.Damage);
+                if (collider.TryGetComponent(out IDamageable damageable) || (damageable = collider.GetComponentInParent<IDamageable>()) != null)
+                {
+                    if (!_hitEntities.Add(damageable))
+                    {
+                        continue;
+                    }
+
+                    if (_config != null)
+                    {
+                        damageable.TakeDamage(_config.Damage);
+                    }
+                }
+                else
+                {
+                    if (!hitObstacles.Add(collider.gameObject))
+                    {
+                        continue;
+                    }
+                }
 
                 if (_piercedCounter > 0)
                 {
@@ -155,6 +200,7 @@ namespace Assets.Scripts.Projectiles
                 {
                     _isAlive = false;
                     OnLifeEnd?.Invoke(this, EventArgs.Empty);
+                    break;
                 }
             }
         }

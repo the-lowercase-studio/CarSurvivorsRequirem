@@ -34,7 +34,7 @@ It does not own wave timing, grid generation, flow-field vector computation, pla
 - Related systems:
   - Wave orchestration: Assets/Scripts/Waves/WaveManager.cs
   - Swarm events: Assets/Scripts/Spawners/Swarm/SwarmSpawner.cs
-  - Boss system: Assets/Scripts/Enemies/Bosses/Golem/ (documented in .agents/context/game-systems/golem-boss-system.md)
+  - Boss systems: Assets/Scripts/Enemies/Bosses/Golem/ (documented in .agents/context/game-systems/golem-boss-system.md) and Assets/Scripts/Enemies/Bosses/Towers/ (documented in .agents/context/game-systems/tower-boss-system.md)
   - Grid & off-camera cells: Assets/Scripts/Navigation/GridSystem/
   - Flow-field navigation: Assets/Scripts/Navigation/FlowFieldSystem/
   - Health & damage: Assets/Scripts/HealthSystem/
@@ -44,9 +44,10 @@ It does not own wave timing, grid generation, flow-field vector computation, pla
   - Collectible items: Assets/Scripts/Skills/ObjectsImpactingSkills/
   - DI registration: Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
 - Related docs:
+  - .agents/context/game-systems/tower-boss-system.md
+  - .agents/context/game-systems/golem-boss-system.md
   - .agents/context/game-systems/flow-field-system.md
   - .agents/context/game-systems/spawners-system.md
-  - .agents/context/game-systems/golem-boss-system.md
   - .agents/context/game-systems/health-system.md
   - .agents/context/game-systems/collectibles-system.md
   - .agents/context/game-systems/di-and-boot-flow-system.md
