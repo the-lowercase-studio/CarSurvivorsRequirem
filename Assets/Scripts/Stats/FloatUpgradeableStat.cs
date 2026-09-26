@@ -19,6 +19,8 @@ namespace Assets.Scripts.Stats
             bool alwaysUseMinValueForUpgrade = false)
             : base(value, minMaxRange, rangeOfPossibleValuesForUpgrade, alwaysUseMinValueForUpgrade)
         {
+            _floatMinMaxRange = minMaxRange;
+            _floatRangeOfPossibleValuesForUpgrade = rangeOfPossibleValuesForUpgrade;
         }
 
         public FloatUpgradeableStat(
@@ -29,6 +31,33 @@ namespace Assets.Scripts.Stats
         {
             MinMaxRange = _floatMinMaxRange;
             _rangeOfPossibleValuesForUpgrade = _floatRangeOfPossibleValuesForUpgrade;
+        }
+
+        public override UpgradeableStat<float> Clone()
+        {
+            FloatValueRange clonedMinMaxRange = _floatMinMaxRange != null
+                ? new FloatValueRange(_floatMinMaxRange.Min, _floatMinMaxRange.Max)
+                : (MinMaxRange != null ? new FloatValueRange(MinMaxRange.Min, MinMaxRange.Max) : null);
+
+            FloatValueRange clonedUpgradeRange = _floatRangeOfPossibleValuesForUpgrade != null
+                ? new FloatValueRange(_floatRangeOfPossibleValuesForUpgrade.Min, _floatRangeOfPossibleValuesForUpgrade.Max)
+                : (_rangeOfPossibleValuesForUpgrade != null ? new FloatValueRange(_rangeOfPossibleValuesForUpgrade.Min, _rangeOfPossibleValuesForUpgrade.Max) : null);
+
+            FloatUpgradeableStat clone = new FloatUpgradeableStat(
+                Value,
+                0f,
+                clonedMinMaxRange,
+                clonedUpgradeRange,
+                AlwaysUseMinValueForUpgrade);
+
+            clone._floatMinMaxRange = clonedMinMaxRange;
+            clone._floatRangeOfPossibleValuesForUpgrade = clonedUpgradeRange;
+            clone.MinMaxRange = clonedMinMaxRange;
+            clone._rangeOfPossibleValuesForUpgrade = clonedUpgradeRange;
+
+            CopyBasePropertiesTo(clone);
+
+            return clone;
         }
 
         public override void OnAfterDeserialize()

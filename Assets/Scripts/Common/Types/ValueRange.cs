@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 
 namespace Assets.Scripts.Common.Types
@@ -10,7 +10,7 @@ namespace Assets.Scripts.Common.Types
     }
 
     [Serializable]
-    public class ValueRange<T> : IValueRange<T>
+    public class ValueRange<T> : IValueRange<T>, ICloneable
         where T : struct, IComparable<T>, IConvertible
     {
         [field: SerializeField] public T Min { get; protected set; }
@@ -22,6 +22,16 @@ namespace Assets.Scripts.Common.Types
             Max = max;
         }
 
+        public virtual ValueRange<T> Clone()
+        {
+            return new ValueRange<T>(Min, Max);
+        }
+
+        object ICloneable.Clone()
+        {
+            return Clone();
+        }
+
         public T GetRandomValueInRange()
         {
             if (typeof(T) == typeof(float))
@@ -30,7 +40,7 @@ namespace Assets.Scripts.Common.Types
             }
             else if (typeof(T) == typeof(int))
             {
-                return (T)(object)UnityEngine.Random.Range((int)(object)Min, (int)(object)Max);
+                return (T)(object)UnityEngine.Random.Range((int)(object)Min, (int)(object)Max + 1);
             }
             else
             {
@@ -47,6 +57,11 @@ namespace Assets.Scripts.Common.Types
         public FloatValueRange(float min, float max) : base(min, max)
         {
         }
+
+        public override ValueRange<float> Clone()
+        {
+            return new FloatValueRange(Min, Max);
+        }
     }
 
     [Serializable]
@@ -54,6 +69,11 @@ namespace Assets.Scripts.Common.Types
     {
         public IntValueRange(int min, int max) : base(min, max)
         {
+        }
+
+        public override ValueRange<int> Clone()
+        {
+            return new IntValueRange(Min, Max);
         }
     }
 }

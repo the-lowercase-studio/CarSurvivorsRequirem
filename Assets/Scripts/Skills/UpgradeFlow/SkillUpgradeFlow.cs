@@ -43,16 +43,8 @@ namespace Assets.Scripts.Skills.UpgradeFlow
 
         public void QueueRandomSkillUpgradeRequest(ISkillsRegistry skillsRegistry)
         {
-            IUpgradeableSkill upgradeableSkill = RandomUpgradeableSkillFinder.Find(GetUpgradeableSkillCandidates(skillsRegistry));
-            if (upgradeableSkill is not null)
-            {
-                _queuedRequests.Enqueue(QueuedSkillRewardRequest.ForUpgradeSkill(upgradeableSkill));
-                OnRequestQueued?.Invoke(this, EventArgs.Empty);
-            }
-            else if (skillsRegistry.InitializedSkillsCount + _pendingNewSkillChoicesCount < SkillConstants.MAX_ACTIVE_SKILLS)
-            {
-                QueueRandomNewSkillRequest(skillsRegistry);
-            }
+            _queuedRequests.Enqueue(QueuedSkillRewardRequest.ForUpgradeSkill());
+            OnRequestQueued?.Invoke(this, EventArgs.Empty);
         }
 
         public bool TryGetNextRequest(ISkillsRegistry skillsRegistry, out SkillUpgradeRequest request)
@@ -95,7 +87,7 @@ namespace Assets.Scripts.Skills.UpgradeFlow
                     continue;
                 }
 
-                IUpgradeableSkill upgradeableSkill = queuedRequest.UpgradeableSkill;
+                IUpgradeableSkill upgradeableSkill = RandomUpgradeableSkillFinder.Find(GetUpgradeableSkillCandidates(skillsRegistry));
                 if (upgradeableSkill != null && upgradeableSkill.CanBeUpgraded())
                 {
                     request = SkillUpgradeRequest.ForUpgradeSkill(upgradeableSkill, CreateUpgradeOptions(upgradeableSkill));
@@ -107,7 +99,7 @@ namespace Assets.Scripts.Skills.UpgradeFlow
             return false;
         }
 
-        private IEnumerable<IUpgradeableSkill> GetUpgradeableSkillCandidates(ISkillsRegistry skillsRegistry)
+        private static IEnumerable<IUpgradeableSkill> GetUpgradeableSkillCandidates(ISkillsRegistry skillsRegistry)
         {
             var candidates = new List<IUpgradeableSkill>();
             IReadOnlyList<ISkillBase> skills = skillsRegistry.Skills;
@@ -164,26 +156,15 @@ namespace Assets.Scripts.Skills.UpgradeFlow
 
         private readonly struct QueuedSkillRewardRequest
         {
-            private QueuedSkillRewardRequest(
-                SkillUpgradeRequestType requestType,
-                IUpgradeableSkill upgradeableSkill)
+            public QueuedSkillRewardRequest(SkillUpgradeRequestType requestType)
             {
                 RequestType = requestType;
-                UpgradeableSkill = upgradeableSkill;
             }
 
             public SkillUpgradeRequestType RequestType { get; }
-            public IUpgradeableSkill UpgradeableSkill { get; }
 
-            public static QueuedSkillRewardRequest ForNewSkillChoice()
-            {
-                return new QueuedSkillRewardRequest(SkillUpgradeRequestType.NewSkillChoice, null);
-            }
-
-            public static QueuedSkillRewardRequest ForUpgradeSkill(IUpgradeableSkill skill)
-            {
-                return new QueuedSkillRewardRequest(SkillUpgradeRequestType.UpgradeSkill, skill);
-            }
+            public static QueuedSkillRewardRequest ForNewSkillChoice() => new(SkillUpgradeRequestType.NewSkillChoice);
+            public static QueuedSkillRewardRequest ForUpgradeSkill() => new(SkillUpgradeRequestType.UpgradeSkill);
         }
     }
 }

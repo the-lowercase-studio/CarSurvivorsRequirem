@@ -29,7 +29,7 @@ namespace Assets.Scripts.Stats
     }
 
     [Serializable]
-    public abstract class UpgradeableStat<T> : IUpgradeableStat, ISerializationCallbackReceiver
+    public abstract class UpgradeableStat<T> : IUpgradeableStat, ISerializationCallbackReceiver, ICloneable
         where T : struct, IComparable<T>, IConvertible
     {
         [field: SerializeField] public Sprite Icon { get; protected set; }
@@ -76,6 +76,13 @@ namespace Assets.Scripts.Stats
             _rangeOfPossibleValuesForUpgrade = rangeOfPossibleValuesForUpgrade;
         }
 
+        public abstract UpgradeableStat<T> Clone();
+
+        object ICloneable.Clone()
+        {
+            return Clone();
+        }
+
         public void SetIcon(Sprite icon)
         {
             Icon = icon;
@@ -89,10 +96,9 @@ namespace Assets.Scripts.Stats
             }
 
             float value = Convert.ToSingle(Value);
-            float minValue = Convert.ToSingle(MinMaxRange.Min);
             float maxValue = Convert.ToSingle(MinMaxRange.Max);
 
-            float delta = _alwaysUseMinValueForUpgrade ? minValue : upgradeValue;
+            float delta = _alwaysUseMinValueForUpgrade ? UpgradeRangeMin : upgradeValue;
             delta = IsSubstractModeOn ? -delta : delta;
 
             float newValue = value + delta;
@@ -106,6 +112,24 @@ namespace Assets.Scripts.Stats
             Value = FromFloatToType(newValue);
 
             OnUpgrade?.Invoke(this, EventArgs.Empty);
+        }
+
+        protected void CopyBasePropertiesTo(UpgradeableStat<T> destination)
+        {
+            if (destination == null)
+            {
+                return;
+            }
+
+            destination.Icon = Icon;
+            destination.IsSubstractModeOn = IsSubstractModeOn;
+            destination.Unit = Unit;
+            destination.OverrideDefaultRarity = OverrideDefaultRarity;
+            destination.Rarity = Rarity;
+            destination.CanBeUpgraded = CanBeUpgraded;
+            destination.Value = Value;
+            destination._alwaysUseMinValueForUpgrade = _alwaysUseMinValueForUpgrade;
+            destination._hasUnlimitedMaxValue = _hasUnlimitedMaxValue;
         }
 
         public float GetUpgradeValueBasedOnUpdateRange()
