@@ -1,5 +1,6 @@
 using System.Collections;
 using Assets.Scripts.Enemies.Bosses.Towers.MortarTower.Projectiles;
+using Assets.Scripts.Indicators;
 using UnityEngine;
 
 namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
@@ -7,6 +8,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
     public class MortarRollingBoulderState : IMortarTowerState
     {
         private readonly MortarTowerBoss _boss;
+        private RectangularTelegraphIndicator _activeTelegraph;
         private Coroutine _boulderRoutine;
         private bool _isExited;
 
@@ -33,6 +35,12 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
             if (_boss.BoulderHitbox != null && _boss.BoulderHitbox.IsRolling)
             {
                 _boss.BoulderHitbox.Stop();
+            }
+
+            if (_activeTelegraph != null)
+            {
+                _activeTelegraph.Dismiss();
+                _activeTelegraph = null;
             }
         }
 
@@ -69,6 +77,28 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
             Vector3 snappedDropPos = dropTelegraph != null ? dropTelegraph.SnappedPosition : dropPos;
             snappedDropPos.y = 0f;
 
+            // Calculate roll direction and display rectangular hazard indicator immediately alongside circular telegraph
+            Vector3 rollDir = playerPos - snappedDropPos;
+            rollDir.y = 0f;
+            if (rollDir.sqrMagnitude < 0.01f || Vector3.Dot(rollDir, toPlayer) <= 0f)
+            {
+                rollDir = toPlayer;
+            }
+            rollDir.Normalize();
+
+            float rollLength = _boss.Config.Attack3RollTelegraphLength;
+            float rollWidth = _boss.Config.Attack3RollTelegraphWidth;
+
+            _activeTelegraph = _boss.ShowRectangularTelegraph(
+                snappedDropPos,
+                rollDir,
+                rollLength,
+                rollWidth,
+                dropWarning,
+                null,
+                autoContractOnFillComplete: false
+            );
+
             _boss.SnapTurretAim(snappedDropPos);
             _boss.PlayFireRecoil();
 
@@ -104,36 +134,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
                 yield break;
             }
 
-            // Direction towards current player position
-            Vector3 targetPlayerPos = _boss.PlayerPosition;
-            targetPlayerPos.y = 0f;
-            Vector3 rollDir = targetPlayerPos - snappedDropPos;
-            rollDir.y = 0f;
-            if (rollDir.sqrMagnitude < 0.01f)
-            {
-                rollDir = toPlayer;
-            }
-            rollDir.Normalize();
-
-            float rollLength = _boss.Config.Attack3RollTelegraphLength;
-            float rollWidth = _boss.Config.Attack3RollTelegraphWidth;
-            const float AIM_TELEGRAPH_DURATION = 0.6f;
-
-            _boss.ShowRectangularTelegraph(snappedDropPos, rollDir, rollLength, rollWidth, AIM_TELEGRAPH_DURATION);
-
-            float aimTimer = 0f;
-            while (aimTimer < AIM_TELEGRAPH_DURATION && !_isExited)
-            {
-                aimTimer += Time.deltaTime;
-                yield return null;
-            }
-
-            if (_isExited)
-            {
-                yield break;
-            }
-
-            // Launch rolling boulder
+            // Launch rolling boulder instantly as soon as the drop projectile impacts the ground
             float speed = _boss.IsEnraged ? _boss.Config.Attack3EnrageRollSpeed : _boss.Config.Attack3RollSpeed;
             float damage = _boss.Config.Attack3RollDamage;
             Vector3 endPos = snappedDropPos + rollDir * rollLength;
@@ -156,6 +157,12 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
             while (!rollFinished && !_isExited)
             {
                 yield return null;
+            }
+
+            if (_activeTelegraph != null)
+            {
+                _activeTelegraph.ContractAndDismiss();
+                _activeTelegraph = null;
             }
 
             if (!_isExited)

@@ -310,7 +310,8 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
                 {
                     Vector3 diff = _playerManager.GameObject.transform.position - transform.position;
                     diff.y = 0f;
-                    if (diff.sqrMagnitude <= MortarTowerConstants.DEFAULT_ARENA_RADIUS * MortarTowerConstants.DEFAULT_ARENA_RADIUS)
+                    float arenaRadius = _config != null ? _config.ArenaRadius : MortarTowerConstants.DEFAULT_ARENA_RADIUS;
+                    if (diff.sqrMagnitude <= arenaRadius * arenaRadius)
                     {
                         StartEncounter();
                     }
@@ -433,7 +434,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
             return indicator;
         }
 
-        public RectangularTelegraphIndicator ShowRectangularTelegraph(Vector3 origin, Vector3 direction, float length, float width, float duration, Action onImpact = null, bool autoContractOnFillComplete = true)
+        public RectangularTelegraphIndicator ShowRectangularTelegraph(Vector3 origin, Vector3 direction, float length, float width, float duration, Action onImpact = null, bool autoContractOnFillComplete = false)
         {
             if (_rectangularTelegraphPrefab == null)
             {
