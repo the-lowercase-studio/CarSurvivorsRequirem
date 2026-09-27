@@ -129,7 +129,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 373a56a05b64dd04baa3b64e409ac34c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.HealthSystem.Health
-  <MaxHealth>k__BackingField: 5000
+  <MaxHealth>k__BackingField: 3500
 --- !u!136 &6814870840188041316
 CapsuleCollider:
   m_ObjectHideFlags: 0

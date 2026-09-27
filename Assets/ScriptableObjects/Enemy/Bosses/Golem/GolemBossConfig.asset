@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5649cee329b435741a7c1a4b30b693f9, type: 3}
   m_Name: GolemBossConfig
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Enemies.Bosses.Golem.Config.GolemBossConfigSO
-  _maxHealth: 5000
+  _maxHealth: 5500
   _moveSpeed: 7.5
   _rotationSpeed: 120
   _bodyContactDamage: 25

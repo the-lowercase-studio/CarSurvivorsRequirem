@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b8381ed036e184448f0e3495c0c6c75, type: 3}
   m_Name: MortarTowerConfig
   m_EditorClassIdentifier: Assembly-CSharp::Assets.ScriptableObjects.Enemies.Bosses.MortarTowerConfigSO
-  _maxHealth: 5000
+  _maxHealth: 3500
   _enrageHealthPercent: 0.4
-  _expReward: 500
+  _expReward: 1000
   _enrageColor: {r: 1, g: 0.2, b: 0.1, a: 1}
   _enrageEmissionColor: {r: 2, g: 0.4, b: 0.1, a: 1}
   _arenaRadius: 22

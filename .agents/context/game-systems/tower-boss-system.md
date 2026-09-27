@@ -6,7 +6,7 @@ The Tower Boss system manages stationary miniboss combat encounters and spatial 
 
 Additionally, this system serves as the prerequisite phase for the stage climax: defeating both Tower Bosses across the map will trigger the awakening and spawn of the Ancient Golem Boss.
 
-It is not responsible for mobile pathfinding or pursuit steering (handled by mobile bosses like the Golem), global wave timing (handled by WaveManager), vehicle movement physics (handled by CarController), or stage progression portal activation (handled by BossManager after the Golem Boss is defeated).
+It is not responsible for mobile pathfinding or pursuit steering (handled by mobile bosses like the Golem), global wave timing (handled by WaveManager), vehicle movement physics (handled by CarController), or stage progression portal activation (handled by BossEncounterService after the Golem Boss is defeated).
 
 ## Reading Map
 
@@ -34,7 +34,7 @@ It is not responsible for mobile pathfinding or pursuit steering (handled by mob
   - Assets/Prefabs/Enemies/Bosses/Towers/Mortal/MortalTower.prefab
   - Assets/Prefabs/Enemies/Bosses/Towers/Mortal/MortarBoulderHitbox.prefab
 - Related systems:
-  - Boss progression & Golem boss: Assets/Scripts/Enemies/Bosses/BossManager.cs
+  - Boss progression & Golem boss: Assets/Scripts/Enemies/Bosses/BossEncounterService.cs
   - UI HUD & Leash warning: Assets/Scripts/UI/HUD/BossHUDPresenter.cs, Assets/Scripts/UI/HUD/ArenaLeashWarningPresenter.cs
   - Combat camera: Assets/Scripts/Camera/CinemachineCombatFollowOffsetController.cs
   - Swarm suppression: Assets/Scripts/Spawners/Swarm/SwarmSpawner.cs (ISwarmFreezer)
@@ -61,7 +61,7 @@ It is not responsible for mobile pathfinding or pursuit steering (handled by mob
 ## Architecture and Data Flow
 
 - Core components:
-  - EncounterArenaController: Coordinates the spatial encounter circle around the tower. Checks squared distance from the player car every frame against the arena radius (default 22m). Manages perimeter border expansion and continuous idle pulsing via DOTween. Automatically invokes ICinemachineCombatFollowOffsetController to ease the camera out to combat framing, shows the Boss HUD, suppresses regular swarm spawns via ISwarmFreezer, and starts the boss combat loop. Enforces leash mechanics when the car exits the boundary, ticking a grace countdown timer and resetting the encounter if the player fails to return in time. Locks out re-activation via IsEncounterCompleted once the boss is defeated.
+  - EncounterArenaController: Coordinates the spatial encounter circle around the tower. Checks squared distance from the player car every frame against the arena radius (default 22m). Manages perimeter border expansion and continuous idle pulsing via DOTween. Automatically invokes ICinemachineCombatFollowOffsetController to ease the camera out to combat framing, delegates Boss HUD presentation and regular swarm suppression to BossEncounterService, and starts the boss combat loop. Enforces leash mechanics when the car exits the boundary, ticking a grace countdown timer and resetting the encounter if the player fails to return in time. Locks out re-activation via IsEncounterCompleted once the boss is defeated.
   - MortarTowerBoss: Aggregate stationary boss entity implementing IMortarTowerBoss, IDamageable, and IKnockable. Controls the state machine, health thresholds, enrage visual state using MaterialPropertyBlock, procedural recoil tweens on barrel and turret housing, smooth yaw tracking toward the player car, telegraph creation and cleanup, and death cleanup. On Start, marks a 5x5 cell footprint on the navigation grid as impassable (cost 255) so pathfinding flows around the structure.
   - MortarTowerStateMachine: Discrete finite state machine managing IMortarTowerState instances (Idle, Cooldown, ClusterBurst, DiagonalBounce, RollingBoulder, Defeated).
   - MortarIdleState: Default dormant state. Awaits arena trigger activation from EncounterArenaController or direct damage taken from outside the arena.
@@ -85,15 +85,15 @@ It is not responsible for mobile pathfinding or pursuit steering (handled by mob
   - IMortarBoulderHitbox: Contract for initiating and canceling linear rolling boulder sweeps.
   - ICinemachineCombatFollowOffsetController: Camera service contract for transitioning and restoring Cinemachine follow offsets.
   - IArenaLeashWarningPresenter: UI contract for showing, updating, and hiding the leash warning banner.
-  - IBossManager: Meta encounter manager contract for spawning bosses and querying active boss status.
+  - IBossEncounterService: Central encounter coordination service contract for tracking tower progression, managing boss HUD/swarm freezing, and spawning GolemBoss.
 - Runtime flow:
   - Detection & Engagement: As the player car approaches within 22 meters of the tower, EncounterArenaController detects player presence via squared distance. Alternatively, if the player damages the tower from outside, TakeDamage() calls NotifyDirectCombatEngaged().
-  - Arena Lock-in: EncounterArenaController expands the visual perimeter border using DOScale (Ease.OutBack) and begins a continuous subtle pulse. It freezes standard enemy swarm spawns through ISwarmFreezer, brings up the boss health bar via IBossHUDPresenter, and instructs ICinemachineCombatFollowOffsetController to transition camera offset to combat framing.
+  - Arena Lock-in: EncounterArenaController expands the visual perimeter border using DOScale (Ease.OutBack) and begins a continuous subtle pulse. It delegates swarm freezing and Boss HUD presentation to BossEncounterService, and instructs ICinemachineCombatFollowOffsetController to transition camera offset to combat framing.
   - Combat Loop: MortarTowerBoss transitions from MortarIdleState to the first attack. During active attacks and cooldown, UpdateTurretAim smoothly tracks the player car's position. Attacks rotate sequentially via MortarCooldownState: Cluster Burst -> Diagonal Bounce -> Rolling Boulder -> loop.
-  - Leash & Reset Mechanics: If the player car leaves the 22m boundary during combat, EncounterArenaController begins a leash grace countdown (default 2.5s). ArenaLeashWarningPresenter displays the warning and punches scale every second. If the player returns before time expires, the warning hides and combat proceeds. If the countdown expires, EncounterArenaController resets the fight: boss health restores to full, enrage state clears, all active shells/telegraphs/hitboxes are canceled, camera restores to default, swarm unfreezes, arena border shrinks, and the boss returns to MortarIdleState.
+  - Leash & Reset Mechanics: If the player car leaves the 22m boundary during combat, EncounterArenaController begins a leash grace countdown (default 2.5s). ArenaLeashWarningPresenter displays the warning and punches scale every second. If the player returns before time expires, the warning hides and combat proceeds. If the countdown expires, EncounterArenaController resets the fight: boss health restores to full, enrage state clears, all active shells/telegraphs/hitboxes are canceled, camera restores to default, BossEncounterService restores swarms and hides HUD, arena border shrinks, and the boss returns to MortarIdleState.
   - Enrage Phase (< 40% Health): When health drops below 40%, the boss roars, plays enrage VFX, and shifts material base and emission colors to fiery orange/red using MaterialPropertyBlock. Attack 1 adds a second blast ring, Attack 2 fires 3 rapid salvos, Attack 3 boulder roll speed increases, and cooldown pauses shorten.
-  - Defeat & Future Escalation: When boss health reaches zero, MortarDefeatedState halts all attacks, drops EXP particles, plays unparented death VFX, and fires OnBossDefeated. EncounterArenaController marks IsEncounterCompleted = true, restores camera framing, hides HUD elements, and collapses the arena border.
-  - Stage Progression Hook (Future 2-Tower Climax): In the multi-tower progression roadmap, defeating both Tower Bosses on the map signals BossManager to trigger the main stage boss encounter: the Ancient Golem Boss spawns ahead of the player or at the map center to initiate the ultimate stage battle.
+  - Defeat & Future Escalation: When boss health reaches zero, MortarDefeatedState halts all attacks, drops EXP particles, plays unparented death VFX, and fires OnBossDefeated. EncounterArenaController marks IsEncounterCompleted = true, notifies BossEncounterService, restores camera framing, and collapses the arena border.
+  - Stage Progression Hook (Tower Climax): Defeating required Tower Bosses on the map signals BossEncounterService to trigger the main stage boss encounter: the Ancient Golem Boss spawns after a breathing delay to initiate the ultimate stage battle.
 
 ## Rules and Invariants
 
@@ -113,11 +113,11 @@ It is not responsible for mobile pathfinding or pursuit steering (handled by mob
   - Create a new tower boss script (e.g. TeslaTowerBoss, FlamethrowerTowerBoss) implementing IMortarTowerBoss or a generalized ITowerBoss.
   - Reuse EncounterArenaController, IArenaLeashWarningPresenter, and ICinemachineCombatFollowOffsetController for arena containment, leash rules, and camera transitions.
   - Define custom attack states within a dedicated state machine folder.
-- Future 2-Tower Boss Meta-Progression & Golem Boss Activation:
-  - Place 2 Tower Boss encounters across distinct quadrants of the gameplay map.
-  - Extend or wire BossManager (or a dedicated EncounterProgressionCoordinator) to subscribe to both tower boss OnBossDefeated events.
-  - Track a defeated count: when defeatedTowerBossesCount >= 2, trigger a dramatic camera cut or screen shake and call BossManager.SpawnBoss() to spawn the Ancient Golem Boss.
-  - This establishes the core stage loop: Explore Map -> Defeat Tower Boss 1 -> Defeat Tower Boss 2 -> Defeat Ancient Golem Boss -> Stage Portal.
+- Unified Tower Boss Progression & Golem Boss Activation:
+  - Place Tower Boss encounters across the gameplay map (e.g. 1 currently in RuinedBloodCity, scaling cleanly to 2).
+  - Towers auto-register with BossEncounterService via EncounterArenaController.
+  - Defeating the required count of towers triggers BossEncounterService.SpawnGolemBoss() after a 10s delay.
+  - This establishes the core stage loop: Explore Map -> Defeat Tower Bosses -> Defeat Ancient Golem Boss -> Stage Portal.
 - Designer tuning via ScriptableObject:
   - All balance values (MaxHealth, EnrageHealthPercent, ArenaRadius, LeashGracePeriodSeconds, attack damage, explosion radii, roll speeds, cooldowns) are exposed in MortarTowerConfigSO and can be tuned without recompiling code.
 - Custom arena geometry & visuals:
@@ -133,7 +133,7 @@ It is not responsible for mobile pathfinding or pursuit steering (handled by mob
 - Downstream consumers:
   - UI Presenters: BossHUDPresenter displays health bar; ArenaLeashWarningPresenter displays leash countdown.
   - Audio & VFX: AudioClipPlayer and VFXPlayer instances play combat feedback.
-  - Progression Architecture: BossManager monitors encounter completion to initiate the Golem Boss fight in the planned 2-tower progression flow.
+  - Progression Architecture: BossEncounterService monitors tower completion to initiate the Golem Boss fight after required towers are defeated.
 - Cross-system coupling risks:
   - Camera Controller Binding: DefaultGameplaySceneInstaller must have CinemachineCombatFollowOffsetController assigned in its inspector fields; otherwise, camera zoom transitions will gracefully degrade to static follow.
   - Prefab Injection: If tower bosses are instantiated dynamically at runtime, ensure the Reflex container injects their dependencies or fallback resolution executes.

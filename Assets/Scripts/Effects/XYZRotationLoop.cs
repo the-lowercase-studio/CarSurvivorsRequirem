@@ -2,8 +2,16 @@ using UnityEngine;
 
 namespace Assets.Scripts.Effects
 {
+    public enum RotationUpdateMode
+    {
+        Update = 0,
+        LateUpdate = 1,
+        FixedUpdate = 2,
+    }
+
     public class XYZRotationLoop : MonoBehaviour
     {
+        [SerializeField] private RotationUpdateMode _updateMode = RotationUpdateMode.Update;
         [SerializeField] private bool _rotateX;
         [SerializeField] private bool _rotateY;
         [SerializeField] private bool _rotateZ;
@@ -15,6 +23,8 @@ namespace Assets.Scripts.Effects
         private Vector3 _maxTweenRotation;
         private Vector3 _angularVelocity;
 
+        public float SpeedMultiplier { get; set; } = 1.0f;
+
         private void OnEnable()
         {
             SetMaxRotationTween();
@@ -22,13 +32,43 @@ namespace Assets.Scripts.Effects
 
         private void Update()
         {
+            if (_updateMode != RotationUpdateMode.Update)
+            {
+                return;
+            }
+
+            ApplyRotation(_unscaleWithTime ? Time.unscaledDeltaTime : Time.deltaTime);
+        }
+
+        private void LateUpdate()
+        {
+            if (_updateMode != RotationUpdateMode.LateUpdate)
+            {
+                return;
+            }
+
+            ApplyRotation(_unscaleWithTime ? Time.unscaledDeltaTime : Time.deltaTime);
+        }
+
+        private void FixedUpdate()
+        {
+            if (_updateMode != RotationUpdateMode.FixedUpdate)
+            {
+                return;
+            }
+
+            ApplyRotation(_unscaleWithTime ? Time.fixedUnscaledDeltaTime : Time.fixedDeltaTime);
+        }
+
+        private void ApplyRotation(float deltaTime)
+        {
             if (_tweenIterationTime <= 0f)
             {
                 return;
             }
 
-            float dt = _unscaleWithTime ? Time.unscaledDeltaTime : Time.deltaTime;
-            transform.Rotate(_angularVelocity * dt, _useLocalRotation ? Space.Self : Space.World);
+            float effectiveDeltaTime = deltaTime * SpeedMultiplier;
+            transform.Rotate(_angularVelocity * effectiveDeltaTime, _useLocalRotation ? Space.Self : Space.World);
         }
 
         private void SetMaxRotationTween()

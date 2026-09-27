@@ -32,6 +32,8 @@ namespace Assets.Scripts.Player.Car
         float DriftYawAngle { get; }
 
         bool IsGrounded { get; }
+
+        float CurrentSteerInput { get; }
     }
 
     [RequireComponent(typeof(Rigidbody))]
@@ -217,6 +219,11 @@ namespace Assets.Scripts.Player.Car
         public bool IsGrounded
         {
             get { return _isGrounded; }
+        }
+
+        public float CurrentSteerInput
+        {
+            get { return _smoothedSteerInput; }
         }
 
         private void Awake()
@@ -408,7 +415,7 @@ namespace Assets.Scripts.Player.Car
                 float targetY = highestGroundY + pivotHeight + GetEffectiveGroundTargetYOffset();
 
                 currentPosition.y = Mathf.SmoothDamp(currentPosition.y, targetY, ref _groundYVelocity, 0.05f, 25f, Time.fixedDeltaTime);
-                _rb.position = currentPosition;
+                _rb.MovePosition(currentPosition);
 
                 Vector3 currentVelocity = _rb.linearVelocity;
                 currentVelocity.y = 0f;
