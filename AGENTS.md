@@ -111,6 +111,7 @@ Use `.agents/skills/` as reusable workflows:
 - `gameplay-spec-writing`: write or review staff-engineer level technical specifications and implementation plans with hard Open Questions gates.
 - `preserve-coding-standards`: audit and safely fix coding-standard drift in a pointed scope.
 - `reduce-code-volume`: audit and safely reduce code volume/lines of code while keeping code readable and safe.
+- `unity-cli`: interact with Unity CLI to control running editors, manage projects, licenses, releases, or execute batch runs.
 - `unity-pre-commit-gate`: run a comprehensive pre-commit verification gate (compilation, zero warnings, DI bindings, serialization safety, standards audit).
 - `unity-refactor-suggestions`: produce behavior-preserving Unity/C# refactor recommendations.
 - `unity-root-cause`: systematically investigate and diagnose Unity runtime bugs, DI issues, and lifecycle defects in read-only mode.

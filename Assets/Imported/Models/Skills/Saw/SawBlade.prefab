@@ -50,7 +50,7 @@ MonoBehaviour:
   _rotateZ: 0
   _maxRotationOnAxis: 360
   _useLocalRotation: 1
-  _tweenIterationTime: 2.5
+  _tweenIterationTime: 0.9
   _unscaleWithTime: 0
 --- !u!1 &8028970397160123671
 GameObject:
