@@ -9,7 +9,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
 ## Reading Map
 
 - Primary code locations:
-  - Assets/Scripts/Enemies/Bosses/BossManager.cs
+  - Assets/Scripts/Enemies/Bosses/BossEncounterService.cs
   - Assets/Scripts/Enemies/Bosses/Golem/IGolemBoss.cs
   - Assets/Scripts/Enemies/Bosses/Golem/GolemBoss.cs
   - Assets/Scripts/Enemies/Bosses/Golem/Constants/GolemBossConstants.cs
@@ -61,7 +61,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
 ## Architecture and Data Flow
 
 - Core components:
-  - BossManager: Scene-level manager implementing IBossManager. Injected with IBossHUDPresenter, ISwarmFreezer, and IPlayerManager. Spawns the GolemBoss prefab (either ahead of the player via _spawnOffsetDistance or at a provided position), freezes active swarm waves during the encounter via ISwarmFreezer.IsSuppressed, initializes the Boss HUD display, listens to OnBossDefeated, restores swarm spawning on victory, and instantiates the next stage portal prefab at the defeat location. Exposes debug spawning via _debugSpawnKey (P key).
+  - BossEncounterService: Scene-level service implementing IBossEncounterService. Injected with IBossHUDPresenter, ISwarmFreezer, and IPlayerManager. Tracks landmark tower encounters, dynamically spawns the GolemBoss prefab (either ahead of the player via _spawnOffsetDistance or at a provided position) upon defeating required towers (or via debug spawn key), freezes active swarm waves during the encounter via ISwarmFreezer.IsSuppressed, initializes the Boss HUD display, listens to OnBossDefeated, restores swarm spawning on victory, and instantiates the next stage portal prefab at the defeat location. Exposes debug spawning via _debugSpawnKey (P key).
   - GolemBoss: Root aggregate entity implementing IGolemBoss, IDamageable, and IKnockable. Requires a Health component. Injected through Reflex with IPlayerManager, IGridManager, damage number spawner, and EXP particle spawner. Manages health changes, phase progression (Phase 1, 2, 3), enrage visual state via MaterialPropertyBlock, knockback immunity, active telegraph tracking and cleanup, linear attack hitbox deactivation, state machine updates, and defeat event emission (OnBossDefeated).
   - GolemStateMachine: Discrete state machine coordinating active IGolemState instances and ticking individual cooldown timers (LeapCooldownTimer, StompCooldownTimer, LinearFistCooldownTimer, SkyBarrageCooldownTimer). Cooldown timers initialize with staggered values (GolemBossConstants.INITIAL_*_COOLDOWN) to ensure an opening pursuit phase.
   - GolemPursuitState: Primary navigation state. Coordinates GolemMovementController to follow PlayerPosition strictly while IsMovingAnimationPlaying is true. Checks attack priorities when arms are docked and executes immediate melee stomps when within StompRadius or anti-kiting leap slams when distance exceeds LeapTriggerMaxDistance.
@@ -80,7 +80,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
   - GolemBossConfigSO: ScriptableObject holding combat balance parameters: health, movement and rotation speed, body contact damage, EXP reward, phase multipliers, leap slam timings/ranges, stomp timings/ranges, linear fist dimensions/speeds, sky barrage cycles/radii, and enrage colors.
   - BossHUDPresenter: UI presenter implementing IBossHUDPresenter. Binds to IHealth, displays boss name, animates health slider changes with DOValue, evaluates health gradient fill color, and hides on boss defeat.
 - Key interfaces:
-  - IBossManager: Encounters contract for boss spawning and active boss status query.
+  - IBossEncounterService: Central encounter coordination contract for boss lifecycle, tower tracking, and active status query.
   - IGolemBoss: Aggregates subsystem access (Movement, Arms, LinearAttackHitbox, Animator, AudioClipPlayer, WorldGrid, Transform, Config, Phase multipliers, player distance/direction properties) and telegraph helper methods.
   - IGolemLinearAttackHitbox: Controls activation, dynamic sizing, forward wavefront translation, and deactivation for linear attack hitbox.
   - IGolemMovementController: Controls navigation enable/disable, kinematic toggling (SetKinematic), movement targeting, position snapping (SetPosition), and obstacle sliding.
@@ -90,7 +90,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
   - IBossHUDPresenter: UI contract for showing and hiding the boss health bar.
   - ISwarmFreezer: Service contract to suppress swarm spawns during boss combat.
 - Runtime flow:
-  - Spawn & Initialization: BossManager instantiates GolemBoss prefab, subscribes to OnBossDefeated, sets ISwarmFreezer.IsSuppressed = true, and displays the boss health bar via IBossHUDPresenter.
+  - Spawn & Initialization: BossEncounterService instantiates GolemBoss prefab, subscribes to OnBossDefeated, sets ISwarmFreezer.IsSuppressed = true, and displays the boss health bar via IBossHUDPresenter.
   - State Loop & Pacing: GolemStateMachine updates the active state in Update() and FixedUpdate(), ticking attack cooldown timers.
   - Pursuit & Attack Priority: GolemPursuitState tracks the player with GolemMovementController strictly while walking animations play. Attack selection follows strict conditions:
     - Melee Stomp: Checked continuously during pursuit and sky barrage whenever the player enters StompRadius, transitioning into GolemStompState which locks movement for the stomp duration.
@@ -98,7 +98,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
     - Linear Rocket Fists: Initiated when Arms.AreBothArmsDocked is true, cooldown <= 0, and player is within LinearFistMaxDistance * 1.3f. Both arms detach and thrust forward along a rectangular telegraph lane while GolemLinearAttackHitbox sweeps the corridor dealing single-pass damage, then retract and dock.
     - Sky Arm Barrage: Highest priority arm attack when Arms.AreBothArmsDocked is true. Both arms launch skyward while the body holds still during the launch phase, then the body resumes pursuit and executes localized melee stomps while arms execute staggered multi-cycle bombardments on circular ground telegraphs around the player before returning to dock.
   - Damage & Phase Enrage: Incoming damage spawns damage numbers, reduces Health, and plays blood VFX. When HP drops below Phase2HealthPercent (60%) or Phase3HealthPercent (30%), phase multipliers accelerate movement speed, arm velocity, and cooldown recovery. Phase 3 triggers Enrage with roar SFX, enrage VFX, and red material emission property overrides via MaterialPropertyBlock.
-  - Defeat & Stage Progression: On Health.OnNoHealth, GolemDeathState cleans up active telegraphs and resets arms. EXP particles and death VFX spawn, BossManager restores swarm spawning, hides the HUD, and instantiates the next stage progression portal.
+  - Defeat & Stage Progression: On Health.OnNoHealth, GolemDeathState cleans up active telegraphs and resets arms. EXP particles and death VFX spawn, BossEncounterService restores swarm spawning, hides the HUD, and instantiates the next stage progression portal.
 
 ## Rules and Invariants
 
@@ -118,7 +118,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
   - MaterialPropertyBlock is used for Enrage tinting to avoid creating runtime material instance leaks.
   - Telegraph indicators snap to the WorldGrid to match arena geometry.
 - Constraints contributors must preserve:
-  - Keep BossManager bound as a singleton through Reflex DI in DefaultGameplaySceneInstaller.
+  - Keep BossEncounterService bound as a singleton through Reflex DI in DefaultGameplaySceneInstaller.
   - Preserve designer configuration values in GolemBossConfigSO rather than hardcoding combat values.
   - Ensure any new attacks or state transitions properly clean up DOTween sequences in Exit().
 
@@ -127,13 +127,13 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
 - Safe extension areas:
   - Adding new boss attacks: Create a new IGolemState class in Assets/Scripts/Enemies/Bosses/Golem/StateMachine/States/, add a cooldown timer to GolemStateMachine, add animation triggers to GolemAnimator and GolemBossConstants, and configure balance parameters in GolemBossConfigSO.
   - Tuning combat balance: Modify GolemBossConfig.asset in the Unity Inspector to adjust health, movement speed, cooldowns, telegraph warning times, damage, and phase multipliers without touching code.
-  - Expanding multi-boss encounters: Extend IBossManager to accept specific boss prefab IDs or configurations.
-  - Multi-stage tower boss progression: In the planned stage loop, the Golem Boss encounter is triggered automatically by BossManager once the player defeats 2 stationary Tower Bosses located across the map.
+  - Expanding multi-boss encounters: Extend IBossEncounterService to accept specific boss prefab IDs or configurations.
+  - Multi-stage tower boss progression: In the unified boss progression loop, the Golem Boss encounter is triggered automatically by BossEncounterService after the required number of stationary Tower Bosses are defeated (with adaptive count matching registered towers).
 - Required dependencies and contracts:
   - GolemBoss requires Health, Rigidbody, Collider, GolemMovementController, GolemArmSocketController, GolemAnimator, AudioClipPlayer, and telegraph indicator references on its prefab hierarchy.
   - GolemBoss requires Reflex dependency injection for IPlayerManager, IGridManager, IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig>, and IInWorldSpaceSpawner<ExpParticleSpawner, float>.
 - Testing implications:
-  - Debug spawning can be triggered using the debug spawn key (P key by default in BossManager) in gameplay scenes.
+  - Debug spawning can be triggered using the debug spawn key (P key by default in BossEncounterService) in gameplay scenes.
   - Compile changes via:
     dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
 
@@ -145,7 +145,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
   - Physics & Layers: Collisions and raycasts query EntityLayers.Player for combat damage and TerrainLayers.Impassable for obstacle sliding.
   - Indicators: Spawns CircularTelegraphIndicator and RectangularTelegraphIndicator for combat feedback.
 - Downstream consumers:
-  - BossManager listens to OnBossDefeated to trigger stage progression portal instantiation and clear swarm suppression.
+  - BossEncounterService listens to OnBossDefeated to trigger stage progression portal instantiation and clear swarm suppression.
   - BossHUDPresenter consumes IHealth events to update boss health bar visuals.
 - Cross-system coupling risks:
   - Prefab instantiation: Dynamically instantiated GolemBoss instances require Reflex container injection (via GameObjectInjector or Dynamic DI component) to resolve injected fields at runtime.
@@ -153,7 +153,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
 ## Known Risks and Open Questions
 
 - Known limitations:
-  - Single active boss: BossManager is currently structured around managing a single active boss instance at a time.
+  - Encounter Coordination: BossEncounterService coordinates active tower encounters and dynamic GolemBoss spawning. Bypassing towers with debug key P logs an explicit QA warning.
   - Tween lifecycle: Rapid scene unload or sudden boss deactivation requires strict killing of active DOTween sequences across arm projectiles and states to prevent orphaned tweens.
 - Open design questions:
   - Portal interaction: The stage progression portal currently spawns at the defeat position; future mechanics may require custom entrance animations or player proximity triggers.

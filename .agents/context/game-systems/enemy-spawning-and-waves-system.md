@@ -31,7 +31,7 @@ It does not own individual enemy combat AI, movement behaviors, or individual en
 - DI installer:
   - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
 - Related systems:
-  - Boss management: Assets/Scripts/Enemies/Bosses/BossManager.cs
+  - Boss management: Assets/Scripts/Enemies/Bosses/BossEncounterService.cs
   - Enemy entities and drops: Assets/Scripts/Enemies/Base/Enemy.cs, Assets/Scripts/Enemies/EnemyDropHandler.cs
   - Grid geometry and visibility: Assets/Scripts/Navigation/GridSystem/GridManager.cs, Assets/Scripts/Navigation/GridSystem/CellCameraVisibilityChecker.cs
 - Related docs:
@@ -59,10 +59,10 @@ It does not own individual enemy combat AI, movement behaviors, or individual en
   - GridCellsNotVisibleByMainCamera: Static utility for camera-culled walkable cell sampling. Validates cell walkability, tests frustum visibility, checks occupancy caps using Physics.OverlapBoxNonAlloc against EntityLayers.Enemies, and expands search radii outside the player chunk.
   - EnemiesOutsidePlayerChunkTeleporter: Periodic maintenance component (_checkForEnemiesOutsidePlayerChunkDelay = 2s) that queries enemies straying outside the active player chunk and teleports them to random hidden walkable cells inside the chunk, resetting vertical velocity.
   - IncreaseDifficultyTotem: Interactive map totem that calls IEnemySpawnDifficultyController to add a flat difficulty boost (RedistributionFactorBonus) to spawn chance redistribution.
-  - BossManager: Scene manager that triggers boss encounters and suppresses swarm events by toggling ISwarmFreezer.IsSuppressed = true while the boss is alive.
+  - BossEncounterService: Central service that manages boss encounters and suppresses swarm events by toggling ISwarmFreezer.IsSuppressed = true while an encounter is engaged.
 - Key interfaces:
   - IWaveFreezer: Implemented by WaveManager. Allows SwarmSpawner to pause (IsFrozen = true) and resume standard wave delay counting.
-  - ISwarmFreezer: Implemented by SwarmSpawner. Allows BossManager to suppress (IsSuppressed = true) swarm event timers during boss fights.
+  - ISwarmFreezer: Implemented by SwarmSpawner. Allows BossEncounterService to suppress (IsSuppressed = true) swarm event timers during boss fights.
   - IOnRandomGridPosSpawner<EnemiesSpawner>: Injected into WaveManager for standard wave spawns and reading CurrentlySpawnedObjectsCount.
   - ISwarmEnemySpawner: Implemented by EnemiesSpawner. Injected into SwarmSpawner to retrieve enemy configurations (EnemyConfigs) and trigger spawns for specific enemy types.
   - ISwarmNotificationPresenter: Injected into SwarmSpawner to present incoming countdowns, ongoing burst notices, and screen dimming.
@@ -147,7 +147,7 @@ The EnemiesSpawnChanceRedistributionSystem executes after each standard wave bat
   - DOTween: Controls HUD notification scale animations and post-processing gamma tweening.
 - Downstream consumers:
   - WaveManager and SwarmSpawner drive enemy generation through EnemiesSpawner.
-  - BossManager suppresses swarms via ISwarmFreezer.
+  - BossEncounterService suppresses swarms via ISwarmFreezer.
   - IncreaseDifficultyTotem modifies spawn progression via IEnemySpawnDifficultyController.
   - EnemiesOutsidePlayerChunkTeleporter maintains enemy proximity to the player.
 - Cross-system coupling risks:

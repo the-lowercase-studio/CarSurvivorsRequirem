@@ -23,7 +23,7 @@ It does not own wave timing, grid generation, flow-field vector computation, pla
   - Assets/Scripts/Enemies/DropAnimationConfiguration.cs
   - Assets/Scripts/Enemies/Constants/EnemyMovementConstants.cs
   - Assets/Scripts/Enemies/Constants/EnemyCombatConstants.cs
-  - Assets/Scripts/Enemies/Bosses/BossManager.cs
+  - Assets/Scripts/Enemies/Bosses/BossEncounterService.cs
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawnChanceRedistributionSystem.cs
   - Assets/Scripts/Spawners/Enemies/EnemySpawnInfo.cs
@@ -72,13 +72,13 @@ It does not own wave timing, grid generation, flow-field vector computation, pla
   - EnemiesOutsidePlayerChunkTeleporter: Periodic monitor that detects enemies drifting outside the active player chunk bounds and relocates them to hidden, walkable cells within the player chunk (using GridCellsNotVisibleByMainCamera.FillWalkableCells) and resets vertical velocity.
   - EnemiesSpawner: Implements IOnRandomGridPosSpawner<EnemiesSpawner>, ISwarmEnemySpawner, and IEnemySpawnDifficultyController. Manages ObjectPool<Enemy> per configured EnemySpawnInfo. Pre-warms pools on Start. Spawns standard wave enemies on off-camera walkable cells outside the player chunk. Spawns swarm enemies inside the player chunk with optional spawn VFX. Coordinates dynamic spawn weight adjustments via EnemiesSpawnChanceRedistributionSystem.
   - EnemiesSpawnChanceRedistributionSystem: Adjusts EnemySpawnInfo.SpawnChance values progressively after spawn batches, shifting spawn probability toward higher-tier enemies geometrically. Supports difficulty multipliers from totems or events via IncreaseSpawnChanceRedistributionFactor.
-  - BossManager: Implements IBossManager. Bridges boss spawning into the scene, instantiating GolemBoss, binding the boss health to IBossHUDPresenter, suppressing standard swarms via ISwarmFreezer, and spawning stage progression portals on defeat.
+  - BossEncounterService: Implements IBossEncounterService. Unifies boss encounters, tracking tower landmarks and dynamically spawning GolemBoss, binding boss health to IBossHUDPresenter, suppressing standard swarms via ISwarmFreezer, and spawning stage progression portals on defeat.
 - Key interfaces:
   - IOnRandomGridPosSpawner<EnemiesSpawner>: Contract for wave manager spawning.
   - ISwarmEnemySpawner: Contract for spawning targeted enemy counts during swarm events.
   - IEnemySpawnDifficultyController: Contract for adjusting difficulty redistribution scalars.
   - ICollectibleDropNotifier: Contract for spawning collectible items with drop physics/tweens.
-  - IBossManager: Contract for managing boss lifecycle and HUD.
+  - IBossEncounterService: Contract for managing boss encounters, tower tracking, and HUD presentation.
   - IPoolable: Pool lifecycle interface (OnGet, ReturnToPool, OnRelease, OnCanBeReleased).
   - IHealthy, IDamageable, IKnockable: Health, combat, and crowd-control contracts.
   - INeedToCompleteBeforeDisable: Contract delaying pool recycling until visual/audio death sequences complete.
@@ -160,7 +160,7 @@ It does not own wave timing, grid generation, flow-field vector computation, pla
   - Add new enemy types: Create an enemy prefab with required components, author an EnemyConfigSO asset, and add an EnemySpawnInfo entry to EnemiesSpawner._poolEnemiesInfo in the scene.
   - Add new collectible drops: Add CollectibleDropEntry items to the EnemyDropHandler component on enemy prefabs.
   - Adjust combat and movement physics: Tune values in EnemyConfigSO, DropAnimationConfiguration, EnemyMovementConstants, or EnemyCombatConstants.
-  - Add custom boss encounters: Implement IBossManager extensions or state machine patterns modeled after GolemBoss.
+  - Add custom boss encounters: Implement IBossEncounterService integrations or state machine patterns modeled after GolemBoss.
 - Required dependencies and contracts:
   - Standard enemy prefabs require:
     - Enemy
@@ -212,7 +212,7 @@ It does not own wave timing, grid generation, flow-field vector computation, pla
   - Car weapons and projectile systems target enemies on EntityLayers.Enemy.
   - LevelController consumes EXP particles spawned by EnemyDeathHandler.
   - Skill upgrade UI and CollectibleDropNotifier consume dropped items.
-  - BossHUDPresenter receives boss health events from BossManager.
+  - BossHUDPresenter receives boss health events from BossEncounterService.
 - Cross-system coupling risks:
   - If GridManager grid generation fails or returns zero walkable cells, spawning and drop resolution fall back or fail to find valid points.
   - If death VFX or audio clips are misconfigured on a prefab and fail to fire completion events, the enemy instance will remain unreleased in the scene.

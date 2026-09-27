@@ -1,12 +1,12 @@
 using System;
 using DG.Tweening;
 using Assets.Scripts.Cameras;
+using Assets.Scripts.Enemies.Bosses;
 using Assets.Scripts.Enemies.Bosses.Towers.Arena.Constants;
 using Assets.Scripts.Enemies.Bosses.Towers.MortarTower;
 using Assets.Scripts.Enemies.Bosses.Towers.MortarTower.Constants;
 using Assets.Scripts.Indicators.Constants;
 using Assets.Scripts.Player;
-using Assets.Scripts.Spawners.Swarm;
 using Assets.Scripts.UI.HUD;
 using Reflex.Attributes;
 using UnityEngine;
@@ -32,6 +32,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
     {
         [Inject] private readonly Reflex.Core.Container _container = null;
         [Inject] private IPlayerManager _playerManager = null;
+        [Inject] private IBossEncounterService _bossEncounterService = null;
 
         [Tooltip("Reference to the stationary mortar tower boss.")]
         [SerializeField] private MortarTowerBoss _boss;
@@ -46,8 +47,6 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
 
         private ICinemachineCombatFollowOffsetController _cameraController;
         private IArenaLeashWarningPresenter _leashWarningPresenter;
-        private IBossHUDPresenter _bossHUDPresenter;
-        private ISwarmFreezer _swarmFreezer;
         private bool _isEncounterActive;
         private bool _isEncounterCompleted;
         private bool _isLeashCountdownActive;
@@ -119,7 +118,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
                 _boss = GetComponent<MortarTowerBoss>();
             }
 
-            if (_playerManager == null)
+            if (_playerManager == null || _bossEncounterService == null)
             {
                 ResolveOptionalDependencies();
             }
@@ -131,6 +130,8 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
                 _boss.OnBossDefeated += Boss_OnBossDefeated;
             }
 
+            _bossEncounterService?.RegisterTower(this);
+
             _isEncounterActive = false;
             _isEncounterCompleted = false;
             _isLeashCountdownActive = false;
@@ -140,6 +141,12 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
             {
                 _perimeterBorder.localScale = Vector3.zero;
             }
+        }
+
+        private void Start()
+        {
+            ResolveOptionalDependencies();
+            _bossEncounterService?.RegisterTower(this);
         }
 
         public void NotifyDirectCombatEngaged()
@@ -157,21 +164,18 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
                 _boss.OnBossDefeated -= Boss_OnBossDefeated;
             }
 
+            _bossEncounterService?.UnregisterTower(this);
+
             if (_isEncounterActive)
             {
-                if (_swarmFreezer != null)
+                if (_bossEncounterService != null)
                 {
-                    _swarmFreezer.IsSuppressed = false;
+                    _bossEncounterService.NotifyEncounterDisengaged();
                 }
 
                 if (_cameraController != null)
                 {
                     _cameraController.RestoreDefaultOffset(0.2f);
-                }
-
-                if (_bossHUDPresenter != null)
-                {
-                    _bossHUDPresenter.Hide();
                 }
 
                 if (_leashWarningPresenter != null)
@@ -191,6 +195,8 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
             {
                 _boss.OnBossDefeated -= Boss_OnBossDefeated;
             }
+
+            _bossEncounterService?.UnregisterTower(this);
 
             KillPerimeterTweens();
         }
@@ -280,9 +286,9 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
             {
                 _boss.StartEncounter();
 
-                if (_bossHUDPresenter != null && _boss.Health != null)
+                if (_bossEncounterService != null && _boss.Health != null)
                 {
-                    _bossHUDPresenter.Show(_boss.Health, _bossDisplayName);
+                    _bossEncounterService.NotifyEncounterEngaged(_boss.Health, _bossDisplayName);
                 }
 
                 if (_cameraController != null)
@@ -292,10 +298,9 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
                     _cameraController.TransitionToCombatOffset(combatOffset, duration);
                 }
             }
-
-            if (_swarmFreezer != null)
+            else if (_bossEncounterService != null)
             {
-                _swarmFreezer.IsSuppressed = true;
+                _bossEncounterService.NotifyEncounterEngaged(null, _bossDisplayName);
             }
 
             AnimatePerimeterExpansion();
@@ -313,14 +318,9 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
                 _leashWarningPresenter.Hide();
             }
 
-            if (_bossHUDPresenter != null)
+            if (_bossEncounterService != null)
             {
-                _bossHUDPresenter.Hide();
-            }
-
-            if (_swarmFreezer != null)
-            {
-                _swarmFreezer.IsSuppressed = false;
+                _bossEncounterService.NotifyEncounterDisengaged();
             }
 
             if (_cameraController != null)
@@ -350,14 +350,9 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
                 _leashWarningPresenter.Hide();
             }
 
-            if (_bossHUDPresenter != null)
+            if (_bossEncounterService != null)
             {
-                _bossHUDPresenter.Hide();
-            }
-
-            if (_swarmFreezer != null)
-            {
-                _swarmFreezer.IsSuppressed = false;
+                _bossEncounterService.NotifyTowerDefeated(this);
             }
 
             if (_cameraController != null)
@@ -450,14 +445,9 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
                     _leashWarningPresenter = _container.Resolve<IArenaLeashWarningPresenter>();
                 }
 
-                if (_bossHUDPresenter == null && _container.HasBinding<IBossHUDPresenter>())
+                if (_bossEncounterService == null && _container.HasBinding<IBossEncounterService>())
                 {
-                    _bossHUDPresenter = _container.Resolve<IBossHUDPresenter>();
-                }
-
-                if (_swarmFreezer == null && _container.HasBinding<ISwarmFreezer>())
-                {
-                    _swarmFreezer = _container.Resolve<ISwarmFreezer>();
+                    _bossEncounterService = _container.Resolve<IBossEncounterService>();
                 }
             }
 

@@ -36,7 +36,7 @@ namespace Assets.Scripts.ReflexDI
         [SerializeField] private SwarmNotificationPresenter _swarmNotificationPresenter;
         [SerializeField] private SwarmSpawner _swarmSpawner;
         [SerializeField] private BossHUDPresenter _bossHUDPresenter;
-        [SerializeField] private BossManager _bossManager;
+        [SerializeField] private BossEncounterService _bossEncounterService;
         [SerializeField] private Assets.Scripts.Cameras.CinemachineCombatFollowOffsetController _cinemachineCombatFollowOffsetController;
         [SerializeField] private ArenaLeashWarningPresenter _arenaLeashWarningPresenter;
         [SerializeField] private Camera _mainCamera;
@@ -96,9 +96,9 @@ namespace Assets.Scripts.ReflexDI
             }
 
             //Boss Management
-            if (_bossManager != null)
+            if (_bossEncounterService != null)
             {
-                builder.AddSingleton(_bossManager, typeof(IBossManager));
+                builder.AddSingleton(_bossEncounterService, typeof(IBossEncounterService));
             }
 
             //Swarm UI

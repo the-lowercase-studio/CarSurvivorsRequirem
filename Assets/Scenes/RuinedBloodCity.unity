@@ -1892,7 +1892,7 @@ MonoBehaviour:
   _swarmNotificationPresenter: {fileID: 1592724051}
   _swarmSpawner: {fileID: 742325823}
   _bossHUDPresenter: {fileID: 7427486876901126385}
-  _bossManager: {fileID: 1331076786}
+  _bossEncounterService: {fileID: 1331076786}
   _cinemachineCombatFollowOffsetController: {fileID: 1082899688}
   _arenaLeashWarningPresenter: {fileID: 1905272535}
   _mainCamera: {fileID: 2001922875}
@@ -3550,7 +3550,7 @@ GameObject:
   - component: {fileID: 1331076785}
   - component: {fileID: 1331076786}
   m_Layer: 0
-  m_Name: BossManager
+  m_Name: BossEncounterService
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3580,13 +3580,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 1331076784}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1a9c4f63d6738414489e08d66375c629, type: 3}
+  m_Script: {fileID: 11500000, guid: ac21db4f4d254425b1aeaaf867e60ef9, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Enemies.Bosses.BossManager
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Enemies.Bosses.BossEncounterService
   _golemBossPrefab: {fileID: 201348459030761865, guid: 94e3b315613f41a498163a9b7f48510f, type: 3}
   _nextStagePortalPrefab: {fileID: 7852946043265520908, guid: 2ec10d8c146bae84b8e7fe4d09b738b0, type: 3}
-  _bossDisplayName: ANCIENT GOLEM
+  _golemDisplayName: RUSTY GOLEM
   _spawnOffsetDistance: 6
+  _requiredTowersForGolemSpawn: 1
+  _delayBeforeGolemSpawn: 10
   _debugSpawnKey: 112
 --- !u!4 &1353509552 stripped
 Transform:
