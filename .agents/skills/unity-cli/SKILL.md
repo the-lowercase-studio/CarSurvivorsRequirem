@@ -50,12 +50,16 @@ If not found, install it:
 curl -fsSL https://public-cdn.cloud.unity3d.com/hub/prod/cli/install.sh | UNITY_CLI_CHANNEL=beta bash
 ```
 
-**Windows (PowerShell)**
+**Windows (PowerShell / WinGet)**
 ```powershell
+# Preferred via WinGet:
+winget install Unity.CLI
+
+# Or via direct installer script:
 $env:UNITY_CLI_CHANNEL='beta'; irm https://public-cdn.cloud.unity3d.com/hub/prod/cli/install.ps1 | iex
 ```
 
-After installing, open a new shell so `unity` is on PATH, then verify with `unity --version`. On Windows, the binary is placed under `$env:LOCALAPPDATA\Unity\bin\unity.exe`. If the current shell session has not refreshed its PATH environment, invoke it directly via:
+After installing, open a new shell so `unity` is on PATH, then verify with `unity --version`. On Windows, WinGet installs the execution alias into `WindowsApps` directly on PATH, while the script installs to `$env:LOCALAPPDATA\Unity\bin\unity.exe`. If the current shell session has not refreshed its PATH environment, invoke it directly via:
 ```powershell
 & "$env:LOCALAPPDATA\Unity\bin\unity.exe" --version
 ```
