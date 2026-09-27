@@ -766,7 +766,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontColor: {r: 0.62352943, g: 0.1254902, b: 0, a: 1}
+  m_fontColor: {r: 0.7075472, g: 0.14239945, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -923,7 +923,7 @@ Animator:
   m_Enabled: 1
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: 6b82c5978acb7a54993967c9b24b7dc4, type: 2}
-  m_CullingMode: 2
+  m_CullingMode: 1
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
