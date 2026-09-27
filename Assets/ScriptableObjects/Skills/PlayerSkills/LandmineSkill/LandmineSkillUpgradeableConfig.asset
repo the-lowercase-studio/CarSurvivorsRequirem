@@ -72,10 +72,10 @@ MonoBehaviour:
     _hasUnlimitedMaxValue: 1
     _floatMinMaxRange:
       <Min>k__BackingField: 1
-      <Max>k__BackingField: 5
+      <Max>k__BackingField: 3.2
     _floatRangeOfPossibleValuesForUpgrade:
-      <Min>k__BackingField: 0.8
-      <Max>k__BackingField: 1.2
+      <Min>k__BackingField: 0.7
+      <Max>k__BackingField: 1
   _damage:
     <Icon>k__BackingField: {fileID: -838568848, guid: cee3411c082140d49bce96eb51f00885, type: 3}
     <IsSubstractModeOn>k__BackingField: 0
