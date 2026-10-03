@@ -16,12 +16,28 @@ namespace Assets.Scripts.Indicators
 
         private Sequence _activeSequence;
         private Action _onImpactCallback;
+        private Transform _followTarget;
+        private Transform _reusableParent;
+        private int _reusableGeneration;
+        private bool _isReusable;
 
         public Vector3 SnappedPosition { get; private set; }
 
         private void OnDisable()
         {
             KillActiveSequence();
+            _reusableGeneration++;
+            _followTarget = null;
+            _onImpactCallback = null;
+            RestoreReusableParent();
+        }
+
+        private void LateUpdate()
+        {
+            if (_isReusable && _followTarget != null)
+            {
+                SynchronizeAttachedPosition();
+            }
         }
 
         private void OnDestroy()
@@ -31,6 +47,7 @@ namespace Assets.Scripts.Indicators
 
         public Vector3 Show(Vector3 worldPosition, float radius, float duration, Grid worldGrid = null, Action onImpact = null, bool autoContractOnFillComplete = false)
         {
+            _isReusable = false;
             KillActiveSequence();
             _onImpactCallback = onImpact;
 
@@ -91,6 +108,94 @@ namespace Assets.Scripts.Indicators
         public void ContractAndDismiss()
         {
             PlayContractAndDismiss();
+        }
+
+        public void ShowAttachedWarning(Transform target, float radius)
+        {
+            HideReusable();
+            if (_outerRing == null || _innerFill == null)
+            {
+                throw new InvalidOperationException("Attached warnings require both ring and fill geometry.");
+            }
+
+            _isReusable = true;
+            _reusableParent = transform.parent;
+            // Detaching avoids inherited rotation, non-uniform scale, and shear.
+            transform.SetParent(null, false);
+            transform.rotation = Quaternion.identity;
+            transform.localScale = Vector3.one;
+            _followTarget = target;
+            SynchronizeAttachedPosition();
+            float scale = radius / IndicatorConstants.CIRCLE_MESH_RADIUS;
+            Vector3 geometryScale = new Vector3(scale, 1f, scale);
+            // The ring includes an authored border beyond the nominal mesh radius.
+            Bounds ringBounds = _outerRing.GetComponent<MeshFilter>().sharedMesh.bounds;
+            float ringRadius = Mathf.Max(ringBounds.extents.x, ringBounds.extents.z);
+            float ringScale = radius / ringRadius;
+            _outerRing.localScale = new Vector3(ringScale, 1f, ringScale);
+            _innerFill.localScale = geometryScale;
+            gameObject.SetActive(true);
+        }
+
+        public void SynchronizeAttachedPosition()
+        {
+            Vector3 position = _followTarget.position;
+            SnappedPosition = position;
+            position.y += IndicatorConstants.GROUND_Y_OFFSET;
+            transform.position = position;
+        }
+
+        public void HideReusable()
+        {
+            _reusableGeneration++;
+            KillActiveSequence();
+            _followTarget = null;
+            _onImpactCallback = null;
+            if (_outerRing != null)
+            {
+                _outerRing.localScale = Vector3.zero;
+            }
+            if (_innerFill != null)
+            {
+                _innerFill.localScale = Vector3.zero;
+            }
+            RestoreReusableParent();
+            gameObject.SetActive(false);
+        }
+
+        public void ContractAndHideReusable(Action onHidden)
+        {
+            KillActiveSequence();
+            int generation = ++_reusableGeneration;
+            if (!gameObject.activeInHierarchy)
+            {
+                HideReusable();
+                onHidden?.Invoke();
+                return;
+            }
+
+            SynchronizeAttachedPosition();
+            _activeSequence = DOTween.Sequence();
+            _activeSequence.Join(_outerRing.DOScale(Vector3.zero, _contractDuration).SetEase(Ease.InQuad));
+            _activeSequence.Join(_innerFill.DOScale(Vector3.zero, _contractDuration).SetEase(Ease.InQuad));
+            _activeSequence.OnComplete(() =>
+            {
+                if (generation != _reusableGeneration)
+                {
+                    return;
+                }
+                HideReusable();
+                onHidden?.Invoke();
+            });
+        }
+
+        private void RestoreReusableParent()
+        {
+            if (_isReusable && _reusableParent != null && _reusableParent.gameObject.activeInHierarchy)
+            {
+                transform.SetParent(_reusableParent, false);
+                _reusableParent = null;
+            }
         }
 
         public void Dismiss()
@@ -154,11 +259,10 @@ namespace Assets.Scripts.Indicators
             int gridWidth = grid.Width;
             int gridHeight = grid.Height;
 
-            const int MAX_SEARCH_RADIUS = 4;
             Cell bestCell = null;
             float minSqrDistance = float.MaxValue;
 
-            for (int r = 1; r <= MAX_SEARCH_RADIUS; r++)
+            for (int r = 1; r <= IndicatorConstants.MAX_SEARCH_RADIUS; r++)
             {
                 for (int dx = -r; dx <= r; dx++)
                 {

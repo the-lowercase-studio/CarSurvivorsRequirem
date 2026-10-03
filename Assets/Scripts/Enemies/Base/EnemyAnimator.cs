@@ -75,6 +75,16 @@ namespace Assets.Scripts.Enemies.Base
             OnAttackAnimationStart?.Invoke(this, EventArgs.Empty);
         }
 
+        public void RestoreInitialState(string stateName)
+        {
+            // A root component can request this before this child receives Awake.
+            _animator = GetComponent<Animator>();
+            ResetAttackAnimationState();
+            _animator.SetFloat(_speedHash, 0f);
+            _animator.Play(stateName, _walkingLayerIndex, 0f);
+            _animator.Update(0f);
+        }
+
         public void Call_OnAttackAnimationEnd()
         {
             if (!IsPlayingAttackAnimation)

@@ -205,9 +205,8 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.Projectiles
 
             if (hasCustomCurve)
             {
-                const float dt = 0.001f;
-                float nextT = Mathf.Min(t + dt, 1f);
-                float prevT = Mathf.Max(t - dt, 0f);
+                float nextT = Mathf.Min(t + MortarTowerConstants.TRAJECTORY_SAMPLE_DELTA, 1f);
+                float prevT = Mathf.Max(t - MortarTowerConstants.TRAJECTORY_SAMPLE_DELTA, 0f);
                 float sampleDelta = nextT - prevT;
 
                 if (sampleDelta > 0.00001f)

@@ -1,4 +1,5 @@
 using Assets.Scripts.LevelSystem;
+using Assets.Scripts.UI.Constants;
 using Assets.Scripts.Player;
 using System;
 using System.Collections;
@@ -18,11 +19,7 @@ namespace Assets.Scripts.UI.Level
 
     public class PlayerLevelPresenter : MonoBehaviour, IPlayerLevelPresenter
     {
-        private const float BASE_EXP_INCREASE_ANIM_SPEED = 1f;
-        private const float FASTEST_EXP_INCREASE_ANIM_SPEED = 0.6f;
-        private const float DELAY_BETWEEN_TWEENS_ANIMATION_CHECK = 0.02f;
-
-        [Inject] private readonly IPlayerManager _playerManager;
+        [Inject] private readonly IPlayerManager _playerManager = null;
 
         [SerializeField] private TextMeshProUGUI _levelText;
         [SerializeField] private Slider _expSlider;
@@ -62,7 +59,7 @@ namespace Assets.Scripts.UI.Level
             _playerLevelController.OnExpChange += LevelController_OnExpChange;
             _playerLevelController.OnLvlUp += LevelController_OnLvlChange;
 
-            InvokeRepeating(nameof(HandleTweensAnimations), 0, DELAY_BETWEEN_TWEENS_ANIMATION_CHECK);
+            InvokeRepeating(nameof(HandleTweensAnimations), 0, UIConstants.DELAY_BETWEEN_TWEENS_ANIMATION_CHECK);
         }
 
         private void OnDestroy()
@@ -211,11 +208,11 @@ namespace Assets.Scripts.UI.Level
             if (isLevelUp)
             {
                 int levelsToGo = _expVisualQueue.Count + 1;
-                return Mathf.Min(FASTEST_EXP_INCREASE_ANIM_SPEED, BASE_EXP_INCREASE_ANIM_SPEED / Mathf.Max(1, levelsToGo));
+                return Mathf.Min(UIConstants.FASTEST_EXP_INCREASE_ANIM_SPEED, UIConstants.BASE_EXP_INCREASE_ANIM_SPEED / Mathf.Max(1, levelsToGo));
             }
             else
             {
-                return BASE_EXP_INCREASE_ANIM_SPEED;
+                return UIConstants.BASE_EXP_INCREASE_ANIM_SPEED;
             }
         }
 

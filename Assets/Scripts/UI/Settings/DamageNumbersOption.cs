@@ -7,7 +7,7 @@ namespace Assets.Scripts.UI.Settings
 {
     public class DamageNumbersOption : MonoBehaviour, IOptionComponent<bool>
     {
-        [Inject] private readonly ISetting<DamageNumbersSetting, bool> _damageNumbersSetting;
+        [Inject] private readonly ISetting<DamageNumbersSetting, bool> _damageNumbersSetting = null;
 
         [SerializeField] private Toggle _toggle;
 

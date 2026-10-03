@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Balance Analysis"
+  short_description: "Forecast progression and compare gameplay balance"
+  default_prompt: "Use $game-balance-analysis to inspect the current Car Survivors balance, forecast progression and encounter pressure with Python charts, and compare candidate changes against the baseline."

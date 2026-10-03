@@ -13,7 +13,7 @@ namespace Assets.Scripts.Waves
 
     public class WaveManager : MonoBehaviour, IWaveFreezer
     {
-        [Inject] private readonly IOnRandomGridPosSpawner<EnemiesSpawner> _enemiesSpawner;
+        [Inject] private readonly IOnRandomGridPosSpawner<EnemiesSpawner> _enemiesSpawner = null;
 
         [SerializeField] private WaveConfig _config;
 

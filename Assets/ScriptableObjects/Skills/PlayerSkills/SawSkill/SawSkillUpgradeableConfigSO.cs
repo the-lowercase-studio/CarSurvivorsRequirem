@@ -8,7 +8,6 @@ namespace Assets.ScriptableObjects.Skills.PlayerSkills.SawSkill
     [CreateAssetMenu(fileName = "SawSkillSO", menuName = "Scriptable Objects/Skills/SawSkillSO")]
     public class SawSkillUpgradeableConfigSO : SkillUpgradeableStatsConfig
     {
-        [field: SerializeField] public float TimeToArriveAtKnockbackLocation { get; private set; }
         [field: SerializeField] public float AttackCooldown { get; private set; } = 0.05f;
         [SerializeField] private FloatUpgradeableStat _knockbackRange;
         [SerializeField] private IntUpgradeableStat _damage;

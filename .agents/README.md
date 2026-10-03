@@ -7,6 +7,7 @@ This folder is the vendor-neutral operational source of truth for agent customiz
 - context/: long-form architecture, technology, coding, and implementation context.
 - context/adr/: architecture decision records (ADRs).
 - context/brainstorming-summaries/: summaries and briefs from divergent brainstorming sessions.
+- context/balance-reports/: final balance reports, charts, input snapshots, and reproduction bundles; provisional data stays in context/tmp/.
 - context/game-systems/: game-system documentation.
 - context/implementations/plans/: implementation plans.
 - context/implementations/summaries/: implementation summaries.

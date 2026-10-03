@@ -1,3 +1,4 @@
+using Assets.Scripts.Editor.Constants;
 using Assets.Scripts.Stats;
 using UnityEditor;
 using UnityEngine;
@@ -8,9 +9,6 @@ namespace Assets.Scripts.Editor.GUI
     [CustomPropertyDrawer(typeof(IntUpgradeableStat))]
     public class UpgradeableStatDrawer : PropertyDrawer
     {
-        private const string RARITY_PROPERTY_NAME = "<Rarity>k__BackingField";
-        private const string OVERRIDE_DEFAULT_RARITY_PROPERTY_NAME = "<OverrideDefaultRarity>k__BackingField";
-
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             EditorGUI.BeginProperty(position, label, property);
@@ -89,12 +87,12 @@ namespace Assets.Scripts.Editor.GUI
 
         private static bool ShouldDrawProperty(SerializedProperty rootProperty, SerializedProperty currentProperty)
         {
-            if (currentProperty.name != RARITY_PROPERTY_NAME)
+            if (currentProperty.name != EditorGUIConstants.RARITY_PROPERTY_NAME)
             {
                 return true;
             }
 
-            SerializedProperty overrideDefaultRarity = rootProperty.FindPropertyRelative(OVERRIDE_DEFAULT_RARITY_PROPERTY_NAME);
+            SerializedProperty overrideDefaultRarity = rootProperty.FindPropertyRelative(EditorGUIConstants.OVERRIDE_DEFAULT_RARITY_PROPERTY_NAME);
 
             return overrideDefaultRarity != null && overrideDefaultRarity.boolValue;
         }

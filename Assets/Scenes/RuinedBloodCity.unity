@@ -923,7 +923,7 @@ Animator:
   m_Enabled: 1
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: 6b82c5978acb7a54993967c9b24b7dc4, type: 2}
-  m_CullingMode: 1
+  m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
@@ -1603,6 +1603,54 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2116983120}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &447322138
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 447322140}
+  - component: {fileID: 447322139}
+  m_Layer: 0
+  m_Name: ExplosionVfxPool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &447322139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 447322138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25491430d43d34c458860cb0dced2835, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.VFX.ExplosionVfxPool
+  _effectPrefab: {fileID: 6622122657513052140, guid: faeea55367f59ec43b8e223c2a88f165, type: 3}
+  _prewarmCount: 32
+  _capacityLimit: 32
+  _watchdogTimeout: 8
+--- !u!4 &447322140
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 447322138}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &449990455
 GameObject:
   m_ObjectHideFlags: 0
@@ -1897,6 +1945,7 @@ MonoBehaviour:
   _arenaLeashWarningPresenter: {fileID: 1905272535}
   _mainCamera: {fileID: 2001922875}
   _postProcessVolume: {fileID: 1699568833015964712}
+  _explosionVfxPool: {fileID: 447322139}
 --- !u!1 &550934126
 GameObject:
   m_ObjectHideFlags: 0
@@ -6085,3 +6134,4 @@ SceneRoots:
   - {fileID: 1224944187}
   - {fileID: 374745548}
   - {fileID: 1764545858}
+  - {fileID: 447322140}

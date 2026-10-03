@@ -6,7 +6,7 @@ namespace Assets.Scripts.Settings
 {
     public sealed class UserSettingsLoader : MonoBehaviour
     {
-        [Inject] private readonly IEnumerable<ISettingLoader> _settingLoaders;
+        [Inject] private readonly IEnumerable<ISettingLoader> _settingLoaders = null;
 
         public void Awake()
         {

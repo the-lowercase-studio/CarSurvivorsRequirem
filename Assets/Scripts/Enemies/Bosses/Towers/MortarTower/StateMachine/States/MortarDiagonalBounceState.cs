@@ -7,7 +7,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
 {
     public class MortarDiagonalBounceState : IMortarTowerState
     {
-        private static readonly float[] DIAGONAL_ANGLES = new float[] { 45f, 135f, 225f, 315f };
+        private static readonly float[] _diagonalAngles = new float[] { 45f, 135f, 225f, 315f };
 
         private readonly MortarTowerBoss _boss;
         private readonly List<Coroutine> _rayCoroutines = new List<Coroutine>();
@@ -127,11 +127,11 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
             }
 
             // Launch 4 diagonal rays with 3 bounces each in parallel
-            int activeRays = DIAGONAL_ANGLES.Length;
+            int activeRays = _diagonalAngles.Length;
 
-            for (int r = 0; r < DIAGONAL_ANGLES.Length; r++)
+            for (int r = 0; r < _diagonalAngles.Length; r++)
             {
-                float angle = DIAGONAL_ANGLES[r];
+                float angle = _diagonalAngles[r];
                 Vector3 rayDirection = Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
                 Coroutine c = _boss.StartCoroutine(RunRayBounces(snappedCenter, rayDirection, () =>
                 {

@@ -12,8 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e4ed7d23dc37d50468b19db7f408bd36, type: 3}
   m_Name: SawSkillUpgradeableConfig
   m_EditorClassIdentifier: 
-  <TimeToArriveAtKnockbackLocation>k__BackingField: 1
-  <AttackCooldown>k__BackingField: 0.14
+  <AttackCooldown>k__BackingField: 0.3
   _knockbackRange:
     <Icon>k__BackingField: {fileID: -84506236, guid: cee3411c082140d49bce96eb51f00885, type: 3}
     <IsSubstractModeOn>k__BackingField: 0
@@ -26,10 +25,10 @@ MonoBehaviour:
     _hasUnlimitedMaxValue: 0
     _floatMinMaxRange:
       <Min>k__BackingField: 1
-      <Max>k__BackingField: 3.2
+      <Max>k__BackingField: 4
     _floatRangeOfPossibleValuesForUpgrade:
-      <Min>k__BackingField: 0.7
-      <Max>k__BackingField: 1
+      <Min>k__BackingField: 0.5
+      <Max>k__BackingField: 0.8
   _damage:
     <Icon>k__BackingField: {fileID: -838568848, guid: cee3411c082140d49bce96eb51f00885, type: 3}
     <IsSubstractModeOn>k__BackingField: 0

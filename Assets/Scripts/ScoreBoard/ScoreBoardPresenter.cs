@@ -6,7 +6,7 @@ namespace Assets.Scripts.ScoreBoard
 {
     public class ScoreBoardPresenter : MonoBehaviour
     {
-        [Inject] private readonly StoredScoreBoard _storedScoreBoard;
+        [Inject] private readonly StoredScoreBoard _storedScoreBoard = null;
 
         [SerializeField] private ScoreBoardEntry _scoreBoardEntryPrefab;
         [SerializeField] private Transform _scoreBoardEntriesParent;

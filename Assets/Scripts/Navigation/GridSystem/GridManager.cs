@@ -1,6 +1,7 @@
 using UnityEngine;
 using Assets.Scripts.Player;
 using Assets.Scripts.Navigation.FlowFieldSystem;
+using Assets.Scripts.Navigation.Constants;
 using Reflex.Attributes;
 
 namespace Assets.Scripts.Navigation.GridSystem
@@ -14,7 +15,7 @@ namespace Assets.Scripts.Navigation.GridSystem
 
     public class GridManager : MonoBehaviour, IGridManager
     {
-        [Inject] private readonly IPlayerManager _playerManager;
+        [Inject] private readonly IPlayerManager _playerManager = null;
 
         [SerializeField] private GridConfiguration _worldGridConfiguration;
         [SerializeField] private float _delayBetweenWorldGridUpdate = 0.2f;
@@ -35,8 +36,6 @@ namespace Assets.Scripts.Navigation.GridSystem
 
         [SerializeField] private FlowFieldDebugConfiguration _flowFieldDebugConfiguration;
 
-        private const float PLAYER_CHUNK_DRAW_Y_OFFSET = 0.2f;
-        private const float DRAW_TIME_OFFSET = 0.02f;
 #endif
 
         private FlowField _flowField;
@@ -78,8 +77,8 @@ namespace Assets.Scripts.Navigation.GridSystem
         {
             if (_debugGrid)
             {
-                InvokeRepeating(nameof(DebugWorldGrid), 0, _delayBetweenWorldGridUpdate + DRAW_TIME_OFFSET);
-                InvokeRepeating(nameof(DebugPlayerChunkGrid), 0, _delayBetweenPlayerChunkGridUpdate + DRAW_TIME_OFFSET);
+                InvokeRepeating(nameof(DebugWorldGrid), 0, _delayBetweenWorldGridUpdate + GridConstants.DRAW_TIME_OFFSET);
+                InvokeRepeating(nameof(DebugPlayerChunkGrid), 0, _delayBetweenPlayerChunkGridUpdate + GridConstants.DRAW_TIME_OFFSET);
             }
         }
 #endif
@@ -250,7 +249,7 @@ namespace Assets.Scripts.Navigation.GridSystem
                 GridPlayerChunk,
                 _playerChunkCellBorderColor,
                 _blockedCellBorderDrawColor,
-                PLAYER_CHUNK_DRAW_Y_OFFSET,
+                GridConstants.PLAYER_CHUNK_DRAW_Y_OFFSET,
                 _delayBetweenPlayerChunkGridUpdate);
         }
 

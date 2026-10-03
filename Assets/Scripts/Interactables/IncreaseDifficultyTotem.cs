@@ -9,8 +9,8 @@ namespace Assets.Scripts.Interactables
 {
     public class IncreaseDifficultyTotem : MonoBehaviour
     {
-        [Inject] private readonly IPlayerManager _playerManager;
-        [Inject] private readonly IEnemySpawnDifficultyController _difficultyController;
+        [Inject] private readonly IPlayerManager _playerManager = null;
+        [Inject] private readonly IEnemySpawnDifficultyController _difficultyController = null;
 
         [SerializeField] private float _interactionRadius = 3f;
         [SerializeField] private GameObject _interactionCanvas;

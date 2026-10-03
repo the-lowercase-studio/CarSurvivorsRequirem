@@ -26,7 +26,7 @@ namespace Assets.Scripts.Spawners.Enemies
     public class EnemiesSpawner : MonoBehaviour,
         IOnRandomGridPosSpawner<EnemiesSpawner>, ISwarmEnemySpawner, IEnemySpawnDifficultyController
     {
-        [Inject] private readonly IGridManager _gridManager;
+        [Inject] private readonly IGridManager _gridManager = null;
         [Inject] private readonly Camera _mainCamera = null;
 
         [Header("SpawnExpParticle Chance Settings")]

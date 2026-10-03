@@ -28,9 +28,9 @@ namespace Assets.Scripts.Spawners
 
     public class MapInteractablesSpawner : MonoBehaviour
     {
-        [Inject] private readonly IGridManager _gridManager;
-        [Inject] private readonly IPlayerManager _playerManager;
-        [Inject] private readonly Reflex.Core.Container _container;
+        [Inject] private readonly IGridManager _gridManager = null;
+        [Inject] private readonly IPlayerManager _playerManager = null;
+        [Inject] private readonly Reflex.Core.Container _container = null;
 
         [SerializeField] private Transform _spawnParent;
         [SerializeField] private List<InteractableSpawnRule> _spawnRules;

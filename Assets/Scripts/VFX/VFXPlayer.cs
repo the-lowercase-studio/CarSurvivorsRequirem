@@ -24,6 +24,7 @@ namespace Assets.Scripts.VFX
         public float GetLongestParticleDuration();
 
         public event EventHandler OnVFXFinished;
+
     }
 
     public class VFXPlayer : MonoBehaviour, IVFXPlayer
@@ -34,6 +35,11 @@ namespace Assets.Scripts.VFX
         private VFXPlayConfig _vfxPlayConfig;
 
         public event EventHandler OnVFXFinished;
+
+        public bool HasParticleSystems
+        {
+            get { return _particleSystems.Length > 0; }
+        }
 
         private void Awake()
         {
@@ -73,6 +79,20 @@ namespace Assets.Scripts.VFX
             }
 
             CallParticlesFinishAfterDelayOrWithout();
+        }
+
+        public void StopPlayback()
+        {
+            CancelInvoke(nameof(OnAllParticlesFinished));
+            _particlesStartedPlaying = false;
+            _vfxPlayConfig = null;
+            foreach (ParticleSystem particleSystem in _particleSystems)
+            {
+                if (particleSystem != null)
+                {
+                    particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                }
+            }
         }
 
         private void CallParticlesFinishAfterDelayOrWithout()

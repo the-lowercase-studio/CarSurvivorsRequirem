@@ -9,8 +9,8 @@ namespace Assets.Scripts.Player
     [RequireComponent(typeof(PlayerManager))]
     public class PlayerDeathHandler : MonoBehaviour
     {
-        [Inject] private readonly IPlayerManager _playerManager;
-        [Inject] private readonly IPlayerDeathPresenter _playerDeathPresenter;
+        [Inject] private readonly IPlayerManager _playerManager = null;
+        [Inject] private readonly IPlayerDeathPresenter _playerDeathPresenter = null;
 
         [SerializeField] private GameObject _visual;
         [SerializeField] private VFXPlayer _deathVfxPlayer;

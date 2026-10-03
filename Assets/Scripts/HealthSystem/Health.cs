@@ -28,14 +28,14 @@ namespace Assets.Scripts.HealthSystem
     {
         [field: SerializeField] public float MaxHealth { get; set; }
 
+        private bool _isAlive;
+
         public float CurrentHealth { get; protected set; }
 
         public event EventHandler OnHealthChanged;
         public event EventHandler OnHealthDecreased;
         public event EventHandler OnHealthIncreased;
         public event EventHandler OnNoHealth;
-
-        private bool _isAlive;
 
         protected virtual void OnEnable()
         {

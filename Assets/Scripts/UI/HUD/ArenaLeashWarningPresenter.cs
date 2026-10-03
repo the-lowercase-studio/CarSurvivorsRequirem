@@ -1,3 +1,4 @@
+using Assets.Scripts.UI.Constants;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -13,9 +14,6 @@ namespace Assets.Scripts.UI.HUD
 
     public class ArenaLeashWarningPresenter : MonoBehaviour, IArenaLeashWarningPresenter
     {
-        private const string WARNING_PREFIX = "RETURN TO ARENA: ";
-        private const string SECONDS_SUFFIX = "s";
-
         [Tooltip("Root visual container toggled on/off during leash warnings.")]
         [SerializeField] private GameObject _visual;
         [Tooltip("TextMeshPro label showing the countdown text.")]
@@ -90,7 +88,7 @@ namespace Assets.Scripts.UI.HUD
             }
 
             float displaySeconds = Mathf.Max(0f, remainingSeconds);
-            _warningText.text = $"{WARNING_PREFIX}{displaySeconds:F1}{SECONDS_SUFFIX}";
+            _warningText.text = $"{UIConstants.WARNING_PREFIX}{displaySeconds:F1}{UIConstants.SECONDS_SUFFIX}";
         }
 
         private void TriggerPunch()

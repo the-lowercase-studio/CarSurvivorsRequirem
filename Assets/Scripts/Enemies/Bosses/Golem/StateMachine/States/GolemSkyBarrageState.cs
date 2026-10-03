@@ -9,10 +9,6 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 {
     public class GolemSkyBarrageState : IGolemState
     {
-        private const float SKY_LAUNCH_HEIGHT = 40f;
-        private const float RETURN_DOCK_DURATION = 0.8f;
-        private const float WARNING_FRACTION_BEFORE_DROP = 0.4f;
-
         private readonly IGolemBoss _boss;
         private readonly GolemStateMachine _stateMachine;
         private GolemPursuitState _pursuitState;
@@ -232,7 +228,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
             armSeq.AppendCallback(() =>
             {
-                arm.LaunchToSky(SKY_LAUNCH_HEIGHT, airTime, () =>
+                arm.LaunchToSky(GolemBossConstants.SKY_LAUNCH_HEIGHT, airTime, () =>
                 {
                     ExecuteArmCycle(arm, currentCycle: 1, isLeftArm);
                 });
@@ -259,7 +255,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             Sequence dropSeq = DOTween.Sequence();
             SetArmSequence(isLeftArm, dropSeq);
 
-            dropSeq.AppendInterval(warningDuration * WARNING_FRACTION_BEFORE_DROP);
+            dropSeq.AppendInterval(warningDuration * GolemBossConstants.WARNING_FRACTION_BEFORE_DROP);
             dropSeq.AppendCallback(() =>
             {
                 arm.DropFromSky(targetLandingPos, fallSpeed, damage, radius, () =>
@@ -286,7 +282,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
                 resetSeq.AppendInterval(resetDelay);
                 resetSeq.AppendCallback(() =>
                 {
-                    arm.LaunchToSky(SKY_LAUNCH_HEIGHT, airTime, () =>
+                    arm.LaunchToSky(GolemBossConstants.SKY_LAUNCH_HEIGHT, airTime, () =>
                     {
                         ExecuteArmCycle(arm, currentCycle + 1, isLeftArm);
                     });
@@ -295,7 +291,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             else
             {
                 // Completed all cycles, return to socket and dock
-                arm.ReturnAndDock(RETURN_DOCK_DURATION, () =>
+                arm.ReturnAndDock(GolemBossConstants.RETURN_DOCK_DURATION, () =>
                 {
                     OnArmFinished();
                 });

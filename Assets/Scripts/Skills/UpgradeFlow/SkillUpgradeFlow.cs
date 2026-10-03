@@ -163,8 +163,15 @@ namespace Assets.Scripts.Skills.UpgradeFlow
 
             public SkillUpgradeRequestType RequestType { get; }
 
-            public static QueuedSkillRewardRequest ForNewSkillChoice() => new(SkillUpgradeRequestType.NewSkillChoice);
-            public static QueuedSkillRewardRequest ForUpgradeSkill() => new(SkillUpgradeRequestType.UpgradeSkill);
+            public static QueuedSkillRewardRequest ForNewSkillChoice()
+            {
+                return new QueuedSkillRewardRequest(SkillUpgradeRequestType.NewSkillChoice);
+            }
+
+            public static QueuedSkillRewardRequest ForUpgradeSkill()
+            {
+                return new QueuedSkillRewardRequest(SkillUpgradeRequestType.UpgradeSkill);
+            }
         }
     }
 }

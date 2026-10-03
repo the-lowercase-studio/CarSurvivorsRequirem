@@ -14,7 +14,7 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
 
     public class FlowFieldMovementController : MonoBehaviour, IFlowFieldMovementController
     {
-        [Inject] private readonly IGridManager _gridManager;
+        [Inject] private readonly IGridManager _gridManager = null;
 
         [Header("Separating moving entities")]
         [SerializeField] private float _separationRadius = 1.2f;
