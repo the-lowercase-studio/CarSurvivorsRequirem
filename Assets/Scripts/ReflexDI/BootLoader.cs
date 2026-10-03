@@ -13,7 +13,7 @@ namespace Assets.Scripts.ReflexDI
 {
     public class BootLoader : MonoBehaviour
     {
-        [Inject] private readonly IGameSceneLoader _gameSceneLoader;
+        [Inject] private readonly IGameSceneLoader _gameSceneLoader = null;
 
         [SerializeField] private AudioMixersManager _audioMixersManager;
         [SerializeField] private BackgroundAudioManager _backgroundAudioManager;

@@ -90,6 +90,30 @@ namespace Assets.Scripts.Audio
             Invoke(nameof(OnAudioClipPlayFinished), _audioSource.clip.length);
         }
 
+        public void StopPlayback()
+        {
+            CancelInvoke(nameof(OnAudioClipPlayFinished));
+            _audioSource.Stop();
+        }
+
+        public bool HasPlayableClip(string name)
+        {
+            if (!_configsByName.TryGetValue(name, out AudioClipPlayerConfig config))
+            {
+                return false;
+            }
+
+            foreach (AudioClipConfig variant in config.ClipVariants)
+            {
+                if (variant == null || variant.AudioClip == null)
+                {
+                    return false;
+                }
+            }
+
+            return config.ClipVariants.Length > 0;
+        }
+
         private AudioClipConfig GetRandomAudioClipVariantFromConfigByName(string name)
         {
             if (!_configsByName.TryGetValue(name, out AudioClipPlayerConfig config)

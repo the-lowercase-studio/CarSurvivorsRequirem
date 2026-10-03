@@ -8,7 +8,7 @@ namespace Assets.Scripts.Enemies.Base
 {
     public class EnemiesOutsidePlayerChunkTeleporter : MonoBehaviour
     {
-        [Inject] private readonly IGridManager _gridManager;
+        [Inject] private readonly IGridManager _gridManager = null;
         [Inject] private readonly Camera _mainCamera = null;
 
         [SerializeField] private Transform _enemiesHolder;

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Batch System Docs Update"
+  short_description: "Refresh system docs in balanced batches of up to 3 systems."
+  default_prompt: "Use $batch-system-docs-update to refresh existing agent system documentation against current code, partitioning work by system size into batches of at most three systems."

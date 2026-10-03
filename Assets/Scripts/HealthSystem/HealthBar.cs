@@ -1,4 +1,5 @@
 using System;
+using Assets.Scripts.HealthSystem.Constants;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
@@ -60,13 +61,6 @@ namespace Assets.Scripts.HealthSystem
 
         private void Health_OnHealthDecreased(object sender, EventArgs e)
         {
-            const float DURATION = 0.1f;
-            const float STRENGTH = 0.14f;
-            const float RANDOMNESS = 90f;
-            const int VIBRATO = 3;
-            const bool SNAPPING = false;
-            const bool FADE_OUT = true;
-
             if (_shakeTween != null && _shakeTween.IsActive())
             {
                 _shakeTween.Complete();
@@ -74,12 +68,12 @@ namespace Assets.Scripts.HealthSystem
             }
 
             _shakeTween = transform.DOShakePosition(
-                DURATION,
-                STRENGTH,
-                VIBRATO,
-                RANDOMNESS,
-                SNAPPING,
-                FADE_OUT,
+                HealthConstants.HEALTH_BAR_SHAKE_DURATION,
+                HealthConstants.HEALTH_BAR_SHAKE_STRENGTH,
+                HealthConstants.HEALTH_BAR_SHAKE_VIBRATO,
+                HealthConstants.HEALTH_BAR_SHAKE_RANDOMNESS,
+                HealthConstants.HEALTH_BAR_SHAKE_SNAPPING,
+                HealthConstants.HEALTH_BAR_SHAKE_FADE_OUT,
                 ShakeRandomnessMode.Harmonic);
         }
     }

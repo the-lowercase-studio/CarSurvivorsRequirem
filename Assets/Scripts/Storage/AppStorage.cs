@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Assets.Scripts.Storage.Constants;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -9,11 +10,7 @@ namespace Assets.Scripts.Storage
 {
     public static class AppStorage
     {
-        private const string DATA_DIRECTORY_NAME = "Data";
-        private const string STORAGE_FILE_NAME = "AppStorage.json";
-        private const string EDITOR_STORAGE_FILE_NAME = "AppStorage.Editor.json";
-
-        private static readonly string SettingsFilePath = Path.Combine(GetDataDirectoryPath(), GetStorageFileName());
+        private static readonly string _settingsFilePath = Path.Combine(GetDataDirectoryPath(), GetStorageFileName());
 
         private static Dictionary<string, JToken> _settingsCache;
 
@@ -52,7 +49,7 @@ namespace Assets.Scripts.Storage
 
                 _settingsCache[key] = JToken.FromObject(value);
                 var json = JsonConvert.SerializeObject(_settingsCache, Formatting.Indented);
-                File.WriteAllText(SettingsFilePath, json);
+                File.WriteAllText(_settingsFilePath, json);
             }
             catch (Exception ex)
             {
@@ -64,9 +61,9 @@ namespace Assets.Scripts.Storage
         {
             try
             {
-                if (File.Exists(SettingsFilePath))
+                if (File.Exists(_settingsFilePath))
                 {
-                    var json = File.ReadAllText(SettingsFilePath);
+                    var json = File.ReadAllText(_settingsFilePath);
                     var obj = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(json);
                     _settingsCache = obj ?? new Dictionary<string, JToken>();
                 }
@@ -77,7 +74,7 @@ namespace Assets.Scripts.Storage
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[AppStorage] Failed to load settings file at '{SettingsFilePath}': {ex.Message}");
+                Debug.LogError($"[AppStorage] Failed to load settings file at '{_settingsFilePath}': {ex.Message}");
                 _settingsCache = new Dictionary<string, JToken>();
             }
         }
@@ -85,9 +82,9 @@ namespace Assets.Scripts.Storage
         private static string GetDataDirectoryPath()
         {
 #if UNITY_EDITOR
-            return Path.Combine(Application.dataPath, DATA_DIRECTORY_NAME);
+            return Path.Combine(Application.dataPath, StorageConstants.DATA_DIRECTORY_NAME);
 #else
-            return Path.Combine(GetBuildRootDirectoryPath(), DATA_DIRECTORY_NAME);
+            return Path.Combine(GetBuildRootDirectoryPath(), StorageConstants.DATA_DIRECTORY_NAME);
 #endif
         }
 
@@ -106,9 +103,9 @@ namespace Assets.Scripts.Storage
         private static string GetStorageFileName()
         {
 #if UNITY_EDITOR
-            return EDITOR_STORAGE_FILE_NAME;
+            return StorageConstants.EDITOR_STORAGE_FILE_NAME;
 #else
-            return STORAGE_FILE_NAME;
+            return StorageConstants.STORAGE_FILE_NAME;
 #endif
         }
     }

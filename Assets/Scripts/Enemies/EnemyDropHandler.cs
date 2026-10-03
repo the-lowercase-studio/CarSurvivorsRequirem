@@ -21,9 +21,9 @@ namespace Assets.Scripts.Enemies
     [RequireComponent(typeof(Enemy))]
     public class EnemyDropHandler : MonoBehaviour
     {
-        [Inject] private readonly ICollectibleDropNotifier _dropNotifier;
-        [Inject] private readonly IGridManager _gridManager;
-        [Inject] private readonly DropAnimationConfiguration _animationConfig;
+        [Inject] private readonly ICollectibleDropNotifier _dropNotifier = null;
+        [Inject] private readonly IGridManager _gridManager = null;
+        [Inject] private readonly DropAnimationConfiguration _animationConfig = null;
 
         [SerializeField] private CollectibleDropEntry[] _dropEntries;
 

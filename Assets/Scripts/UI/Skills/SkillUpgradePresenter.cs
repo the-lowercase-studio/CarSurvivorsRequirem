@@ -8,6 +8,7 @@ using Assets.Scripts.Skills.ObjectsImpactingSkills.Crate;
 using Assets.Scripts.Skills.UpgradeFlow;
 using Assets.Scripts.Enemies;
 using Assets.Scripts.UI.Level;
+using Assets.Scripts.UI.Constants;
 using Reflex.Attributes;
 using System.Collections.Generic;
 using TMPro;
@@ -47,8 +48,6 @@ namespace Assets.Scripts.UI.Skills
         [SerializeField] private int _newSkillLevelInterval = 3;
 
         [SerializeField] private AudioClipPlayer _buttonsAudioPlayer;
-
-        private const string SKILL_NAME_TEMPLATE = "New Skill: {0}";
 
         private bool _isShowingAnySection;
         private IAudioClipPlayer _audioClipPlayer;
@@ -193,7 +192,7 @@ namespace Assets.Scripts.UI.Skills
                 _firstSkillCard.SetActive(true);
             }
 
-            _newSkillName.text = string.Format(SKILL_NAME_TEMPLATE, choices[0].SkillInfo.Name);
+            _newSkillName.text = string.Format(UIConstants.SKILL_NAME_TEMPLATE, choices[0].SkillInfo.Name);
             _newSkillDescription.text = choices[0].SkillInfo.Description;
             _skillsVisualPresenter.ShowSkillVisual(choices[0].SkillInfo, 0);
 
@@ -205,7 +204,7 @@ namespace Assets.Scripts.UI.Skills
                 }
                 if (_secondSkillName != null)
                 {
-                    _secondSkillName.text = string.Format(SKILL_NAME_TEMPLATE, choices[1].SkillInfo.Name);
+                    _secondSkillName.text = string.Format(UIConstants.SKILL_NAME_TEMPLATE, choices[1].SkillInfo.Name);
                 }
                 if (_secondSkillDescription != null)
                 {

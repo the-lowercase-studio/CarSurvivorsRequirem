@@ -7,7 +7,7 @@ namespace Assets.Scripts.UI.Common
 {
     public class MenuButtonsFunctionality : MonoBehaviour
     {
-        [Inject] private readonly IGameSceneLoader _gameSceneLoader;
+        [Inject] private readonly IGameSceneLoader _gameSceneLoader = null;
 
         [SerializeField] private GameObject[] _enabledDisabledObjects;
 

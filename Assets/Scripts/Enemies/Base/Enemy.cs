@@ -22,6 +22,8 @@ namespace Assets.Scripts.Enemies.Base
         [SerializeField] private VFXPlayer _bloodVfxPlayer;
         [SerializeField] private GameObject _visual;
 
+        private INeedToCompleteBeforeDisable _enemyDeathSequence;
+
         public IHealth Health { get; private set; }
         public ICollisionsController CollisionsController { get; private set; }
         public IMovementController MovementController { get; private set; }
@@ -29,8 +31,6 @@ namespace Assets.Scripts.Enemies.Base
         public EnemyAnimator EnemyAnimator { get; private set; }
 
         public event EventHandler OnCanBeReleased;
-
-        private INeedToCompleteBeforeDisable _enemyDeathSequence;
 
         private void Awake()
         {

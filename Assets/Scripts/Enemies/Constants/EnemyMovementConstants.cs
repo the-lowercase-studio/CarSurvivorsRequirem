@@ -13,5 +13,6 @@ namespace Assets.Scripts.Enemies.Constants
         public const float OBSTACLE_SAFETY_BUFFER = 0.1f;
         public const float DEFAULT_ACCELERATION_SPEED_MULTIPLIER = 4.0f;
         public const float MIN_VELOCITY_FOR_ROTATION_SQR = 0.001f;
+        public const float WORLD_BOUNDARY_SAFETY_PADDING = 0.5f;
     }
 }

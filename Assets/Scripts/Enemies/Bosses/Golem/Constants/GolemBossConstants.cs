@@ -35,5 +35,9 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Constants
         public const float DEFAULT_LEAP_LANDING_DURATION = 1.27f;
         public const float DEFAULT_LINEAR_FIST_RELEASE_DELAY = 1.2f;
         public const float DEFAULT_SKY_BARRAGE_RELEASE_DELAY = 1.5f;
+
+        internal const float SKY_LAUNCH_HEIGHT = 40f;
+        internal const float RETURN_DOCK_DURATION = 0.8f;
+        internal const float WARNING_FRACTION_BEFORE_DROP = 0.4f;
     }
 }

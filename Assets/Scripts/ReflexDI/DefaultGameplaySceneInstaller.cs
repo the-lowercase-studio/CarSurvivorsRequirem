@@ -13,6 +13,7 @@ using Assets.Scripts.UI.HUD;
 using Assets.Scripts.UI.Level;
 using Assets.Scripts.UI.Skills;
 using Assets.Scripts.Waves;
+using Assets.Scripts.VFX;
 using Reflex.Core;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -41,6 +42,8 @@ namespace Assets.Scripts.ReflexDI
         [SerializeField] private ArenaLeashWarningPresenter _arenaLeashWarningPresenter;
         [SerializeField] private Camera _mainCamera;
         [SerializeField] private Volume _postProcessVolume;
+        [SerializeField, Tooltip("Scene-owned independent explosion presentation pool.")]
+        private ExplosionVfxPool _explosionVfxPool;
 
         public Camera MainCamera => _mainCamera;
 
@@ -106,6 +109,12 @@ namespace Assets.Scripts.ReflexDI
 
             //Post Processing
             builder.AddSingleton(_postProcessVolume);
+
+            if (_explosionVfxPool == null)
+            {
+                throw new System.InvalidOperationException("Gameplay scene requires an authored explosion VFX pool.");
+            }
+            builder.AddSingleton(_explosionVfxPool, typeof(IExplosionVfxPool));
         }
     }
 }

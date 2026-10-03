@@ -9,7 +9,7 @@ namespace Assets.Scripts.UI.Settings
 {
     public class GraphicOption : MonoBehaviour, IOptionComponent<int>
     {
-        [Inject] private readonly ISetting<GraphicSetting, string> _graphicSetting;
+        [Inject] private readonly ISetting<GraphicSetting, string> _graphicSetting = null;
 
         [SerializeField] private TMP_Dropdown _dropDown;
 

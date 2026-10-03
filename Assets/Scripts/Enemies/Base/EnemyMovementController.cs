@@ -1,7 +1,9 @@
 using Assets.Scripts.Enemies.Constants;
 using Assets.Scripts.Navigation.Constants;
 using Assets.Scripts.Navigation.FlowFieldSystem;
+using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.LayerMasks;
+using Reflex.Attributes;
 using UnityEngine;
 
 namespace Assets.Scripts.Enemies.Base
@@ -9,6 +11,8 @@ namespace Assets.Scripts.Enemies.Base
     [RequireComponent(typeof(Enemy), typeof(FlowFieldMovementController))]
     public class EnemyMovementController : MonoBehaviour, IMovementController
     {
+        [Inject] private readonly IGridManager _gridManager = null;
+
         private readonly Vector3 _obstacleCheckOffset = new(0, 0.5f, 0);
 
         private Enemy _enemy;
@@ -23,6 +27,8 @@ namespace Assets.Scripts.Enemies.Base
         private Vector3 _currentVelocity;
 
         private bool _isKnockbackActive;
+        private bool _isPursuitSuppressed;
+        private bool _isMovementStopped;
         private Vector3 _knockbackStartPos;
         private Vector3 _knockbackTargetPos;
         private float _knockbackDuration;
@@ -47,6 +53,8 @@ namespace Assets.Scripts.Enemies.Base
 
             _currentMovementDelayAfterAttack = 0;
             _isKnockbackActive = false;
+            _isPursuitSuppressed = false;
+            _isMovementStopped = false;
         }
 
         private void OnDisable()
@@ -57,6 +65,8 @@ namespace Assets.Scripts.Enemies.Base
             _isMovingToPositionUnrelatedToGrid = false;
             _verticalVelocity = 0f;
             _currentVelocity = Vector3.zero;
+            _isPursuitSuppressed = false;
+            _isMovementStopped = false;
         }
 
         private void FixedUpdate()
@@ -101,6 +111,11 @@ namespace Assets.Scripts.Enemies.Base
 
         public void MoveToPositionInTimeIgnoringSpeed(Vector3 pos, float time)
         {
+            if (_isMovementStopped)
+            {
+                return;
+            }
+
             _currentVelocity = Vector3.zero;
 
             Vector3 startPos = transform.position;
@@ -121,6 +136,30 @@ namespace Assets.Scripts.Enemies.Base
                 }
             }
 
+            if (_gridManager?.WorldGrid != null)
+            {
+                float minX = EnemyMovementConstants.WORLD_BOUNDARY_SAFETY_PADDING;
+                float maxX = (_gridManager.WorldGrid.Width * _gridManager.WorldGrid.CellSize) - EnemyMovementConstants.WORLD_BOUNDARY_SAFETY_PADDING;
+                float minZ = EnemyMovementConstants.WORLD_BOUNDARY_SAFETY_PADDING;
+                float maxZ = (_gridManager.WorldGrid.Height * _gridManager.WorldGrid.CellSize) - EnemyMovementConstants.WORLD_BOUNDARY_SAFETY_PADDING;
+
+                if (maxX > minX && maxZ > minZ)
+                {
+                    Vector3 clampedPos = new Vector3(
+                        Mathf.Clamp(pos.x, minX, maxX),
+                        pos.y,
+                        Mathf.Clamp(pos.z, minZ, maxZ)
+                    );
+
+                    if (distance > 0.001f && (clampedPos.x != pos.x || clampedPos.z != pos.z))
+                    {
+                        float clampedDistance = Vector3.Distance(startPos, clampedPos);
+                        adjustedTime = time * (clampedDistance / distance);
+                        pos = clampedPos;
+                    }
+                }
+            }
+
             _knockbackStartPos = startPos;
             _knockbackTargetPos = pos;
             _knockbackDuration = Mathf.Max(0.001f, adjustedTime);
@@ -132,6 +171,21 @@ namespace Assets.Scripts.Enemies.Base
         public void ResetVerticalVelocity()
         {
             _verticalVelocity = 0f;
+        }
+
+        public void SetPursuitSuppressed(bool isSuppressed)
+        {
+            _isPursuitSuppressed = isSuppressed;
+            _currentVelocity = Vector3.zero;
+        }
+
+        public void StopMovement()
+        {
+            _isMovementStopped = true;
+            _isKnockbackActive = false;
+            _isMovingToPositionUnrelatedToGrid = false;
+            _verticalVelocity = 0f;
+            _currentVelocity = Vector3.zero;
         }
 
         public bool IsOnGround()
@@ -184,7 +238,17 @@ namespace Assets.Scripts.Enemies.Base
 
         private void MovementHandler()
         {
+            if (_isMovementStopped)
+            {
+                return;
+            }
+
             bool isGrounded = HandleVerticalPositionAndGrounding();
+
+            if (_isMovementStopped)
+            {
+                return;
+            }
 
             if (!isGrounded && transform.position.y < _lastGroundedY - EnemyMovementConstants.FALL_SUPPRESSION_Y_OFFSET)
             {
@@ -211,6 +275,7 @@ namespace Assets.Scripts.Enemies.Base
             }
 
             bool canMoveOnGrid = !_enemy.EnemyAnimator.IsPlayingAttackAnimation
+                && !_isPursuitSuppressed
                 && _currentMovementDelayAfterAttack <= 0;
 
             if (canMoveOnGrid)

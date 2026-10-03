@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Assets.Scripts.LevelSystem.Constants;
 using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.Utils;
 using UnityEngine;
@@ -44,8 +45,6 @@ namespace Assets.Scripts.LevelSystem.Exp
             }
         }
 
-        private const float CHECK_QUEUED_EXP_SPAWNS_DELAY = 0.2f;
-
         [SerializeField] private Transform _expParticlesParent;
         [SerializeField] private float _particlesYOffset;
         [SerializeField] private ExpParticle _expParticlePrefab;
@@ -84,8 +83,8 @@ namespace Assets.Scripts.LevelSystem.Exp
         {
             InvokeRepeating(
                 nameof(SpawnParticlesBasedOnExpAmount),
-                CHECK_QUEUED_EXP_SPAWNS_DELAY,
-                CHECK_QUEUED_EXP_SPAWNS_DELAY
+                LevelConstants.CHECK_QUEUED_EXP_SPAWNS_DELAY,
+                LevelConstants.CHECK_QUEUED_EXP_SPAWNS_DELAY
             );
         }
 

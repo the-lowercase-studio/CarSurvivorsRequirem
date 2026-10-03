@@ -11,7 +11,7 @@ namespace Assets.Scripts.Enemies.Base
     [RequireComponent(typeof(Enemy))]
     public class EnemyDeathHandler : MonoBehaviour, INeedToCompleteBeforeDisable
     {
-        [Inject] private readonly IInWorldSpaceSpawner<ExpParticleSpawner, float> _expParticleSpawner;
+        [Inject] private readonly IInWorldSpaceSpawner<ExpParticleSpawner, float> _expParticleSpawner = null;
 
         [SerializeField] private GameObject _visual;
         [SerializeField] private VFXPlayer _deathVfxPlayer;

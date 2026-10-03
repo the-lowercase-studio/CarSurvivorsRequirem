@@ -9,7 +9,7 @@ namespace Assets.Scripts.UI.Settings
 {
     public class ResolutionOption : MonoBehaviour, IOptionComponent<int>
     {
-        [Inject] private readonly ISetting<ResolutionSetting, SerializableResolution> _resolutionSetting;
+        [Inject] private readonly ISetting<ResolutionSetting, SerializableResolution> _resolutionSetting = null;
 
         [SerializeField] private TMP_Dropdown _resolutionDropdown;
 

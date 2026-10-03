@@ -17,11 +17,11 @@ namespace Assets.Scripts.UI.Death
 
     public class PlayerDeathPresenter : MonoBehaviour, IPlayerDeathPresenter
     {
-        [Inject] private readonly IPlayerManager _playerManager;
-        [Inject] private readonly IBackgroundAudioManager _backgroundAudioManager;
-        [Inject] private readonly IScoreBoardNewScoreSaver _scoreBoardNewScoreSaver;
-        [Inject] private readonly IScoreBoardBestScoreGetter _scoreBoardBestScoreGetter;
-        [Inject] private readonly ITimerPresenter _timerPresenter;
+        [Inject] private readonly IPlayerManager _playerManager = null;
+        [Inject] private readonly IBackgroundAudioManager _backgroundAudioManager = null;
+        [Inject] private readonly IScoreBoardNewScoreSaver _scoreBoardNewScoreSaver = null;
+        [Inject] private readonly IScoreBoardBestScoreGetter _scoreBoardBestScoreGetter = null;
+        [Inject] private readonly ITimerPresenter _timerPresenter = null;
 
         [SerializeField] private GameObject _visual;
         [SerializeField] private TextMeshProUGUI _levelText;

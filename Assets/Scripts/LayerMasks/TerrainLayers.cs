@@ -1,13 +1,10 @@
 using UnityEngine;
+using static Assets.Scripts.LayerMasks.Constants.LayerMaskConstants;
 
 namespace Assets.Scripts.LayerMasks
 {
     public static class TerrainLayers
     {
-        private const string IMPASSABLE = "Impassable";
-        private const string ROUGH_TERRAIN = "RoughTerrain";
-        private const string GROUND = "Ground";
-
         public static readonly LayerMask Impassable = LayerMask.GetMask(IMPASSABLE);
         public static readonly LayerMask Rough = LayerMask.GetMask(ROUGH_TERRAIN);
         public static readonly LayerMask Ground = LayerMask.GetMask(GROUND);

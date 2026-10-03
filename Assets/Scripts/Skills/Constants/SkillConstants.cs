@@ -13,5 +13,12 @@ namespace Assets.Scripts.Skills.Constants
         public const float SMALLEST_ANGLE_QUALIFYING_AS_LOOKING_AT_TARGET = 4f;
         public const float CAN_PLACE_MINE_RAY_DISTANCE = 5f;
         public const float TIME_TO_ARRIVE_AT_LOCATION_MULTIPLIER = 0.2f;
+
+        public const float SAW_MIN_KNOCKBACK_DISTANCE = 1.2f;
+        public const float SAW_MAX_KNOCKBACK_DISTANCE = 3.5f;
+        public const float SAW_KNOCKBACK_SPEED_FACTOR = 0.5f;
+        public const float SAW_MIN_KNOCKBACK_DURATION = 0.12f;
+        public const float SAW_MAX_KNOCKBACK_DURATION = 0.22f;
+        public const float SAW_COOLDOWN_PURGE_INTERVAL = 3.0f;
     }
 }

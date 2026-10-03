@@ -7,7 +7,7 @@ namespace Assets.Scripts.UI.Settings
 {
     public class FullScreenOption : MonoBehaviour, IOptionComponent<bool>
     {
-        [Inject] private readonly ISetting<FullScreenSetting, FullScreenMode> _fullScreenSetting;
+        [Inject] private readonly ISetting<FullScreenSetting, FullScreenMode> _fullScreenSetting = null;
 
         [SerializeField] private Toggle _toggle;
 

@@ -8,7 +8,7 @@ namespace Assets.Scripts.UI.Settings
 {
     public class AudioVolumeOption : MonoBehaviour, IOptionComponent<float>
     {
-        [Inject] private readonly ISetting<AudioVolumeSetting, float> _audioVolumeSetting;
+        [Inject] private readonly ISetting<AudioVolumeSetting, float> _audioVolumeSetting = null;
 
         [SerializeField] private TextMeshProUGUI _volumeText;
         [SerializeField] private Slider _slider;

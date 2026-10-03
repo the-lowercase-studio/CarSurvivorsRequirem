@@ -16,14 +16,14 @@ namespace Assets.Scripts.Enemies
 
     public class CollectibleDropNotifier : MonoBehaviour, ICollectibleDropNotifier
     {
-        [Inject] private readonly DropAnimationConfiguration _animationConfig;
+        [Inject] private readonly DropAnimationConfiguration _animationConfig = null;
 
         [SerializeField] private Transform _collectibleItemsParent;
 
-        public event EventHandler OnSkillUpgradeCollectibleCollected;
-
         private readonly Dictionary<GameObject, ObjectPool<GameObject>> _pools = new();
         private readonly Dictionary<GameObject, ObjectPool<GameObject>> _instancePoolMap = new();
+
+        public event EventHandler OnSkillUpgradeCollectibleCollected;
 
         private ObjectPool<GameObject> GetOrCreatePool(GameObject prefab)
         {

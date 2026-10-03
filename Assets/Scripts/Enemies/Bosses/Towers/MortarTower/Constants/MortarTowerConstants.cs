@@ -23,5 +23,8 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.Constants
 
         public const string BASE_COLOR_PROPERTY = "_BaseColor";
         public const string EMISSION_COLOR_PROPERTY = "_EmissionColor";
+
+        internal const int FOOTPRINT_RADIUS = 2;
+        internal const float TRAJECTORY_SAMPLE_DELTA = 0.001f;
     }
 }

@@ -529,11 +529,9 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
 
             int cx = centerCell.WorldGridPos.x;
             int cy = centerCell.WorldGridPos.y;
-            const int FOOTPRINT_RADIUS = 2;
-
-            for (int dx = -FOOTPRINT_RADIUS; dx <= FOOTPRINT_RADIUS; dx++)
+            for (int dx = -MortarTowerConstants.FOOTPRINT_RADIUS; dx <= MortarTowerConstants.FOOTPRINT_RADIUS; dx++)
             {
-                for (int dy = -FOOTPRINT_RADIUS; dy <= FOOTPRINT_RADIUS; dy++)
+                for (int dy = -MortarTowerConstants.FOOTPRINT_RADIUS; dy <= MortarTowerConstants.FOOTPRINT_RADIUS; dy++)
                 {
                     int nx = cx + dx;
                     int ny = cy + dy;
