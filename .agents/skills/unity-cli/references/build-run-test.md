@@ -1,5 +1,12 @@
 # Run, test & build — unity-cli command reference
 
+## Car Survivors Repository Boundary
+
+Read .agents/skills/unity-cli/SKILL.md before using these imported commands. Examples describe capabilities, not task authority. Inspection does not authorize repairs, installs, editor restarts, scene changes, or direct serialized-file edits. Reuse existing authority and preserve unrelated user work; AGENTS.md governs direct .unity, .prefab, .asset, and .meta edits.
+
+Run from the verified project root. Explicitly route agent-created logs, reports, coverage, scratch scripts, build outputs, and provenance to .agents/context/tmp/unity-cli/; create output directories first. Override example/default paths, including tests that otherwise write test-results.xml at the root. Unity-generated editor state remains Editor-managed. Verify installed command help and official sources before relying on version-dependent behavior.
+
+
 Part of the **`unity-cli`** skill. See that skill's `SKILL.md` for CLI install, global flags,
 environment variables, exit codes, and common workflows. All global flags (`--format json`,
 `--non-interactive`, `--yes`, `--proxy`, …) apply to every command below.
@@ -461,4 +468,3 @@ unity test /path/to/MyProject -- \
 **A configured endpoint can still be ignored.** Every `-cacheServer*` argument overrides *Editor Preferences*, not Project Settings; `ProjectSettings/EditorSettings.asset`'s `m_CacheServerMode` decides whether preferences are consulted at all (`0` = Use global settings, `1` = Enabled, `2` = Disabled). A project on mode `2` ignores the injected flags, and the CLI emits a warning (never a failure — the run proceeds). Mode `1` is not warned about: whether a project-pinned endpoint beats an injected one is unmeasured, and a false warning would be worse than none. Diagnose with `unity diagnose accelerator` (see [diagnostics-maintenance.md](diagnostics-maintenance.md)); full explanation in `apps/cli/docs/accelerator.md`.
 
 ---
-

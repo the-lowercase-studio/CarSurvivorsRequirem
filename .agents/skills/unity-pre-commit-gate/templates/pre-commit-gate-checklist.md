@@ -1,38 +1,38 @@
 # Pre-Commit Gate Checklist
 
-**Date:** [YYYY-MM-DD]  
-**Branch / Scope:** [Scope / Files]  
-**Verdict:** [PASS | FAIL]  
+Date: [YYYY-MM-DD]
+Changed scope: [Files / domains]
+Mode: [Verification only | Authorized scoped repairs]
+Verdict: [PASS | FAIL | PENDING]
 
----
+## Scope
 
-## 1. Scope & Changed Files
-- Files Audited:
-  - `Assets/Scripts/...`
+- Files inspected and authorized untracked additions:
+- Pre-existing user changes:
+- Repair authority, if applicable:
 
----
+## Gate Results
 
-## 2. Gate Results
+| Gate | Status | Evidence / reason |
+| --- | --- | --- |
+| 1. Compilation and warnings | [PASS / FAIL / PENDING / N/A] | [Executed command, exit code, errors, warnings; no prefilled success] |
+| 2. Serialized data | [PASS / FAIL / PENDING / N/A] | [Canonical permitted inspector patterns, identities, migration authority/checks] |
+| 3. DI and field order | [PASS / FAIL / PENDING / N/A] | [Inspected bindings/lifetimes; pending live checks] |
+| 4. Standards and architecture | [PASS / FAIL / PENDING / N/A] | [Changed-scope evidence; source risks versus measured allocations] |
+| 5. Git and assets | [PASS / FAIL / PENDING / N/A] | [Touched files accounted for, user changes protected, metadata/references checked] |
+| 6. Lifecycle artifacts | [PASS / FAIL / PENDING / N/A] | [Durable plan, requirements state, summary paths] |
 
-| Gate | Status | Details |
-| :--- | :---: | :--- |
-| **1. Compilation & Warnings** | [PASS / FAIL] | `dotnet build` exit code 0, 0 errors, 0 warnings. |
-| **2. Serialized Data Safety** | [PASS / FAIL] | `[SerializeField] private` used, `_camelCase` names, no broken inspector fields. |
-| **3. Reflex DI & Field Order** | [PASS / FAIL] | Order: `[Inject]` -> `[SerializeField]` -> private. All bindings registered in installers. |
-| **4. Coding Standards** | [PASS / FAIL] | Constants in `Constants/`, `OnX` events, no GC allocations in hot loops, no singletons. |
-| **5. Git & Asset Consistency** | [PASS / FAIL] | Clean worktree in touched scope, no orphaned meta files. |
-| **6. Implementation Lifecycle** | [PASS / FAIL] | Summary created in `.agents/context/implementations/summaries/`, no external plans/summaries. |
+N/A requires a scope-based reason. Unavailable checks are PENDING. Overall PASS requires every applicable gate to pass.
 
----
+## Findings and Repairs
 
-## 3. Findings & Remediations Applied
-- Fixed issues:
-  - (e.g. Fixed field ordering in `...`, corrected warning in `...`)
-- Issues requiring user confirmation (if any):
-  - (None / listed items)
+- Findings reported without edits:
+- Authorized corrections actually applied:
+- Baseline versus introduced diagnostics:
+- Remaining blockers and missing authority:
 
----
+## Next Actions
 
-## 4. Final Verdict & Next Actions
-- [ ] Ready to commit / merge.
-- [ ] Remaining Unity Editor manual checks needed:
+- [ ] All applicable gates passed with evidence.
+- [ ] Required Unity Editor/manual checks completed, or explicitly pending.
+- Commit/merge authority and action taken: [Not requested / Authorized / Executed with reference]

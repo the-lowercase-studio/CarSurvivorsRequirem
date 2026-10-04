@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Pre-Commit Gate"
+  short_description: "Verify changes through the full pre-commit gate"
+  default_prompt: "Use $unity-pre-commit-gate to verify these changes through all applicable gates and report results without unrelated repairs."

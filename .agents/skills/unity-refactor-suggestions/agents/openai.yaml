@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Refactor Suggestions"
+  short_description: "Suggest scoped refactors that preserve gameplay"
+  default_prompt: "Use $unity-refactor-suggestions to propose reviewable simplifications for this target while preserving behavior and inspector compatibility."

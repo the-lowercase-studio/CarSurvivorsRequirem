@@ -17,7 +17,11 @@ Before changing DI-related code, ground the work in:
 - .agents/context/technology-documentation.md
 - Assets/Scripts/ReflexDI/
 
-Use official Reflex documentation from `.agents/context/technology-documentation.md` when binding or injection behavior is uncertain.
+Consult official Reflex documentation from .agents/context/technology-documentation.md before relying on binding, injection, or lifetime behavior.
+
+## Authority
+
+A DI review reports findings without editing runtime code. For authorized implementation, reuse confirmed requirements and follow the durable plan/requirements gate in AGENTS.md before non-trivial code edits; create the durable summary on completion. Review findings alone do not grant implementation authority.
 
 ## Inputs
 
@@ -35,14 +39,14 @@ Use official Reflex documentation from `.agents/context/technology-documentation
    - Use Reflex injection for scene/runtime services already managed by DI.
    - Use prefab-local component references for tightly owned child components.
    - Use ScriptableObject fields for designer-authored configuration.
-   - Avoid `FindAnyObjectByType`, singleton access, static mutable service state, or broad scene searches unless explicitly accepted as a temporary bridge.
+   - Do not introduce `FindAnyObjectByType`, singleton access, static mutable service state, or broad scene searches as temporary bridges. A deliberately requested architecture exception must be specific, documented, and reconciled with the governing user instructions; inconvenience in binding a dependency is not an exception.
    - Choose if it should be a readonly field.
 3. Define or reuse the narrowest interface.
    - Reuse existing interfaces before adding a new one.
    - If adding an interface primarily used by one implementation, colocate it above the implementation class.
    - Prefix interface names with `I`.
 4. Add or update Reflex binding.
-   - Register scene services in the appropriate installer under `Assets/Scripts/ReflexDI/`.
+   - Register scene services in the appropriate installer under Assets/Scripts/ReflexDI/.
    - Bind concrete implementations to interfaces consumed by runtime systems.
    - Keep binding names and lifetimes consistent with nearby registrations.
 5. Update consumers.
@@ -94,4 +98,3 @@ When implementing, summarize:
 - Consumers updated.
 - Any direct lookup removed or intentionally left in place.
 - Validation performed and remaining Unity Editor setup, if any.
-

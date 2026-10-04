@@ -9,11 +9,12 @@
 
 ## 2. Preserved Invariants
 
-- DI/interfaces preserved: yes/no
-- No singleton reintroduction: yes/no
-- Health/damage semantics preserved: yes/no
-- Gameplay event ordering preserved: yes/no
-- Inspector workflow preserved: yes/no
+- For each invariant use: proposal requirement | verified with evidence | pending | risk.
+- DI/interfaces:
+- No singleton reintroduction:
+- Health/damage semantics:
+- Gameplay event ordering:
+- Inspector workflow and serialized identities:
 
 ## 3. Findings and Opportunities
 
@@ -48,9 +49,16 @@
 
 ## 5. Validation Plan
 
+These are proposed post-implementation checks, not performed results.
+
 1. Compile check.
 2. Scenario checks for changed logic.
 3. Event-order checks if combat/wave code is touched.
+
+### Checks Actually Performed
+
+- [Command / inspected evidence and result, or none]
+- Baseline diagnostics or unavailable checks:
 
 ## 6. Assumptions and Open Questions
 

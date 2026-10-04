@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gameplay Spec Writing"
+  short_description: "Draft gameplay specs with resolved decision tracking"
+  default_prompt: "Use $gameplay-spec-writing to write a repository spec for this feature, preserving approved choices and resolving consequential unknowns."

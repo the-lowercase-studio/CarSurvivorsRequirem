@@ -1,36 +1,31 @@
-# Batch Codebase Review Handoff State
+# Batch Codebase Review Handoff
 
-**Last Updated:** [YYYY-MM-DD HH:MM]  
-**Current Active Batch:** [Batch ID or None]  
-**Overall Status:** [IN_PROGRESS | COMPLETED | PAUSED]  
+Last updated: [YYYY-MM-DD HH:MM]
+Action mode: [Audit only | Authorized fixes]
+Durable plan: .agents/context/implementations/plans/[task-name]-plan.md
+Overall review coverage: [In progress | Complete | Partial | Roadmap only]
+Overall verification: [PASS | FAIL | PENDING | N/A with reason]
 
----
+## Tasks and Ownership
 
-## 1. Tasks & Checkpoint Progress Table
+| Batch | Owner | Read scope | Writable files | Status | Coverage / findings | Verification | Ownership released |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [ID] | [Owner] | [Full project-relative paths] | [None / exact files] | PENDING | [Pending] | PENDING | [Yes / No] |
 
-| Batch ID | Domain | Status | Checkpoint Compile | Files Modified | Issues Fixed / Notes |
-| :--- | :--- | :---: | :---: | :---: | :--- |
-| **Batch 1** | Boot & Reflex DI | `PENDING` | - | - | |
-| **Batch 2** | Player & Navigation | `PENDING` | - | - | |
-| **Batch 3** | Enemies & Waves | `PENDING` | - | - | |
-| **Batch 4** | Combat & Skills | `PENDING` | - | - | |
-| **Batch 5** | Health & Stats | `PENDING` | - | - | |
-| **Batch 6** | UI Systems | `PENDING` | - | - | |
-| **Batch 7A** | Audio, VFX & Settings | `PENDING` | - | - | |
-| **Batch 7B** | Utilities & Editor | `PENDING` | - | - | |
+Statuses: PENDING, IN_PROGRESS, REVIEW, DONE, BLOCKED. DONE means accepted review coverage; unresolved findings and failed checks remain recorded separately.
 
-*Status values: `PENDING`, `IN_PROGRESS`, `DONE`, `BLOCKED`*
+## Verification and Diagnostics
 
----
+- Shared compile owner:
+- Executed command and result, exit code, errors, warnings:
+- Baseline diagnostics:
+- Introduced diagnostics and authorized corrections:
+- Unavailable checks and remaining blockers:
+- Cross-batch contracts/findings requiring coordinator action:
 
-## 2. Global Checkpoint Verification
-- **Latest Full Project Compile:** `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`
-  - Exit Code: [0 | Non-zero]
-  - Warnings: [0 | Count]
-- **Unresolved Blockers Across Batches:** [None / List]
+## Resumption
 
----
-
-## 3. Resumption Instructions for Next Agent
-- Next batch to execute: [Batch ID]
-- Specific instructions or context notes:
+- Next unfinished batch and owner state:
+- Source changes since accepted review requiring reinspection:
+- Required next action without widening authority:
+- Durable summary: .agents/context/implementations/summaries/[task-name]-summary.md

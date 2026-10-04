@@ -1,42 +1,39 @@
-# Performance & Optimization Review Report
+# Performance and Optimization Review
 
-**Target Scope / System:** [System / File Name]  
-**Date:** [YYYY-MM-DD]  
-**Overall Performance Health:** [CRITICAL | WARNING | GOOD | EXCELLENT]  
+Target scope: [System / files]
+Date: [YYYY-MM-DD]
+Review mode: [Source inspection | Profiler-assisted]
+Implementation authority: [Review only | Existing explicit authority and scope]
+Overall assessment: [Source risks identified | Measured bottleneck | No inspected risk | Insufficient evidence]
 
----
+## Evidence and Scope
 
-## 1. Hot-Path & Scope Audit
-- **Files Inspected:**
-  - `Assets/Scripts/...`
-- **Execution Context:** (e.g. `Update` loop, Physics tick, Spawner cycle, Combat event)
+- Files and invocation paths inspected:
+  - Assets/Scripts/[Domain]/[File].cs
+- Profiler measurements: [Not collected | Environment, workload, samples, capture path]
+- Evidence limits and unverified paths:
 
----
+## Findings and Reviewable Proposals
 
-## 2. Performance Findings by Severity
+| Severity | File / method / line | Evidence type | Risk or measurement | Proposed change / affected scope | Expected impact and uncertainty |
+| --- | --- | --- | --- | --- | --- |
+| [Blocker / Major / Minor / Nit] | [Location] | [Source inference / measured] | [Finding] | [Concrete proposal] | [Qualitative expectation; measured values only with evidence] |
 
-### 🔴 Blocker (Hot-Path GC Allocations / Search Shortcuts / Leaks)
-- [None / Finding: File, line, issue (e.g. LINQ in Update), and concrete zero-allocation replacement]
+## Invariants and Safety
 
-### 🟠 Major (Scale Bottlenecks / Missing Pooling / Canvas Rebuilds)
-- [None / Finding: File, line, issue (e.g. Instantiate without pool), and pooling integration fix]
+Check only after verification and cite evidence; unchecked items are requirements or pending checks.
 
-### 🟡 Minor (Math & Algorithmic Inefficiencies)
-- [None / Finding: File, line, issue (e.g. sqrMagnitude vs Distance), and fix]
+- [ ] Reflex DI boundaries preserved.
+- [ ] Gameplay determinism and event order preserved.
+- [ ] Serialized identities and inspector authoring preserved.
+- [ ] Required mechanical dependencies still fail fast.
 
-### ⚪ Nit (Micro-Optimizations)
-- [None / Finding: File, line, suggestion]
+## Verification and Action State
 
----
+- Executed checks and results: [Command / exit code / diagnostics, or none]
+- Proposed compilation after implementation: dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
+- Pending profiler comparison: [Baseline and changed workload; no claimed gains before measurement]
+- Implementation state: [Not requested / Authorized / Applied / Blocked]
+- Remaining authority: [None needed / Specific missing approval for listed reviewable proposals]
 
-## 3. Preserved Invariants & Safety
-- [x] Reflex DI boundaries preserved (no static singletons introduced).
-- [x] Gameplay determinism and event order unchanged.
-- [x] Serialized fields and inspector authoring intact.
-
----
-
-## 4. Verification & Implementation Approval
-- **Compilation Check:** `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false` [PASS / FAIL]
-- **Approval Request:**
-  > I can implement these proposed optimizations: [list]. Do you approve all items, or only specific ones?
+Ask for implementation approval only when the concrete proposal lacks existing authority. Do not add a routine approval request to already authorized work or claim proposed checks were executed.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "DI Integration"
+  short_description: "Integrate explicit Reflex dependencies and bindings"
+  default_prompt: "Use $di-integration to integrate this approved dependency through existing Reflex interfaces and installer bindings."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Brainstorm"
+  short_description: "Explore mechanics and track tentative design choices"
+  default_prompt: "Use $game-brainstorm to explore this gameplay idea and record confirmed choices, tentative options, and unresolved parameters."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Performance Review"
+  short_description: "Inspect performance risks and propose scoped changes"
+  default_prompt: "Use $check-optimalization to audit this scope for performance risks and propose changes with evidence and pending measurement checks."

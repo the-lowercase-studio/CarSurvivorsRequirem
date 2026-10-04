@@ -1,5 +1,12 @@
 # Integration & advanced — unity-cli command reference
 
+## Car Survivors Repository Boundary
+
+Read .agents/skills/unity-cli/SKILL.md before using these imported commands. Examples describe capabilities, not task authority. Inspection does not authorize repairs, installs, editor restarts, scene changes, or direct serialized-file edits. Reuse existing authority and preserve unrelated user work; AGENTS.md governs direct .unity, .prefab, .asset, and .meta edits.
+
+Run from the verified project root. Explicitly route agent-created logs, reports, coverage, scratch scripts, build outputs, and provenance to .agents/context/tmp/unity-cli/; create output directories first. Override example/default paths, including tests that otherwise write test-results.xml at the root. Unity-generated editor state remains Editor-managed. Verify installed command help and official sources before relying on version-dependent behavior.
+
+
 Part of the **`unity-cli`** skill. See that skill's `SKILL.md` for CLI install, global flags,
 environment variables, exit codes, and common workflows. All global flags (`--format json`,
 `--non-interactive`, `--yes`, `--proxy`, …) apply to every command below.

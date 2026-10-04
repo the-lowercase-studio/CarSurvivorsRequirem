@@ -60,6 +60,8 @@ Classify the defect into one or more categories:
    - Specify the exact files, methods, and lines to modify.
    - Ensure the proposed fix is minimal and avoids collateral architectural changes.
    - Identify potential regression risks and how to verify the fix.
+   - Separate confirmed evidence from hypotheses. Do not add silent guards for required mechanical dependencies; follow ADR-005 when proposing a fix.
+   - List post-fix compilation and play-mode steps as proposed validation, separately from investigation checks actually performed. Do not claim the proposed fix compiles or reproduces successfully without executing it.
 
 ## Output
 

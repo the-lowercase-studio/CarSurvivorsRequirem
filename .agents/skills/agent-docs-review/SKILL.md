@@ -17,10 +17,10 @@ Use this skill to turn an existing documentation file into concise, implementati
 
 1. Read the pointed documentation file first.
 2. Read project source-of-truth docs before editing:
-   - `AGENTS.md`
-   - `.agents/README.md`
-   - `.agents/context/technology-documentation.md` when framework or package behavior is mentioned.
-   - `.agents/context/project-coding-standards.md` when conventions or coding rules are mentioned.
+   - AGENTS.md
+   - .agents/README.md
+   - .agents/context/technology-documentation.md when framework or package behavior is mentioned.
+   - .agents/context/project-coding-standards.md when conventions or coding rules are mentioned.
 3. If the document describes a concrete system, inspect the relevant source files before changing behavioral claims.
 4. Separate content into three groups:
    - Keep: invariants, architecture boundaries, file maps, workflow steps, validation checks, extension points, failure modes, and open questions.
@@ -31,7 +31,7 @@ Use this skill to turn an existing documentation file into concise, implementati
    - Prefer checklists, constraints, file references, and decision rules over prose.
    - Include "verify in code" notes where behavior may drift.
    - Preserve exact relative paths and update broken or renamed links.
-   - Keep markdown filenames kebab-case under `.agents/context/` unless the file is a reserved operational name.
+   - Keep markdown filenames kebab-case under .agents/context/ unless the file is a reserved operational name.
 6. For changed behavior claims, make them traceable to code or mark them as assumptions/open questions.
 7. Run a final pass for brevity, consistency, and agent trigger usefulness.
 

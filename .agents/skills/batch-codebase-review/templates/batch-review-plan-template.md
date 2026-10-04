@@ -1,27 +1,31 @@
 # Batch Codebase Review Plan
 
-**Date:** [YYYY-MM-DD]  
-**Execution Mode:** [Parallel Subagents | Sequential Loop | Prompt Roadmap]  
-**Project:** Car Survivors  
+Date: [YYYY-MM-DD]
+Action mode: [Audit only | Authorized fixes]
+Execution mode: [Delegated | Sequential | Prompt roadmap]
+Durable plan: .agents/context/implementations/plans/[task-name]-plan.md
+Authority and approved decisions: [User request / existing plan / unresolved requirements]
 
----
+## Scope and Baseline
 
-## 1. Objectives & Quality Gates
-- **Standard Alignment:** Enforce project coding standards across all touched files.
-- **Architecture Audit:** Audit Reflex DI bindings, singletons, lifecycle unsubscriptions, and pooling.
-- **Compilation Invariant:** Every batch must pass `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false` with zero warnings.
+- Requested scope and exclusions:
+- Pre-existing user changes:
+- Baseline compilation: [Executed result | Pending | Not required for roadmap]
+- Shared build owner and verified isolation, if any:
+- Coordinator-owned shared interfaces/installers:
 
----
+## Inventory and Ownership
 
-## 2. Batch Partitioning & Scopes
+Replace example groupings with the actual inventory. Assign each file once and reserve shared edits for the coordinator.
 
-| Batch ID | Domain | Scope Paths | Estimated Files | Owner / Subagent |
-| :--- | :--- | :--- | :---: | :--- |
-| **Batch 1** | Boot, Reflex DI & Game Flow | `Assets/Scripts/ReflexDI/`, `Initializers/`, `GameFlow/`, `Providers/`, `GameWindow/` | ~15 | |
-| **Batch 2** | Player & Navigation | `Assets/Scripts/Player/`, `Navigation/GridSystem/`, `Navigation/FlowFieldSystem/`, `Collisions/` | ~25 | |
-| **Batch 3** | Enemies, Waves & Spawners | `Assets/Scripts/Enemies/`, `Waves/`, `Spawners/`, `Pooling/`, `ObjectLifecycle/` | ~30 | |
-| **Batch 4** | Combat & Skills | `Assets/Scripts/Skills/`, `Assets/Scripts/Projectiles/` | ~20 | |
-| **Batch 5** | Health, Stats & Feedback | `Assets/Scripts/HealthSystem/`, `Stats/`, `StatusEffects/`, `DamageNumbers/` | ~20 | |
-| **Batch 6** | UI Systems | `Assets/Scripts/UI/` | ~20 | |
-| **Batch 7A** | Audio, VFX & Settings | `Assets/Scripts/Audio/`, `VFX/`, `Effects/`, `ScoreBoard/`, `LevelSystem/`, `Settings/`, `Storage/`, `Interactables/` | ~25 | |
-| **Batch 7B** | Utilities & Editor Tools | `Assets/Scripts/Shapes/`, `Volumes/`, `LayerMasks/`, `Utils/`, `Extensions/`, `Common/`, `Editor/` | ~25 | |
+| Batch | Domain | Full project-relative scope paths | Actual files / size | Review owner | Writable files |
+| --- | --- | --- | --- | --- | --- |
+| [ID] | [Domain] | Assets/Scripts/[Domain]/ | [Count / lines] | [Owner] | [None for audit / explicit files] |
+
+## Acceptance and Reporting
+
+- Review coverage, authorized repair completion, and verification status are separate.
+- Introduced diagnostics can be repaired only within authorized scope; report unrelated baseline failures.
+- Coordinator serializes shared builds and reconciles cross-batch contracts and findings.
+- Durable summary: .agents/context/implementations/summaries/[task-name]-summary.md
+- Scratch handoff: .agents/context/tmp/batch_review_handoff.md

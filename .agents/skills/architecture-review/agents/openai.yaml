@@ -1,0 +1,4 @@
+interface:
+  display_name: "Architecture Review"
+  short_description: "Review DI, ownership, and gameplay lifecycle safety"
+  default_prompt: "Use $architecture-review to review this change for DI correctness, ownership, serialization safety, and event ordering."

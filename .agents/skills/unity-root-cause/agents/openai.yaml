@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Root Cause"
+  short_description: "Diagnose Unity bugs with source evidence"
+  default_prompt: "Use $unity-root-cause to investigate this exception and report its cause and a minimal proposed fix without changing runtime files."
