@@ -87,8 +87,8 @@ Runtime flow:
    - `ClearPlayerChunkCells`: sets all previous chunk cells' `ChunkGridPos` to `(-1, -1)`, `BestDirection` to `GridDirection.None`, and nulls the array entries.
    - `UpdatePlayerChunkBasedOnPlayerPositionInWorldGrid`: finds the closest world cell to the player car, computes `minGridX` / `minGridY` clamped within `[0, WorldGrid.Width - chunkWidth]` and `[0, WorldGrid.Height - chunkHeight]`, and populates `_playerChunkCells` by referencing the corresponding `WorldGrid.Cells`.
    - Velocity prediction: gets car velocity from `_playerManager.CarController.GetMovementVelocity()`; if `speed > 0.1f`, offsets destination by `Mathf.Clamp(speed * _flowFieldTargetPredictionTime, 0f, _maxFlowFieldTargetOffset)`.
-   - `GetClampedChunkDestinationCell`: resolves destination cell within `GridPlayerChunk`, falling back to player current cell or chunk center.
-   - Invokes `FlowField.CreateCostField`, `CreateIntegrationField`, and `CreateFlowField` over `GridPlayerChunk`.
+   - Creates terrain costs before resolving the destination. GetSupportedDestination prefers a supported predicted cell in the active chunk, then selects the nearest supported chunk cell by squared XZ distance with stable grid-index ties.
+   - Sets DestinationCell to null when no supported cell exists; integration and directions remain empty. Creates integration and flow fields after destination resolution.
 4. Downstream spatial queries:
    - `EnemiesSpawner`: queries `GridCellsNotVisibleByMainCamera.GetRandomWalkableCellsOutsidePlayerChunk` to select off-camera spawn points outside the player chunk with enemy density limits.
    - `EnemiesOutsidePlayerChunkTeleporter`: checks enemies outside player chunk bounds and teleports them to hidden walkable cells within `GridPlayerChunk`.
@@ -101,6 +101,9 @@ Runtime flow:
 - **Coordinate Conversion**: `WorldPosToCellConverter` normalizes coordinates relative to total grid extents (`percentX = worldPos.x / (width * cellSize)`), clamps to `[0, 1]`, and floors to grid indices `[0, width - 1]` and `[0, height - 1]`.
 - **Shared Reference Model**: `GridPlayerChunk` does not clone `Cell` objects; it references `WorldGrid.Cells`. Modifying cell costs, best costs, directions, or chunk positions mutates the single shared instance.
 - **Walkability Rule**: `CellStatusDescriber.IsWalkable(cell)` returns `true` if and only if `cell.Cost < byte.MaxValue` (i.e. cost < 255).
+- GroundSupportQuery validates exact physical support using Walkable layers, ignores triggers, and rejects embedded probe origins. The probe starts 1.5 units above grid height, extends 3.5 units downward, and returns surface height plus 0.02 units of clearance. Cell.WorldPos remains the grid coordinate.
+- Placement checks revalidate ground, walkability, visibility, grid membership, and configured occupancy before pool checkout. Supported placement positions are kept separately from cells.
+- GroundSupportQuery.IsWithinWorldBounds checks actual XZ extents before clamping coordinate conversion; WorldPosToCellConverter retains its shared clamping semantics.
 - **Camera Visibility Rule**: `CellCameraVisibilityChecker.IsCellVisibleFromCamera` uses `camera.WorldToViewportPoint(cellPosition)` and returns `true` when `0 <= x <= 1`, `0 <= y <= 1`, and `z > 0`.
 - **Occupancy Querying**: `GridCellsNotVisibleByMainCamera` evaluates enemy occupancy per cell using `Physics.OverlapBoxNonAlloc` with `_occupancyBuffer` (size 32) on `EntityLayers.Enemies` with half-extents `(cellSize * 0.45f, 2f, cellSize * 0.45f)`.
 - **Target Prediction**: Prediction lead offset is computed as `velocity.normalized * Mathf.Clamp(speed * _flowFieldTargetPredictionTime, 0f, _maxFlowFieldTargetOffset)` when `speed > 0.1f`.

@@ -102,6 +102,18 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
 
 ## Rules and Invariants
 
+### DeathVolume Recovery
+
+- GolemBoss implements the colocated IDeathVolumeRecoverable contract. DeathVolume dispatches to it on the entering collider and returns before damage/pooling, including ignored dead or duplicate requests. Only the root participates; child hitbox parents are not searched.
+- A living enabled boss latches recovery and advances OperationGeneration before exiting its current state. Hitboxes, owned attack sequences, arms, warnings, and body movement are interrupted; health, phase, HUD, encounter ownership, and swarm suppression are retained.
+- GolemStateMachine supports explicit same-state restart and Shutdown. Disable/death invalidates recovery and restores animator playback; obsolete callbacks cannot return the boss to pursuit.
+- Landing search expands deterministic square rings around a snapshot of the clamped player grid index, across the world. At most 64 candidates are evaluated per frame. Each candidate validates root-capsule footprint support and a nonallocating static body/descent corridor. Root Y derives from surface height and scaled collider bottom offset, never the fallen root height.
+- With no landing, the kinematic boss stays harmlessly above grid height plus LeapMaxHeight, logs once per episode, and retries after one scaled second. A cached safe fallback is physically revalidated. Holding does not cause an impact or defeat.
+- Recovery shares GolemLeapSlamState impact/completion. It teleports directly above the supported landing and immediately descends with Ease.InQuad over LeapTakeoffDuration + LeapAirTime / 2. The circular warning uses exact surface placement; normal telegraph snapping and ordinary leap timing are preserved.
+- GolemAnimator.HoldLeapAirbornePose samples Base Layer.JumpAttack at normalized time 0.5 and holds playback until impact. Playback is restored on impact, interruption, death, and disable. Existing controller/clips remain unchanged pending visual verification.
+- Static support/clearance is checked again immediately before impact. An invalid landing restarts search and gives a fresh full warning. Dynamic players/enemies do not force retargeting. Impact damage/sound and landing completion are guarded once; completion resets only the leap cooldown using the current phase multiplier and resumes pursuit.
+- Asset integration requires InstantKill inclusion on the root Golem CapsuleCollider through Unity Editor, preserving the globally disabled Boss/InstantKill pair and tower exclusion. This edit and Play Mode validation are pending while the live Editor main thread is unavailable; runtime dispatch alone does not enable trigger contact.
+
 - Critical behavior rules:
   - Knockback immunity: GolemBoss implements IKnockable but ignores knockback force to preserve heavy boss presence.
   - Kinematic locking during attack stances: Non-walking animations and attack stances (Stomp, Linear Fist charge, Sky Barrage launch, Leap Slam jump, Death) lock boss movement in place using SetKinematic(true) to eliminate physics jitter and collision drift. FixedUpdate navigation only drives movement when walking and CanMove is true.

@@ -11,6 +11,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
     {
         private readonly IGolemBoss _boss;
         private readonly GolemStateMachine _stateMachine;
+        private int _operationGeneration;
         private GolemPursuitState _pursuitState;
 
         private int _totalCycles;
@@ -43,8 +44,15 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             // Maintained for interface/instantiation compatibility
         }
 
+        private bool IsCurrent()
+        {
+            return _operationGeneration == _boss.OperationGeneration && _boss.IsOperational
+                && _stateMachine.CurrentState == this;
+        }
+
         public void Enter()
         {
+            _operationGeneration = _boss.OperationGeneration;
             _isLaunchingArms = true;
             _isStomping = false;
             _hasDealtStompDamage = false;
@@ -147,6 +155,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         public void Exit()
         {
+            _operationGeneration = -1;
             if (_boss.Animator != null)
             {
                 _boss.Animator.OnSkyBarrageRelease -= HandleSkyBarrageRelease;
@@ -169,6 +178,10 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         private void TriggerArmLaunch()
         {
+            if (!IsCurrent())
+            {
+                return;
+            }
             if (_hasTriggeredRelease)
             {
                 return;
@@ -237,6 +250,10 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         private void ExecuteArmCycle(GolemArmProjectile arm, int currentCycle, bool isLeftArm)
         {
+            if (!IsCurrent())
+            {
+                return;
+            }
             if (arm == null)
             {
                 OnArmFinished();
@@ -268,6 +285,10 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         private void OnArmImpact(GolemArmProjectile arm, int currentCycle, bool isLeftArm)
         {
+            if (!IsCurrent())
+            {
+                return;
+            }
             _boss.AudioClipPlayer?.PlayOneShot(GolemBossConstants.SLAM_SFX_KEY);
 
             if (currentCycle < _totalCycles)
@@ -300,6 +321,10 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         private void OnArmFinished()
         {
+            if (!IsCurrent())
+            {
+                return;
+            }
             _armsFinishedCount++;
             if (_armsFinishedCount >= _totalArmsCount)
             {
@@ -309,6 +334,10 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         private void FinishAttack()
         {
+            if (!IsCurrent())
+            {
+                return;
+            }
             _stateMachine.SkyBarrageCooldownTimer = _boss.Config.SkyBarrageCooldown * _boss.CurrentCooldownMultiplier;
             _stateMachine.ChangeState(_pursuitState);
         }
@@ -348,6 +377,11 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         private void KillAllSequences()
         {
+            if (_releaseSequence != null && _releaseSequence.IsActive())
+            {
+                _releaseSequence.Kill(false);
+            }
+            _releaseSequence = null;
             if (_leftArmSequence != null && _leftArmSequence.IsActive())
             {
                 _leftArmSequence.Kill();

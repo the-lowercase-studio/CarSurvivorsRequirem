@@ -37,6 +37,15 @@ namespace Assets.Scripts.Enemies.Base
         private float _movementDelayAfterAttack = 0.2f;
         private float _currentMovementDelayAfterAttack;
 
+        public bool CanBeTeleported
+        {
+            get
+            {
+                return isActiveAndEnabled && !_isMovementStopped && !_isKnockbackActive
+                    && _verticalVelocity <= 0f && IsOnGround();
+            }
+        }
+
         private void Awake()
         {
             _enemy = GetComponent<Enemy>();
@@ -136,30 +145,6 @@ namespace Assets.Scripts.Enemies.Base
                 }
             }
 
-            if (_gridManager?.WorldGrid != null)
-            {
-                float minX = EnemyMovementConstants.WORLD_BOUNDARY_SAFETY_PADDING;
-                float maxX = (_gridManager.WorldGrid.Width * _gridManager.WorldGrid.CellSize) - EnemyMovementConstants.WORLD_BOUNDARY_SAFETY_PADDING;
-                float minZ = EnemyMovementConstants.WORLD_BOUNDARY_SAFETY_PADDING;
-                float maxZ = (_gridManager.WorldGrid.Height * _gridManager.WorldGrid.CellSize) - EnemyMovementConstants.WORLD_BOUNDARY_SAFETY_PADDING;
-
-                if (maxX > minX && maxZ > minZ)
-                {
-                    Vector3 clampedPos = new Vector3(
-                        Mathf.Clamp(pos.x, minX, maxX),
-                        pos.y,
-                        Mathf.Clamp(pos.z, minZ, maxZ)
-                    );
-
-                    if (distance > 0.001f && (clampedPos.x != pos.x || clampedPos.z != pos.z))
-                    {
-                        float clampedDistance = Vector3.Distance(startPos, clampedPos);
-                        adjustedTime = time * (clampedDistance / distance);
-                        pos = clampedPos;
-                    }
-                }
-            }
-
             _knockbackStartPos = startPos;
             _knockbackTargetPos = pos;
             _knockbackDuration = Mathf.Max(0.001f, adjustedTime);
@@ -171,6 +156,22 @@ namespace Assets.Scripts.Enemies.Base
         public void ResetVerticalVelocity()
         {
             _verticalVelocity = 0f;
+        }
+
+        public void ResetAfterRelocation()
+        {
+            _verticalVelocity = 0f;
+            _currentVelocity = Vector3.zero;
+            _isKnockbackActive = false;
+            _isMovingToPositionUnrelatedToGrid = false;
+            _knockbackStartPos = transform.position;
+            _knockbackTargetPos = transform.position;
+            _knockbackElapsed = 0f;
+            _knockbackDuration = 0f;
+            _currentMovementPositionUnrelatedToGrid = transform.position;
+            _lastPos = transform.position;
+            _lastGroundedY = transform.position.y;
+            _flowFieldMovementController.ResetAfterRelocation();
         }
 
         public void SetPursuitSuppressed(bool isSuppressed)
@@ -197,7 +198,7 @@ namespace Assets.Scripts.Enemies.Base
                 Vector3.down,
                 out _,
                 EnemyMovementConstants.GROUND_CHECK_DISTANCE,
-                TerrainLayers.Walkable);
+                TerrainLayers.Walkable, QueryTriggerInteraction.Ignore);
         }
 
         private bool HandleVerticalPositionAndGrounding()
@@ -209,7 +210,7 @@ namespace Assets.Scripts.Enemies.Base
                 Vector3.down,
                 out RaycastHit hitInfo,
                 EnemyMovementConstants.GROUND_CHECK_DISTANCE,
-                TerrainLayers.Walkable);
+                TerrainLayers.Walkable, QueryTriggerInteraction.Ignore);
 
             if (isGrounded)
             {
@@ -250,7 +251,7 @@ namespace Assets.Scripts.Enemies.Base
                 return;
             }
 
-            if (!isGrounded && transform.position.y < _lastGroundedY - EnemyMovementConstants.FALL_SUPPRESSION_Y_OFFSET)
+            if (!_isKnockbackActive && !isGrounded && transform.position.y < _lastGroundedY - EnemyMovementConstants.FALL_SUPPRESSION_Y_OFFSET)
             {
                 return;
             }
@@ -262,7 +263,9 @@ namespace Assets.Scripts.Enemies.Base
                 _knockbackElapsed += Time.fixedDeltaTime;
                 float t = Mathf.Clamp01(_knockbackElapsed / _knockbackDuration);
                 float easedT = Mathf.Sin(t * Mathf.PI * 0.5f);
-                transform.position = Vector3.Lerp(_knockbackStartPos, _knockbackTargetPos, easedT);
+                Vector3 knockbackPosition = Vector3.Lerp(_knockbackStartPos, _knockbackTargetPos, easedT);
+                knockbackPosition.y = transform.position.y;
+                transform.position = knockbackPosition;
 
                 if (t >= 1f)
                 {
@@ -298,7 +301,18 @@ namespace Assets.Scripts.Enemies.Base
                         : _enemy.Config.MovementSpeed * EnemyMovementConstants.DEFAULT_ACCELERATION_SPEED_MULTIPLIER;
 
                     _currentVelocity = Vector3.MoveTowards(_currentVelocity, targetVelocity, effectiveAcceleration * Time.fixedDeltaTime);
-                    transform.position += _currentVelocity * Time.fixedDeltaTime;
+                    Vector3 proposed = transform.position + _currentVelocity * Time.fixedDeltaTime;
+                    if (isGrounded && GroundSupportQuery.IsWithinWorldBounds(_gridManager.WorldGrid, transform.position)
+                        && GroundSupportQuery.IsWithinWorldBounds(_gridManager.WorldGrid, proposed)
+                        && !_flowFieldMovementController.IsValidVoluntaryStep(transform.position, proposed))
+                    {
+                        Vector3 flowStep = transform.position + _flowFieldMovementController.GetFlowDirection()
+                            * (_enemy.Config.MovementSpeed * Time.fixedDeltaTime);
+                        proposed = _flowFieldMovementController.IsValidVoluntaryStep(transform.position, flowStep)
+                            ? flowStep : transform.position;
+                        _currentVelocity = (proposed - transform.position) / Time.fixedDeltaTime;
+                    }
+                    transform.position = proposed;
 
                     if (_currentVelocity.sqrMagnitude > EnemyMovementConstants.MIN_VELOCITY_FOR_ROTATION_SQR)
                     {

@@ -16,6 +16,7 @@ using Assets.Scripts.Indicators;
 using Assets.Scripts.LayerMasks;
 using Assets.Scripts.LevelSystem.Exp;
 using Assets.Scripts.Navigation.GridSystem;
+using Assets.Scripts.Navigation.Constants;
 using Assets.Scripts.Player;
 using Assets.Scripts.Shapes;
 using Assets.Scripts.Spawners.WorldSpace;
@@ -27,8 +28,13 @@ using Grid = Assets.Scripts.Navigation.GridSystem.Grid;
 
 namespace Assets.Scripts.Enemies.Bosses.Golem
 {
-    [RequireComponent(typeof(Health))]
-    public class GolemBoss : MonoBehaviour, IGolemBoss, IDamageable, IKnockable
+    public interface IDeathVolumeRecoverable
+    {
+        void RequestDeathVolumeRecovery();
+    }
+
+    [RequireComponent(typeof(Health), typeof(CapsuleCollider))]
+    public class GolemBoss : MonoBehaviour, IGolemBoss, IDamageable, IKnockable, IDeathVolumeRecoverable
     {
         [Inject] private readonly IPlayerManager _playerManager = null;
         [Inject] private readonly IGridManager _gridManager = null;
@@ -54,6 +60,16 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         [SerializeField] private VFXPlayer _deathVfxPlayer;
         [SerializeField] private Renderer[] _renderersForEnrage;
 
+        private CapsuleCollider _rootCollider;
+        private readonly Collider[] _recoveryClearanceBuffer = new Collider[GolemBossConstants.RECOVERY_CLEARANCE_BUFFER_SIZE];
+        private Vector2Int _recoverySearchCenter;
+        private int _recoverySearchRadius;
+        private int _recoverySearchIndex;
+        private float _recoveryRetryTimer;
+        private bool _hasLoggedMissingLanding;
+        private bool _hasSafeLanding;
+        private Vector3 _lastSafeLanding;
+
         private GolemStateMachine _stateMachine;
         private GolemPursuitState _pursuitState;
         private GolemLeapSlamState _leapSlamState;
@@ -68,6 +84,9 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
 
         public event Action<IGolemBoss> OnBossDefeated;
 
+        public bool IsOperational => isActiveAndEnabled && Health.IsAlive();
+        public bool IsRecovering { get; private set; }
+        public int OperationGeneration { get; private set; }
         public IHealth Health { get; private set; }
         public GolemBossConfigSO Config => _config;
         public IGolemMovementController Movement => _movementController;
@@ -75,7 +94,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         public IGolemLinearAttackHitbox LinearAttackHitbox => _linearAttackHitbox;
         public IGolemAnimator Animator => _animator;
         public IAudioClipPlayer AudioClipPlayer => _audioClipPlayer;
-        public Grid WorldGrid => _gridManager?.WorldGrid;
+        public Grid WorldGrid => _gridManager.WorldGrid;
         public Transform Transform => transform;
 
         public int CurrentPhase { get; private set; } = 1;
@@ -138,6 +157,11 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         private void Awake()
         {
             Health = GetComponent<IHealth>();
+            _rootCollider = GetComponent<CapsuleCollider>();
+            if (_rootCollider.direction != 1)
+            {
+                throw new InvalidOperationException("Golem recovery requires a vertical root capsule.");
+            }
             _materialPropertyBlock = new MaterialPropertyBlock();
             InitializeStateMachine();
         }
@@ -151,6 +175,8 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
                 Health.OnNoHealth += Health_OnNoHealth;
             }
 
+            IsRecovering = false;
+            OperationGeneration++;
             CurrentPhase = 1;
             _isEnraged = false;
             _stateMachine.ResetCooldowns(
@@ -164,6 +190,13 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
 
         private void OnDisable()
         {
+            OperationGeneration++;
+            IsRecovering = false;
+            _stateMachine.Shutdown();
+            _movementController.CanMove = false;
+            _movementController.Stop();
+            _animator.RestorePlayback();
+            _armSocketController.ResetAllArms();
             if (Health != null)
             {
                 Health.OnHealthChanged -= Health_OnHealthChanged;
@@ -192,7 +225,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
             _stateMachine.FixedUpdate();
         }
 
-        public CircularTelegraphIndicator ShowCircularTelegraph(Vector3 position, float radius, float duration, Action onImpact = null, bool autoContractOnFillComplete = false)
+        public CircularTelegraphIndicator ShowCircularTelegraph(Vector3 position, float radius, float duration, Action onImpact = null, bool autoContractOnFillComplete = false, bool exactPosition = false)
         {
             if (_circularTelegraph == null)
             {
@@ -201,7 +234,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
 
             CircularTelegraphIndicator indicator = Instantiate(_circularTelegraph);
             _activeTelegraphs.Add(indicator);
-            indicator.Show(position, radius, duration, WorldGrid, onImpact, autoContractOnFillComplete);
+            indicator.Show(position, radius, duration, WorldGrid, onImpact, autoContractOnFillComplete, exactPosition);
             return indicator;
         }
 
@@ -247,6 +280,212 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
             _linearFistState.SetPursuitState(_pursuitState);
             _skyBarrageState.SetPursuitState(_pursuitState);
             _skyBarrageState.SetStompState(_stompState);
+        }
+
+        public void RequestDeathVolumeRecovery()
+        {
+            if (!IsOperational || IsRecovering)
+            {
+                return;
+            }
+            IsRecovering = true;
+            OperationGeneration++;
+            _hasLoggedMissingLanding = false;
+            _stateMachine.Shutdown();
+            _linearAttackHitbox.Deactivate();
+            _armSocketController.ResetAllArms();
+            DismissAllTelegraphs();
+            _movementController.CanMove = false;
+            _movementController.Stop();
+            _movementController.SetKinematic(true);
+            RestartRecoverySearch();
+            _stateMachine.ChangeState(_leapSlamState, restart: true);
+        }
+
+        public void RestartRecoverySearch()
+        {
+            Cell center = WorldPosToCellConverter.GetCellFromGridByWorldPos(WorldGrid, PlayerPosition);
+            _recoverySearchCenter = center.WorldGridPos;
+            _recoverySearchRadius = 0;
+            _recoverySearchIndex = 0;
+            _recoveryRetryTimer = 0f;
+            _movementController.SetKinematic(true);
+            _movementController.SetPosition(center.WorldPos + Vector3.up * _config.LeapMaxHeight);
+        }
+
+        public bool TryFindRecoveryLanding(out Vector3 rootPosition, out Vector3 surfacePosition)
+        {
+            rootPosition = default;
+            surfacePosition = default;
+            if (!IsRecovering || !IsOperational || Time.deltaTime <= 0f)
+            {
+                return false;
+            }
+            if (_recoveryRetryTimer > 0f)
+            {
+                _recoveryRetryTimer -= Time.deltaTime;
+                if (_recoveryRetryTimer > 0f)
+                {
+                    return false;
+                }
+                RestartRecoverySearch();
+            }
+
+            int maxRadius = Mathf.Max(WorldGrid.Width, WorldGrid.Height);
+            for (int attempt = 0; attempt < GolemBossConstants.RECOVERY_CANDIDATES_PER_FRAME; attempt++)
+            {
+                if (_recoverySearchRadius >= maxRadius)
+                {
+                    if (_hasSafeLanding && TryGetRecoveryLanding(_lastSafeLanding, out rootPosition, out surfacePosition))
+                    {
+                        return true;
+                    }
+                    if (!_hasLoggedMissingLanding)
+                    {
+                        Debug.LogWarning("Golem recovery found no supported body landing; holding airborne and retrying.", this);
+                        _hasLoggedMissingLanding = true;
+                    }
+                    _recoveryRetryTimer = GolemBossConstants.RECOVERY_RETRY_DELAY;
+                    return false;
+                }
+
+                Vector2Int offset = GetRecoverySearchOffset(_recoverySearchRadius, _recoverySearchIndex);
+                _recoverySearchIndex++;
+                int ringCount = _recoverySearchRadius == 0 ? 1 : 8 * _recoverySearchRadius;
+                if (_recoverySearchIndex >= ringCount)
+                {
+                    _recoverySearchRadius++;
+                    _recoverySearchIndex = 0;
+                }
+                Vector2Int index = _recoverySearchCenter + offset;
+                if (index.x < 0 || index.y < 0 || index.x >= WorldGrid.Width || index.y >= WorldGrid.Height)
+                {
+                    continue;
+                }
+                Cell candidate = WorldGrid.Cells[index.x, index.y];
+                if (candidate != null && TryGetRecoveryLanding(candidate.WorldPos, out rootPosition, out surfacePosition))
+                {
+                    _lastSafeLanding = rootPosition;
+                    _hasSafeLanding = true;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool ValidateRecoveryLanding(Vector3 rootPosition, out Vector3 surfacePosition)
+        {
+            if (TryGetRecoveryLanding(rootPosition, out Vector3 currentRoot, out surfacePosition))
+            {
+                return (currentRoot - rootPosition).sqrMagnitude
+                    <= GridConstants.ROOT_GROUND_CLEARANCE * GridConstants.ROOT_GROUND_CLEARANCE;
+            }
+            return false;
+        }
+
+        public void CompleteRecovery()
+        {
+            IsRecovering = false;
+        }
+
+        private static Vector2Int GetRecoverySearchOffset(int radius, int index)
+        {
+            if (radius == 0)
+            {
+                return Vector2Int.zero;
+            }
+            int sideLength = radius * 2;
+            int side = index / sideLength;
+            int step = index % sideLength;
+            switch (side)
+            {
+                case 0: return new Vector2Int(-radius + step, -radius);
+                case 1: return new Vector2Int(radius, -radius + step);
+                case 2: return new Vector2Int(radius - step, radius);
+                default: return new Vector2Int(-radius, radius - step);
+            }
+        }
+
+        private bool TryGetRecoveryLanding(Vector3 candidate, out Vector3 rootPosition, out Vector3 surfacePosition)
+        {
+            rootPosition = default;
+            surfacePosition = default;
+            if (!GroundSupportQuery.IsWithinWorldBounds(WorldGrid, candidate))
+            {
+                return false;
+            }
+            // Grid height, never the fallen root height, defines the support probing band.
+            Cell cell = WorldPosToCellConverter.GetCellFromGridByWorldPos(WorldGrid, candidate);
+            candidate.y = cell.WorldPos.y;
+            Vector3 scale = transform.lossyScale;
+            float radius = _rootCollider.radius * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.z));
+            float height = Mathf.Max(_rootCollider.height * Mathf.Abs(scale.y), radius * 2f);
+            Vector3 centerOffset = transform.TransformVector(_rootCollider.center);
+            Vector3 supportCenter = candidate + new Vector3(centerOffset.x, 0f, centerOffset.z);
+            if (!GroundSupportQuery.TryGetSupportedPosition(supportCenter, out Vector3 support))
+            {
+                return false;
+            }
+            float minHeight = support.y;
+            float maxHeight = support.y;
+            // Sample the interior at grid resolution as well as the circular footprint boundary.
+            float spacing = WorldGrid.CellSize * 0.5f;
+            int extent = Mathf.CeilToInt(radius / spacing);
+            for (int x = -extent; x <= extent; x++)
+            {
+                for (int z = -extent; z <= extent; z++)
+                {
+                    Vector3 offset = new Vector3(x * spacing, 0f, z * spacing);
+                    if (offset.sqrMagnitude <= radius * radius
+                        && !SampleRecoverySupport(supportCenter + offset, ref minHeight, ref maxHeight))
+                    {
+                        return false;
+                    }
+                }
+            }
+            for (int sample = 0; sample < GolemBossConstants.RECOVERY_FOOTPRINT_RING_SAMPLES; sample++)
+            {
+                float angle = sample * Mathf.PI * 2f / GolemBossConstants.RECOVERY_FOOTPRINT_RING_SAMPLES;
+                Vector3 offset = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * radius;
+                if (!SampleRecoverySupport(supportCenter + offset, ref minHeight, ref maxHeight))
+                {
+                    return false;
+                }
+            }
+            surfacePosition = new Vector3(supportCenter.x,
+                maxHeight - GridConstants.ROOT_GROUND_CLEARANCE, supportCenter.z);
+            rootPosition = candidate;
+            rootPosition.y = maxHeight - centerOffset.y + height * 0.5f;
+            Vector3 center = rootPosition + centerOffset;
+            Vector3 bottom = center - Vector3.up * (height * 0.5f - radius);
+            Vector3 top = center + Vector3.up * (height * 0.5f - radius + _config.LeapMaxHeight);
+            int count = Physics.OverlapCapsuleNonAlloc(bottom, top, radius, _recoveryClearanceBuffer,
+                TerrainLayers.All, QueryTriggerInteraction.Ignore);
+            if (count == _recoveryClearanceBuffer.Length)
+            {
+                return false;
+            }
+            for (int i = 0; i < count; i++)
+            {
+                Collider obstacle = _recoveryClearanceBuffer[i];
+                if (obstacle != _rootCollider && (obstacle.attachedRigidbody == null || obstacle.attachedRigidbody.isKinematic))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private bool SampleRecoverySupport(Vector3 sample, ref float minHeight, ref float maxHeight)
+        {
+            if (!GroundSupportQuery.IsWithinWorldBounds(WorldGrid, sample)
+                || !GroundSupportQuery.TryGetSupportedPosition(sample, out Vector3 supported))
+            {
+                return false;
+            }
+            minHeight = Mathf.Min(minHeight, supported.y);
+            maxHeight = Mathf.Max(maxHeight, supported.y);
+            return maxHeight - minHeight <= GolemBossConstants.RECOVERY_SUPPORT_HEIGHT_TOLERANCE;
         }
 
         public void TakeDamage(float damage)
@@ -344,6 +583,9 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
 
         private void Health_OnNoHealth(object sender, EventArgs e)
         {
+            OperationGeneration++;
+            IsRecovering = false;
+            _animator.RestorePlayback();
             _stateMachine.ChangeState(_deathState);
 
             if (_deathVfxPlayer != null)

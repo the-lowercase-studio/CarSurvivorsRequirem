@@ -9,6 +9,9 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
     public interface IFlowFieldMovementController
     {
         Vector3 CalculateDesiredMovementDirection();
+        Vector3 GetFlowDirection();
+        bool IsValidVoluntaryStep(Vector3 from, Vector3 to);
+        void ResetAfterRelocation();
         Vector3 MoveOnFlowFieldGrid(float movementSpeed);
     }
 
@@ -66,9 +69,49 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
             return movement;
         }
 
+        public void ResetAfterRelocation()
+        {
+            _separationVector = Vector3.zero;
+        }
+
+        public Vector3 GetFlowDirection()
+        {
+            return GetMoveDirectionBasedOnCurrentCell();
+        }
+
+        public bool IsValidVoluntaryStep(Vector3 from, Vector3 to)
+        {
+            GridSystem.Grid grid = _gridManager.WorldGrid;
+            if (!GroundSupportQuery.IsWithinWorldBounds(grid, from)
+                || !GroundSupportQuery.IsWithinWorldBounds(grid, to))
+            {
+                return false;
+            }
+            Cell previous = WorldPosToCellConverter.GetCellFromGridByWorldPos(grid, from);
+            Vector3 displacement = to - from;
+            displacement.y = 0f;
+            int steps = Mathf.Max(1, Mathf.CeilToInt(displacement.magnitude / (grid.CellSize * 0.25f)));
+            if (steps > FlowFieldConstants.MAX_LOCAL_TRAVERSAL_STEPS)
+            {
+                return false;
+            }
+            for (int step = 1; step <= steps; step++)
+            {
+                Cell next = WorldPosToCellConverter.GetCellFromGridByWorldPos(grid,
+                    Vector3.Lerp(from, to, (float)step / steps));
+                if (!FlowField.CanTraverse(grid, previous, next))
+                {
+                    return false;
+                }
+                previous = next;
+            }
+            return true;
+        }
+
         private Vector3 GetMoveDirectionBasedOnCurrentCell()
         {
-            if (_gridManager == null || _gridManager.WorldGrid == null)
+            if (_gridManager.WorldGrid == null || _gridManager.DestinationCell == null
+                || !GroundSupportQuery.IsWithinWorldBounds(_gridManager.WorldGrid, transform.position))
             {
                 return Vector3.zero;
             }
@@ -89,7 +132,8 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
                 return Vector3.zero;
             }
 
-            if (currentCell != null && currentCell.BestDirection != null && currentCell.BestDirection != GridDirection.None)
+            if (currentCell != null && currentCell.Cost < FlowFieldConstants.IMPASSABLE_COST
+                && currentCell.BestDirection != null && currentCell.BestDirection != GridDirection.None)
             {
                 Vector2Int gridDirection = currentCell.BestDirection.Vector;
                 if (gridDirection != Vector2Int.zero)
@@ -104,21 +148,39 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
                 return borderNeighborDirection;
             }
 
-            // Fallback: When far outside chunk or on unintegrated cell, direct toward destination if beyond arrival distance
-            if (_gridManager.DestinationCell != null)
+            // Outside the integrated chunk, take only one traversable local step toward the target.
+            Cell nearest = null;
+            float bestDistance = float.MaxValue;
+            if (currentCell != null)
             {
-                Vector3 toDestination = _gridManager.DestinationCell.WorldPos - transform.position;
-                toDestination.y = 0f;
-                float sqrDist = toDestination.sqrMagnitude;
-
-                if (sqrDist > FlowFieldConstants.DESTINATION_ARRIVAL_DISTANCE_SQR)
+                for (int i = 0; i < GridDirection.CardinalAndIntercardinalDirections.Count; i++)
                 {
-                    return toDestination.normalized;
+                    Vector2Int index = currentCell.WorldGridPos + GridDirection.CardinalAndIntercardinalDirections[i].Vector;
+                    if (index.x < 0 || index.y < 0 || index.x >= _gridManager.WorldGrid.Width
+                        || index.y >= _gridManager.WorldGrid.Height)
+                    {
+                        continue;
+                    }
+                    Cell candidate = _gridManager.WorldGrid.Cells[index.x, index.y];
+                    if (!FlowField.CanTraverse(_gridManager.WorldGrid, currentCell, candidate))
+                    {
+                        continue;
+                    }
+                    Vector3 offset = candidate.WorldPos - _gridManager.DestinationCell.WorldPos;
+                    offset.y = 0f;
+                    if (offset.sqrMagnitude < bestDistance)
+                    {
+                        bestDistance = offset.sqrMagnitude;
+                        nearest = candidate;
+                    }
                 }
-
-                return Vector3.zero;
             }
-
+            if (nearest != null)
+            {
+                Vector3 direction = nearest.WorldPos - transform.position;
+                direction.y = 0f;
+                return direction.normalized;
+            }
             return Vector3.zero;
         }
 
@@ -141,9 +203,7 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
                 {
                     Cell neighbor = _gridManager.WorldGrid.Cells[neighborPos.x, neighborPos.y];
                     if (neighbor != null
-                        && neighbor.Cost < FlowFieldConstants.IMPASSABLE_COST
-                        && neighbor.BestDirection != null
-                        && neighbor.BestDirection != GridDirection.None
+                        && FlowField.CanTraverse(_gridManager.WorldGrid, currentCell, neighbor)
                         && neighbor.BestCost < bestCost)
                     {
                         bestCost = neighbor.BestCost;
@@ -152,13 +212,11 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
                 }
             }
 
-            if (bestNeighbor != null && bestNeighbor.BestDirection != null && bestNeighbor.BestDirection != GridDirection.None)
+            if (bestNeighbor != null)
             {
-                Vector2Int dir = bestNeighbor.BestDirection.Vector;
-                if (dir != Vector2Int.zero)
-                {
-                    return new Vector3(dir.x, 0, dir.y).normalized;
-                }
+                Vector3 direction = bestNeighbor.WorldPos - transform.position;
+                direction.y = 0f;
+                return direction.normalized;
             }
 
             return Vector3.zero;

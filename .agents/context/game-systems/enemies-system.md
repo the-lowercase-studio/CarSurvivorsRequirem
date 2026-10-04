@@ -5,7 +5,7 @@
 The Enemies system manages runtime enemy entities in Car Survivors. It is responsible for:
 - Standard melee enemy units (such as walking and crawling zombies) and exploding suicide units (such as barrel enemies).
 - Object pooling, pre-warming, and pool recycling for high-density enemy swarms.
-- Locomotion driven by flow fields or off-grid targets, smooth rotation, ground detection, slope snapping, fall physics, fall suppression, lethal void checks, and world grid boundary clamping.
+- Locomotion driven by flow fields or off-grid targets, smooth rotation, ground detection, slope snapping, fall physics, fall suppression, lethal void checks, and safeguards against voluntary movement through invalid internal cells.
 - Collision detection against players and peer enemies.
 - Line-of-sight checked arc melee attacks and damage application on animation hit frames.
 - Suicide bomber telegraphing, visual feedback (mesh rotation punch and material color/emission lerping), circular telegraph indicators, and area-of-effect detonations.
@@ -94,7 +94,7 @@ The system is not responsible for:
 
 - Core components:
   - Enemy: Aggregate root component for enemy GameObjects. Implements IHealthy, IDamageable, IKnockable, and IPoolable. Injects IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> via Reflex. Emits floating damage numbers in a hemisphere pattern, decrements health, triggers blood VFX, delegates knockback to EnemyMovementController, and fires OnCanBeReleased when death sequences finish. Restores MaxHealth and resets animator state in OnGet().
-  - EnemyMovementController: Implements IMovementController. Coordinates locomotion along flow fields (via IFlowFieldMovementController) or off-grid positions (MoveToPositionInTimeIgnoringSpeed). FixedUpdate checks ground contact using Physics.Raycast against TerrainLayers.Walkable from an origin offset of GROUND_CHECK_ORIGIN_Y (1.5f) over GROUND_CHECK_DISTANCE (3.5f), snapping smoothly to terrain with GROUND_SNAP_LERP_SPEED (20f). If ungrounded, applies FALL_GRAVITY (25f), suppresses horizontal movement when falling past FALL_SUPPRESSION_Y_OFFSET (1.0f) below last grounded Y, and kills the entity if falling below FALL_DEATH_Y_THRESHOLD (-10f). Enforces world grid boundary bounds using WORLD_BOUNDARY_SAFETY_PADDING (0.5f). Obstacle SphereCasting against TerrainLayers.Impassable uses OBSTACLE_CHECK_RADIUS (0.4f) and OBSTACLE_SAFETY_BUFFER (0.1f) to prevent wall clipping during knockbacks. Knocks back using sine easing without extra allocations. Smoothly accelerates towards target velocity (using Config.Acceleration or speed multiplier 4.0f) and rotates toward movement direction with Config.RotationSpeed. Halts movement during attack animations and enforces a 0.2s post-attack delay.
+  - EnemyMovementController: Implements IMovementController. Coordinates flow-field locomotion, grounding, gravity, and obstacle-checked knockback. Ground probes ignore triggers and preserve the existing 1.5-unit origin/3.5-unit range and 20-unit snapping speed. Ungrounded enemies accumulate gravity, suppress ordinary horizontal pursuit after falling one unit below the last ground sample, and die below Y = -10. Knockback continues in XZ without a world clamp while gravity owns Y. Grounded voluntary displacement is checked after separation and acceleration. CanBeTeleported excludes stopped, knocked, airborne, and falling movement; ResetAfterRelocation clears spatial state after final positioning while preserving lifecycle/attack flags.
   - EnemyCollisionsController: Implements ICollisionsController. Performs periodic SphereCastAll queries (default every 0.05s) on EntityLayers.All using _collisionRadius (1.0f), filtering out its own trigger colliders and emitting OnCollisionWithPlayer and OnCollisionWithOtherEnemy.
   - EnemyAttackController: Handles standard melee attacks. Subscribes to EnemyCollisionsController.OnCollisionWithPlayer. Checks if target is within _attackRange and within _attackArcAngle (default 60°), and executes a Physics.Raycast line-of-sight check against TerrainLayers.All to prevent attacking through obstacles. Plays the attack animation on EnemyAnimator, and applies Config.Damage to IDamageable targets when OnAttackHitFrame is fired.
   - EnemyAnimator: Implements IAttackAnimationPlayer. Sets Animator parameters (Speed, IsOnGround, IsMovingByCrawling, Attack). Toggles layer weights between walking layer (0) and crawling layer (1) based on Config.IsMovingByCrawling. Bridges animation events into OnAttackAnimationStart, OnAttackHitFrame, and OnAttackAnimationEnd. Periodically synchronizes attack animation state (every 0.05s), automatically calling OnAttackAnimationEnd if transition state enters falling or if duration exceeds MAX_ATTACK_ANIMATION_DURATION (3.5s).
@@ -104,7 +104,7 @@ The system is not responsible for:
   - EnemyDeathHandler: Standard enemy death sequence handler. Implements INeedToCompleteBeforeDisable. Subscribes to Health.OnNoHealth. Disables collider, sets Rigidbody isKinematic = true, hides visuals, plays death VFX, plays death SFX ("Death"), spawns EXP particles via IInWorldSpaceSpawner<ExpParticleSpawner, float>, and fires OnCompleted once both VFX and SFX finish (_startEffectsToFinish = 2).
   - EnemyDropHandler: Subscribes to Health.OnNoHealth. Evaluates configured CollectibleDropEntry drop chance percentages. Calculates 360° radial scatter positions with jitter and height offsets. Resolves valid walkable destination points using a 4-step algorithm: (1) direct target position, (2) stepping along ray toward start, (3) start position, (4) 5-ring spiral search around start cell, (5) fallback. Delegates instantiation to ICollectibleDropNotifier.SpawnCollectible.
   - CollectibleDropNotifier: Implements ICollectibleDropNotifier. Manages ObjectPool<GameObject> instances per collectible item prefab. Spawns items and animates them with DOTween DOScale (Ease.OutBack) and DOJump to the resolved target position. Listens to ICollectible.OnCollected and IPoolable.OnCanBeReleased to recycle items back into their pools.
-  - EnemiesOutsidePlayerChunkTeleporter: Periodic monitor (every 2.0s) that identifies active enemies positioned outside the current player chunk boundary. Queries GridCellsNotVisibleByMainCamera.FillWalkableCells to collect hidden walkable cells inside the player chunk, shuffles them, teleports off-chunk enemies to these locations, and resets their vertical velocity.
+  - EnemiesOutsidePlayerChunkTeleporter: Every two seconds, selects active, living, movable enemies outside the chunk in XZ. It rechecks eligibility before committing, validates supported hidden placements, and performs full movement reset after assignment. Knockback/falling enemies retain their trajectory and gravity; there is no below-chunk rescue.
   - EnemiesSpawner: Implements IOnRandomGridPosSpawner<EnemiesSpawner>, ISwarmEnemySpawner, and IEnemySpawnDifficultyController. Manages ObjectPool<Enemy> instances per EnemySpawnInfo. Pre-warms pools on Start. Spawns standard wave enemies on off-camera walkable cells outside the player chunk (using _outerSpawnBufferCells and _maxEnemiesPerCell). Spawns swarm enemies inside the player chunk with optional spawn VFX. Drives spawn weight updates via EnemiesSpawnChanceRedistributionSystem.
   - EnemiesSpawnChanceRedistributionSystem: Gradually decrements spawn chance of lower-tier enemies after spawn batches and redistributes probability geometrically across higher-tier enemies whose threshold flags are unlocked. Supports difficulty scalars from external game events via IncreaseSpawnChanceRedistributionFactor.
   - BossEncounterService: Implements IBossEncounterService. Tracks tower landmarks, counts defeated towers against required threshold (default 2), pauses before spawning GolemBoss (default 10s delay), binds boss health to IBossHUDPresenter, suppresses standard swarms via ISwarmFreezer, and instantiates stage progression portals upon Golem defeat.
@@ -113,7 +113,7 @@ The system is not responsible for:
   - IHealthy, IDamageable, IKnockable: Health management, damage reception, and knockback handling.
   - IPoolable: Pool lifecycle contracts (OnGet, ReturnToPool, OnRelease, OnCanBeReleased).
   - INeedToCompleteBeforeDisable: Contract delaying pool release until death presentation finishes (OnCompleted).
-  - IMovementController: Locomotion, knockback, vertical velocity reset, pursuit suppression, and movement stops.
+  - IMovementController: Locomotion, knockback, grounding, CanBeTeleported, ResetAfterRelocation, and the retained ResetVerticalVelocity API. Concrete EnemyMovementController also owns pursuit suppression and movement stops.
   - IAttackAnimationPlayer: Animation event forwarding (OnAttackAnimationStart, OnAttackHitFrame, OnAttackAnimationEnd).
   - ICollisionsController: Contact detection interface emitting player and peer enemy collision events.
   - ICollectibleDropNotifier: Collectible item spawning with jump/scale animation and collection notification.
@@ -181,7 +181,7 @@ The system is not responsible for:
   - Movement, Grounding, Falling, and Knockback Flow:
     1. FixedUpdate runs EnemyMovementController.MovementHandler().
     2. Raycasts downward (3.5m) against TerrainLayers.Walkable. If grounded, snaps Y smoothly to terrain point with speed 20. If ungrounded, applies 25m/s² downward gravity; if Y drops below -10m, triggers TakeFullHpDamage(). If falling past 1m below last ground point, horizontal movement is paused.
-    3. If knockback is active, interpolates position toward target using sine easing (Mathf.Sin(t * PI * 0.5f)). Knockback paths perform SphereCasts against TerrainLayers.Impassable and clamp within world grid boundary bounds (WORLD_BOUNDARY_SAFETY_PADDING = 0.5f).
+    3. Active knockback interpolates XZ toward its obstacle-checked target with sine easing while gravity continues to own Y. It is not clamped to the world rectangle; skills can knock enemies off supported terrain and outside world bounds.
     4. When moving along flow field, samples desired direction from IFlowFieldMovementController, accelerates toward target velocity, and updates position.
     5. Rotates toward movement direction with Config.RotationSpeed when squared velocity exceeds 0.001.
   - Standard Melee Attack Flow:
@@ -225,9 +225,9 @@ The system is not responsible for:
     5. CollectibleDropNotifier retrieves instance from ObjectPool<GameObject>, attaches pool tracking, and plays concurrent DOScale (Ease.OutBack) and DOJump tweens.
   - Off-Chunk Enemy Relocation Flow:
     1. EnemiesOutsidePlayerChunkTeleporter executes every 2.0s.
-    2. Identifies active enemies whose positions fall outside the active player chunk bounds.
+    2. Identifies active, living enemies outside the chunk in XZ whose movement allows relocation. Stopped, knocked, airborne, and falling enemies remain untouched; no Y-based rescue is performed.
     3. Gathers hidden walkable cells inside the player chunk via GridCellsNotVisibleByMainCamera.FillWalkableCells and shuffles them.
-    4. Moves off-chunk enemies to these shuffled cells and resets their vertical velocities via ResetVerticalVelocity().
+    4. Revalidates eligibility and exact support before moving. ResetAfterRelocation clears horizontal/vertical velocity, knockback endpoints/timing, off-grid targets, separation, and ground/previous-position samples at the assigned position. Stopped flags, attack delays, and barrel pursuit suppression are preserved.
   - Pool Recycling Flow:
     1. EnemiesSpawner observes Enemy.OnCanBeReleased.
     2. Calls Enemy.OnRelease() to unsubscribe internal death listeners and reset animator triggers.
@@ -246,7 +246,8 @@ The system is not responsible for:
   - Suicide bomber detonations must check player body capsule overlap within ExplosionRadius before inflicting damage.
   - Collectible item drops scattered on enemy death must resolve to a valid walkable cell on WorldGrid.
   - Object pool release must never occur until death presentation sequences (VFX, SFX, and indicators) finish or reach their failsafe watchdog timeout.
-  - Knockback paths must perform obstacle SphereCasts and clamp within world grid bounds to prevent enemies from being knocked into impassable walls or outside the arena.
+  - Knockback paths retain obstacle SphereCasts and can cross world/ground edges. Ordinary falls retain DeathVolume and low-Y death behavior.
+  - Spawn candidates require exact support before pool checkout. Delayed swarm candidates are revalidated for support, chunk, visibility, occupancy, and advertised height; invalid candidates are skipped. Disable invalidates pending VFX callbacks. Counts change only when an enemy is actually retrieved/released.
 - Ordering or sequencing guarantees:
   - ObjectPool<Enemy> instances are created in EnemiesSpawner.Awake() and pre-warmed in Start().
   - Movement is paused immediately when attack animations start and remains locked for a 0.2s post-attack delay.
@@ -326,7 +327,7 @@ The system is not responsible for:
     - Pools pre-warm without runtime allocations on initial wave spawns.
     - Standard wave enemies spawn off-camera outside player chunk.
     - Swarm enemies spawn inside player chunk with optional spawn VFX.
-    - Knockback paths stop safely at impassable obstacles and do not breach world grid borders.
+    - Knockback stops safely at impassable obstacles, crosses world edges, and continues falling without teleporter interruption.
     - Attack raycast checks block melee attacks through walls.
     - Barrel enemies trigger priming telegraph indicator upon reaching player contact range.
     - Punch rotation and color/emission transitions play smoothly during barrel attack priming.

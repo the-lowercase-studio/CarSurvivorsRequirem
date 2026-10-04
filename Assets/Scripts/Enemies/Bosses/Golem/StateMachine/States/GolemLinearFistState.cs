@@ -10,6 +10,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
     {
         private readonly IGolemBoss _boss;
         private readonly GolemStateMachine _stateMachine;
+        private int _operationGeneration;
         private GolemPursuitState _pursuitState;
         private Sequence _chargeSequence;
         private RectangularTelegraphIndicator _activeTelegraph;
@@ -28,8 +29,15 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             _pursuitState = pursuitState;
         }
 
+        private bool IsCurrent()
+        {
+            return _operationGeneration == _boss.OperationGeneration && _boss.IsOperational
+                && _stateMachine.CurrentState == this;
+        }
+
         public void Enter()
         {
+            _operationGeneration = _boss.OperationGeneration;
             _boss.Movement.CanMove = false;
             _boss.Movement.Stop();
             _boss.Movement.SetKinematic(true);
@@ -84,6 +92,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         public void Exit()
         {
+            _operationGeneration = -1;
             if (_boss.Animator != null)
             {
                 _boss.Animator.OnLinearFistRelease -= HandleLinearFistRelease;
@@ -117,6 +126,10 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         private void TriggerFistRelease()
         {
+            if (!IsCurrent())
+            {
+                return;
+            }
             if (_hasFiredFists)
             {
                 return;
@@ -182,6 +195,10 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         private void OnArmReturned()
         {
+            if (!IsCurrent())
+            {
+                return;
+            }
             _armsCompleted++;
 
             int totalArms = 0;
@@ -196,6 +213,10 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         private void FinishAttack()
         {
+            if (!IsCurrent())
+            {
+                return;
+            }
             if (_activeTelegraph != null)
             {
                 _activeTelegraph.ContractAndDismiss();

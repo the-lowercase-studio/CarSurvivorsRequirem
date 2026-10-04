@@ -2,6 +2,13 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Constants
 {
     public static class GolemBossConstants
     {
+        public const int RECOVERY_CANDIDATES_PER_FRAME = 64;
+        public const int RECOVERY_CLEARANCE_BUFFER_SIZE = 32;
+        public const float RECOVERY_RETRY_DELAY = 1f;
+        public const float RECOVERY_SUPPORT_HEIGHT_TOLERANCE = 0.1f;
+        public const int RECOVERY_FOOTPRINT_RING_SAMPLES = 16;
+        public const float AIRBORNE_ANIMATION_NORMALIZED_TIME = 0.5f;
+        public const string ANIM_STATE_JUMP_ATTACK = "Base Layer.JumpAttack";
         public const string SLAM_SFX_KEY = "GolemSlam";
         public const string ROCKET_SFX_KEY = "GolemRocket";
         public const string ROAR_SFX_KEY = "GolemRoar";

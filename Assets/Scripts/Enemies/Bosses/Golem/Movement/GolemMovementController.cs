@@ -91,6 +91,9 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Movement
 
         public void SetPosition(Vector3 position)
         {
+            _hasMovementTarget = false;
+            _desiredVelocity = Vector3.zero;
+            _desiredRotation = transform.rotation;
             transform.position = position;
             if (_rigidbody != null)
             {

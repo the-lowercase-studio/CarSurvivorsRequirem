@@ -46,12 +46,22 @@ namespace Assets.Scripts.Enemies.Base
 
             foreach (Enemy enemy in _enemiesOutsidePlayerChunk)
             {
-                Cell randomCell = _hiddenWalkableCells[cellIndex];
-
-                enemy.transform.position = randomCell.WorldPos;
-                enemy.MovementController?.ResetVerticalVelocity();
-
-                cellIndex = (cellIndex + 1) % _hiddenWalkableCells.Count;
+                if (!CanRelocate(enemy))
+                {
+                    continue;
+                }
+                for (int attempt = 0; attempt < _hiddenWalkableCells.Count; attempt++)
+                {
+                    Cell cell = _hiddenWalkableCells[cellIndex];
+                    cellIndex = (cellIndex + 1) % _hiddenWalkableCells.Count;
+                    if (GridCellsNotVisibleByMainCamera.TryGetPlacement(cell, _gridManager.GridPlayerChunk,
+                        _mainCamera, -1, out Vector3 position) && CanRelocate(enemy))
+                    {
+                        enemy.transform.position = position;
+                        enemy.MovementController.ResetAfterRelocation();
+                        break;
+                    }
+                }
             }
         }
 
@@ -61,6 +71,10 @@ namespace Assets.Scripts.Enemies.Base
 
             NavigationGrid playerChunk = _gridManager.GridPlayerChunk;
             Cell centerCell = playerChunk.Cells[playerChunk.Width / 2, playerChunk.Height / 2];
+            if (centerCell == null)
+            {
+                return;
+            }
             Vector3 center = centerCell.WorldPos;
 
             float width = playerChunk.Width * 0.5f * playerChunk.CellSize;
@@ -73,7 +87,7 @@ namespace Assets.Scripts.Enemies.Base
                     continue;
                 }
 
-                if (child.TryGetComponent(out Enemy enemy))
+                if (child.TryGetComponent(out Enemy enemy) && CanRelocate(enemy))
                 {
                     Vector3 enemyPos = enemy.transform.position;
                     if (Mathf.Abs(enemyPos.x - center.x) > width || Mathf.Abs(enemyPos.z - center.z) > height)
@@ -82,6 +96,12 @@ namespace Assets.Scripts.Enemies.Base
                     }
                 }
             }
+        }
+
+        private static bool CanRelocate(Enemy enemy)
+        {
+            return enemy != null && enemy.gameObject.activeInHierarchy && enemy.Health.IsAlive()
+                && enemy.MovementController.CanBeTeleported;
         }
 
         private void ShuffleCells(List<Cell> cells)

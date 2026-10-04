@@ -9,6 +9,32 @@ namespace Assets.Scripts.Navigation.GridSystem
     {
         private static readonly Collider[] _occupancyBuffer = new Collider[GridConstants.OCCUPANCY_BUFFER_SIZE];
 
+        public static bool TryGetPlacement(Cell cell, Grid grid, Camera camera, int maxEnemiesPerCell, out Vector3 position)
+        {
+            position = default;
+            if (cell == null || !CellStatusDescriber.IsWalkable(cell)
+                || CellCameraVisibilityChecker.IsCellVisibleFromCamera(cell.WorldPos, camera)
+                || !ContainsCell(grid, cell)
+                || !GroundSupportQuery.TryGetSupportedPosition(cell.WorldPos, out position))
+            {
+                return false;
+            }
+            return maxEnemiesPerCell <= 0 || GetEnemyCountOnCell(cell, grid.CellSize, maxEnemiesPerCell) < maxEnemiesPerCell;
+        }
+
+        public static bool ContainsCell(Grid grid, Cell cell)
+        {
+            Vector2Int index = cell.ChunkGridPos;
+            if (index.x >= 0 && index.y >= 0 && index.x < grid.Width && index.y < grid.Height
+                && grid.Cells[index.x, index.y] == cell)
+            {
+                return true;
+            }
+            index = cell.WorldGridPos;
+            return index.x >= 0 && index.y >= 0 && index.x < grid.Width && index.y < grid.Height
+                && grid.Cells[index.x, index.y] == cell;
+        }
+
         private static int GetEnemyCountOnCell(Cell cell, float cellSize, int maxEnemiesPerCell)
         {
             if (maxEnemiesPerCell <= 0)
@@ -40,13 +66,13 @@ namespace Assets.Scripts.Navigation.GridSystem
             return cells;
         }
 
-        public static IEnumerable<Cell> GetRandomWalkableCells(Grid grid, Camera camera, int count, int maxEnemiesPerCell = -1)
+        public static IEnumerable<Cell> GetRandomWalkableCells(Grid grid, Camera camera, int count, int maxEnemiesPerCell = -1, bool includeRemainingCandidates = false)
         {
             List<Cell> cells = new List<Cell>();
             FillWalkableCells(grid, camera, cells, maxEnemiesPerCell);
             Shuffle(cells);
 
-            int resultCount = Mathf.Min(count, cells.Count);
+            int resultCount = includeRemainingCandidates ? cells.Count : Mathf.Min(count, cells.Count);
             for (int i = 0; i < resultCount; i++)
             {
                 yield return cells[i];
@@ -59,7 +85,8 @@ namespace Assets.Scripts.Navigation.GridSystem
             Camera camera,
             int count,
             int outerSpawnBufferCells,
-            int maxEnemiesPerCell)
+            int maxEnemiesPerCell,
+            bool includeRemainingCandidates = false)
         {
             List<Cell> cells = new List<Cell>();
             int currentBuffer = outerSpawnBufferCells;
@@ -79,7 +106,7 @@ namespace Assets.Scripts.Navigation.GridSystem
 
             Shuffle(cells);
 
-            int resultCount = Mathf.Min(count, cells.Count);
+            int resultCount = includeRemainingCandidates ? cells.Count : Mathf.Min(count, cells.Count);
             for (int i = 0; i < resultCount; i++)
             {
                 yield return cells[i];
@@ -105,7 +132,8 @@ namespace Assets.Scripts.Navigation.GridSystem
                     Cell cell = cells[x, y];
                     if (cell != null
                         && CellStatusDescriber.IsWalkable(cell)
-                        && !CellCameraVisibilityChecker.IsCellVisibleFromCamera(cell.WorldPos, camera))
+                        && !CellCameraVisibilityChecker.IsCellVisibleFromCamera(cell.WorldPos, camera)
+                        && GroundSupportQuery.TryGetSupportedPosition(cell.WorldPos, out _))
                     {
                         candidateCount++;
                         if (UnityEngine.Random.Range(0, candidateCount) == 0)
@@ -132,7 +160,8 @@ namespace Assets.Scripts.Navigation.GridSystem
                     Cell cell = cells[x, y];
                     if (cell != null
                         && CellStatusDescriber.IsWalkable(cell)
-                        && !CellCameraVisibilityChecker.IsCellVisibleFromCamera(cell.WorldPos, camera))
+                        && !CellCameraVisibilityChecker.IsCellVisibleFromCamera(cell.WorldPos, camera)
+                        && GroundSupportQuery.TryGetSupportedPosition(cell.WorldPos, out _))
                     {
                         int currentEnemies = GetEnemyCountOnCell(cell, cellSize, maxEnemiesPerCell);
                         int slots = maxEnemiesPerCell > 0 ? Mathf.Max(0, maxEnemiesPerCell - currentEnemies) : 1;
@@ -188,7 +217,8 @@ namespace Assets.Scripts.Navigation.GridSystem
                     Cell cell = cells[x, y];
                     if (cell != null
                         && CellStatusDescriber.IsWalkable(cell)
-                        && !CellCameraVisibilityChecker.IsCellVisibleFromCamera(cell.WorldPos, camera))
+                        && !CellCameraVisibilityChecker.IsCellVisibleFromCamera(cell.WorldPos, camera)
+                        && GroundSupportQuery.TryGetSupportedPosition(cell.WorldPos, out _))
                     {
                         int currentEnemies = GetEnemyCountOnCell(cell, cellSize, maxEnemiesPerCell);
                         int slots = maxEnemiesPerCell > 0 ? Mathf.Max(0, maxEnemiesPerCell - currentEnemies) : 1;
