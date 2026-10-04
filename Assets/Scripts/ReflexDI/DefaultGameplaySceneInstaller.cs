@@ -11,6 +11,7 @@ using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.UI.Death;
 using Assets.Scripts.UI.HUD;
 using Assets.Scripts.UI.Level;
+using Assets.Scripts.UI.Pause;
 using Assets.Scripts.UI.Skills;
 using Assets.Scripts.Waves;
 using Assets.Scripts.VFX;
@@ -24,6 +25,8 @@ namespace Assets.Scripts.ReflexDI
     {
         [SerializeField] private PlayerManager _playerManager;
         [SerializeField] private PlayerDeathPresenter _playerDeathPresenter;
+        [SerializeField] private SkillsStatsPresenter _skillsStatsPresenter;
+        [SerializeField] private PausePresenter _pausePresenter;
         [SerializeField] private PlayerLevelPresenter _playerLevelPresenter;
         [SerializeField] private SkillsVisualPresenter _skillsVisualPresenter;
         [SerializeField] private GridManager _gridManager;
@@ -60,6 +63,12 @@ namespace Assets.Scripts.ReflexDI
             builder.AddSingleton(_playerManager, typeof(IPlayerManager));
 
             //UI Presenters
+            if (_skillsStatsPresenter == null || _pausePresenter == null)
+            {
+                throw new System.InvalidOperationException("Gameplay scene requires skills stats and pause presenter bindings.");
+            }
+            builder.AddSingleton(_skillsStatsPresenter, typeof(ISkillsStatsPresenter));
+            builder.AddSingleton(_pausePresenter, typeof(IPausePresenter));
             builder.AddSingleton(_playerDeathPresenter, typeof(IPlayerDeathPresenter));
             builder.AddSingleton(_playerLevelPresenter, typeof(IPlayerLevelPresenter));
             builder.AddSingleton(_skillsVisualPresenter, typeof(ISkillsVisualPresenter));

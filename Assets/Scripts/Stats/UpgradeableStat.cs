@@ -13,6 +13,7 @@ namespace Assets.Scripts.Stats
         bool IsSubstractModeOn { get; }
         bool AlwaysUseMinValueForUpgrade { get; }
         bool IsIntegerUpgradeRange { get; }
+        double CurrentValue { get; }
         float UpgradeRangeMin { get; }
         float UpgradeRangeMax { get; }
         bool OverrideDefaultRarity { get; }
@@ -49,6 +50,7 @@ namespace Assets.Scripts.Stats
         public bool HasUnlimitedMaxValue => _hasUnlimitedMaxValue;
         public bool AlwaysUseMinValueForUpgrade => _alwaysUseMinValueForUpgrade;
         public bool IsIntegerUpgradeRange => typeof(T) == typeof(int);
+        public double CurrentValue => Convert.ToDouble(Value);
         public float UpgradeRangeMin => _rangeOfPossibleValuesForUpgrade is null
             ? 0f
             : Convert.ToSingle(_rangeOfPossibleValuesForUpgrade.Min);

@@ -45,19 +45,3 @@ MonoBehaviour:
     _intRangeOfPossibleValuesForUpgrade:
       <Min>k__BackingField: 4
       <Max>k__BackingField: 7
-  _numberOfSaws:
-    <Icon>k__BackingField: {fileID: 387773495, guid: cee3411c082140d49bce96eb51f00885, type: 3}
-    <IsSubstractModeOn>k__BackingField: 0
-    <Unit>k__BackingField: 0
-    <OverrideDefaultRarity>k__BackingField: 0
-    <Rarity>k__BackingField: 0
-    <CanBeUpgraded>k__BackingField: 0
-    <Value>k__BackingField: 1
-    _alwaysUseMinValueForUpgrade: 1
-    _hasUnlimitedMaxValue: 0
-    _intMinMaxRange:
-      <Min>k__BackingField: 1
-      <Max>k__BackingField: 1
-    _intRangeOfPossibleValuesForUpgrade:
-      <Min>k__BackingField: 1
-      <Max>k__BackingField: 1

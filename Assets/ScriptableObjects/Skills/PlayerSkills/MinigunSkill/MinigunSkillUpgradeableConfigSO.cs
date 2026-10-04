@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Assets.ScriptableObjects.Player.Skills;
 using Assets.Scripts.Stats;
 using Assets.Scripts.Utils;
@@ -33,6 +34,17 @@ namespace Assets.ScriptableObjects.Skills.PlayerSkills.MinigunSkill
         private void OnEnable()
         {
             ResetRuntimeState();
+        }
+
+        public override void AppendStatsForDisplay(List<NameUpgradableStatPair> destination)
+        {
+            destination.Add(new NameUpgradableStatPair(nameof(DelayBetweenShoots), DelayBetweenShoots, null));
+            destination.Add(new NameUpgradableStatPair(nameof(Range), Range, null));
+            destination.Add(new NameUpgradableStatPair(nameof(NumberOfTurrets), NumberOfTurrets, null));
+            destination.Add(new NameUpgradableStatPair(nameof(BulletSize), BulletSize, null));
+            destination.Add(new NameUpgradableStatPair(nameof(BulletSpeed), BulletSpeed, null));
+            destination.Add(new NameUpgradableStatPair(nameof(BulletDamage), BulletDamage, null));
+            destination.Add(new NameUpgradableStatPair(nameof(BulletMaxPiercing), BulletMaxPiercing, null));
         }
 
         public override void ResetRuntimeState()

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Assets.ScriptableObjects.Player.Skills;
 using Assets.Scripts.Stats;
 using Assets.Scripts.Utils;
@@ -23,6 +24,15 @@ namespace Assets.ScriptableObjects.Skills.PlayerSkills.LandmineSkill
         private void OnEnable()
         {
             ResetRuntimeState();
+        }
+
+        public override void AppendStatsForDisplay(List<NameUpgradableStatPair> destination)
+        {
+            destination.Add(new NameUpgradableStatPair(nameof(SpawnCooldown), SpawnCooldown, null));
+            destination.Add(new NameUpgradableStatPair(nameof(ExplosionRadius), ExplosionRadius, null));
+            destination.Add(new NameUpgradableStatPair(nameof(Size), Size, null));
+            destination.Add(new NameUpgradableStatPair(nameof(KnockbackRange), KnockbackRange, null));
+            destination.Add(new NameUpgradableStatPair(nameof(Damage), Damage, null));
         }
 
         public override void ResetRuntimeState()

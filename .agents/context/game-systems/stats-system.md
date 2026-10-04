@@ -105,7 +105,7 @@ It is not responsible for:
   - Skill upgrade UI owns presentation, icon rendering, rarity background application, and button callbacks.
 - Downstream consumers:
   - Skill configs update projectile and turret configs when stat events fire.
-  - Concrete skills listen to count stats to activate more turrets or saws.
+  - Concrete skills listen to count stats to activate more turrets. Saw initializes only its first authored blade.
   - UI filters and displays available stat upgrades through Assets/Scripts/Stats/UpgradeableStat.cs.
 - Cross-system coupling risks:
   - Reflection in Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs couples UI availability to public property shape.
@@ -128,3 +128,11 @@ It is not responsible for:
 - Suggested follow-up tasks:
   - Add focused tests for clamp behavior, unlimited max behavior, subtract mode, int conversion, and upgrade event firing.
   - Review `ValueRange<T>.GetRandomValueInRange` before adding more concrete stat types.
+
+## Current Value Display
+
+- IUpgradeableStat.CurrentValue is a read-only double conversion of typed Value. It adds no serialized or mutable state and preserves int precision when reading values for UI.
+- Assets/Scripts/UI/Skills/SkillStatValueFormatter.cs uses invariant culture, integer format 0, and float format 0.##. Seconds/meters have a space before their suffix; Percentage uses the raw current value followed directly by %. A value of 1.5 displays as 1.5%, without normalization or multiplication.
+- Rounded negative zero displays as 0. Missing stats, non-finite values, and unsupported units fail explicitly.
+- AppendStatsForDisplay in each skill config includes supported capped stats. GetUpgradeableStatsThatCanBeUpgraded keeps its existing filtering for reward selection; reaching a cap removes an upgrade candidate without removing its overview row.
+- Current-value display never uses GetWhatPercentOfValueIsUpgradeValue, which remains specific to upgrade-delta text.
