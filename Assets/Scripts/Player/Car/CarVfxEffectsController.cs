@@ -7,6 +7,25 @@ namespace Assets.Scripts.Player.Car
     [RequireComponent(typeof(CarController))]
     public class CarVfxEffectsController : MonoBehaviour
     {
+        private sealed class DriftEmitter
+        {
+            public readonly TrailRenderer Template;
+            public readonly Transform ContactParent;
+            public readonly Vector3 LocalContactPosition;
+            public readonly CarDriftTrailSegmentPool Pool;
+            public readonly Vector3[] ContinuityPoints = new Vector3[CarVfxConstants.DRIFT_MAX_CONTINUITY_SAMPLES];
+            public Vector3 PreviousCandidate;
+            public bool HasContinuity;
+
+            public DriftEmitter(TrailRenderer template)
+            {
+                Template = template;
+                ContactParent = template.transform.parent;
+                LocalContactPosition = template.transform.localPosition;
+                Pool = new CarDriftTrailSegmentPool(template);
+            }
+        }
+
         [SerializeField] private MeshRenderer _carMeshRenderer;
 
         [Header("Car Stop Effect")]
@@ -37,19 +56,24 @@ namespace Assets.Scripts.Player.Car
 
         private ICarController _carController;
         private Material _carStopLightsMat;
+        private DriftEmitter[] _driftEmitters;
+        private bool _isInitialized;
 
         private void Awake()
         {
             _carController = GetComponent<ICarController>();
+            SetTrailEmitting(_rearDriftTrailRenderers, false);
         }
 
         private void OnEnable()
         {
             _carController.OnBrakePress += CarController_OnBrakePress;
             _carController.OnBrakeRelease += CarController_OnBrakeRelease;
-            _carController.OnDriftStart += CarController_OnDriftStart;
             _carController.OnDriftStop += CarController_OnDriftStop;
-            _carController.OnDriftDirectionChanged += CarController_OnDriftDirectionChanged;
+            if (_isInitialized)
+            {
+                StartSpeedTrailPolling();
+            }
         }
 
         private void Start()
@@ -66,12 +90,6 @@ namespace Assets.Scripts.Player.Car
                 }
             }
 
-            InvokeRepeating(
-                nameof(ActivateSpeedTrailWhenSpeedExceedsThreshold),
-                CarVfxConstants.SPEED_CHECK_FOR_TRAIL_DELAY,
-                CarVfxConstants.SPEED_CHECK_FOR_TRAIL_DELAY
-            );
-
             SetTrailTime(_rearTrailRenderers, _trailDisappearingSpeed);
             SetTrailTime(_frontTrailRenderers, _trailDisappearingSpeed);
             SetTrailTime(_rearDriftTrailRenderers, _driftTrailLifetime);
@@ -80,15 +98,180 @@ namespace Assets.Scripts.Player.Car
             SetTrailEmitting(_rearTrailRenderers, false);
             SetTrailEmitting(_frontTrailRenderers, false);
             SetTrailEmitting(_rearDriftTrailRenderers, false);
+            _driftEmitters = new DriftEmitter[_rearDriftTrailRenderers == null ? 0 : _rearDriftTrailRenderers.Length];
+            for (int i = 0; i < _driftEmitters.Length; i++)
+            {
+                if (_rearDriftTrailRenderers[i] != null)
+                {
+                    _driftEmitters[i] = new DriftEmitter(_rearDriftTrailRenderers[i]);
+                }
+            }
+
+            _isInitialized = true;
+            StartSpeedTrailPolling();
         }
 
         private void OnDisable()
         {
             _carController.OnBrakePress -= CarController_OnBrakePress;
             _carController.OnBrakeRelease -= CarController_OnBrakeRelease;
-            _carController.OnDriftStart -= CarController_OnDriftStart;
             _carController.OnDriftStop -= CarController_OnDriftStop;
-            _carController.OnDriftDirectionChanged -= CarController_OnDriftDirectionChanged;
+            CancelInvoke(nameof(ActivateSpeedTrailWhenSpeedExceedsThreshold));
+            SetTrailEmitting(_rearTrailRenderers, false);
+            SetTrailEmitting(_frontTrailRenderers, false);
+            EndDriftSegments();
+        }
+
+        private void LateUpdate()
+        {
+            if (!_isInitialized || Time.deltaTime <= 0f)
+            {
+                return;
+            }
+
+            float scaledTime = Time.time;
+            for (int i = 0; i < _driftEmitters.Length; i++)
+            {
+                DriftEmitter emitter = _driftEmitters[i];
+                if (emitter == null)
+                {
+                    continue;
+                }
+
+                emitter.Pool.TickExpiry(scaledTime);
+                if (emitter.Template == null || !emitter.Template.gameObject.activeInHierarchy
+                    || !_carController.IsGrounded || !_carController.IsDrifting)
+                {
+                    EndDriftSegment(emitter, scaledTime);
+                    continue;
+                }
+
+                UpdateDriftEmitter(emitter, scaledTime);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (_driftEmitters == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < _driftEmitters.Length; i++)
+            {
+                if (_driftEmitters[i] != null)
+                {
+                    _driftEmitters[i].Pool.Dispose();
+                }
+            }
+
+            _driftEmitters = null;
+        }
+
+        private void StartSpeedTrailPolling()
+        {
+            InvokeRepeating(nameof(ActivateSpeedTrailWhenSpeedExceedsThreshold),
+                CarVfxConstants.SPEED_CHECK_FOR_TRAIL_DELAY, CarVfxConstants.SPEED_CHECK_FOR_TRAIL_DELAY);
+        }
+
+        private void UpdateDriftEmitter(DriftEmitter emitter, float scaledTime)
+        {
+            Vector3 candidate = emitter.ContactParent == null
+                ? emitter.LocalContactPosition
+                : emitter.ContactParent.TransformPoint(emitter.LocalContactPosition);
+            if (!_carController.TryGetTireGroundContact(candidate, out RaycastHit hit))
+            {
+                EndDriftSegment(emitter, scaledTime);
+                return;
+            }
+
+            Vector3 supportedPoint = GetDriftSurfacePoint(hit);
+            int sampleCount = 0;
+            if (emitter.HasContinuity && !TrySampleContinuity(emitter, candidate, out sampleCount))
+            {
+                EndDriftSegment(emitter, scaledTime);
+            }
+
+            if (!emitter.HasContinuity)
+            {
+                if (!emitter.Pool.TryBeginSegment(supportedPoint))
+                {
+                    return;
+                }
+
+                emitter.HasContinuity = true;
+            }
+            else
+            {
+                // Validate the whole interval before adding any of its points to the old strip.
+                for (int i = 0; i < sampleCount; i++)
+                {
+                    emitter.Pool.AppendPoint(emitter.ContinuityPoints[i]);
+                }
+
+                emitter.Pool.AppendPoint(supportedPoint);
+            }
+
+            emitter.PreviousCandidate = candidate;
+        }
+
+        private bool TrySampleContinuity(DriftEmitter emitter, Vector3 candidate, out int sampleCount)
+        {
+            sampleCount = 0;
+            float distance = Vector3.Distance(emitter.PreviousCandidate, candidate);
+            if (float.IsNaN(distance) || float.IsInfinity(distance)
+                || distance > (CarVfxConstants.DRIFT_MAX_CONTINUITY_SAMPLES + 1)
+                    * CarVfxConstants.DRIFT_CONTINUITY_SAMPLE_SPACING)
+            {
+                return false;
+            }
+
+            int intervals = Mathf.Max(1, Mathf.CeilToInt(distance / CarVfxConstants.DRIFT_CONTINUITY_SAMPLE_SPACING));
+            sampleCount = intervals - 1;
+            if (sampleCount > CarVfxConstants.DRIFT_MAX_CONTINUITY_SAMPLES)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < sampleCount; i++)
+            {
+                Vector3 sample = Vector3.Lerp(emitter.PreviousCandidate, candidate, (i + 1f) / intervals);
+                if (!_carController.TryGetTireGroundContact(sample, out RaycastHit hit))
+                {
+                    return false;
+                }
+
+                emitter.ContinuityPoints[i] = GetDriftSurfacePoint(hit);
+            }
+
+            return true;
+        }
+
+        private Vector3 GetDriftSurfacePoint(RaycastHit hit)
+        {
+            return hit.point + Vector3.up * CarVfxConstants.DRIFT_GROUND_SURFACE_OFFSET;
+        }
+
+        private void EndDriftSegment(DriftEmitter emitter, float scaledTime)
+        {
+            emitter.Pool.EndSegment(scaledTime);
+            emitter.HasContinuity = false;
+        }
+
+        private void EndDriftSegments()
+        {
+            if (_driftEmitters == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < _driftEmitters.Length; i++)
+            {
+                if (_driftEmitters[i] != null)
+                {
+                    EndDriftSegment(_driftEmitters[i], Time.time);
+                }
+            }
         }
 
         private void CarController_OnBrakePress(object sender, EventArgs e)
@@ -103,34 +286,22 @@ namespace Assets.Scripts.Player.Car
             _carBackLightsHolder.SetActive(false);
         }
 
-        private void CarController_OnDriftStart(object sender, EventArgs e)
-        {
-            UpdateDriftTrails();
-        }
-
         private void CarController_OnDriftStop(object sender, EventArgs e)
         {
-            UpdateDriftTrails();
-        }
-
-        private void CarController_OnDriftDirectionChanged(object sender, int driftDirection)
-        {
-            UpdateDriftTrails();
-        }
-
-        private void UpdateDriftTrails()
-        {
-            bool isEmitting = _carController.IsGrounded && _carController.IsDrifting;
-            SetTrailEmitting(_rearDriftTrailRenderers, isEmitting);
+            EndDriftSegments();
         }
 
         private void ActivateSpeedTrailWhenSpeedExceedsThreshold()
         {
+            if (!isActiveAndEnabled)
+            {
+                return;
+            }
+
             if (!_carController.IsGrounded)
             {
                 SetTrailEmitting(_rearTrailRenderers, false);
                 SetTrailEmitting(_frontTrailRenderers, false);
-                SetTrailEmitting(_rearDriftTrailRenderers, false);
                 return;
             }
 
@@ -138,11 +309,8 @@ namespace Assets.Scripts.Player.Car
             {
                 SetTrailEmitting(_rearTrailRenderers, false);
                 SetTrailEmitting(_frontTrailRenderers, false);
-                UpdateDriftTrails();
                 return;
             }
-
-            UpdateDriftTrails();
 
             Vector3 velocity = _carController.GetMovementVelocity();
             float forwardSpeed = Vector3.Dot(velocity, transform.forward);
