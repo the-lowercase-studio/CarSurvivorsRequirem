@@ -74,7 +74,10 @@ namespace Assets.Scripts.UI.HUD
             UnsubscribeHealth();
             KillTweens();
 
-            _visual.SetActive(false);
+            if (_visual != null)
+            {
+                _visual.SetActive(false);
+            }
         }
 
         private void Health_OnHealthChanged(object sender, EventArgs e)
