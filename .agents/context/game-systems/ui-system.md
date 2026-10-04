@@ -46,7 +46,7 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - `SkillUpgradeButton` initializes generated upgrade buttons, resolves missing button/text/icon/background references from children, displays keyboard-number icons through `SkillUpgradeKeyboardIconMapping`, applies rarity background visuals through `SkillUpgradeRaritySpriteMapping`, and can add optional hover callbacks through `PointerEnterHandler`.
   - `SkillsVisualPresenter` maps `SkillInfoSO.Name` to scene visual objects by matching GameObject names, can hide all registered visuals, and logs a warning when a visual is missing.
   - `PlayerDeathPresenter` saves the current timer score, displays final level and time alive, switches background audio to death mode, enables the death screen, and pauses `GameTime`.
-  - `PausePresenter` listens to the Input System `Pause` action and toggles a pause visual plus `GameTime.Pause` or `GameTime.Resume`.
+  - `PausePresenter` listens to the Input System `Pause` action and, for a living player, toggles its visual/time before forwarding visibility to ISkillsStatsPresenter. Dead-player toggles are ignored. IPausePresenter.HideForDeath hides pause UI without changing time; the serialized ToogleActivation Continue callback remains supported.
   - `MenuButtonsFunctionality` backs menu button actions for scene loading, current-scene retry, application exit, and mutually exclusive panel toggling.
   - `IOptionComponent<T>` standardizes settings UI components with `LoadComponent` and `PerformValueChange`.
   - `AudioVolumeOption`, `DamageNumbersOption`, `FullScreenOption`, `GraphicOption`, and `ResolutionOption` load current setting values into Unity UI controls and save/load settings when controls change. `GraphicOption` also rebuilds its dropdown options from its hard-coded quality map in `Awake`.
@@ -55,6 +55,7 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - `ITimerPresenter` is bound by `DefaultGameplaySceneInstaller` and consumed by `PlayerDeathPresenter`.
   - `IPlayerLevelPresenter` is bound by `DefaultGameplaySceneInstaller` and consumed by `SkillUpgradePresenter`.
   - `IPlayerDeathPresenter` is bound by `DefaultGameplaySceneInstaller` and consumed by `PlayerDeathHandler`.
+  - `ISkillsStatsPresenter` and `IPausePresenter` are bound to required scene instances by DefaultGameplaySceneInstaller and consumed by pause/death UI.
   - `ISkillsVisualPresenter` is bound by `DefaultGameplaySceneInstaller` and consumed by `SkillUpgradePresenter`.
   - `IOptionComponent<T>` is a local UI option contract, not currently bound in DI.
   - `ISetting<TSelf, TRepresentedBy>` implementations are bound in `MainMenuInstaller` and injected into settings option components.
@@ -151,3 +152,14 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Fix `ButtonsAudioClipPlayer` initialization before relying on it for shared button audio.
   - Add disable/re-enable-safe listener handling to `PlayerLevelPresenter` and `SkillUpgradePresenter` if UI objects can be disabled without scene teardown.
   - Add a small validation checklist for scene/prefab UI references when UI prefabs or canvases are edited in the Unity Editor.
+
+## Pause and Death Skill Stats
+
+- Assets/Scripts/UI/Skills/SkillsStatsPresenter.cs owns Hidden, Pause, and terminal Death modes. It validates authored references and hides Visual in Awake, then yields one frame from Start before reading initialized runtime configs. Early requests remain pending, with death taking precedence.
+- Scene references are explicit: the existing active MainCanvas/SkillsStatsPresenter root owns an inactive authored Visual, SkillGroups RectTransform, and SkillStatsGroupView prefab. DefaultGameplaySceneInstaller requires and binds both stats and pause scene instances.
+- Three groups with seven rows each are prewarmed once using SkillConstants.MAX_ACTIVE_SKILLS and SkillsStatsConstants.MAX_STATS_PER_SKILL. SkillGroups uses two fixed columns with 204 x 329 cells and 20 x 24 spacing. Unused groups/rows are cleared and inactive; the third owned skill starts the second row.
+- SkillStatsGroupView binds SkillInfo.Icon/Name and ordered config display records. SkillStatRowView renders stat.Icon and formatted CurrentValue. Views have no injected services or gameplay subscriptions.
+- Pause subscribes once to registry acquisition and once per unique displayed stat. Acquisition rebuilds bindings; upgrades refresh values without view creation or cap filtering. Hidden/death/disable/loading states detach only presenter-owned handlers.
+- Death captures current header/row content and releases runtime stat references. Repeated death/pause requests cannot recapture or dismiss the snapshot. Temporary root disable preserves a captured snapshot; scene loading permanently clears it.
+- PlayerDeathHandler remains unchanged. After its VFX completion callback, PlayerDeathPresenter saves score, sets labels, hides pause without resuming time, enables death UI, switches audio, pauses time, and opens stats in that order.
+- Panel graphics do not receive raycasts. Continue retains its serialized ToogleActivation callback. No new audio, tweens, per-frame loops, or layout rebuilding loops were added.

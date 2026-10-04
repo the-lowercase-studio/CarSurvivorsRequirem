@@ -28,6 +28,7 @@ namespace Assets.ScriptableObjects.Player.Skills
     public interface ISkillUpgradeableStatsConfig
     {
         public void ResetRuntimeState();
+        void AppendStatsForDisplay(List<NameUpgradableStatPair> destination);
 
         public IEnumerable<NameUpgradableStatPair> GetUpgradeableStatsThatCanBeUpgraded();
     }
@@ -35,6 +36,7 @@ namespace Assets.ScriptableObjects.Player.Skills
     public abstract class SkillUpgradeableStatsConfig : ScriptableObject, ISkillUpgradeableStatsConfig
     {
         public abstract void ResetRuntimeState();
+        public abstract void AppendStatsForDisplay(List<NameUpgradableStatPair> destination);
 
         public IEnumerable<NameUpgradableStatPair> GetUpgradeableStatsThatCanBeUpgraded()
         {

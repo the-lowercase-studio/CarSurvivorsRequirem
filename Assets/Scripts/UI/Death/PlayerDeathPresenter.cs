@@ -3,6 +3,8 @@ using Assets.Scripts.GameFlow;
 using Assets.Scripts.Player;
 using Assets.Scripts.ScoreBoard;
 using Assets.Scripts.UI.HUD;
+using Assets.Scripts.UI.Pause;
+using Assets.Scripts.UI.Skills;
 using Assets.Scripts.Utils;
 using Reflex.Attributes;
 using TMPro;
@@ -22,6 +24,8 @@ namespace Assets.Scripts.UI.Death
         [Inject] private readonly IScoreBoardNewScoreSaver _scoreBoardNewScoreSaver = null;
         [Inject] private readonly IScoreBoardBestScoreGetter _scoreBoardBestScoreGetter = null;
         [Inject] private readonly ITimerPresenter _timerPresenter = null;
+        [Inject] private readonly IPausePresenter _pausePresenter = null;
+        [Inject] private readonly ISkillsStatsPresenter _skillsStatsPresenter = null;
 
         [SerializeField] private GameObject _visual;
         [SerializeField] private TextMeshProUGUI _levelText;
@@ -40,11 +44,15 @@ namespace Assets.Scripts.UI.Death
 
             SetTimeText();
 
+            _pausePresenter.HideForDeath();
+
             _visual.SetActive(true);
 
             _backgroundAudioManager.ChangeAudioToDeathAudioMode();
 
             GameTime.Pause();
+
+            _skillsStatsPresenter.ShowDeathStats();
         }
 
         private void SetLevelText()

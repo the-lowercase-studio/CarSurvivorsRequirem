@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Assets.ScriptableObjects;
 using Assets.ScriptableObjects.Player.Skills;
 using Assets.Scripts.Stats;
@@ -29,6 +30,15 @@ public class LasergunSkillSO : SkillUpgradeableStatsConfig
     private void OnEnable()
     {
         ResetRuntimeState();
+    }
+
+    public override void AppendStatsForDisplay(List<NameUpgradableStatPair> destination)
+    {
+        destination.Add(new NameUpgradableStatPair(nameof(DelayBetweenShoots), DelayBetweenShoots, null));
+        destination.Add(new NameUpgradableStatPair(nameof(NumberOfTurrets), NumberOfTurrets, null));
+        destination.Add(new NameUpgradableStatPair(nameof(NumberOfTargets), NumberOfTargets, null));
+        destination.Add(new NameUpgradableStatPair(nameof(Range), Range, null));
+        destination.Add(new NameUpgradableStatPair(nameof(Damage), Damage, null));
     }
 
     public override void ResetRuntimeState()

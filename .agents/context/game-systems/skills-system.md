@@ -195,7 +195,7 @@ It is not responsible for:
     - Update SkillConstants.MAX_ACTIVE_SKILLS and wire additional slot frames/images in PlayerSkillsHUDPresenter.
 
 - Required dependencies and contracts:
-  - New skill configs must inherit SkillUpgradeableStatsConfig and implement ResetRuntimeState().
+  - New skill configs must inherit SkillUpgradeableStatsConfig and implement ResetRuntimeState() and AppendStatsForDisplay(List<NameUpgradableStatPair>).
   - New child activatable items must implement IInitializableWithScriptableConfig<T> and correctly maintain IsInitialized().
   - New projectile-based skills must use the established projectile pooling pattern (ObjectPool<Projectile>) and release projectiles on OnLifeEnd / OnCanBeReleased.
   - New skill visuals must match SkillInfoSO.Name exactly.
@@ -236,7 +236,7 @@ It is not responsible for:
 ## Known Risks and Open Questions
 
 - Known limitations:
-  - SawSkillUpgradeableConfigSO.NuberOfSaws retains a legacy spelling typo in its serialized property name to preserve existing asset data compatibility.
+  - Saw count is intentionally retired. SawSkill initializes the first authored blade; its supported runtime stats are KnockbackRange and Damage.
   - LandmineSkill has an unused serialized _cooldown field; active spawn intervals are controlled by _config.SpawnCooldown.Value.
   - Starting skill selection relies on direct child hierarchy order (Skills[0]) rather than an explicit designer-selected loadout property.
   - LasergunTurret dynamically instantiates additional LineRenderer components at runtime if NumberOfTargets exceeds the initial capacity, cloning from _laserLineRenderer.
@@ -249,4 +249,11 @@ It is not responsible for:
 - Suggested follow-up tasks:
   - Add an explicit empty-check guard in SkillsRegistry.Start before accessing Skills[0].
   - Remove or wire the unused _cooldown field in LandmineSkill in a focused cleanup.
-  - Safely migrate SawSkillUpgradeableConfigSO.NuberOfSaws using FormerlySerializedAs when asset serialization updates are scheduled.
+  - Keep new supported stats in each config's explicit display enumeration and review the seven-row UI capacity before expanding it.
+
+## Owned Skill Stats Display
+
+- Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs provides AppendStatsForDisplay independently of filtered upgrade selection. It appends runtime references in explicit order without resetting configs, clearing the destination, or filtering capped stats.
+- Supported counts and order: Saw 2 (KnockbackRange, Damage); Minigun 7 (DelayBetweenShoots, Range, NumberOfTurrets, BulletSize, BulletSpeed, BulletDamage, BulletMaxPiercing); Lasergun 5 (DelayBetweenShoots, NumberOfTurrets, NumberOfTargets, Range, Damage); Landmine 5 (SpawnCooldown, ExplosionRadius, Size, KnockbackRange, Damage).
+- Assets/Scripts/UI/Skills/SkillsStatsPresenter.cs iterates initialized skills in registry order, refreshes ownership while paused, and freezes values when the death menu opens. It never modifies skill ownership, upgrade math, configs, or gameplay time.
+- The obsolete saw-count field and upgrade consumers were removed; its config asset and preset were reserialized through Unity. Retained designer values are unchanged.
