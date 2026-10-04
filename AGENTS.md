@@ -122,16 +122,9 @@ When a request matches a skill trigger, read the relevant `SKILL.md` before edit
 
 ## Agent Descriptors
 
-Current vendor-specific descriptors are nested under skills:
+All 17 repository-local skills have an optional Codex descriptor at .agents/skills/<skill-name>/agents/openai.yaml. Each descriptor supplies display_name, short_description, and a default_prompt naming its skill. Invocation policy retains the default; descriptors do not grant action authority.
 
-- `.agents/skills/agent-docs-review/agents/openai.yaml`
-- `.agents/skills/batch-codebase-review/agents/openai.yaml`
-- .agents/skills/batch-system-docs-update/agents/openai.yaml
-- `.agents/skills/create-user-doc/agents/openai.yaml`
-- .agents/skills/game-balance-analysis/agents/openai.yaml
-- `.agents/skills/preserve-coding-standards/agents/openai.yaml`
-
-Treat these YAML files as optional UI/default-prompt metadata for compatible tools. The portable workflow source remains each skill's `SKILL.md`.
+Treat these YAML files as optional UI/default-prompt metadata for compatible tools. The portable workflow source remains each skill's SKILL.md.
 
 ## Implementation Lifecycle & In-Repo Storage Invariant
 

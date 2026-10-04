@@ -1,86 +1,62 @@
 ---
 name: preserve-coding-standards
-description: "Use when: auditing and fixing a provided Car Survivors scope for practices that compile or work but drift from .agents/context/project-coding-standards.md. Triggers: preserve coding standards, coding standards cleanup, style drift, naming/order cleanup, fix standards violations, align scope with Car Survivors standards."
+description: "Use when: auditing or applying authorized fixes within a provided Car Survivors scope for drift from .agents/context/project-coding-standards.md. Triggers: preserve coding standards, coding standards cleanup, style drift, naming/order cleanup, fix standards violations, align scope with Car Survivors standards."
 ---
 
-# Preserve Coding Standards Skill
+# Preserve Coding Standards
 
-Use this skill to inspect a user-provided scope, identify code that drifts from Car Survivors coding standards, apply safe incremental fixes, and verify them with an automated compilation and self-correction loop.
+Inspect the named scope against the canonical standards. An audit-only request produces findings; a cleanup/fix request permits compatible incremental corrections within that scope.
 
 ## Required Sources
-
-Always read these before editing:
 
 - AGENTS.md
 - .agents/README.md
 - .agents/context/project-coding-standards.md
 - .agents/context/ai-game-dev-best-practices.md
+- .agents/context/adr/ADR-004-designer-authored-data-and-prefabs.md
+- .agents/context/adr/ADR-005-fail-fast-and-inspector-null-checks-policy.md
 
-Use .agents/context/technology-documentation.md and official Unity or Reflex documentation only when a standards fix depends on framework behavior.
+Consult official sources through .agents/context/technology-documentation.md before relying on Unity or Reflex behavior.
 
-## Scope Rules
+## Scope and Lifecycle
 
-1. Work strictly inside the user-provided scope: files, folders, classes, or systems.
-2. If no scope is provided, infer the narrowest active or mentioned scope; otherwise ask for clarification.
-3. Exclude generated and transient directories:
-   - Library/
-   - Temp/
-   - Obj/
-   - Logs/
-   - Builds/
-   - Packages/
-   - UserSettings/
-4. Never edit .prefab or .unity files directly unless explicitly requested.
-5. Treat legacy style incrementally: fix touched and scoped violations without broadening into unrequested rewrites.
+- Use the named files, classes, folders, or systems. Infer only the narrowest clear active scope; clarify consequential ambiguity while inspecting independent evidence.
+- Exclude generated directories and package/vendor code. Preserve unrelated user changes and avoid broad legacy rewrites.
+- Before non-trivial code changes, create or update the durable implementation plan and resolve requirements under AGENTS.md. Reuse existing authorization and approved decisions. Write the durable implementation summary upon completion.
+- Do not directly edit .prefab, .unity, .asset, or .meta files without an explicit user request and a safe text review. The coding-standards migration exception alone does not supply this authority.
 
-## Standards Checklist & Rules
+## Checklist
 
-Apply the core Car Survivors coding rules:
+- Field order: injected fields, serialized fields, other private fields.
+- Private and serialized private fields: _camelCase. Constants: UPPER_SNAKE_CASE in the owning domain's Constants folder.
+- Public members: PascalCase. Events: OnX. Narrow owned interfaces colocated above their implementation.
+- Encapsulation: prefer private serialized fields; use serialized auto-properties for public read access where compatible. Preserve canonical Unity/editor and serialized compatibility exceptions.
+- No LINQ, expression-bodied methods, singleton shortcuts, or silent guards/fallback lookups for required mechanical dependencies.
+- Preserve intentional diagnostics, event order, DI ownership, and designer configuration.
 
-1. Field Ordering in MonoBehaviours and runtime classes:
-   - `[Inject]` private fields first.
-   - `[SerializeField] private` fields second.
-   - Other private / protected fields third.
-2. Naming Conventions:
-   - Private and serialized fields: `_camelCase`.
-   - Constants: `UPPER_SNAKE_CASE`, placed inside a `Constants/` subfolder under the owning domain.
-   - Public properties, methods, types, and events: `PascalCase`.
-   - Events: `OnX` naming.
-   - Interfaces: prefixed with `I`, colocated above primary implementation when tightly owned.
-3. Encapsulation:
-   - Convert public mutable fields meant for inspector editing to `[SerializeField] private`.
-4. Clean Diagnostics:
-   - Remove temporary or noisy `Debug.Log` calls that are not intentional runtime diagnostics.
+## Fix Classification
 
-## Audit & Automated Self-Correction Loop
+For every candidate inspect serialization, references, reflection/string-based access, event consumers, and initialization effects before classifying it.
 
-Follow this verified loop inspired by automated fix workflows:
+- **Compatible within authorized cleanup:** reorder declarations only when initializer behavior is unchanged; rename non-serialized private fields only after establishing private ownership and updating all references; remove unused imports or comments with no behavioral role.
+- **Requires complete consumer analysis and existing implementation authority:** relocate constants or encapsulate fields only after accounting for all usages and preserving public/serialized contracts. If authority or compatibility is uncertain, propose the change rather than applying it.
+- **Public or serialized contract change:** OnX event renames, visibility changes affecting consumers, serialized field renames, type changes, or conversions to auto-properties are not automatically safe fixes. Obtain missing authority and define the affected consumer updates/migration before editing. DI lifetime changes and gameplay changes require explicit design authority.
 
-1. Inventory Scope
-   - Search candidate files with ripgrep (`rg --files <scope> -g '*.cs'`).
-   - Read the relevant code context before modifying.
+Preserve serialized identities wherever possible. Do not use FormerlySerializedAs. Notify the user before an authorized serialized rename that editor reassignment is required; check affected assets and record follow-ups. Do not label a private field safe merely because it is private: it may be serialized.
 
-2. Classify & Apply Safe Fixes
-   - Safe to fix now: field reordering, private field `_camelCase` renaming, constant relocation to `Constants/`, `[SerializeField] private` encapsulation, `OnX` event naming.
-   - Needs user confirmation: renaming serialized fields that hold inspector data in prefabs/scenes, altering public API shapes, or changing DI lifetimes.
+## Workflow and Verification
 
-3. Automated Verification Gate (Mandatory)
-   - Run targeted C# compilation:
-     ```powershell
-     dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
-     ```
-   - Treat warnings as errors: exit code must be 0 with 0 warnings.
-   - If any compiler error or warning occurs, immediately analyze the diagnostic, apply a minimal correction, and re-run compilation until completely green.
+1. Inventory with rg --files, read the scope and its consumers, and record user changes and available baseline diagnostics.
+2. Classify candidates and either report them in audit mode or apply compatible authorized fixes after the lifecycle gate.
+3. Compile implemented C# changes:
 
-4. Serialized Data Safety Check
-   - Confirm that no serialized fields were renamed without explicit user approval or without verifying inspector safety.
+```powershell
+dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
+```
+
+4. Require exit code 0 with zero errors and warnings. In authorized fix mode, repair diagnostics introduced by these edits within the owned scope and re-run the check. Do not repair unrelated baseline failures or expand scope. Stop an unproductive correction loop, record evidence and the blocker, and continue independent work.
+5. Inspect the diff for serialized identity, consumers, and behavioral compatibility. Report unavailable checks as pending; suggestions list future commands separately from executed checks.
 
 ## Output
 
-After completing the audit and verification loop, report:
-
-1. Audited Scope.
-2. Files Modified.
-3. Standards Violations Fixed (by rule category: Field Order, Naming, Constants, Visibility).
-4. Items Intentionally Preserved / Deferred.
-5. Automated Compilation Gate Result (`dotnet build` exit code and warnings count).
+Report audited scope, changed files, violations fixed or proposed, deliberately preserved/deferred items, baseline versus introduced diagnostics, actual compilation result, and durable artifacts. Do not claim a clean gate without evidence.

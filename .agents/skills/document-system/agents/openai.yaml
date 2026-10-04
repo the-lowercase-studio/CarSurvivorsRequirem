@@ -1,0 +1,4 @@
+interface:
+  display_name: "Document System"
+  short_description: "Document gameplay systems for agent operations"
+  default_prompt: "Use $document-system to update this agent-facing system document against current source, contracts, and lifecycle behavior."

@@ -24,6 +24,10 @@ Always read these before reviewing:
 - Changed files or planned touch points.
 - Intended behavior change.
 
+## Review Boundary
+
+An architecture review produces findings and a verdict; it does not authorize fixes. Reuse explicit implementation authority when present and follow the durable plan/requirements gate before non-trivial code edits. Report unrelated baseline failures without expanding the repair scope. Consult the official sources in .agents/context/technology-documentation.md before relying on framework behavior.
+
 ## Severity Classification
 
 Group every finding into one of four severity tiers:
@@ -52,7 +56,8 @@ Group every finding into one of four severity tiers:
 Check changed files against the following breaking dimensions:
 
 1. Serialized Data Breaking:
-   - Renaming or changing types of `[SerializeField]` fields without `[FormerlySerializedAs]` or designer notification.
+   - Renaming, converting, or changing types of serialized fields without inspecting asset/prefab bindings and obtaining authority for the change. Do not use `FormerlySerializedAs`; notify the user before an authorized rename that editor reassignment is required.
+   - Direct .prefab, .unity, .asset, or .meta edits without the explicit user request required by AGENTS.md. A coding-standards text-migration exception does not supply that authority.
    - Deleting serialized fields still referenced by prefabs or ScriptableObjects.
 2. Reflex DI & Interface Breaking:
    - Changing constructor or injected interface signatures without updating the corresponding installer under Assets/Scripts/ReflexDI/.
@@ -64,7 +69,7 @@ Check changed files against the following breaking dimensions:
 ## Review Workflow
 
 1. Identify impacted domains and dependency direction.
-2. Run compilation verification: `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`.
+2. For implemented C# changes, run compilation verification: `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`. For a proposed design, list it as a future check. Report executed checks, baseline diagnostics, and unavailable checks separately.
 3. Check Reflex DI registration, field order, and interface colocation.
 4. Check Unity lifecycle, event unsubscriptions, and DOTween cleanup.
 5. Apply the Breaking Change Matrix.
@@ -72,6 +77,7 @@ Check changed files against the following breaking dimensions:
 7. Issue a clear verdict:
    - Approve: 0 Blocker, 0 Major findings.
    - Request Changes: 1+ Blocker or Major findings.
+   - Pending Verification: required checks could not run; do not present them as passed.
 
 ## Output
 

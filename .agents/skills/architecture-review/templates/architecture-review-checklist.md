@@ -1,8 +1,10 @@
 # Architecture Review Report
 
-**Target System / Feature:** [System / Feature Name]  
-**Date:** [YYYY-MM-DD]  
-**Verdict:** [APPROVE | REQUEST CHANGES]  
+**Target System / Feature:** [System / Feature Name]
+
+**Date:** [YYYY-MM-DD]
+
+**Verdict:** [APPROVE | REQUEST CHANGES | PENDING VERIFICATION]
 
 ---
 
@@ -13,7 +15,8 @@
 ---
 
 ## 2. Validation & Compilation Gate
-- `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`: [PASS / FAIL] (Exit code, warnings count)
+- `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`: [PASS / FAIL / PENDING / PROPOSED] (Actual command, exit code, errors, warnings; proposed checks are not executed results)
+- Baseline diagnostics and unavailable checks:
 
 ---
 

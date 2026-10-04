@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reduce Code Volume"
+  short_description: "Reduce scoped code while preserving behavior"
+  default_prompt: "Use $reduce-code-volume to implement the approved scoped reductions while preserving fail-fast dependencies and serialized identities."

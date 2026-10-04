@@ -15,6 +15,12 @@ Always read these before editing:
 - .agents/README.md
 - .agents/context/project-coding-standards.md
 - .agents/context/ai-game-dev-best-practices.md
+- .agents/context/adr/ADR-004-designer-authored-data-and-prefabs.md
+- .agents/context/adr/ADR-005-fail-fast-and-inspector-null-checks-policy.md
+
+## Authority and Routing
+
+An audit request produces candidates without editing code. A request to implement reductions authorizes behavior-preserving refactoring within the named scope. Use unity-refactor-suggestions for suggestions alone. Before non-trivial code edits, create the durable plan under .agents/context/implementations/plans/ and resolve consequential requirements with the user, reusing existing decisions and authorization. Record the outcome under .agents/context/implementations/summaries/.
 
 ## Core Guidelines
 
@@ -33,26 +39,17 @@ Inspect the target scope for the following patterns to reduce code volume:
   // Property (Allowed):
   public float BaseDamage => _baseDamage * _multiplier;
   ```
-- **Null-coalescing and null-conditional operators**: Use `??`, `??=`, and `?.` to simplify null checks.
-  ```csharp
-  // Before
-  if (_uiController != null)
-  {
-      _uiController.Show();
-  }
-  // After
-  _uiController?.Show();
-  ```
-- **Pattern matching**: Use modern `is` checks and switch expressions.
+- **Optional dependency checks**: Simplify checks only for documented optional cosmetic/sensory dependencies or permitted inspector overrides under ADR-005. Preserve fail-fast calls for required services, controllers, animators, hitboxes, and configs. Do not introduce `??`, `??=`, or `?.` fallbacks that hide missing mechanical dependencies. For Unity Object references, retain Unity lifetime-aware checks rather than substituting C# null operators.
+- **Pattern matching**: Use modern `is` checks and switch expressions when they preserve existing semantics. For Unity Object types, a type pattern does not replace the existing lifetime-aware `!= null` check. This example preserves an optional target check; it must not introduce a silent guard for a required mechanical dependency.
   ```csharp
   // Before
   var enemy = target as Enemy;
   if (enemy != null) { ... }
   // After
-  if (target is Enemy enemy) { ... }
+  if (target is Enemy enemy && enemy != null) { ... }
   ```
 - **Tuple deconstruction & swap**: Use tuples for compact assignments or value swaps.
-- **Auto-implemented properties**: Avoid explicit backing fields unless custom logic is required in getters/setters.
+- **Auto-implemented properties**: Use for non-serialized state when no custom logic is required. Converting existing serialized fields to auto-properties changes serialized identity; handle it as a migration rather than boilerplate cleanup.
 
 ### 2. Eliminating Redundancy (DRY)
 - **Extract helper methods**: Identify duplicate or highly similar block patterns and consolidate them.
@@ -61,7 +58,7 @@ Inspect the target scope for the following patterns to reduce code volume:
 - **Loop Consolidation**: Consolidate redundant loops and early exits using clean helper methods while strictly adhering to the project's LINQ ban (no `System.Linq` methods like `Any()`, `Where()`, etc.).
 
 ### 3. Cleaning Up Boilerplate & Dead Code
-- Remove unused variables, imports (`using` statements), and private helper fields that are never read.
+- Remove unused variables, imports (`using` statements), and private helper fields only after checking serialization, reflection, and external consumers.
 - Remove redundant, noisy comments that merely repeat what the code does.
 - Remove empty Unity lifecycle methods (e.g., empty `Start()`, `Update()`, `OnDestroy()`) as they carry a slight performance overhead and clutter classes.
 - Use implicit typing (`var`) where the type is obvious from the right-hand side of the assignment.
@@ -69,8 +66,9 @@ Inspect the target scope for the following patterns to reduce code volume:
 ## Serialization & Unity Safety
 
 Unity relies heavily on serialized fields to link scenes, prefabs, and ScriptableObjects.
-- **Never rename a serialized field** (e.g., `_myPrefab`) to reduce code or clean up naming without checking if it is referenced in Unity. If renamed, use `[FormerlySerializedAs("oldName")]` to preserve asset values, and obtain explicit user agreement.
+- Preserve serialized field identities, including public serialized fields and auto-property backing fields. Inspect asset/prefab bindings and consumers before any authorized rename, removal, type change, or property conversion. Do not use `FormerlySerializedAs`. Notify the user before an authorized rename that values must be reassigned in the editor; record compatibility checks and editor follow-ups.
 - Do not edit `.meta`, `.prefab`, `.unity`, or `.asset` files directly unless explicitly asked and validated.
+- The coding-standards exception for small text migrations does not independently authorize direct asset edits under AGENTS.md.
 - Ensure that Unity API rules are followed (e.g., do not use `?.` on Unity `Object` references if it bypasses Unity's custom lifetime check, or handle it carefully as `obj != null ? obj.name : null` is safer than `obj?.name` for Unity objects).
 
 ## Audit & Implementation Workflow
@@ -81,10 +79,10 @@ Unity relies heavily on serialized fields to link scenes, prefabs, and Scriptabl
    - Will the code be harder for a human to read?
    - Will it break any Unity editor serialized values?
    - Does it change behavior, timing, or side effects?
-4. **Draft & Apply**: Apply the refactoring incrementally using precise replacing tools.
-5. **Verify**: Build the project to confirm there are no compiler errors or warnings.
+4. **Draft & Apply**: In audit mode, report reviewable candidates. In authorized implementation mode, apply approved reductions incrementally after the plan/requirements gate.
+5. **Verify**: Compile implemented C# changes and require zero introduced errors or warnings. Repair introduced diagnostics within the authorized scope; report unrelated baseline failures or unavailable checks without broadening work. For audit-only proposals, distinguish future validation from performed checks.
 6. **Report**: Present the audit results detailing:
    - Files audited
    - Number of lines/complexity reduced
    - Specific techniques applied
-   - Reassurance of serialization/DI safety
+   - Evidence for serialization/DI safety, remaining uncertainty, and durable summary path

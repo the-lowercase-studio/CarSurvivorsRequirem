@@ -10,7 +10,7 @@ Use this skill for divergent gameplay, architecture, and design exploration befo
 ## Hard Gate (Read-Only)
 
 During the brainstorm phase, do not edit runtime repository code, modify prefabs, alter ScriptableObjects, or begin implementation.
-The only persistent artifact this skill produces is the final, detail-rich brainstorm summary saved to `.agents/context/brainstorming-summaries/[feature-name]-brainstorm-summary.md` when the user confirms the direction or concludes the session.
+The only persistent artifact this skill produces is the final, detail-rich brainstorm summary saved to .agents/context/brainstorming-summaries/[feature-name]-brainstorm-summary.md when the user confirms the direction or concludes the session.
 
 ## Required Sources
 
@@ -53,13 +53,13 @@ Ground the exploration in the project context:
      - di-integration: for introducing new scene services or Reflex bindings.
 
 5. Produce & Save the Brainstorm Summary
-   - When the brainstorm session concludes or is confirmed by the user, produce a comprehensive, detail-rich brief based on `.agents/skills/game-brainstorm/templates/brainstorm-brief-template.md`.
-   - Save the completed summary directly in the repository at `.agents/context/brainstorming-summaries/[feature-name]-brainstorm-summary.md` (use kebab-case without date prefix in the filename; specify the date inside the document body).
-   - Invariant: The summary must be **rich with technical and gameplay details** (concrete parameters, state transitions, architecture choices, Unity lifecycle/memory considerations, phase progressions, and exact target files rather than brief high-level summaries).
+   - When the brainstorm session concludes or is confirmed by the user, produce a comprehensive, detail-rich brief based on .agents/skills/game-brainstorm/templates/brainstorm-brief-template.md.
+   - Save the completed summary directly in the repository at .agents/context/brainstorming-summaries/[feature-name]-brainstorm-summary.md (use kebab-case without date prefix in the filename; specify the date inside the document body).
+   - Include technical and gameplay details supported by the discussion and inspected source. Label every decision/value as confirmed, recommended, tentative, or unresolved. Do not invent settled parameters, formulas, phases, state transitions, or implementation choices to fill the template. Distinguish existing behavior from a design possibility, and omit irrelevant sections.
 
 ## Output
 
-Produce and save a completed summary in `.agents/context/brainstorming-summaries/` following the template with:
+Produce and save a completed summary in .agents/context/brainstorming-summaries/ following the template with:
 
 1. Context & Motivation: Detailed feature description, player-facing goals, and exhaustive breakdown of impacted systems.
 2. Explored Alternatives & Trade-offs: Detailed comparison of options with pros, cons, and architectural risks.

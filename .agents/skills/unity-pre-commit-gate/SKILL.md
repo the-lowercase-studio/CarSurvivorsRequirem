@@ -1,86 +1,64 @@
 ---
 name: unity-pre-commit-gate
-description: "Use when: running a comprehensive pre-commit verification gate, compiling the Unity C# solution with zero warnings, validating DI bindings, auditing serialized data safety, and ensuring coding standards compliance before finalizing changes or committing. Triggers: pre-commit gate, check and commit, verify build, validate changes, compile check, pre-merge check."
+description: "Use when: the user requests a comprehensive Car Survivors pre-commit or pre-merge verification gate covering compilation, DI, serialized data, coding standards, git consistency, and lifecycle documentation. Triggers: pre-commit gate, check and commit, full validation gate, pre-merge check. A narrow compile/build check uses targeted compilation without a whole-codebase audit."
 ---
 
-# Unity Pre-Commit Gate Skill
+# Unity Pre-Commit Gate
 
-Use this skill before finalizing changes, committing, or opening a PR to verify that the codebase compiles cleanly with zero warnings, satisfies Reflex DI bindings, preserves serialized inspector safety, and strictly complies with Car Survivors coding standards.
+Verify the changed scope with six gates. Verification does not itself authorize repairs, commits, or unrelated cleanup.
 
 ## Required Sources
-
-Always verify changes against:
 
 - AGENTS.md
 - .agents/README.md
 - .agents/context/project-coding-standards.md
 - .agents/context/ai-game-dev-best-practices.md
-- Assets/Scripts/ReflexDI/
+- Relevant ADRs, system docs, and installers under Assets/Scripts/ReflexDI/.
 
-## Verification Gates (Mandatory)
+Consult official sources through .agents/context/technology-documentation.md before relying on framework behavior.
 
-All 6 gates must pass. Do not declare code ready if any gate fails.
+## Scope and Authority
 
-### Gate 1: Compilation & Warnings
-Run targeted project compilation:
+- A requested full pre-commit gate requires all six gates. A single compile request runs only the targeted compile unless the user requests more.
+- Inspect git status and diff, including authorized untracked additions. Preserve unrelated work; a dirty worktree is not itself a failure.
+- Verification-only mode reports findings without edits. Existing explicit repair authority permits scoped compatible fixes after the durable plan/requirements gate for non-trivial code edits. Apply preserve-coding-standards classifications rather than assuming every naming/visibility fix is safe.
+- Fix introduced diagnostics within authorized scope. Report unrelated baseline diagnostics, missing tools/generated projects, and blocked checks. Do not broaden repairs or run an unproductive fix loop.
+- Use PASS, FAIL, PENDING, or N/A with evidence for every gate. N/A requires a scope-based reason; unavailable checks are PENDING. Overall PASS requires all applicable checks to pass.
+
+## Six Gates
+
+### 1. Compilation and Warnings
+
+For C# changes, execute:
+
 ```powershell
 dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
 ```
-- Exit code must be 0.
-- Zero compilation errors.
-- Zero compiler warnings (treat warnings as errors during development).
 
-### Gate 2: Serialized Data & Inspector Safety
-- Serialized fields must be `_camelCase` and use `[SerializeField] private` (never public mutable fields).
-- Check that existing serialized fields were not renamed without verifying asset/prefab impact.
-- Do not edit `.prefab`, `.unity`, or `.asset` files directly unless explicitly requested by the user.
+Require exit code 0, zero errors, and zero warnings. Report actual diagnostics and distinguish baseline from introduced failures. For documentation-only changes, record compilation as N/A with a reason.
 
-### Gate 3: Reflex DI & Injection Order
-- Verify that every injected interface (`[Inject]`) has a corresponding binding in an installer under `Assets/Scripts/ReflexDI/`.
-- Verify field ordering in runtime MonoBehaviours and classes:
-  1. `[Inject]` fields
-  2. `[SerializeField]` fields
-  3. Other private/protected fields
-- Verify no hidden fallback lookups (e.g. `FindAnyObjectByType` or singleton fallbacks) were added to mask missing DI wiring.
+### 2. Serialized Data and Inspector Safety
 
-### Gate 4: Coding Standards & Architecture
-- Constants use `UPPER_SNAKE_CASE` and belong in a `Constants/` subfolder under the owning domain.
-- Events follow `OnX` naming.
-- Interfaces are prefixed with `I` and colocated above implementations when tightly coupled.
-- No memory allocations (`new`, LINQ, string concatenation) inside `Update()` or `FixedUpdate()` loops.
-- High-frequency spawned objects (projectiles, damage numbers, VFX) use object pooling.
+Validate canonical permitted patterns: private serialized fields, serialized auto-properties when public read access is appropriate, and justified Unity/editor or serialized compatibility exceptions. Do not impose a second never-public policy.
 
-### Gate 5: Git & Asset Consistency
-- Check `git status --short` to ensure no orphaned files or untracked changes exist in touched scopes.
-- Protect user work in dirty worktrees; do not revert unrelated modifications.
+Check serialized identities, field types, property conversions, and prefab/asset impact. Do not use FormerlySerializedAs; advance notification and reassignment/migration checks are required for authorized renames. Direct .prefab, .unity, .asset, or .meta edits require the explicit user request in AGENTS.md; the small text-migration exception alone is insufficient authority.
 
-### Gate 6: Implementation Lifecycle & Summary
-- Verify that non-trivial changes, features, or refactors have a corresponding implementation summary under `.agents/context/implementations/summaries/[task-name].md`.
-- Verify that plans and summaries are saved in the project repository and not in external directories (e.g. `brain/`, `AppData`, `/tmp`).
+### 3. Reflex DI and Field Order
 
-## Workflow
+Trace touched injected dependencies to the appropriate existing installer binding and lifetime. Check injected, serialized, then other private field order. Reject hidden global lookups or singleton fallbacks. Source review does not prove live injection; record required editor checks separately.
 
-1. Scope the Diff
-   - Check modified files with `git status` and `git diff`.
-   - Identify touched domains and files.
+### 4. Coding Standards and Architecture
 
-2. Run Automated Compilation (Gate 1)
-   - Execute `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`.
-   - If build fails or produces warnings, fix them immediately and re-run.
+Check the changed scope against canonical naming, constants placement, interface colocation, no LINQ, block-bodied methods, fail-fast dependencies, lifecycle/event order, and pooling requirements. Inspect hot-path allocation risks without presenting source inspection as profiler measurement.
 
-3. Audit DI, Serialization & Standards (Gates 2, 3, 4)
-   - Inspect diff for field ordering, naming conventions, and DI registrations.
-   - Apply safe incremental fixes for any standards drift in touched files.
+### 5. Git and Asset Consistency
 
-4. Re-Verify & Check Git State (Gate 5)
-   - Ensure clean compilation post-fixes.
-   - Confirm all touched files are accounted for.
+Account for touched files and expected Unity metadata where applicable. Inspect orphaned references and accidental generated additions. Preserve pre-existing user edits and untracked files; do not demand a globally clean worktree or stage unrelated work.
 
-5. Produce Pre-Commit Report
-   - Output the verification status based on .agents/skills/unity-pre-commit-gate/templates/pre-commit-gate-checklist.md.
+### 6. Implementation Lifecycle
 
-## Output
+For non-trivial changes verify the durable plan under .agents/context/implementations/plans/, resolved consequential requirements, and summary under .agents/context/implementations/summaries/. Temporary state and external IDE artifacts do not replace them.
 
-Produce a completed checklist summarizing gate results:
+## Workflow and Output
 
-- .agents/skills/unity-pre-commit-gate/templates/pre-commit-gate-checklist.md
+Scope the diff, run applicable checks, inspect DI/serialization/standards, and report results using .agents/skills/unity-pre-commit-gate/templates/pre-commit-gate-checklist.md. If repairs are authorized, apply only scoped corrections and repeat checks affected by those edits. A full gate with failures or pending checks is not passed. Report editor/manual checks and remaining blockers explicitly; commit only when the request authorizes it.

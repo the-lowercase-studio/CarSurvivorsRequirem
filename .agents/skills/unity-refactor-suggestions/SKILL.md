@@ -1,12 +1,19 @@
 ---
 name: unity-refactor-suggestions
-description: "Use when: suggesting behavior-safe refactoring for a selected Unity system, script, or code block in Car Survivors. Triggers: refactor, cleanup, architecture review, C# best practices, Unity best practices, reduce complexity, code quality."
-argument-hint: "Target (system/script/code block) + goal + constraints"
+description: "Use when: the user requests behavior-safe refactor suggestions, cleanup options, or a code-quality review of a selected Car Survivors system, script, or code block. Produces reviewable proposals; use reduce-code-volume for authorized reduction implementation and architecture-review for an architecture verdict."
 ---
 
 # Unity Refactor Suggestions Skill
 
 Use this skill to produce focused, reviewable refactor suggestions for Car Survivors while preserving gameplay semantics, Unity inspector compatibility, and Reflex DI boundaries.
+
+## Inputs and Authority
+
+- Target: system, script, or code block.
+- Goal and constraints.
+- Existing decisions and implementation authority, if any.
+
+Suggestions remain read-only and do not authorize refactoring. Route authorized implementation through the relevant implementation workflow and the durable plan/requirements gate in AGENTS.md. Use architecture-review for DI/ownership verdicts and reduce-code-volume for implemented reductions; do not expand a local review into a batch run implicitly.
 
 ## Scope
 
@@ -62,7 +69,7 @@ Classify all suggestions using the 4-tier scale:
 4. Completion Criteria
    - Stays strictly within the selected scope.
    - Preserves deterministic gameplay semantics.
-   - Produces clean compilation with zero warnings.
+   - Distinguishes proposed validation from checks actually executed. Suggested snippets do not establish clean compilation; report commands and results only when run, and mark unavailable checks pending.
 
 ## Output
 

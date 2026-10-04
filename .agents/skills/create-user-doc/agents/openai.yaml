@@ -1,4 +1,4 @@
 interface:
   display_name: "Create User Doc"
   short_description: "Create human-oriented project documentation in .user-docs/."
-  default_prompt: "Create a clear, human-friendly documentation file in .user-docs/ explaining this system or topic."
+  default_prompt: "Use $create-user-doc to explain this system for human readers and update the documentation index."

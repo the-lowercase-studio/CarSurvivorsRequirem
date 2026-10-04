@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity CLI"
+  short_description: "Inspect or drive Unity within the authorized task"
+  default_prompt: "Use $unity-cli to inspect the current Unity Editor status and report connectivity without modifying the project."

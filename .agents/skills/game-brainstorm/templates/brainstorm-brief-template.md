@@ -2,6 +2,8 @@
 
 Date: YYYY-MM-DD
 
+Label choices and values as confirmed, recommended, tentative, or unresolved. Existing behavior requires source evidence. Omit irrelevant sections and leave unknown parameters unresolved; template examples are not approved design values.
+
 ## 1. Context & Motivation
 - Feature / Idea: [Comprehensive description of the feature, weapon, enemy, mechanic, or system exploration]
 - Player-Facing Goal: [Direct gameplay feel, challenge, feedback, juice, or progression goal]
@@ -71,9 +73,10 @@ Date: YYYY-MM-DD
 - **Phase 2 ([e.g. 60% – 30% HP])**: [Reduced cooldowns, aggressive multipliers, upgraded projectile count]
 - **Phase 3 – Enrage ([e.g. < 30% HP])**: [Shortest cooldowns, multi-cycle recursion, visual state shifts (material tint / VFX emission)]
 
-### C. Settled Design Parameters
+### C. Design Parameters and Decision State
 - [Parameter 1, e.g. Base Movement Speed = X, Health = Y]
 - [Parameter 2, e.g. Telegraph Warning Duration = Z seconds]
+- [Unresolved choices and values; distinguish recommendation from user confirmation]
 
 ---
 

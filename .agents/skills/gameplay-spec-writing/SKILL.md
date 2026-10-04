@@ -25,19 +25,21 @@ Before writing a spec, load context from:
 1. Load Context & Scope
    - Identify touched domains: Player/Car, Enemies, Waves, Grid/FlowField, Skills, Health/Damage, UI, Pooling, Audio, or ReflexDI.
    - Inspect existing interfaces, ScriptableObjects, and installers to prevent duplicate abstractions.
+   - Reuse the user's approved design choices, prior answers, and existing plan. Do not reopen resolved decisions unless new evidence creates a consequential conflict.
 
 2. Draft Minimal Skeleton Spec
-   - Write a skeleton spec first: Feature TLDR, core architectural intent, and critical unknowns.
+   - Save the skeleton directly under .agents/context/implementations/plans/[feature-name]-spec.md before presenting it: feature summary, architectural intent, resolved decisions, and critical unknowns. Update an existing canonical spec rather than creating competing plans.
    - Do not write the full detailed spec in one pass without validating assumptions.
    - Include a numbered Open Questions block for critical design, balance, prefab, or lifecycle unknowns.
 
 3. Open Questions Hard Gate
-   - Stop and present the skeleton with the Open Questions block to the user.
+   - If consequential unknowns remain, present the saved skeleton and ask only those questions; pause dependent design/code work while continuing independent inspection. Routine reversible technical choices do not require repeated approval.
    - Resolve decisions that would otherwise force rewriting architecture or serialized data:
      - Game balance equations and scaling.
      - Serialized data ownership (ScriptableObject vs Inspector serialized fields).
      - Lifecycle and event order requirements (e.g. death sequencing, wave transitions).
    - Once questions are resolved, proceed to the detailed design.
+   - If all consequential choices are already resolved, record Open Questions: None and proceed to the detailed spec using existing authorization. A request to write a spec authorizes the document, not runtime implementation; preserve the before-code requirements gate in AGENTS.md for later implementation.
 
 4. Detailed Design & Architecture
    - Define Data Model: ScriptableObjects, serialized configurations, immutable runtime states.

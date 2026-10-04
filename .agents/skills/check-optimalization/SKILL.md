@@ -1,6 +1,6 @@
 ---
 name: check-optimalization
-description: "Use when: checking current optimizations or performance risks for pointed Car Survivors systems, scripts, methods, code parts, Unity components, combat flows, UI flows, allocations, update loops, events, DI usage, or data access before proposing and requesting approval to implement possible optimization changes. Also trigger for optimization/optimisation/optimalization review requests."
+description: "Use when: auditing current optimizations or performance risks in a pointed Car Survivors system, script, method, update loop, allocation path, combat/UI flow, DI usage, or data access and proposing reviewable changes. Triggers: optimization/optimisation/optimalization review. Source inspection does not imply profiling or implementation authority."
 ---
 
 # Check Optimalization Skill
@@ -20,6 +20,8 @@ Before reviewing code, ground the work in:
 
 ## Performance Gate & Severity Classification
 
+Separate project-policy violations from measured runtime costs. Source patterns establish risks; severity and expected impact are provisional without workload/profiler evidence. Do not infer a measured bottleneck or zero-allocation guarantee from inspection alone.
+
 Classify all performance findings into four severity tiers:
 
 - 🔴 Blocker (Unacceptable Hot-Path Cost / Memory Leak)
@@ -28,7 +30,7 @@ Classify all performance findings into four severity tiers:
   - Infinite or unkilled DOTween sequences / coroutines lingering after object deactivation or destruction.
 
 - 🟠 Major (Scale & Pooling Bottlenecks)
-  - Spawning dynamic combat instances (`Instantiate`/`Destroy` on projectiles, damage numbers, enemy units, particle VFX) without using `Assets/Scripts/Pooling/`.
+  - Spawning dynamic combat instances (`Instantiate`/`Destroy` on projectiles, damage numbers, enemy units, particle VFX) without using Assets/Scripts/Pooling/.
   - Non-layer-masked physics raycasts, sphere casts, or overlap queries executed per unit per frame.
   - Heavy UI canvas rebuilds triggered repeatedly every frame instead of event-driven updates.
 
@@ -47,9 +49,10 @@ Classify all performance findings into four severity tiers:
    - Confirm in-scope files and runtime invocation paths (e.g. `Update`, event handlers, physics queries).
    - Trace hot paths (methods called 60+ times per second or per-unit-per-frame).
 
-2. Profile & Identify Hot Spots
+2. Inspect Risks and Record Available Measurements
    - Audit code against the Performance Gate checklist.
-   - Separate verified zero-allocation hot paths from risky allocation patterns.
+   - Label each finding as source evidence, inference, or profiler measurement. Record profiler environment, workload, samples, and capture paths when measurements exist; otherwise state that profiling was not performed.
+   - Report inspected allocation patterns and unverified paths without claiming measured zero allocations or speedups.
 
 3. Formulate Optimization Proposals
    - Label each proposal with Severity (`Blocker`, `Major`, `Minor`, `Nit`) and Expected Impact (`High`, `Medium`, `Low`).
@@ -58,16 +61,17 @@ Classify all performance findings into four severity tiers:
      - Preserve inspector workflows and ScriptableObject configurability.
      - Preserve deterministic combat invariants and event ordering.
 
-4. Obtain Approval Before Implementing
+4. Establish Implementation Authority
    - Present the structured review report to the user.
-   - If the user approves implementation, proceed with atomic, behavior-preserving changes.
+   - Audit requests remain read-only. Present concrete affected files, proposed changes, expected qualitative impact, and invariant risks before asking for missing implementation authority.
+   - Reuse explicit authority already given; do not ask again for approved changes. Before non-trivial code edits, follow the durable plan/requirements gate in AGENTS.md and create the durable summary on completion.
 
 5. Validation
-   - Run project compilation:
+   - For implemented C# changes, run project compilation:
      ```powershell
      dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
      ```
-   - Specify Unity Profiler / Deep Profile verification instructions for the user.
+   - For review-only proposals, list compilation as a proposed future check. Distinguish executed results, baseline failures, unavailable checks, and pending Unity Profiler comparison. Claim measured gains only with comparable before/after captures.
 
 ## Output
 
