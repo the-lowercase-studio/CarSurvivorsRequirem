@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Assets.Scripts.Player.Constants;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -20,6 +21,8 @@ namespace Assets.Scripts.Player.Car
         float GetMovementSpeed();
 
         Vector3 GetMovementVelocity();
+
+        bool TryGetTireGroundContact(Vector3 contactPosition, out RaycastHit groundHit);
 
         float MaxForwardSpeed { get; }
 
@@ -293,6 +296,22 @@ namespace Assets.Scripts.Player.Car
             UpdateDriftState();
             HandleArcadeMovement();
             HandleArcadeSteering();
+        }
+
+        public bool TryGetTireGroundContact(Vector3 contactPosition, out RaycastHit groundHit)
+        {
+            Vector3 origin = contactPosition + Vector3.up * CarVfxConstants.DRIFT_GROUND_PROBE_HEIGHT;
+            if (!Physics.Raycast(origin, Vector3.down, out groundHit,
+                CarVfxConstants.DRIFT_GROUND_PROBE_DISTANCE, _groundLayerMask, QueryTriggerInteraction.Ignore))
+            {
+                return false;
+            }
+
+            Vector3 point = groundHit.point;
+            return groundHit.normal.y > 0f
+                && !float.IsNaN(point.x) && !float.IsInfinity(point.x)
+                && !float.IsNaN(point.y) && !float.IsInfinity(point.y)
+                && !float.IsNaN(point.z) && !float.IsInfinity(point.z);
         }
 
         private LayerMask GetEffectiveGroundLayerMask()
