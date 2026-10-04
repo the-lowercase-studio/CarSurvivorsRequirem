@@ -18,9 +18,9 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine
             CurrentState?.Enter();
         }
 
-        public void ChangeState(IGolemState newState)
+        public void ChangeState(IGolemState newState, bool restart = false)
         {
-            if (CurrentState == newState)
+            if (CurrentState == newState && !restart)
             {
                 return;
             }
@@ -28,6 +28,13 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine
             CurrentState?.Exit();
             CurrentState = newState;
             CurrentState?.Enter();
+        }
+
+        public void Shutdown()
+        {
+            IGolemState previous = CurrentState;
+            CurrentState = null;
+            previous?.Exit();
         }
 
         public void Update()

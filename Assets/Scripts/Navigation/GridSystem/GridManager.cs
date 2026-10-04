@@ -62,7 +62,7 @@ namespace Assets.Scripts.Navigation.GridSystem
             if (WorldGrid != null && WorldGrid.Cells != null && WorldGrid.Width > 0 && WorldGrid.Height > 0)
             {
                 Cell initialCenterCell = WorldGrid.Cells[WorldGrid.Width / 2, WorldGrid.Height / 2];
-                UpdateFlowField(WorldGrid, initialCenterCell);
+                UpdateFlowField(WorldGrid, initialCenterCell.WorldPos);
             }
             else
             {
@@ -98,8 +98,7 @@ namespace Assets.Scripts.Navigation.GridSystem
                 destination += velocity.normalized * offsetDistance;
             }
 
-            Cell destinationCell = GetClampedChunkDestinationCell(destination, playerPosition);
-            UpdateFlowField(GridPlayerChunk, destinationCell);
+            UpdateFlowField(GridPlayerChunk, destination);
         }
 
         private void UpdatePlayerChunkBasedOnPlayerPositionInWorldGrid()
@@ -178,40 +177,40 @@ namespace Assets.Scripts.Navigation.GridSystem
             }
         }
 
-        private Cell GetClampedChunkDestinationCell(Vector3 destination, Vector3 fallbackPosition)
+        private Cell GetSupportedDestination(Grid grid, Vector3 destination)
         {
-            Cell predictedWorldCell = WorldPosToCellConverter.GetCellFromGridByWorldPos(WorldGrid, destination);
-            if (IsCellInChunk(predictedWorldCell))
+            if (GroundSupportQuery.IsWithinWorldBounds(WorldGrid, destination))
             {
-                return predictedWorldCell;
-            }
-
-            // If predicted destination falls outside chunk, clamp world coords to chunk boundary
-            Cell chunkOrigin = GridPlayerChunk.Cells[0, 0];
-            if (chunkOrigin != null && predictedWorldCell != null)
-            {
-                int minChunkWorldX = chunkOrigin.WorldGridPos.x;
-                int minChunkWorldY = chunkOrigin.WorldGridPos.y;
-
-                int clampedChunkX = Mathf.Clamp(predictedWorldCell.WorldGridPos.x - minChunkWorldX, 0, GridPlayerChunk.Width - 1);
-                int clampedChunkY = Mathf.Clamp(predictedWorldCell.WorldGridPos.y - minChunkWorldY, 0, GridPlayerChunk.Height - 1);
-
-                Cell clampedCell = GridPlayerChunk.Cells[clampedChunkX, clampedChunkY];
-                if (clampedCell != null)
+                Cell predicted = WorldPosToCellConverter.GetCellFromGridByWorldPos(WorldGrid, destination);
+                if ((grid == WorldGrid || IsCellInChunk(predicted))
+                    && predicted.Cost < FlowFieldConstants.IMPASSABLE_COST)
                 {
-                    return clampedCell;
+                    return predicted;
                 }
             }
 
-            // Fallback to player's current cell
-            Cell playerWorldCell = WorldPosToCellConverter.GetCellFromGridByWorldPos(WorldGrid, fallbackPosition);
-            if (IsCellInChunk(playerWorldCell))
+            Cell nearest = null;
+            float bestDistance = float.MaxValue;
+            for (int x = 0; x < grid.Width; x++)
             {
-                return playerWorldCell;
+                for (int y = 0; y < grid.Height; y++)
+                {
+                    Cell cell = grid.Cells[x, y];
+                    if (cell == null || cell.Cost >= FlowFieldConstants.IMPASSABLE_COST)
+                    {
+                        continue;
+                    }
+                    float dx = cell.WorldPos.x - destination.x;
+                    float dz = cell.WorldPos.z - destination.z;
+                    float distance = dx * dx + dz * dz;
+                    if (distance < bestDistance)
+                    {
+                        bestDistance = distance;
+                        nearest = cell;
+                    }
+                }
             }
-
-            // Final fallback: center cell of the player chunk
-            return GridPlayerChunk.Cells[GridPlayerChunk.Width / 2, GridPlayerChunk.Height / 2];
+            return nearest;
         }
 
         private bool IsCellInChunk(Cell cell)
@@ -229,17 +228,17 @@ namespace Assets.Scripts.Navigation.GridSystem
                 && GridPlayerChunk.Cells[chunkPos.x, chunkPos.y] == cell;
         }
 
-        private void UpdateFlowField(Grid gridPerformingUpdate, Cell destinationCell)
+        private void UpdateFlowField(Grid gridPerformingUpdate, Vector3 destination)
         {
-            if (destinationCell == null)
-            {
-                return;
-            }
-
-            DestinationCell = destinationCell;
             _flowField.CreateCostField(gridPerformingUpdate);
+            DestinationCell = GetSupportedDestination(gridPerformingUpdate, destination);
             _flowField.CreateIntegrationField(gridPerformingUpdate, DestinationCell);
             _flowField.CreateFlowField(gridPerformingUpdate);
+        }
+
+        private void OnDisable()
+        {
+            CancelInvoke();
         }
 
 #if DEBUG

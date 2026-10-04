@@ -7,6 +7,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
     {
         private readonly IGolemBoss _boss;
         private readonly GolemStateMachine _stateMachine;
+        private int _operationGeneration;
 
         private IGolemState _returnState;
         private float _impactTimer;
@@ -24,8 +25,15 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             _returnState = returnState;
         }
 
+        private bool IsCurrent()
+        {
+            return _operationGeneration == _boss.OperationGeneration && _boss.IsOperational
+                && _stateMachine.CurrentState == this;
+        }
+
         public void Enter()
         {
+            _operationGeneration = _boss.OperationGeneration;
             _boss.Movement.CanMove = false;
             _boss.Movement.Stop();
             _boss.Movement.SetKinematic(true);
@@ -67,6 +75,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         public void Exit()
         {
+            _operationGeneration = -1;
             if (_boss.Animator != null)
             {
                 _boss.Animator.OnStompImpact -= HandleStompImpact;
@@ -85,6 +94,10 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         private void ApplyStomp()
         {
+            if (!IsCurrent())
+            {
+                return;
+            }
             if (_hasDealtDamage)
             {
                 return;

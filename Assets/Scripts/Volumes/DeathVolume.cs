@@ -1,4 +1,5 @@
 using Assets.Scripts.Pooling;
+using Assets.Scripts.Enemies.Bosses.Golem;
 using Assets.Scripts.StatusEffects;
 using UnityEngine;
 
@@ -11,6 +12,11 @@ namespace Assets.Scripts.Volumes
 
         private void OnTriggerEnter(Collider other)
         {
+            if (other.TryGetComponent(out IDeathVolumeRecoverable recoverable))
+            {
+                recoverable.RequestDeathVolumeRecovery();
+                return;
+            }
             if (other.TryGetComponent(out IDamageable damageable))
             {
                 damageable.TakeFullHpDamage();

@@ -2,6 +2,7 @@ namespace Assets.Scripts.Navigation.Constants
 {
     public static class FlowFieldConstants
     {
+        public const int MAX_LOCAL_TRAVERSAL_STEPS = 64;
         public const int IMPASSABLE_COST = 255;
         public const int ROUGH_TERRAIN_COST = 3;
         public const int DEFAULT_FIELD_COST = 1;

@@ -45,14 +45,14 @@ namespace Assets.Scripts.Indicators
             KillActiveSequence();
         }
 
-        public Vector3 Show(Vector3 worldPosition, float radius, float duration, Grid worldGrid = null, Action onImpact = null, bool autoContractOnFillComplete = false)
+        public Vector3 Show(Vector3 worldPosition, float radius, float duration, Grid worldGrid = null, Action onImpact = null, bool autoContractOnFillComplete = false, bool exactPosition = false)
         {
             _isReusable = false;
             KillActiveSequence();
             _onImpactCallback = onImpact;
 
             Vector3 finalPosition = worldPosition;
-            if (worldGrid != null && worldGrid.Cells != null)
+            if (!exactPosition && worldGrid != null && worldGrid.Cells != null)
             {
                 finalPosition = SnapToWalkableCell(worldPosition, worldGrid);
             }

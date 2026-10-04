@@ -21,7 +21,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         IGolemLinearAttackHitbox LinearAttackHitbox { get; }
         IGolemAnimator Animator { get; }
         IAudioClipPlayer AudioClipPlayer { get; }
-        CircularTelegraphIndicator ShowCircularTelegraph(Vector3 position, float radius, float duration, Action onImpact = null, bool autoContractOnFillComplete = false);
+        CircularTelegraphIndicator ShowCircularTelegraph(Vector3 position, float radius, float duration, Action onImpact = null, bool autoContractOnFillComplete = false, bool exactPosition = false);
         RectangularTelegraphIndicator ShowRectangularTelegraph(Vector3 origin, Vector3 direction, float length, float width, float duration, Action onImpact = null, bool autoContractOnFillComplete = false);
         void DismissAllTelegraphs();
         Vector3 PlayerPosition { get; }
@@ -34,6 +34,13 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         float CurrentArmSpeedMultiplier { get; }
         Grid WorldGrid { get; }
         Transform Transform { get; }
+        bool IsOperational { get; }
+        bool IsRecovering { get; }
+        int OperationGeneration { get; }
+        bool TryFindRecoveryLanding(out Vector3 rootPosition, out Vector3 surfacePosition);
+        bool ValidateRecoveryLanding(Vector3 rootPosition, out Vector3 surfacePosition);
+        void RestartRecoverySearch();
+        void CompleteRecovery();
         void TriggerStompDamage();
     }
 }

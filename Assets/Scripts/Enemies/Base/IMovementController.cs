@@ -4,6 +4,8 @@ namespace Assets.Scripts.Enemies.Base
 {
     public interface IMovementController
     {
+        bool CanBeTeleported { get; }
+        void ResetAfterRelocation();
         public float GetCurrentMovementSpeed();
 
         public bool IsOnGround();

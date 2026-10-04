@@ -11,6 +11,8 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
         void SetMoving(bool isMoving, float speed = 0f);
         void PlayLeapTakeoff();
         void PlayLeapLand();
+        void HoldLeapAirbornePose();
+        void RestorePlayback();
         void PlayStomp();
         void PlayLinearFist();
         void PlaySkyBarrage();
@@ -35,6 +37,9 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
         private static readonly int _linearFistHash = Animator.StringToHash(GolemBossConstants.ANIM_TRIGGER_LINEAR_FIST);
         private static readonly int _skyBarrageHash = Animator.StringToHash(GolemBossConstants.ANIM_TRIGGER_SKY_BARRAGE);
         private static readonly int _walkingStateHash = Animator.StringToHash(GolemBossConstants.ANIM_STATE_WALKING);
+
+        private bool _isHoldingAirbornePose;
+        private float _previousPlaybackSpeed;
 
         public event Action OnLinearFistRelease;
         public event Action OnSkyBarrageRelease;
@@ -65,6 +70,37 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
             }
         }
 
+        private void OnDisable()
+        {
+            RestorePlayback();
+        }
+
+        public void HoldLeapAirbornePose()
+        {
+            RestorePlayback();
+            _animator.ResetTrigger(_leapTakeoffHash);
+            _animator.ResetTrigger(_leapSlamLegacyHash);
+            _animator.ResetTrigger(_leapLandHash);
+            _animator.ResetTrigger(_stompHash);
+            _animator.ResetTrigger(_linearFistHash);
+            _animator.ResetTrigger(_skyBarrageHash);
+            _previousPlaybackSpeed = _animator.speed;
+            _animator.Play(GolemBossConstants.ANIM_STATE_JUMP_ATTACK, 0,
+                GolemBossConstants.AIRBORNE_ANIMATION_NORMALIZED_TIME);
+            _animator.Update(0f);
+            _animator.speed = 0f;
+            _isHoldingAirbornePose = true;
+        }
+
+        public void RestorePlayback()
+        {
+            if (_isHoldingAirbornePose)
+            {
+                _animator.speed = _previousPlaybackSpeed;
+                _isHoldingAirbornePose = false;
+            }
+        }
+
         public void SetMoving(bool isMoving, float speed = 0f)
         {
             _animator.SetBool(_isMovingHash, isMoving);
@@ -80,6 +116,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
 
         public void PlayLeapLand()
         {
+            RestorePlayback();
             _animator.ResetTrigger(_leapTakeoffHash);
             _animator.ResetTrigger(_leapSlamLegacyHash);
             _animator.SetTrigger(_leapLandHash);

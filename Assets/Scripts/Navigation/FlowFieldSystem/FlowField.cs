@@ -39,11 +39,10 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
                         halfExtents,
                         _terrainColliderBuffer,
                         Quaternion.identity,
-                        TerrainLayers.All);
+                        TerrainLayers.All, QueryTriggerInteraction.Ignore);
 
                     cell.ResetCosts();
 
-                    bool hasGround = false;
                     bool isImpassable = false;
                     bool isRough = false;
 
@@ -64,19 +63,19 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
                                 isImpassable = true;
                                 break;
                             }
-                            if ((layerValue & TerrainLayers.Ground.value) != 0)
-                            {
-                                hasGround = true;
-                            }
-                            else if ((layerValue & TerrainLayers.Rough.value) != 0)
+                            if ((layerValue & TerrainLayers.Rough.value) != 0)
                             {
                                 isRough = true;
-                                hasGround = true;
                             }
                         }
                     }
 
-                    if (isImpassable || !hasGround)
+                    bool hasSupport = GroundSupportQuery.TryGetSupportedPosition(cell.WorldPos, out _, out Collider support);
+                    if (hasSupport && ((1 << support.gameObject.layer) & TerrainLayers.Rough.value) != 0)
+                    {
+                        isRough = true;
+                    }
+                    if (isImpassable || !hasSupport)
                     {
                         cell.IncreaseCost(FlowFieldConstants.IMPASSABLE_COST);
                     }
@@ -95,12 +94,12 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
                 return;
             }
 
-            if (!TryGetCellGridPosition(grid, destinationCell, out _))
+            if (!TryGetCellGridPosition(grid, destinationCell, out _)
+                || destinationCell.Cost >= FlowFieldConstants.IMPASSABLE_COST)
             {
                 return;
             }
 
-            destinationCell.Cost = 0;
             destinationCell.BestCost = 0;
 
             _cellsToCheck.Clear();
@@ -150,7 +149,7 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
                 foreach (GridDirection gridDirection in GridDirection.AllDirections)
                 {
                     Cell currentNeighbour = GetNeighbourCell(grid, currentCell, gridDirection);
-                    if (currentNeighbour == null)
+                    if (currentNeighbour == null || !CanTraverse(grid, currentCell, currentNeighbour))
                     {
                         continue;
                     }
@@ -174,6 +173,33 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
             }
         }
 
+        public static bool CanTraverse(NavigationGrid grid, Cell from, Cell to)
+        {
+            if (from == null || to == null || to.Cost >= FlowFieldConstants.IMPASSABLE_COST
+                || !TryGetCellGridPosition(grid, from, out _) || !TryGetCellGridPosition(grid, to, out _))
+            {
+                return false;
+            }
+            Vector2Int delta = to.WorldGridPos - from.WorldGridPos;
+            if (Mathf.Abs(delta.x) > 1 || Mathf.Abs(delta.y) > 1)
+            {
+                return false;
+            }
+            if (delta.x != 0 && delta.y != 0)
+            {
+                if (!TryGetCellGridPosition(grid, from, out Vector2Int origin))
+                {
+                    return false;
+                }
+                Cell horizontal = grid.Cells[origin.x + delta.x, origin.y];
+                Cell vertical = grid.Cells[origin.x, origin.y + delta.y];
+                return horizontal != null && vertical != null
+                    && horizontal.Cost < FlowFieldConstants.IMPASSABLE_COST
+                    && vertical.Cost < FlowFieldConstants.IMPASSABLE_COST;
+            }
+            return true;
+        }
+
         private Cell GetNeighbourCell(NavigationGrid grid, Cell currentCell, GridDirection gridDirection)
         {
             if (!TryGetCellGridPosition(grid, currentCell, out Vector2Int gridPos))
@@ -193,7 +219,7 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
             return null;
         }
 
-        private bool TryGetCellGridPosition(NavigationGrid grid, Cell cell, out Vector2Int position)
+        private static bool TryGetCellGridPosition(NavigationGrid grid, Cell cell, out Vector2Int position)
         {
             if (cell == null || grid == null || grid.Cells == null)
             {

@@ -67,13 +67,13 @@ Runtime flow:
 3. `GridManager.UpdateFlowFieldWithNewPlayerChunkGrid` triggers periodically (default every `0.32s`):
    - Repositions `GridPlayerChunk` around the player car in `WorldGrid`.
    - Computes target destination using player car velocity and target prediction lead time.
-   - Selects and clamps `DestinationCell` within `GridPlayerChunk`.
+   - Creates costs first, prefers a supported predicted destination, and otherwise selects the nearest supported active-chunk cell. No supported cell yields a null DestinationCell.
 4. `FlowField.CreateCostField` resets each cell in the target grid (`cell.ResetCosts()`) and performs `Physics.OverlapBoxNonAlloc` against `TerrainLayers.All`:
    - Query box half-extents: `(cellSize * 0.49f, 1.0f, cellSize * 0.49f)`.
    - If colliders hit `TerrainLayers.Impassable` or if the 16-collider buffer is saturated, cost is increased by `IMPASSABLE_COST` (255).
    - If colliders hit `TerrainLayers.Rough` and no impassable layer is present, cost is increased by `ROUGH_TERRAIN_COST` (3).
-   - If no `TerrainLayers.Ground` is detected (or 0 obstacles returned), the cell is treated as missing ground and assigned `IMPASSABLE_COST` (255).
-5. `FlowField.CreateIntegrationField` initializes `DestinationCell` (`Cost = 0`, `BestCost = 0`) and propagates path costs via breadth-first search across cardinal neighbors (`GridDirection.CardinalDirections`):
+   - GroundSupportQuery probes exact center support with triggers ignored. Missing support or an embedded probe origin blocks the cell even if ground overlaps another part of the cell. The supported collider and conservative overlaps retain rough-terrain classification.
+5. FlowField.CreateIntegrationField rejects blocked destinations, sets only BestCost to zero, preserves terrain Cost, and propagates path costs across cardinal neighbors:
    - Neighbor candidate cost: `currentNeighbour.Cost + currentCell.BestCost`.
    - If candidate cost is strictly less than `currentNeighbour.BestCost`, `BestCost` is updated and the neighbor is enqueued in `_cellsToCheck`.
 6. `FlowField.CreateFlowField` iterates all cells in the grid, inspects all 8 neighbors (`GridDirection.AllDirections`), finds the neighbor with the minimum `BestCost`, and sets `currentCell.BestDirection` to point toward that neighbor via `GridDirection.GetDirectionFromV2I(bestCostCell.WorldGridPos - currentCell.WorldGridPos)`. If no neighbor has a lower cost, `BestDirection` is set to `GridDirection.None`.
@@ -91,14 +91,16 @@ Runtime flow:
   - `ROUGH_TERRAIN_COST` = 3 (slow/rough terrain).
   - `IMPASSABLE_COST` = 255 (walls, obstacles, or voids with no ground collider).
 - **Integration Topology**: Integration strictly expands across cardinal neighbors (North, East, South, West). Diagonal expansion during integration is disallowed to prevent path clipping through diagonal obstacle corners.
-- **Flow Direction Topology**: Flow vector evaluation evaluates all 8 cardinal and intercardinal directions (`GridDirection.AllDirections`) to permit smooth 8-way diagonal steering.
+- **Flow Direction Topology**: Flow vector evaluation checks all eight neighbors. Diagonal steps require both adjacent cardinal cells to be traversable, preventing corner cutting.
 - **Coordinate System**: Grid horizontal axes map to Unity world X (horizontal) and Z (depth). The Y component in flow vectors is strictly zero (`Vector3(gridDirection.x, 0, gridDirection.y)`).
 - **Movement Fallback Hierarchy**:
   1. If current cell has a valid `BestDirection` (`!= GridDirection.None`), combine grid direction with `_separationVector`.
   2. If cell direction is `None` but `_separationVector != Vector3.zero`, apply dampened separation (`_separationVector * 0.1f`) to prevent oscillations when resting directly on destination.
-  3. If cell direction is `None` and outside chunk/destination, direct straight toward `_gridManager.DestinationCell.WorldPos`.
+  3. If no cell direction exists, point toward a traversable integrated border neighbor, or select a single traversable local neighbor toward the destination. No unchecked direct pursuit or per-entity world scan is used.
   4. Otherwise, zero movement.
 - **Entity Separation**: Separation queries evaluate `EntityLayers.Enemies` using `Physics.OverlapSphereNonAlloc` with `FlowFieldConstants.SEPARATION_COLLIDER_BUFFER_SIZE` (32), excluding the mover's own `_selfCollider`.
+- EnemyMovementController validates final grounded voluntary displacement after separation and acceleration through bounded local cell traversal. Invalid internal motion uses a valid flow step or stops horizontally. Knockback, falling, and entities already outside world bounds bypass the enemy-specific safeguard; ordinary edge falls remain possible.
+- EXP uses the shared flow-direction corrections through MoveOnFlowFieldGrid. It does not receive the enemy-specific final displacement policy. Verify attraction separately in Play Mode.
 
 Preserve these constraints when editing:
 
@@ -141,7 +143,7 @@ Downstream consumers:
 Cross-system coupling risks:
 
 - `GridPlayerChunk` contains direct references to `Cell` instances owned by `WorldGrid`. Resetting costs or directions during chunk updates immediately affects the shared cell objects.
-- `FlowFieldMovementController` queries `IGridManager.WorldGrid` for cell lookup; incomplete or out-of-date flow vectors cause fallback straight-line movement.
+- FlowFieldMovementController queries IGridManager.WorldGrid for cell lookup; incomplete directions use bounded local traversal rather than unchecked straight-line movement.
 - High enemy counts multiply `Physics.OverlapSphereNonAlloc` calls in `FixedUpdate`, creating physics query overhead if separation radius or enemy density increases significantly.
 
 ## Known Risks and Open Questions
@@ -149,13 +151,12 @@ Cross-system coupling risks:
 Known limitations:
 
 - `FlowField.CreateCostField` uses a fixed 16-element collider buffer per cell. Dense clusters of overlapping decorative colliders may saturate the buffer and cause false impassable markings.
-- If the predicted destination cell falls outside `GridPlayerChunk` boundaries, `GridManager` clamps the destination to the chunk boundary, which can momentarily orient edge enemies toward the boundary instead of the player's true position.
-- `FlowFieldMovementController.MoveOnFlowFieldGrid` scales displacement using `Time.deltaTime` even when invoked from `FixedUpdate`.
+- A supported fallback destination can differ from the player's actual position near unsupported terrain. Enemy crowds and EXP attraction need Play Mode verification there.
+- FlowFieldMovementController.MoveOnFlowFieldGrid uses Time.fixedDeltaTime.
 
 Open design questions:
 
 - Should flow field generation be refactored into an independent injected service (`IFlowFieldGenerator`) to decouple calculation logic from `GridManager`?
-- Should `FlowFieldMovementController` use `Time.fixedDeltaTime` when driven by physics loops?
 - Should dynamic separation be moved to a centralized separation manager or spatial hash grid to eliminate per-entity `OverlapSphereNonAlloc` physics queries?
 
 Suggested follow-up tasks:

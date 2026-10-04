@@ -46,6 +46,27 @@ namespace Assets.Scripts.Spawners.Enemies
         private Dictionary<EnemySpawnInfo, ObjectPool<Enemy>> _enemyPools = new();
         private Dictionary<Enemy, ObjectPool<Enemy>> _instancePoolMap = new();
 
+        private readonly Dictionary<VFXPlayer, PendingSpawn> _pendingSpawns = new();
+
+        private sealed class PendingSpawn
+        {
+            public EnemySpawnInfo Info;
+            public Cell Cell;
+            public Vector3 Position;
+        }
+
+        private void OnDisable()
+        {
+            foreach (var pending in _pendingSpawns)
+            {
+                if (pending.Key != null)
+                {
+                    pending.Key.OnVFXFinished -= HandleSwarmVfxFinished;
+                }
+            }
+            _pendingSpawns.Clear();
+        }
+
         public event EventHandler OnSpawnedEntityReleased;
 
         public uint CurrentlySpawnedObjectsCount { get; private set; }
@@ -154,20 +175,31 @@ namespace Assets.Scripts.Spawners.Enemies
                 _mainCamera,
                 count,
                 _outerSpawnBufferCells,
-                _maxEnemiesPerCell
+                _maxEnemiesPerCell,
+                includeRemainingCandidates: true
             );
             using (var enumerator = cells.GetEnumerator())
             {
                 for (int i = 0; i < count; i++)
                 {
-                    if (!enumerator.MoveNext()) break;
+                    if (!enumerator.MoveNext())
+                    {
+                        break;
+                    }
+                    if (!GridCellsNotVisibleByMainCamera.TryGetPlacement(enumerator.Current,
+                        _gridManager.WorldGrid, _mainCamera, _maxEnemiesPerCell, out Vector3 supportedPosition))
+                    {
+                        i--;
+                        continue;
+                    }
 
                     EnemySpawnInfo currentEnemyToSpawnInfo = RandomEnemyInfoBasedOnSpawnChance();
                     if (currentEnemyToSpawnInfo != null && _enemyPools.TryGetValue(currentEnemyToSpawnInfo, out var pool))
                     {
                         Enemy enemy = pool.Get();
                         _instancePoolMap[enemy] = pool;
-                        enemy.transform.position = enumerator.Current.WorldPos;
+                        enemy.transform.position = supportedPosition;
+                        enemy.MovementController.ResetAfterRelocation();
                     }
                 }
             }
@@ -183,41 +215,66 @@ namespace Assets.Scripts.Spawners.Enemies
                 _gridManager.GridPlayerChunk,
                 _mainCamera,
                 count,
-                _maxEnemiesPerCell
+                _maxEnemiesPerCell,
+                includeRemainingCandidates: true
             );
             using (var enumerator = cells.GetEnumerator())
             {
                 for (int i = 0; i < count; i++)
                 {
-                    if (!enumerator.MoveNext()) break;
-
-                    Vector3 spawnPos = enumerator.Current.WorldPos;
+                    if (!enumerator.MoveNext())
+                    {
+                        break;
+                    }
+                    Cell candidate = enumerator.Current;
+                    if (!GridCellsNotVisibleByMainCamera.TryGetPlacement(candidate, _gridManager.GridPlayerChunk,
+                        _mainCamera, _maxEnemiesPerCell, out Vector3 spawnPos))
+                    {
+                        i--;
+                        continue;
+                    }
 
                     if (_swarmSpawnVfxPrefab != null)
                     {
-                        VFXPlayer vfxInstance = Instantiate(_swarmSpawnVfxPrefab, spawnPos, Quaternion.identity);
-
-                        vfxInstance.Play(new VFXPlayConfig(scale: 1f, destroyOnEnd: true));
-
-                        vfxInstance.OnVFXFinished += (sender, e) =>
-                        {
-                            if (this == null) return;
-                            if (_enemyPools.TryGetValue(enemyInfo, out ObjectPool<Enemy> currentPool))
-                            {
-                                Enemy enemy = currentPool.Get();
-                                _instancePoolMap[enemy] = currentPool;
-                                enemy.transform.position = spawnPos;
-                            }
-                        };
+                        VFXPlayer vfx = Instantiate(_swarmSpawnVfxPrefab, spawnPos, Quaternion.identity);
+                        _pendingSpawns.Add(vfx, new PendingSpawn { Info = enemyInfo, Cell = candidate, Position = spawnPos });
+                        vfx.OnVFXFinished += HandleSwarmVfxFinished;
+                        vfx.Play(new VFXPlayConfig(scale: 1f, destroyOnEnd: true));
                     }
                     else
                     {
-                        Enemy enemy = pool.Get();
-                        _instancePoolMap[enemy] = pool;
-                        enemy.transform.position = spawnPos;
+                        SpawnAtSupportedPosition(pool, spawnPos);
                     }
                 }
             }
+        }
+
+        private void HandleSwarmVfxFinished(object sender, EventArgs args)
+        {
+            if (sender is not VFXPlayer vfx || !_pendingSpawns.TryGetValue(vfx, out PendingSpawn pending))
+            {
+                return;
+            }
+            vfx.OnVFXFinished -= HandleSwarmVfxFinished;
+            _pendingSpawns.Remove(vfx);
+            if (!isActiveAndEnabled || !GridCellsNotVisibleByMainCamera.TryGetPlacement(pending.Cell,
+                _gridManager.GridPlayerChunk, _mainCamera, _maxEnemiesPerCell, out Vector3 currentPosition)
+                || (currentPosition - pending.Position).sqrMagnitude > Mathf.Epsilon)
+            {
+                return;
+            }
+            if (_enemyPools.TryGetValue(pending.Info, out ObjectPool<Enemy> pool))
+            {
+                SpawnAtSupportedPosition(pool, currentPosition);
+            }
+        }
+
+        private void SpawnAtSupportedPosition(ObjectPool<Enemy> pool, Vector3 position)
+        {
+            Enemy enemy = pool.Get();
+            _instancePoolMap[enemy] = pool;
+            enemy.transform.position = position;
+            enemy.MovementController.ResetAfterRelocation();
         }
 
         public void IncreaseSpawnChanceRedistributionFactor(float amount)

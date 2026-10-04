@@ -1,4 +1,3 @@
-using System;
 using DG.Tweening;
 using Assets.Scripts.Enemies.Bosses.Golem.Constants;
 using Assets.Scripts.Indicators;
@@ -16,13 +15,17 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
         private Sequence _leapSequence;
         private Sequence _phaseSequence;
         private CircularTelegraphIndicator _activeTelegraph;
-
         private Vector3 _startPosition;
         private Vector3 _snappedTarget;
+        private Vector3 _impactSurface;
         private float _slamRadius;
         private float _slamDamage;
         private bool _hasLaunchedAirborne;
         private bool _hasLanded;
+        private bool _hasCompleted;
+        private bool _isRecovery;
+        private int _operationGeneration;
+        private int _entryGeneration;
 
         public GolemLeapSlamState(IGolemBoss boss, GolemStateMachine stateMachine)
         {
@@ -37,50 +40,57 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         public void Enter()
         {
+            _entryGeneration++;
+            _operationGeneration = _boss.OperationGeneration;
+            _isRecovery = _boss.IsRecovering;
+            _hasLaunchedAirborne = false;
+            _hasLanded = false;
+            _hasCompleted = false;
+            _slamRadius = _boss.Config.SlamRadius;
+            _slamDamage = _boss.Config.SlamDamage;
             _boss.Movement.CanMove = false;
             _boss.Movement.Stop();
             _boss.Movement.SetKinematic(true);
-            _boss.Animator?.SetMoving(false, 0f);
+            _boss.Animator.SetMoving(false, 0f);
+            _boss.Animator.OnLeapLandComplete += HandleLandingComplete;
 
-            _hasLaunchedAirborne = false;
-            _hasLanded = false;
+            if (_isRecovery)
+            {
+                _boss.Animator.HoldLeapAirbornePose();
+                return;
+            }
 
             _startPosition = _boss.Transform.position;
-            Vector3 targetLandingPos = _boss.PlayerPosition;
-            float fillDuration = _boss.Config.LeapTakeoffDuration + (_boss.Config.LeapAirTime * 0.5f);
-            _slamRadius = _boss.Config.SlamRadius;
-            _slamDamage = _boss.Config.SlamDamage;
-
-            _activeTelegraph = _boss.ShowCircularTelegraph(targetLandingPos, _slamRadius, fillDuration, null, autoContractOnFillComplete: false);
-            _snappedTarget = _activeTelegraph != null ? _activeTelegraph.SnappedPosition : targetLandingPos;
+            Vector3 target = _boss.PlayerPosition;
+            _activeTelegraph = _boss.ShowCircularTelegraph(target, _slamRadius, GetWarningDuration());
+            _snappedTarget = _activeTelegraph != null ? _activeTelegraph.SnappedPosition : target;
             _snappedTarget.y = _startPosition.y;
-
-            Vector3 jumpDir = _snappedTarget - _startPosition;
-            jumpDir.y = 0f;
-            if (jumpDir.sqrMagnitude > 0.001f)
-            {
-                _boss.Transform.rotation = Quaternion.LookRotation(jumpDir.normalized, Vector3.up);
-            }
-
-            if (_boss.Animator != null)
-            {
-                _boss.Animator.OnLeapTakeoffComplete += HandleTakeoffComplete;
-                _boss.Animator.OnLeapLandComplete += HandleLandingComplete;
-                _boss.Animator.PlayLeapTakeoff();
-            }
-
-            float takeoffDelay = _boss.Config.LeapTakeoffDuration;
+            _impactSurface = _snappedTarget;
+            RotateTowardsLanding();
+            _boss.Animator.OnLeapTakeoffComplete += HandleTakeoffComplete;
+            _boss.Animator.PlayLeapTakeoff();
+            int entry = _entryGeneration;
             _phaseSequence = DOTween.Sequence();
-            _phaseSequence.AppendInterval(takeoffDelay);
+            _phaseSequence.AppendInterval(_boss.Config.LeapTakeoffDuration);
             _phaseSequence.OnComplete(() =>
             {
-                LaunchAirborne();
+                if (IsCurrent(entry))
+                {
+                    LaunchAirborne();
+                }
             });
         }
 
         public void Update()
         {
             _stateMachine.TickCooldowns(Time.deltaTime);
+            if (_isRecovery && !_hasLaunchedAirborne && IsCurrent(_entryGeneration)
+                && _boss.TryFindRecoveryLanding(out Vector3 root, out Vector3 surface))
+            {
+                _snappedTarget = root;
+                _impactSurface = surface;
+                StartRecoveryDescent();
+            }
         }
 
         public void FixedUpdate()
@@ -90,128 +100,178 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         public void Exit()
         {
+            _entryGeneration++;
             KillAllSequences();
-
-            if (_boss.Animator != null)
-            {
-                _boss.Animator.OnLeapTakeoffComplete -= HandleTakeoffComplete;
-                _boss.Animator.OnLeapLandComplete -= HandleLandingComplete;
-            }
-
+            _boss.Animator.OnLeapTakeoffComplete -= HandleTakeoffComplete;
+            _boss.Animator.OnLeapLandComplete -= HandleLandingComplete;
+            _boss.Animator.RestorePlayback();
             if (_activeTelegraph != null)
             {
                 _activeTelegraph.Dismiss();
                 _activeTelegraph = null;
             }
-
             _boss.Movement.SetKinematic(false);
+        }
+
+        private float GetWarningDuration()
+        {
+            return _boss.Config.LeapTakeoffDuration + _boss.Config.LeapAirTime * 0.5f;
+        }
+
+        private bool IsCurrent(int entry)
+        {
+            return entry == _entryGeneration && _operationGeneration == _boss.OperationGeneration
+                && _stateMachine.CurrentState == this && _boss.IsOperational && !_hasCompleted;
+        }
+
+        private void RotateTowardsLanding()
+        {
+            Vector3 direction = _snappedTarget - _boss.Transform.position;
+            direction.y = 0f;
+            if (direction.sqrMagnitude > 0.001f)
+            {
+                _boss.Transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+            }
         }
 
         private void HandleTakeoffComplete()
         {
-            LaunchAirborne();
+            if (!_isRecovery && IsCurrent(_entryGeneration))
+            {
+                LaunchAirborne();
+            }
         }
 
         private void LaunchAirborne()
         {
-            if (_hasLaunchedAirborne)
+            if (_hasLaunchedAirborne || !IsCurrent(_entryGeneration))
             {
                 return;
             }
             _hasLaunchedAirborne = true;
-
-            if (_phaseSequence != null && _phaseSequence.IsActive())
-            {
-                _phaseSequence.Kill();
-                _phaseSequence = null;
-            }
-
-            float airTime = _boss.Config.LeapAirTime;
-            float halfAirTime = airTime * 0.5f;
-            float maxHeight = _boss.Config.LeapMaxHeight;
-            Vector3 apexPos = (_startPosition + _snappedTarget) * 0.5f + Vector3.up * maxHeight;
-
+            KillPhaseSequence();
+            float halfAirTime = _boss.Config.LeapAirTime * 0.5f;
+            Vector3 apex = (_startPosition + _snappedTarget) * 0.5f + Vector3.up * _boss.Config.LeapMaxHeight;
+            int entry = _entryGeneration;
             _leapSequence = DOTween.Sequence();
-            _leapSequence.Append(_boss.Transform.DOMove(apexPos, halfAirTime).SetEase(Ease.OutQuad));
+            _leapSequence.Append(_boss.Transform.DOMove(apex, halfAirTime).SetEase(Ease.OutQuad));
             _leapSequence.Append(_boss.Transform.DOMove(_snappedTarget, halfAirTime).SetEase(Ease.InQuad));
             _leapSequence.OnComplete(() =>
             {
-                OnGroundCollision();
+                if (IsCurrent(entry))
+                {
+                    OnGroundCollision();
+                }
+            });
+        }
+
+        private void StartRecoveryDescent()
+        {
+            _hasLaunchedAirborne = true;
+            RotateTowardsLanding();
+            _boss.Movement.SetPosition(_snappedTarget + Vector3.up * _boss.Config.LeapMaxHeight);
+            _activeTelegraph = _boss.ShowCircularTelegraph(_impactSurface, _slamRadius,
+                GetWarningDuration(), exactPosition: true);
+            int entry = _entryGeneration;
+            _leapSequence = DOTween.Sequence();
+            _leapSequence.Append(_boss.Transform.DOMove(_snappedTarget, GetWarningDuration()).SetEase(Ease.InQuad));
+            _leapSequence.OnComplete(() =>
+            {
+                if (IsCurrent(entry))
+                {
+                    OnGroundCollision();
+                }
             });
         }
 
         private void OnGroundCollision()
         {
-            if (_hasLanded)
+            if (_hasLanded || !IsCurrent(_entryGeneration))
             {
                 return;
             }
+            if (_isRecovery && !_boss.ValidateRecoveryLanding(_snappedTarget, out _impactSurface))
+            {
+                _boss.RestartRecoverySearch();
+                _stateMachine.ChangeState(this, restart: true);
+                return;
+            }
             _hasLanded = true;
-
             _boss.Movement.SetPosition(_snappedTarget);
             _boss.Movement.SetKinematic(false);
             _boss.AudioClipPlayer?.PlayOneShot(GolemBossConstants.SLAM_SFX_KEY);
-
-            _boss.Animator?.PlayLeapLand();
-
-            // Perform circular area of effect damage check on ground impact
-            ApplyAreaImpactDamage(_snappedTarget, _slamRadius, _slamDamage);
-
+            _boss.Animator.PlayLeapLand();
+            ApplyAreaImpactDamage(_impactSurface, _slamRadius, _slamDamage);
             if (_activeTelegraph != null)
             {
                 _activeTelegraph.ContractAndDismiss();
                 _activeTelegraph = null;
             }
-
-            float landingRecovery = _boss.Config.LeapLandingDuration;
+            int entry = _entryGeneration;
             _phaseSequence = DOTween.Sequence();
-            _phaseSequence.AppendInterval(landingRecovery);
+            _phaseSequence.AppendInterval(_boss.Config.LeapLandingDuration);
             _phaseSequence.OnComplete(() =>
             {
-                FinishLeapState();
+                if (IsCurrent(entry))
+                {
+                    FinishLeapState();
+                }
             });
         }
 
         private void HandleLandingComplete()
         {
-            FinishLeapState();
+            if (_hasLanded && IsCurrent(_entryGeneration))
+            {
+                FinishLeapState();
+            }
         }
 
         private void ApplyAreaImpactDamage(Vector3 center, float radius, float damage)
         {
-            Vector3 point1 = center;
-            Vector3 point2 = center + Vector3.up * 4.0f;
-            Collider[] hitColliders = Physics.OverlapCapsule(point1, point2, radius, EntityLayers.Player, QueryTriggerInteraction.Collide);
-            foreach (Collider hit in hitColliders)
+            Collider[] hits = Physics.OverlapCapsule(center, center + Vector3.up * 4f,
+                radius, EntityLayers.Player, QueryTriggerInteraction.Collide);
+            foreach (Collider hit in hits)
             {
-                if (hit == null)
+                if (hit != null)
                 {
-                    continue;
+                    EntityManipulationHelper.Damage(hit, damage);
                 }
-
-                EntityManipulationHelper.Damage(hit, damage);
             }
         }
 
         private void FinishLeapState()
         {
+            if (!_hasLanded || !IsCurrent(_entryGeneration))
+            {
+                return;
+            }
+            _hasCompleted = true;
             _stateMachine.LeapCooldownTimer = _boss.Config.LeapCooldown * _boss.CurrentCooldownMultiplier;
+            if (_isRecovery)
+            {
+                _boss.CompleteRecovery();
+            }
             _stateMachine.ChangeState(_pursuitState);
+        }
+
+        private void KillPhaseSequence()
+        {
+            if (_phaseSequence != null && _phaseSequence.IsActive())
+            {
+                _phaseSequence.Kill(false);
+            }
+            _phaseSequence = null;
         }
 
         private void KillAllSequences()
         {
             if (_leapSequence != null && _leapSequence.IsActive())
             {
-                _leapSequence.Kill();
+                _leapSequence.Kill(false);
             }
             _leapSequence = null;
-
-            if (_phaseSequence != null && _phaseSequence.IsActive())
-            {
-                _phaseSequence.Kill();
-            }
-            _phaseSequence = null;
+            KillPhaseSequence();
         }
     }
 }
