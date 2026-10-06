@@ -2884,6 +2884,10 @@ PrefabInstance:
       propertyPath: _stats
       value: 
       objectReference: {fileID: 11400000, guid: 6a1203ade72efae429dbe8d7b2beb0c3, type: 2}
+    - target: {fileID: 2714479283582284822, guid: 027ddf779200ba34c8294e72ec6c3d5f, type: 3}
+      propertyPath: _beamFlashDuration
+      value: 0.04
+      objectReference: {fileID: 0}
     - target: {fileID: 2839812882640289078, guid: 027ddf779200ba34c8294e72ec6c3d5f, type: 3}
       propertyPath: m_Layer
       value: 11
@@ -3244,10 +3248,18 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1085811977318177950, guid: 027ddf779200ba34c8294e72ec6c3d5f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2714479283582284822, guid: 027ddf779200ba34c8294e72ec6c3d5f, type: 3}
       propertyPath: _stats
       value: 
       objectReference: {fileID: 11400000, guid: 6a1203ade72efae429dbe8d7b2beb0c3, type: 2}
+    - target: {fileID: 2714479283582284822, guid: 027ddf779200ba34c8294e72ec6c3d5f, type: 3}
+      propertyPath: _beamFlashDuration
+      value: 0.04
+      objectReference: {fileID: 0}
     - target: {fileID: 2839812882640289078, guid: 027ddf779200ba34c8294e72ec6c3d5f, type: 3}
       propertyPath: m_Layer
       value: 11
@@ -3445,6 +3457,10 @@ PrefabInstance:
     - target: {fileID: 2714479283582284822, guid: 027ddf779200ba34c8294e72ec6c3d5f, type: 3}
       propertyPath: _inverseRotation
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2714479283582284822, guid: 027ddf779200ba34c8294e72ec6c3d5f, type: 3}
+      propertyPath: _beamFlashDuration
+      value: 0.04
       objectReference: {fileID: 0}
     - target: {fileID: 2839812882640289078, guid: 027ddf779200ba34c8294e72ec6c3d5f, type: 3}
       propertyPath: m_Layer
@@ -3766,6 +3782,10 @@ PrefabInstance:
     - target: {fileID: 2714479283582284822, guid: 027ddf779200ba34c8294e72ec6c3d5f, type: 3}
       propertyPath: _inverseRotation
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2714479283582284822, guid: 027ddf779200ba34c8294e72ec6c3d5f, type: 3}
+      propertyPath: _beamFlashDuration
+      value: 0.04
       objectReference: {fileID: 0}
     - target: {fileID: 2839812882640289078, guid: 027ddf779200ba34c8294e72ec6c3d5f, type: 3}
       propertyPath: m_Layer

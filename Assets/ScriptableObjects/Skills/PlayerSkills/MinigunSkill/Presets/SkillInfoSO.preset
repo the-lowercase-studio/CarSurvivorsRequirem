@@ -30,8 +30,14 @@ Preset:
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: <Description>k__BackingField
-    value: Minigun turrets that will shot lot's of bullets in certain pattern
+    value: Sweeping laser lanes fire instant beam shots. Upgrade shot delay, range,
+      turret count, beam width, damage and enemy piercing. Impassable terrain stops
+      every beam.
     objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: <Icon>k__BackingField
+    value: 
+    objectReference: {fileID: 21300000, guid: eea3f78a5d6363141b3c878203e91e11, type: 3}
   m_ExcludedProperties: []
   m_CoupledType:
     m_NativeTypeID: 0

@@ -38,7 +38,14 @@ namespace Assets.Scripts.VFX
 
         public bool HasParticleSystems
         {
-            get { return _particleSystems.Length > 0; }
+            get
+            {
+                if (_particleSystems == null)
+                {
+                    _particleSystems = GetComponentsInChildren<ParticleSystem>(includeInactive: true);
+                }
+                return _particleSystems.Length > 0;
+            }
         }
 
         private void Awake()
@@ -54,6 +61,11 @@ namespace Assets.Scripts.VFX
         public void Play(VFXPlayConfig config)
         {
             _vfxPlayConfig = config;
+
+            if (_particleSystems == null)
+            {
+                _particleSystems = GetComponentsInChildren<ParticleSystem>(includeInactive: true);
+            }
 
             _longestParticleDuration = 0;
             foreach (ParticleSystem particleSystem in _particleSystems)

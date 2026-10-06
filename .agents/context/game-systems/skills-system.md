@@ -116,9 +116,9 @@ It is not responsible for:
     - Snappy dynamic arrival duration clamped between SkillConstants.SAW_MIN_KNOCKBACK_DURATION (0.12s) and SkillConstants.SAW_MAX_KNOCKBACK_DURATION (0.22s).
     - Knockback impulse vector is normalized strictly on the XZ plane (transform.forward with y = 0f, falling back to Vector3.forward).
   - MinigunSkill / MinigunTurret:
-    - MinigunSkill initializes MinigunTurret instances up to NumberOfTurrets and runs a coroutine calling Shoot() at DelayBetweenShoots intervals.
+    - MinigunSkill initializes typed turrets up to NumberOfTurrets. One LateUpdate applies all lane poses before firing at most one instant volley per scaled frame interval. Acquisition marks the first shot pending until the first unpaused presentation update.
     - MinigunTurret oscillates its visual horizontally using a mathematical cosine wave (Mathf.Cos(Time.time * Mathf.PI / _config.RotationDuration), with _inverseRotation support) to eliminate runtime tween allocations.
-    - Spawns Projectile instances from an internal ObjectPool<Projectile> parented to _projectilesParent, initializes projectile stats, plays muzzle flash VFX, and triggers Shoot audio.
+    - MinigunShotResolver uses thin oriented box overlap/sweep queries, orders and deduplicates living damageable owners, and captures at most 1 + Piercing targets. Impassable terrain always stops the entire corridor. Full 64-entry buffers retry preallocated 2048-entry storage; saturated overflow rejects damage. A persistent collider-free rectangle previews the terrain-limited corridor; one reusable world-space beam flashes the captured piercing-limited endpoint for 0.06 scaled seconds. Sensory feedback remains once per turret shot.
   - LasergunSkill / LasergunTurret:
     - LasergunSkill initializes LasergunTurret instances up to NumberOfTurrets, propagates NumberOfTargets updates event-driven to all turrets, and invokes ShootFromTurrets() at DelayBetweenShoots intervals.
     - LasergunTurret searches for enemies using Physics.OverlapSphereNonAlloc on EntityLayers.Enemies into a preallocated buffer (_targetBuffer, size 64).
@@ -254,6 +254,17 @@ It is not responsible for:
 ## Owned Skill Stats Display
 
 - Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs provides AppendStatsForDisplay independently of filtered upgrade selection. It appends runtime references in explicit order without resetting configs, clearing the destination, or filtering capped stats.
-- Supported counts and order: Saw 2 (KnockbackRange, Damage); Minigun 7 (DelayBetweenShoots, Range, NumberOfTurrets, BulletSize, BulletSpeed, BulletDamage, BulletMaxPiercing); Lasergun 5 (DelayBetweenShoots, NumberOfTurrets, NumberOfTargets, Range, Damage); Landmine 5 (SpawnCooldown, ExplosionRadius, Size, KnockbackRange, Damage).
+- Supported counts and order: Saw 2 (KnockbackRange, Damage); Minigun 6 (ShotDelay, Range, NumberOfTurrets, BeamWidth, Damage, Piercing); Lasergun 5 (DelayBetweenShoots, NumberOfTurrets, NumberOfTargets, Range, Damage); Landmine 5 (SpawnCooldown, ExplosionRadius, Size, KnockbackRange, Damage).
+
+## Minigun Laser Lane Invariants
+
+- Runtime stats are deep copies. Reset and upgrades do not write into authored TurretConfigSO. BeamWidth is meters, initially 0.24; asset/preset conversion runs once outside runtime.
+- Each lane follows the current horizontal muzzle pose and retains the authored cosine sweep and mirrored direction. ShotDelay does not alter sweep speed.
+- Ground preview probes TerrainLayers.Walkable downward; missing support hides only the preview. Mechanical width and height both equal BeamWidth. The flat preview does not conform to ramps.
+- EntityLayers.Enemies includes triggers; TerrainLayers.Impassable ignores triggers. Muzzle overlaps have zero distance, walls win coincident planes, and enemy ties use Unity 6.4 EntityId ordering within the run.
+- Health is required on each damageable owner via IHealthy or local IHealth. Dead/disabled targets cannot consume piercing. Captured identities are checked again before TakeDamage; killing hits do not extend shots. Cleanup during a damage callback cancels remaining pending target damage.
+- Zero scaled delta freezes scheduling, sweep and flash countdown. The existing injected IPlayerManager supplies player health. Death/disable hide visuals and detach exact subscriptions; re-enable preserves ownership and grants no free initial volley.
+- All turret slots require authored gun tip, visual, lane and beam references. Sensory references are optional and explicit. Minigun owns no projectile pool or per-shot GameObjects; shared projectile and Lasergun behavior remain unchanged.
+- Focused tests: Assets/Scripts/Editor/Tests/MinigunShotResolverTests.cs. Executed checks and remaining Editor validation: .agents/context/implementations/summaries/minigun-laser-lane-summary.md.
 - Assets/Scripts/UI/Skills/SkillsStatsPresenter.cs iterates initialized skills in registry order, refreshes ownership while paused, and freezes values when the death menu opens. It never modifies skill ownership, upgrade math, configs, or gameplay time.
 - The obsolete saw-count field and upgrade consumers were removed; its config asset and preset were reserialized through Unity. Retained designer values are unchanged.
