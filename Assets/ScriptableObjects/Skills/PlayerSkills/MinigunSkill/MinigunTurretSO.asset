@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _startRange: 6
   <ProjectileStatsSO>k__BackingField: {fileID: 11400000, guid: b196fd0c1c6051341865604dd4fa9534, type: 2}
-  <RotationAngle>k__BackingField: 120
-  <RotationDuration>k__BackingField: 1.74
+  <RotationAngle>k__BackingField: 90
+  <RotationDuration>k__BackingField: 8
   <RotationSpeed>k__BackingField: 0
   <SearchForTargetInterval>k__BackingField: 0

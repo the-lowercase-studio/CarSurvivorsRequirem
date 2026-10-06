@@ -9,27 +9,24 @@ namespace Assets.ScriptableObjects.Skills.PlayerSkills.MinigunSkill
     [CreateAssetMenu(fileName = "MinigunSkillSO", menuName = "Scriptable Objects/Skills/MinigunSkillSO")]
     public class MinigunSkillUpgradeableConfigSO : SkillUpgradeableStatsConfig
     {
-        [Header("Turrets Stats")]
         [SerializeField] private TurretConfigSO _turretConfig;
+        [Tooltip("Scaled seconds between instant shots.")]
         [SerializeField] private FloatUpgradeableStat _delayBetweenShootingBullets;
         [SerializeField] private FloatUpgradeableStat _range;
         [SerializeField] private IntUpgradeableStat _numberOfTurrets;
-        public TurretConfigSO TurretConfig => _turretConfig;
-        public FloatUpgradeableStat DelayBetweenShoots { get; private set; }
-        public FloatUpgradeableStat Range { get; private set; }
-        public IntUpgradeableStat NumberOfTurrets { get; private set; }
-
-        [Header("Bullets Stats")]
-        [SerializeField] private FloatUpgradeableStat _startBulletSpeed;
+        [Tooltip("Square beam corridor width in meters.")]
         [SerializeField] private FloatUpgradeableStat _startBulletSize;
         [SerializeField] private IntUpgradeableStat _startBulletDamage;
+        [Tooltip("Additional distinct enemies penetrated after the first hit.")]
         [SerializeField] private IntUpgradeableStat _startBulletMaxPiercing;
-        public FloatUpgradeableStat BulletSize { get; private set; }
-        public FloatUpgradeableStat BulletSpeed { get; private set; }
-        public IntUpgradeableStat BulletDamage { get; private set; }
-        public IntUpgradeableStat BulletMaxPiercing { get; private set; }
 
-        private ProjectileConfigSO _projectileConfig;
+        public TurretConfigSO TurretConfig => _turretConfig;
+        public FloatUpgradeableStat ShotDelay { get; private set; }
+        public FloatUpgradeableStat Range { get; private set; }
+        public IntUpgradeableStat NumberOfTurrets { get; private set; }
+        public FloatUpgradeableStat BeamWidth { get; private set; }
+        public IntUpgradeableStat Damage { get; private set; }
+        public IntUpgradeableStat Piercing { get; private set; }
 
         private void OnEnable()
         {
@@ -38,58 +35,22 @@ namespace Assets.ScriptableObjects.Skills.PlayerSkills.MinigunSkill
 
         public override void AppendStatsForDisplay(List<NameUpgradableStatPair> destination)
         {
-            destination.Add(new NameUpgradableStatPair(nameof(DelayBetweenShoots), DelayBetweenShoots, null));
+            destination.Add(new NameUpgradableStatPair(nameof(ShotDelay), ShotDelay, null));
             destination.Add(new NameUpgradableStatPair(nameof(Range), Range, null));
             destination.Add(new NameUpgradableStatPair(nameof(NumberOfTurrets), NumberOfTurrets, null));
-            destination.Add(new NameUpgradableStatPair(nameof(BulletSize), BulletSize, null));
-            destination.Add(new NameUpgradableStatPair(nameof(BulletSpeed), BulletSpeed, null));
-            destination.Add(new NameUpgradableStatPair(nameof(BulletDamage), BulletDamage, null));
-            destination.Add(new NameUpgradableStatPair(nameof(BulletMaxPiercing), BulletMaxPiercing, null));
+            destination.Add(new NameUpgradableStatPair(nameof(BeamWidth), BeamWidth, null));
+            destination.Add(new NameUpgradableStatPair(nameof(Damage), Damage, null));
+            destination.Add(new NameUpgradableStatPair(nameof(Piercing), Piercing, null));
         }
 
         public override void ResetRuntimeState()
         {
-            DeepCopyUpgradeableStats();
-
-            PrepareTurretConfig();
-
-            PrepareProjectileConfig();
-
-            TurretConfig.ProjectileStatsSO = _projectileConfig;
-        }
-
-        private void DeepCopyUpgradeableStats()
-        {
+            ShotDelay = DeepCopyUtility.DeepCopy(_delayBetweenShootingBullets);
             Range = DeepCopyUtility.DeepCopy(_range);
             NumberOfTurrets = DeepCopyUtility.DeepCopy(_numberOfTurrets);
-            DelayBetweenShoots = DeepCopyUtility.DeepCopy(_delayBetweenShootingBullets);
-            BulletSize = DeepCopyUtility.DeepCopy(_startBulletSize);
-            BulletSpeed = DeepCopyUtility.DeepCopy(_startBulletSpeed);
-            BulletDamage = DeepCopyUtility.DeepCopy(_startBulletDamage);
-            BulletMaxPiercing = DeepCopyUtility.DeepCopy(_startBulletMaxPiercing);
-        }
-
-        private void PrepareTurretConfig()
-        {
-            TurretConfig.Range = Range.Value;
-            Range.OnUpgrade += (s, e) => TurretConfig.Range = Range.Value;
-        }
-
-        private void PrepareProjectileConfig()
-        {
-            _projectileConfig = ScriptableObject.CreateInstance<ProjectileConfigSO>();
-
-            _projectileConfig.Damage = BulletDamage.Value;
-            _projectileConfig.Size = BulletSize.Value;
-            _projectileConfig.Range = Range.Value;
-            _projectileConfig.Speed = BulletSpeed.Value;
-            _projectileConfig.MaxPiercing = BulletMaxPiercing.Value;
-
-            Range.OnUpgrade += (s, e) => _projectileConfig.Range = Range.Value;
-            BulletSize.OnUpgrade += (s, e) => _projectileConfig.Size = BulletSize.Value;
-            BulletSpeed.OnUpgrade += (s, e) => _projectileConfig.Speed = BulletSpeed.Value;
-            BulletDamage.OnUpgrade += (s, e) => _projectileConfig.Damage = BulletDamage.Value;
-            BulletMaxPiercing.OnUpgrade += (s, e) => _projectileConfig.MaxPiercing = BulletMaxPiercing.Value;
+            BeamWidth = DeepCopyUtility.DeepCopy(_startBulletSize);
+            Damage = DeepCopyUtility.DeepCopy(_startBulletDamage);
+            Piercing = DeepCopyUtility.DeepCopy(_startBulletMaxPiercing);
         }
     }
 }

@@ -16,7 +16,7 @@ It is not responsible for:
 
 - Skill firing cadence, target choice, turret rotation, muzzle VFX, or shooting audio.
 - Enemy health implementation or damage-number spawning.
-- Pool ownership; current pooling lives in `MinigunTurret`.
+- Pool ownership. Minigun now resolves instant laser lanes and owns no projectile pool.
 - Final projectile balance values stored in ScriptableObject assets.
 
 ## Reading Map
@@ -25,8 +25,7 @@ It is not responsible for:
   - Assets/Scripts/Projectiles/Projectile.cs
   - Assets/Scripts/Projectiles/ProjectileSpawnConfig.cs
   - Assets/ScriptableObjects/ProjectileConfigSO.cs
-- Current projectile owner:
-  - Assets/Scripts/Skills/PlayerSkills/Minigun/MinigunTurret.cs
+- Legacy projectile-oriented base (unused by Minigun):
   - Assets/Scripts/Skills/Turret.cs
 - Related code:
   - Assets/Scripts/StatusEffects/EntityManipulationHelper.cs
@@ -99,7 +98,7 @@ It is not responsible for:
 
 - Upstream dependencies:
   - Skill configs and `TurretConfigSO` provide projectile config.
-  - Minigun currently owns the projectile pool and uses `ProjectilesHolder` tag lookup from `Turret<TConfig>.Awake`.
+  - Minigun no longer consumes this system. Its standalone projectile prefab/config assets remain retained pending a separate retirement/reference audit.
   - DOTween drives range-expiration disappearance.
 - Downstream consumers:
   - Enemies receive damage through `IDamageable`.
@@ -113,7 +112,7 @@ It is not responsible for:
 ## Known Risks and Open Questions
 
 - Known limitations:
-  - `ProjectileSpawnConfig.ProjectileConfigSO` is populated by `MinigunTurret` but `Projectile.Initialize` currently receives `_config.ProjectileStatsSO` directly.
+  - Existing standalone Minigun projectile assets are legacy content; no live Minigun spawn path remains.
   - `Projectile.MoveProjectileInDirection(Vector3 direction)` ignores its `direction` parameter and uses `_movementDir`.
   - `ProjectileConfigSO.DisapearingDuration` contains a spelling error that is part of the current public API.
   - `Projectile.OnLifeEnd` and `OnCanBeReleased` can both be subscribed to the same release handler by current pool owners; double-release paths should be reviewed when changing lifecycle.

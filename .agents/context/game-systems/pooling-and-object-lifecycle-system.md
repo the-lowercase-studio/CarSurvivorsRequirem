@@ -34,7 +34,7 @@ It is not responsible for:
   - Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/SkillCrate.cs (IPoolable)
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs (ObjectPool<Enemy>, IObjectReleaseNotifier via spawner interfaces)
   - Assets/Scripts/LevelSystem/Exp/ExpParticleSpawner.cs (IObjectPool<ExpParticle>, IObjectReleaseNotifier via spawner interfaces)
-  - Assets/Scripts/Skills/PlayerSkills/Minigun/MinigunTurret.cs (IObjectPool<Projectile>)
+  - MinigunTurret reuses authored lane/beam children and preallocated resolver storage, without a projectile pool or per-shot GameObjects. Death/disable clear captured targets and hide visuals.
   - Assets/Scripts/Enemies/CollectibleDropNotifier.cs (ObjectPool<GameObject> for drop prefabs, monitors IPoolable.OnCanBeReleased)
   - Assets/Scripts/DamageNumbers/DamageNumbersSpawner.cs (IObjectPool<DamageNumber>, IEnableDisableFunctionalityTrigger<DamageNumbersSpawner>, IObjectReleaseNotifier via spawner interface)
   - Assets/Scripts/Settings/DamageNumbersSetting.cs (consumes IEnableDisableFunctionalityTrigger<DamageNumbersSpawner>)

@@ -29,6 +29,10 @@ Preset:
     value: 
     objectReference: {fileID: 11400000, guid: 09a2094f8392219419795ba6f67d3425, type: 2}
   - target: {fileID: 0}
+    propertyPath: _delayBetweenShootingBullets.<Icon>k__BackingField
+    value: 
+    objectReference: {fileID: -1115999999, guid: cee3411c082140d49bce96eb51f00885, type: 3}
+  - target: {fileID: 0}
     propertyPath: _delayBetweenShootingBullets.<IsSubstractModeOn>k__BackingField
     value: 1
     objectReference: {fileID: 0}
@@ -37,7 +41,11 @@ Preset:
     value: 2
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _delayBetweenShootingBullets._alwaysUseMinValueForUpgrade
+    propertyPath: _delayBetweenShootingBullets.<OverrideDefaultRarity>k__BackingField
+    value: 0
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: _delayBetweenShootingBullets.<Rarity>k__BackingField
     value: 0
     objectReference: {fileID: 0}
   - target: {fileID: 0}
@@ -47,6 +55,14 @@ Preset:
   - target: {fileID: 0}
     propertyPath: _delayBetweenShootingBullets.<Value>k__BackingField
     value: 1.2
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: _delayBetweenShootingBullets._alwaysUseMinValueForUpgrade
+    value: 0
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: _delayBetweenShootingBullets._hasUnlimitedMaxValue
+    value: 0
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: _delayBetweenShootingBullets._floatMinMaxRange.<Min>k__BackingField
@@ -65,6 +81,10 @@ Preset:
     value: 0.3
     objectReference: {fileID: 0}
   - target: {fileID: 0}
+    propertyPath: _range.<Icon>k__BackingField
+    value: 
+    objectReference: {fileID: -1240442457, guid: cee3411c082140d49bce96eb51f00885, type: 3}
+  - target: {fileID: 0}
     propertyPath: _range.<IsSubstractModeOn>k__BackingField
     value: 0
     objectReference: {fileID: 0}
@@ -73,7 +93,11 @@ Preset:
     value: 3
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _range._alwaysUseMinValueForUpgrade
+    propertyPath: _range.<OverrideDefaultRarity>k__BackingField
+    value: 0
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: _range.<Rarity>k__BackingField
     value: 0
     objectReference: {fileID: 0}
   - target: {fileID: 0}
@@ -83,6 +107,14 @@ Preset:
   - target: {fileID: 0}
     propertyPath: _range.<Value>k__BackingField
     value: 6
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: _range._alwaysUseMinValueForUpgrade
+    value: 0
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: _range._hasUnlimitedMaxValue
+    value: 0
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: _range._floatMinMaxRange.<Min>k__BackingField
@@ -101,6 +133,10 @@ Preset:
     value: 9
     objectReference: {fileID: 0}
   - target: {fileID: 0}
+    propertyPath: _numberOfTurrets.<Icon>k__BackingField
+    value: 
+    objectReference: {fileID: 387773495, guid: cee3411c082140d49bce96eb51f00885, type: 3}
+  - target: {fileID: 0}
     propertyPath: _numberOfTurrets.<IsSubstractModeOn>k__BackingField
     value: 0
     objectReference: {fileID: 0}
@@ -109,8 +145,12 @@ Preset:
     value: 0
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _numberOfTurrets._alwaysUseMinValueForUpgrade
+    propertyPath: _numberOfTurrets.<OverrideDefaultRarity>k__BackingField
     value: 1
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: _numberOfTurrets.<Rarity>k__BackingField
+    value: 2
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: _numberOfTurrets.<CanBeUpgraded>k__BackingField
@@ -119,6 +159,14 @@ Preset:
   - target: {fileID: 0}
     propertyPath: _numberOfTurrets.<Value>k__BackingField
     value: 1
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: _numberOfTurrets._alwaysUseMinValueForUpgrade
+    value: 1
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: _numberOfTurrets._hasUnlimitedMaxValue
+    value: 0
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: _numberOfTurrets._intMinMaxRange.<Min>k__BackingField
@@ -137,55 +185,23 @@ Preset:
     value: 1
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _projectileConfig
+    propertyPath: _startBulletSize.<Icon>k__BackingField
     value: 
-    objectReference: {fileID: 11400000, guid: b196fd0c1c6051341865604dd4fa9534, type: 2}
-  - target: {fileID: 0}
-    propertyPath: _startBulletSpeed.<IsSubstractModeOn>k__BackingField
-    value: 0
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: _startBulletSpeed.<Unit>k__BackingField
-    value: 1
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: _startBulletSpeed._alwaysUseMinValueForUpgrade
-    value: 0
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: _startBulletSpeed.<CanBeUpgraded>k__BackingField
-    value: 1
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: _startBulletSpeed.<Value>k__BackingField
-    value: 5
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: _startBulletSpeed._floatMinMaxRange.<Min>k__BackingField
-    value: 5
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: _startBulletSpeed._floatMinMaxRange.<Max>k__BackingField
-    value: 12
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: _startBulletSpeed._floatRangeOfPossibleValuesForUpgrade.<Min>k__BackingField
-    value: 2.2
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: _startBulletSpeed._floatRangeOfPossibleValuesForUpgrade.<Max>k__BackingField
-    value: 4.2
-    objectReference: {fileID: 0}
+    objectReference: {fileID: -644498185, guid: cee3411c082140d49bce96eb51f00885, type: 3}
   - target: {fileID: 0}
     propertyPath: _startBulletSize.<IsSubstractModeOn>k__BackingField
     value: 0
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: _startBulletSize.<Unit>k__BackingField
-    value: 1
+    value: 3
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _startBulletSize._alwaysUseMinValueForUpgrade
+    propertyPath: _startBulletSize.<OverrideDefaultRarity>k__BackingField
+    value: 0
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: _startBulletSize.<Rarity>k__BackingField
     value: 0
     objectReference: {fileID: 0}
   - target: {fileID: 0}
@@ -194,24 +210,36 @@ Preset:
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: _startBulletSize.<Value>k__BackingField
+    value: 0.24
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: _startBulletSize._alwaysUseMinValueForUpgrade
+    value: 0
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: _startBulletSize._hasUnlimitedMaxValue
     value: 1
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: _startBulletSize._floatMinMaxRange.<Min>k__BackingField
-    value: 1
+    value: 0.24
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: _startBulletSize._floatMinMaxRange.<Max>k__BackingField
-    value: 2
+    value: 0.48
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: _startBulletSize._floatRangeOfPossibleValuesForUpgrade.<Min>k__BackingField
-    value: 0.2
+    value: 0.048
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: _startBulletSize._floatRangeOfPossibleValuesForUpgrade.<Max>k__BackingField
-    value: 0.4
+    value: 0.096
     objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: _startBulletDamage.<Icon>k__BackingField
+    value: 
+    objectReference: {fileID: -838568848, guid: cee3411c082140d49bce96eb51f00885, type: 3}
   - target: {fileID: 0}
     propertyPath: _startBulletDamage.<IsSubstractModeOn>k__BackingField
     value: 0
@@ -221,7 +249,11 @@ Preset:
     value: 0
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _startBulletDamage._alwaysUseMinValueForUpgrade
+    propertyPath: _startBulletDamage.<OverrideDefaultRarity>k__BackingField
+    value: 0
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: _startBulletDamage.<Rarity>k__BackingField
     value: 0
     objectReference: {fileID: 0}
   - target: {fileID: 0}
@@ -231,6 +263,14 @@ Preset:
   - target: {fileID: 0}
     propertyPath: _startBulletDamage.<Value>k__BackingField
     value: 5
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: _startBulletDamage._alwaysUseMinValueForUpgrade
+    value: 0
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: _startBulletDamage._hasUnlimitedMaxValue
+    value: 1
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: _startBulletDamage._intMinMaxRange.<Min>k__BackingField
@@ -249,6 +289,10 @@ Preset:
     value: 7
     objectReference: {fileID: 0}
   - target: {fileID: 0}
+    propertyPath: _startBulletMaxPiercing.<Icon>k__BackingField
+    value: 
+    objectReference: {fileID: 1540327766, guid: cee3411c082140d49bce96eb51f00885, type: 3}
+  - target: {fileID: 0}
     propertyPath: _startBulletMaxPiercing.<IsSubstractModeOn>k__BackingField
     value: 0
     objectReference: {fileID: 0}
@@ -257,7 +301,11 @@ Preset:
     value: 0
     objectReference: {fileID: 0}
   - target: {fileID: 0}
-    propertyPath: _startBulletMaxPiercing._alwaysUseMinValueForUpgrade
+    propertyPath: _startBulletMaxPiercing.<OverrideDefaultRarity>k__BackingField
+    value: 0
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: _startBulletMaxPiercing.<Rarity>k__BackingField
     value: 0
     objectReference: {fileID: 0}
   - target: {fileID: 0}
@@ -269,12 +317,20 @@ Preset:
     value: 0
     objectReference: {fileID: 0}
   - target: {fileID: 0}
+    propertyPath: _startBulletMaxPiercing._alwaysUseMinValueForUpgrade
+    value: 0
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: _startBulletMaxPiercing._hasUnlimitedMaxValue
+    value: 0
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
     propertyPath: _startBulletMaxPiercing._intMinMaxRange.<Min>k__BackingField
     value: 0
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: _startBulletMaxPiercing._intMinMaxRange.<Max>k__BackingField
-    value: 10
+    value: 16
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: _startBulletMaxPiercing._intRangeOfPossibleValuesForUpgrade.<Min>k__BackingField
