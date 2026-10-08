@@ -30,6 +30,7 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - .agents/context/game-systems/damage-numbers-system.md
   - .agents/context/game-systems/collectibles-system.md
   - .agents/context/game-systems/spawners-system.md
+  - .agents/context/game-systems/dev-console-system.md
   - .agents/context/technology-documentation.md
 - Related agents or instructions:
   - Root `AGENTS.md`

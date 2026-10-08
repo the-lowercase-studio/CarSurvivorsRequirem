@@ -20,6 +20,8 @@ namespace Assets.Scripts.UI.Skills
 {
     public interface ISkillUpgradePresenter
     {
+        bool IsAutoUpgradeEnabled { get; set; }
+        void AutoResolvePendingUpgrades();
     }
 
     public class SkillUpgradePresenter : MonoBehaviour, ISkillUpgradePresenter
@@ -103,6 +105,43 @@ namespace Assets.Scripts.UI.Skills
             _skillUpgradeFlow.OnRequestQueued -= HandleRequestQueued;
         }
 
+        public bool IsAutoUpgradeEnabled { get; set; }
+
+        public void AutoResolvePendingUpgrades()
+        {
+            if (_newSkillSection != null)
+            {
+                _newSkillSection.SetActive(false);
+            }
+            if (_upgradeSkillSection != null)
+            {
+                _upgradeSkillSection.SetActive(false);
+            }
+            if (_skillsVisualPresenter != null)
+            {
+                _skillsVisualPresenter.HideAll();
+            }
+            _isShowingAnySection = false;
+
+            while (_skillUpgradeFlow.TryGetNextRequest(_playerManager.SkillsRegistry, out SkillUpgradeRequest request))
+            {
+                if (request.RequestType == SkillUpgradeRequestType.NewSkillChoice)
+                {
+                    if (request.SkillChoices != null && request.SkillChoices.Count > 0)
+                    {
+                        _playerManager.SkillsRegistry.InitializeSkill(request.SkillChoices[0]);
+                    }
+                }
+                else if (request.RequestType == SkillUpgradeRequestType.UpgradeSkill)
+                {
+                    if (request.UpgradeOptions != null && request.UpgradeOptions.Count > 0)
+                    {
+                        request.UpgradeOptions[0].Apply();
+                    }
+                }
+            }
+        }
+
         private void HandleRequestQueued(object sender, System.EventArgs e)
         {
             TryShowQueuedRewardSection();
@@ -128,6 +167,12 @@ namespace Assets.Scripts.UI.Skills
 
         private void TryShowQueuedRewardSection()
         {
+            if (IsAutoUpgradeEnabled)
+            {
+                AutoResolvePendingUpgrades();
+                return;
+            }
+
             if (!_isShowingAnySection)
             {
                 _isShowingAnySection = true;
@@ -146,6 +191,12 @@ namespace Assets.Scripts.UI.Skills
 
         private void HandleUpgradeableOrInitializableSkillsShowing()
         {
+            if (IsAutoUpgradeEnabled)
+            {
+                AutoResolvePendingUpgrades();
+                return;
+            }
+
             _skillsVisualPresenter.HideAll();
 
             if (_skillUpgradeFlow.TryGetNextRequest(_playerManager.SkillsRegistry, out SkillUpgradeRequest request))

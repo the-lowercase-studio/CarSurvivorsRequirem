@@ -15,6 +15,7 @@ namespace Assets.Scripts.UI.Level
     public interface IPlayerLevelPresenter
     {
         event EventHandler<ValueEventArgs<LevelData>> OnExpSliderVisualEndValueReached;
+        void FastForward();
     }
 
     public class PlayerLevelPresenter : MonoBehaviour, IPlayerLevelPresenter
@@ -214,6 +215,34 @@ namespace Assets.Scripts.UI.Level
             {
                 return UIConstants.BASE_EXP_INCREASE_ANIM_SPEED;
             }
+        }
+
+        public void FastForward()
+        {
+            KillExpIncreaseCoroutineIfPlaying();
+            if (_levelUpCoroutine != null)
+            {
+                StopCoroutine(_levelUpCoroutine);
+                _levelUpCoroutine = null;
+            }
+
+            while (_expVisualQueue.Count > 0)
+            {
+                ExpVisualEvent expEvent = _expVisualQueue.Dequeue();
+                _currentlyVisibleLevelData = expEvent.LevelData;
+                OnExpSliderVisualEndValueReached?.Invoke(this, new ValueEventArgs<LevelData>(expEvent.LevelData));
+            }
+
+            if (_playerLevelController != null)
+            {
+                _currentlyVisibleLevelData = _playerLevelController.LevelData;
+            }
+
+            _lastQueuedExpInSameLevelIncreaseEvent = null;
+
+            _expSlider.maxValue = _currentlyVisibleLevelData.MaxExp;
+            _expSlider.value = _currentlyVisibleLevelData.Exp;
+            UpdateLevelText();
         }
 
         private void UpdateLevelText()

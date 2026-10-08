@@ -21,6 +21,7 @@ namespace Assets.Scripts.Spawners.Enemies
     {
         IReadOnlyList<EnemySpawnInfo> EnemyConfigs { get; }
         void SpawnSpecificEnemy(EnemySpawnInfo enemyInfo, int count = 1);
+        bool TrySpawnEnemyAt(EnemySpawnInfo enemyInfo, Vector3 position, out Enemy enemy);
     }
 
     public class EnemiesSpawner : MonoBehaviour,
@@ -247,6 +248,21 @@ namespace Assets.Scripts.Spawners.Enemies
                     }
                 }
             }
+        }
+
+        public bool TrySpawnEnemyAt(EnemySpawnInfo enemyInfo, Vector3 position, out Enemy enemy)
+        {
+            enemy = null;
+            if (enemyInfo == null || !_enemyPools.TryGetValue(enemyInfo, out ObjectPool<Enemy> pool))
+            {
+                return false;
+            }
+
+            enemy = pool.Get();
+            _instancePoolMap[enemy] = pool;
+            enemy.transform.position = position;
+            enemy.MovementController.ResetAfterRelocation();
+            return true;
         }
 
         private void HandleSwarmVfxFinished(object sender, EventArgs args)

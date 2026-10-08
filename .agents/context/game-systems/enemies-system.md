@@ -83,6 +83,7 @@ The system is not responsible for:
   - .agents/context/game-systems/health-system.md
   - .agents/context/game-systems/collectibles-system.md
   - .agents/context/game-systems/di-and-boot-flow-system.md
+  - .agents/context/game-systems/dev-console-system.md
   - .agents/context/project-coding-standards.md
 - Related agents or instructions:
   - .agents/skills/document-system/SKILL.md
@@ -165,7 +166,6 @@ The system is not responsible for:
     - DEFAULT_SPAWN_OFFSET_DISTANCE = 15f
     - DEFAULT_REQUIRED_TOWERS = 2
     - DEFAULT_DELAY_BEFORE_GOLEM_SPAWN = 10.0f
-    - DEFAULT_DEBUG_SPAWN_KEY = KeyCode.P
 
 - Runtime flows:
   - Standard Wave Spawning Flow:

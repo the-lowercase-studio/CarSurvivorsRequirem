@@ -9,6 +9,7 @@ using Assets.Scripts.Spawners.GridSpace;
 using Assets.Scripts.Spawners.Swarm;
 using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.UI.Death;
+using Assets.Scripts.UI.DevConsole;
 using Assets.Scripts.UI.HUD;
 using Assets.Scripts.UI.Level;
 using Assets.Scripts.UI.Pause;
@@ -43,6 +44,8 @@ namespace Assets.Scripts.ReflexDI
         [SerializeField] private BossEncounterService _bossEncounterService;
         [SerializeField] private Assets.Scripts.Cameras.CinemachineCombatFollowOffsetController _cinemachineCombatFollowOffsetController;
         [SerializeField] private ArenaLeashWarningPresenter _arenaLeashWarningPresenter;
+        [SerializeField] private DevConsolePresenter _devConsolePresenter;
+        [SerializeField] private GameplayDevCommandsRegistrar _devCommandsRegistrar;
         [SerializeField] private Camera _mainCamera;
         [SerializeField] private Volume _postProcessVolume;
         [SerializeField, Tooltip("Scene-owned independent explosion presentation pool.")]
@@ -61,6 +64,14 @@ namespace Assets.Scripts.ReflexDI
 
             //Player
             builder.AddSingleton(_playerManager, typeof(IPlayerManager));
+            if (_playerManager != null)
+            {
+                ISkillUpgradePresenter skillUpgradePresenter = _playerManager.GetComponentInChildren<ISkillUpgradePresenter>();
+                if (skillUpgradePresenter != null)
+                {
+                    builder.AddSingleton(skillUpgradePresenter, typeof(ISkillUpgradePresenter));
+                }
+            }
 
             //UI Presenters
             if (_skillsStatsPresenter == null || _pausePresenter == null)
@@ -84,6 +95,17 @@ namespace Assets.Scripts.ReflexDI
             if (_playerSkillsHUDPresenter != null)
             {
                 builder.AddSingleton(_playerSkillsHUDPresenter, typeof(IPlayerSkillsHUDPresenter));
+            }
+
+            //Dev Console
+            builder.AddSingleton(typeof(DevConsoleService), typeof(IDevConsoleService));
+            if (_devConsolePresenter != null)
+            {
+                builder.AddSingleton(_devConsolePresenter, typeof(IDevConsolePresenter));
+            }
+            if (_devCommandsRegistrar != null)
+            {
+                builder.AddSingleton(_devCommandsRegistrar, typeof(IGameplayDevCommandsRegistrar));
             }
 
             //Grid System
