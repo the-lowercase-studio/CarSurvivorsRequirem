@@ -52,6 +52,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
   - .agents/context/game-systems/ui-system.md
   - .agents/context/game-systems/vfx-system.md
   - .agents/context/game-systems/audio-system.md
+  - .agents/context/game-systems/dev-console-system.md
 - Related agents or instructions:
   - .agents/skills/document-system/SKILL.md
   - .agents/skills/architecture-review/SKILL.md
@@ -61,7 +62,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
 ## Architecture and Data Flow
 
 - Core components:
-  - BossEncounterService: Scene-level service implementing IBossEncounterService. Injected with IBossHUDPresenter, ISwarmFreezer, and IPlayerManager. Tracks landmark tower encounters, dynamically spawns the GolemBoss prefab (either ahead of the player via _spawnOffsetDistance or at a provided position) upon defeating required towers (or via debug spawn key), freezes active swarm waves during the encounter via ISwarmFreezer.IsSuppressed, initializes the Boss HUD display, listens to OnBossDefeated, restores swarm spawning on victory, and instantiates the next stage portal prefab at the defeat location. Exposes debug spawning via _debugSpawnKey (P key).
+  - BossEncounterService: Scene-level service implementing IBossEncounterService. Injected with IBossHUDPresenter, ISwarmFreezer, and IPlayerManager. Tracks landmark tower encounters, dynamically spawns the GolemBoss prefab (either ahead of the player via _spawnOffsetDistance or at a provided position) upon defeating required towers (or via dev console commands `golem` or `spawn golem`), freezes active swarm waves during the encounter via ISwarmFreezer.IsSuppressed, initializes the Boss HUD display, listens to OnBossDefeated, restores swarm spawning on victory, and instantiates the next stage portal prefab at the defeat location. Exposes debug spawning via `SpawnGolemBoss()`.
   - GolemBoss: Root aggregate entity implementing IGolemBoss, IDamageable, and IKnockable. Requires a Health component. Injected through Reflex with IPlayerManager, IGridManager, damage number spawner, and EXP particle spawner. Manages health changes, phase progression (Phase 1, 2, 3), enrage visual state via MaterialPropertyBlock, knockback immunity, active telegraph tracking and cleanup, linear attack hitbox deactivation, state machine updates, and defeat event emission (OnBossDefeated).
   - GolemStateMachine: Discrete state machine coordinating active IGolemState instances and ticking individual cooldown timers (LeapCooldownTimer, StompCooldownTimer, LinearFistCooldownTimer, SkyBarrageCooldownTimer). Cooldown timers initialize with staggered values (GolemBossConstants.INITIAL_*_COOLDOWN) to ensure an opening pursuit phase.
   - GolemPursuitState: Primary navigation state. Coordinates GolemMovementController to follow PlayerPosition strictly while IsMovingAnimationPlaying is true. Checks attack priorities when arms are docked and executes immediate melee stomps when within StompRadius or anti-kiting leap slams when distance exceeds LeapTriggerMaxDistance.
@@ -145,7 +146,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
   - GolemBoss requires Health, Rigidbody, Collider, GolemMovementController, GolemArmSocketController, GolemAnimator, AudioClipPlayer, and telegraph indicator references on its prefab hierarchy.
   - GolemBoss requires Reflex dependency injection for IPlayerManager, IGridManager, IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig>, and IInWorldSpaceSpawner<ExpParticleSpawner, float>.
 - Testing implications:
-  - Debug spawning can be triggered using the debug spawn key (P key by default in BossEncounterService) in gameplay scenes.
+  - Debug spawning can be triggered using the developer console (`golem` or `spawn golem`) in gameplay scenes.
   - Compile changes via:
     dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
 
@@ -165,7 +166,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
 ## Known Risks and Open Questions
 
 - Known limitations:
-  - Encounter Coordination: BossEncounterService coordinates active tower encounters and dynamic GolemBoss spawning. Bypassing towers with debug key P logs an explicit QA warning.
+  - Encounter Coordination: BossEncounterService coordinates active tower encounters and dynamic GolemBoss spawning. Bypassing towers with dev console command `golem` logs an explicit QA warning.
   - Tween lifecycle: Rapid scene unload or sudden boss deactivation requires strict killing of active DOTween sequences across arm projectiles and states to prevent orphaned tweens.
 - Open design questions:
   - Portal interaction: The stage progression portal currently spawns at the defeat position; future mechanics may require custom entrance animations or player proximity triggers.

@@ -105,6 +105,7 @@ Use `.agents/skills/` as reusable workflows:
 - `batch-codebase-review`: partition and orchestrate project-wide architecture review and coding standards preservation via subagents or generated prompt roadmaps.
 - `batch-system-docs-update`: refresh existing system documentation through size-aware batches of one to three systems, delegated workers, and cross-batch verification.
 - `check-optimalization`: inspect performance risks and propose optimizations before implementing them.
+- `create-dev-console-command`: prepare dev console system context and draft a specification for a new in-game CLI command via gameplay-spec-writing.
 - `create-user-doc`: create or update human-facing, user-oriented project documentation in `.user-docs/` upon explicit user request.
 - `di-integration`: add or review Reflex bindings, injected services, and dependency boundaries.
 - `document-system`: create or update technical documentation for a specific gameplay system.
@@ -122,7 +123,7 @@ When a request matches a skill trigger, read the relevant `SKILL.md` before edit
 
 ## Agent Descriptors
 
-All 17 repository-local skills have an optional Codex descriptor at .agents/skills/<skill-name>/agents/openai.yaml. Each descriptor supplies display_name, short_description, and a default_prompt naming its skill. Invocation policy retains the default; descriptors do not grant action authority.
+All 18 repository-local skills have an optional Codex descriptor at .agents/skills/<skill-name>/agents/openai.yaml. Each descriptor supplies display_name, short_description, and a default_prompt naming its skill. Invocation policy retains the default; descriptors do not grant action authority.
 
 Treat these YAML files as optional UI/default-prompt metadata for compatible tools. The portable workflow source remains each skill's SKILL.md.
 

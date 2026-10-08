@@ -50,10 +50,6 @@ namespace Assets.Scripts.Enemies.Bosses
         [Tooltip("Breathing delay in seconds between final tower defeat and GolemBoss spawn.")]
         [SerializeField] private float _delayBeforeGolemSpawn = BossEncounterConstants.DEFAULT_DELAY_BEFORE_GOLEM_SPAWN;
 
-        [Header("Debug")]
-        [Tooltip("Debug key to force-spawn GolemBoss immediately.")]
-        [SerializeField] private KeyCode _debugSpawnKey = BossEncounterConstants.DEFAULT_DEBUG_SPAWN_KEY;
-
         private readonly HashSet<IEncounterArenaController> _registeredTowers = new();
         private readonly HashSet<IEncounterArenaController> _defeatedTowers = new();
         private GolemBoss _activeGolemInstance;
@@ -73,19 +69,6 @@ namespace Assets.Scripts.Enemies.Bosses
         public event Action<int, int> OnTowerDefeated;
         public event Action<IGolemBoss> OnGolemSpawned;
         public event Action<IGolemBoss> OnGolemDefeated;
-
-        private void Update()
-        {
-            if (Input.GetKeyDown(_debugSpawnKey))
-            {
-                if (RemainingTowersCount > 0)
-                {
-                    Debug.LogWarning($"[BossEncounterService] Debug force-spawning GolemBoss while {RemainingTowersCount} tower(s) remain undefeated.");
-                }
-
-                SpawnGolemBoss();
-            }
-        }
 
         private void OnDisable()
         {

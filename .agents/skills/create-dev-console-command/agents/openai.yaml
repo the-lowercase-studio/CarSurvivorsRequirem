@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Dev Console Command"
+  short_description: "Specify a new in-game dev console command via gameplay-spec-writing"
+  default_prompt: "Use $create-dev-console-command to gather dev console context and draft a local command specification."
