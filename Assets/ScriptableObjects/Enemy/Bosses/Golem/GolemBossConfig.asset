@@ -17,7 +17,7 @@ MonoBehaviour:
   _rotationSpeed: 120
   _bodyContactDamage: 25
   _expForKill: 500
-  _phase2HealthPercent: 0.3
+  _phase2HealthPercent: 0.4
   _phase2CooldownMultiplier: 0.4
   _phase2SpeedMultiplier: 1.35
   _phase2ArmSpeedMultiplier: 1.6

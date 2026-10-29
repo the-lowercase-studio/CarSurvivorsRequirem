@@ -38,11 +38,11 @@ namespace Assets.Scripts.UI.HUD
         public void ValidateLayout(BossHealthBarKind kind)
         {
             string prefix = kind == BossHealthBarKind.Golem ? "GOLEM_BOSS_HP_BAR_" : "TOWER_HP_BAR_";
-            ValidateImage(_mainBackground, prefix + "MAIN_BACKGROUND", false);
-            ValidateImage(_normalFillBackground, prefix + "FILL_BACKGROUND_PART_NORMAL", false);
-            ValidateImage(_enragedFillBackground, prefix + "FILL_BACKGROUND_PART_ENRAGED", false);
-            ValidateImage(_normalFill, prefix + "FILL_PART_NORMAL", true);
-            ValidateImage(_enragedFill, prefix + "FILL_PART_ENRAGED", true);
+            ValidateImage(_mainBackground, prefix + "MAIN_BACKGROUND", false, new Color32(255, 255, 255, 255));
+            ValidateImage(_normalFillBackground, prefix + "FILL_BACKGROUND_PART_NORMAL", false, new Color32(0x23, 0x07, 0x00, 0xFF));
+            ValidateImage(_enragedFillBackground, prefix + "FILL_BACKGROUND_PART_ENRAGED", false, new Color32(0x23, 0x07, 0x00, 0xFF));
+            ValidateImage(_normalFill, prefix + "FILL_PART_NORMAL", true, new Color32(255, 255, 255, 255));
+            ValidateImage(_enragedFill, prefix + "FILL_PART_ENRAGED", true, new Color32(255, 255, 255, 255));
             if (_enragedFillMotion == null || _enragedFill.transform.parent != _enragedFillMotion
                 || _enragePunchDuration <= 0f || _enragePunchInterval < 0f
                 || _enragePunchVibrato < 1 || _enragePunchOffset.x != 0f)
@@ -101,10 +101,10 @@ namespace Assets.Scripts.UI.HUD
             }
         }
 
-        private void ValidateImage(Image image, string spriteName, bool isFill)
+        private void ValidateImage(Image image, string spriteName, bool isFill, Color32 expectedColor)
         {
             if (image == null || image.sprite == null || image.sprite.name != spriteName
-                || image.raycastTarget || image.color != Color.white
+                || image.raycastTarget || !image.preserveAspect || (Color32)image.color is var c && (c.r != expectedColor.r || c.g != expectedColor.g || c.b != expectedColor.b || c.a != expectedColor.a)
                 || image.type != (isFill ? Image.Type.Filled : Image.Type.Simple)
                 || (isFill && (image.fillMethod != Image.FillMethod.Horizontal || image.fillOrigin != 0)))
             {

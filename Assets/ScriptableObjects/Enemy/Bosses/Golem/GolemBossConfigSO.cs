@@ -13,7 +13,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Config
         [SerializeField] private float _expForKill = 500f;
 
         [Header("Phase Thresholds & Multipliers")]
-        [SerializeField] private float _phase2HealthPercent = 0.3f;
+        [SerializeField] private float _phase2HealthPercent = 0.4f;
         [SerializeField] private float _phase2CooldownMultiplier = 0.4f;
         [SerializeField] private float _phase2SpeedMultiplier = 1.35f;
         [SerializeField] private float _phase2ArmSpeedMultiplier = 1.6f;
