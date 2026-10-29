@@ -63,7 +63,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
 
 - Core components:
   - BossEncounterService: Scene-level service implementing IBossEncounterService. Injected with IBossHUDPresenter, ISwarmFreezer, and IPlayerManager. Tracks landmark tower encounters, dynamically spawns the GolemBoss prefab (either ahead of the player via _spawnOffsetDistance or at a provided position) upon defeating required towers (or via dev console commands `golem` or `spawn golem`), freezes active swarm waves during the encounter via ISwarmFreezer.IsSuppressed, initializes the Boss HUD display, listens to OnBossDefeated, restores swarm spawning on victory, and instantiates the next stage portal prefab at the defeat location. Exposes debug spawning via `SpawnGolemBoss()`.
-  - GolemBoss: Root aggregate entity implementing IGolemBoss, IDamageable, and IKnockable. Requires a Health component. Injected through Reflex with IPlayerManager, IGridManager, damage number spawner, and EXP particle spawner. Manages health changes, phase progression (Phase 1, 2, 3), enrage visual state via MaterialPropertyBlock, knockback immunity, active telegraph tracking and cleanup, linear attack hitbox deactivation, state machine updates, and defeat event emission (OnBossDefeated).
+  - GolemBoss: Root aggregate entity implementing IGolemBoss, IDamageable, and IKnockable. Requires a Health component. Injected through Reflex with IPlayerManager, IGridManager, damage number spawner, and EXP particle spawner. Manages health changes, two-phase progression (normal phase 1, enraged phase 2), enrage visual state via MaterialPropertyBlock, knockback immunity, active telegraph tracking and cleanup, linear attack hitbox deactivation, state machine updates, and defeat event emission (OnBossDefeated).
   - GolemStateMachine: Discrete state machine coordinating active IGolemState instances and ticking individual cooldown timers (LeapCooldownTimer, StompCooldownTimer, LinearFistCooldownTimer, SkyBarrageCooldownTimer). Cooldown timers initialize with staggered values (GolemBossConstants.INITIAL_*_COOLDOWN) to ensure an opening pursuit phase.
   - GolemPursuitState: Primary navigation state. Coordinates GolemMovementController to follow PlayerPosition strictly while IsMovingAnimationPlaying is true. Checks attack priorities when arms are docked and executes immediate melee stomps when within StompRadius or anti-kiting leap slams when distance exceeds LeapTriggerMaxDistance.
   - GolemStompState: Dedicated melee stomp attack state. Sets movement kinematic and locks position, triggers the Stomp animation, handles damage application through TriggerStompDamage (with dual-path trigger via animation event or STOMP_IMPACT_DELAY fallback), and returns smoothly to the calling state (GolemPursuitState or GolemSkyBarrageState) after STOMP_TOTAL_DURATION.
@@ -79,7 +79,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
   - GolemAnimationEventsForwarder: Helper component attached alongside Animator clips to forward Unity Animation Events (Call_OnLinearFistRelease, Call_OnSkyBarrageRelease, Call_OnLeapTakeoffComplete, Call_OnLeapLandComplete, Call_OnStompImpact) to GolemAnimator.
   - GolemStompTrigger: Optional leg trigger component. Tracks overlapping player colliders via OnTriggerEnter/Exit and applies stomp damage, with fallback to Physics.OverlapBox over bounds.
   - GolemBossConfigSO: ScriptableObject holding combat balance parameters: health, movement and rotation speed, body contact damage, EXP reward, phase multipliers, leap slam timings/ranges, stomp timings/ranges, linear fist dimensions/speeds, sky barrage cycles/radii, and enrage colors.
-  - BossHUDPresenter: UI presenter implementing IBossHUDPresenter. Binds to IHealth, displays boss name, animates health slider changes with DOValue, evaluates health gradient fill color, and hides on boss defeat.
+  - BossHUDPresenter: Binds IBossHUDSource and the existing health instance, selects the authored Golem view by BossHealthBarKind, displays the designer name, and derives both phase-range fills from one interpolated HP ratio. BossHealthBarView owns the scaled enraged punch. Death or source disable hides immediately.
 - Key interfaces:
   - IBossEncounterService: Central encounter coordination contract for boss lifecycle, tower tracking, and active status query.
   - IGolemBoss: Aggregates subsystem access (Movement, Arms, LinearAttackHitbox, Animator, AudioClipPlayer, WorldGrid, Transform, Config, Phase multipliers, player distance/direction properties) and telegraph helper methods.
@@ -98,7 +98,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
     - Anti-Kiting Leap Slam: Triggered immediately if the player is beyond LeapTriggerMaxDistance, launching the boss along a kinematic parabolic arc to land precisely at the circular telegraph center.
     - Linear Rocket Fists: Initiated when Arms.AreBothArmsDocked is true, cooldown <= 0, and player is within LinearFistMaxDistance * 1.3f. Both arms detach and thrust forward along a rectangular telegraph lane while GolemLinearAttackHitbox sweeps the corridor dealing single-pass damage, then retract and dock.
     - Sky Arm Barrage: Highest priority arm attack when Arms.AreBothArmsDocked is true. Both arms launch skyward while the body holds still during the launch phase, then the body resumes pursuit and executes localized melee stomps while arms execute staggered multi-cycle bombardments on circular ground telegraphs around the player before returning to dock.
-  - Damage & Phase Enrage: Incoming damage spawns damage numbers, reduces Health, and plays blood VFX. When HP drops below Phase2HealthPercent (60%) or Phase3HealthPercent (30%), phase multipliers accelerate movement speed, arm velocity, and cooldown recovery. Phase 3 triggers Enrage with roar SFX, enrage VFX, and red material emission property overrides via MaterialPropertyBlock.
+  - Damage & Phase Enrage: Living HP at or below Config.Phase2HealthPercent (0.4 in authored data and defaults) commits phase 2 and enrage once. There is no intermediate phase or third-phase configuration. The former phase 3 tuning is retained in phase 2: cooldown 0.4, movement 1.35, arm speed 1.6. The authored asset uses five barrage cycles; new configurations default to three. An active barrage retains its attack-entry cycle count. Healing does not clear the latch. Presentation notification follows the existing roar, VFX and material feedback.
   - Defeat & Stage Progression: On Health.OnNoHealth, GolemDeathState cleans up active telegraphs and resets arms. EXP particles and death VFX spawn, BossEncounterService restores swarm spawning, hides the HUD, and instantiates the next stage progression portal.
 
 ## Rules and Invariants
@@ -154,12 +154,12 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
 
 - Upstream dependencies:
   - Reflex DI: Injects scene services (IPlayerManager, IGridManager, spawners, IBossHUDPresenter, ISwarmFreezer).
-  - DOTween: Drives projectile trajectories, leap jump arcs, returning arm motions, and HUD slider animations.
+  - DOTween: Drives projectile trajectories, leap jump arcs, returning arm motions, and HUD health-ratio interpolation and enraged fill punches.
   - Physics & Layers: Collisions and raycasts query EntityLayers.Player for combat damage and TerrainLayers.Impassable for obstacle sliding.
   - Indicators: Spawns CircularTelegraphIndicator and RectangularTelegraphIndicator for combat feedback.
 - Downstream consumers:
   - BossEncounterService listens to OnBossDefeated to trigger stage progression portal instantiation and clear swarm suppression.
-  - BossHUDPresenter consumes IHealth events to update boss health bar visuals.
+  - IGolemBoss inherits IBossHUDSource. BossHUDPresenter subscribes directly to Health.OnHealthChanged, Health.OnNoHealth and OnPresentationChanged. Enable/disable and committed enrage publish presentation changes; DeathVolume recovery does not invalidate the binding.
 - Cross-system coupling risks:
   - Prefab instantiation: Dynamically instantiated GolemBoss instances require Reflex container injection (via GameObjectInjector or Dynamic DI component) to resolve injected fields at runtime.
 

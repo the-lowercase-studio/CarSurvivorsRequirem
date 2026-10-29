@@ -17,14 +17,10 @@ MonoBehaviour:
   _rotationSpeed: 120
   _bodyContactDamage: 25
   _expForKill: 500
-  _phase2HealthPercent: 0.6
-  _phase3HealthPercent: 0.3
-  _phase2CooldownMultiplier: 0.7
-  _phase3CooldownMultiplier: 0.4
-  _phase2SpeedMultiplier: 1.15
-  _phase3SpeedMultiplier: 1.35
-  _phase2ArmSpeedMultiplier: 1.25
-  _phase3ArmSpeedMultiplier: 1.6
+  _phase2HealthPercent: 0.4
+  _phase2CooldownMultiplier: 0.4
+  _phase2SpeedMultiplier: 1.35
+  _phase2ArmSpeedMultiplier: 1.6
   _leapTriggerMaxDistance: 25
   _leapCooldown: 8
   _leapAirTime: 1.5
@@ -51,8 +47,7 @@ MonoBehaviour:
   _skyBarrageCooldown: 10
   _skyBarrageReleaseDelay: 1.5
   _skyBarrageCyclesPhase1: 2
-  _skyBarrageCyclesPhase2: 3
-  _skyBarrageCyclesPhase3: 5
+  _skyBarrageCyclesPhase2: 5
   _skyArmLaunchAirTime: 1
   _skyArmFallSpeed: 35
   _skyArmImpactRadius: 4.8

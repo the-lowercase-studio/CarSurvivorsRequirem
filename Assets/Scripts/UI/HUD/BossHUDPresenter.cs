@@ -1,128 +1,195 @@
 using System;
-using DG.Tweening;
+using Assets.Scripts.Enemies.Bosses;
 using Assets.Scripts.HealthSystem;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Assets.Scripts.UI.HUD
 {
     public interface IBossHUDPresenter
     {
-        void Show(IHealth bossHealth, string bossName);
+        void Show(IBossHUDSource source, string bossName);
         void Hide();
     }
 
     public class BossHUDPresenter : MonoBehaviour, IBossHUDPresenter
     {
         [SerializeField] private GameObject _visual;
-        [SerializeField] private Slider _healthSlider;
-        [SerializeField] private Image _fillImage;
-        [SerializeField] private Gradient _healthGradient;
+        [SerializeField] private BossHealthBarView _towerHealthBar;
+        [SerializeField] private BossHealthBarView _golemHealthBar;
         [SerializeField] private TextMeshProUGUI _bossTitleText;
+        [SerializeField] private float _healthTweenDuration = 0.2f;
 
+        private IBossHUDSource _activeSource;
         private IHealth _activeHealth;
-        private Tween _sliderTween;
+        private BossHealthBarView _activeView;
+        private Tweener _healthTween;
+        private float _displayedRatio;
+        private float _targetRatio;
+        private float _threshold;
+        private bool _isEnraged;
+        private int _bindingGeneration;
+        private EventHandler _healthChangedHandler;
+        private EventHandler _noHealthHandler;
+        private Action _presentationChangedHandler;
 
         private void Awake()
         {
-            _visual.SetActive(false);
+            if (_visual == null || _towerHealthBar == null || _golemHealthBar == null
+                || _towerHealthBar == _golemHealthBar || _bossTitleText == null || _healthTweenDuration <= 0f)
+            {
+                throw new InvalidOperationException(name + ": assign both boss health layouts, Visual, title and a positive tween duration.");
+            }
+            _towerHealthBar.ValidateLayout(BossHealthBarKind.Tower);
+            _golemHealthBar.ValidateLayout(BossHealthBarKind.Golem);
+            _bossTitleText.raycastTarget = false;
+            Hide();
         }
 
         private void OnDisable()
         {
-            UnsubscribeHealth();
-            KillTweens();
+            Hide();
         }
 
         private void OnDestroy()
         {
-            UnsubscribeHealth();
-            KillTweens();
+            Hide();
         }
 
-        public void Show(IHealth bossHealth, string bossName)
+        public void Show(IBossHUDSource source, string bossName)
         {
-            UnsubscribeHealth();
-            KillTweens();
-
-            _activeHealth = bossHealth;
-
-            if (_bossTitleText != null)
+            Hide();
+            if (source == null)
             {
-                _bossTitleText.text = bossName;
+                throw new ArgumentNullException(nameof(source));
             }
-
-            if (_healthSlider != null && _activeHealth != null)
+            if (!isActiveAndEnabled || !source.IsActive || source.Health == null || !source.Health.IsAlive())
             {
-                _healthSlider.maxValue = _activeHealth.MaxHealth;
-                _healthSlider.value = _activeHealth.CurrentHealth;
-                UpdateFillColor();
+                return;
             }
-
-            if (_activeHealth != null)
+            ValidateSource(source);
+            switch (source.HealthBarKind)
             {
-                _activeHealth.OnHealthChanged += Health_OnHealthChanged;
-                _activeHealth.OnNoHealth += Health_OnNoHealth;
+                case BossHealthBarKind.Tower:
+                    _activeView = _towerHealthBar;
+                    break;
+                case BossHealthBarKind.Golem:
+                    _activeView = _golemHealthBar;
+                    break;
+                default:
+                    throw new InvalidOperationException("Unsupported boss health bar kind.");
             }
-
+            _activeSource = source;
+            _activeHealth = source.Health;
+            _threshold = source.EnrageHealthPercent;
+            _isEnraged = source.IsEnraged;
+            _targetRatio = Mathf.Clamp01(_activeHealth.CurrentHealth / _activeHealth.MaxHealth);
+            _displayedRatio = _targetRatio;
+            _bossTitleText.text = bossName;
+            int generation = _bindingGeneration;
+            _healthChangedHandler = (sender, args) => { RefreshBinding(source, generation); };
+            _noHealthHandler = (sender, args) => { RefreshBinding(source, generation); };
+            _presentationChangedHandler = () => { RefreshBinding(source, generation); };
+            _activeHealth.OnHealthChanged += _healthChangedHandler;
+            _activeHealth.OnNoHealth += _noHealthHandler;
+            source.OnPresentationChanged += _presentationChangedHandler;
+            Render();
+            _activeView.gameObject.SetActive(true);
             _visual.SetActive(true);
+            _activeView.SetEnraged(_isEnraged);
         }
 
         public void Hide()
         {
-            UnsubscribeHealth();
-            KillTweens();
-
-            if (_visual != null)
+            _bindingGeneration++;
+            if (_activeSource != null)
             {
-                _visual.SetActive(false);
+                _activeHealth.OnHealthChanged -= _healthChangedHandler;
+                _activeHealth.OnNoHealth -= _noHealthHandler;
+                _activeSource.OnPresentationChanged -= _presentationChangedHandler;
             }
+            _activeSource = null;
+            _activeHealth = null;
+            _activeView = null;
+            _healthChangedHandler = null;
+            _noHealthHandler = null;
+            _presentationChangedHandler = null;
+            KillHealthTween();
+            // Cleanup also runs when an incompletely authored component is destroyed in Edit Mode.
+            if (_towerHealthBar != null) _towerHealthBar.ResetView();
+            if (_golemHealthBar != null) _golemHealthBar.ResetView();
+            if (_visual != null) _visual.SetActive(false);
         }
 
-        private void Health_OnHealthChanged(object sender, EventArgs e)
+        private void RefreshBinding(IBossHUDSource source, int generation)
         {
-            if (_activeHealth == null || _healthSlider == null)
+            if (generation != _bindingGeneration || !ReferenceEquals(source, _activeSource))
             {
                 return;
             }
-
-            _sliderTween?.Kill();
-            _sliderTween = _healthSlider.DOValue(_activeHealth.CurrentHealth, 0.2f).SetEase(Ease.OutQuad);
-            UpdateFillColor();
-        }
-
-        private void Health_OnNoHealth(object sender, EventArgs e)
-        {
-            Hide();
-        }
-
-        private void UpdateFillColor()
-        {
-            if (_fillImage != null && _healthGradient != null && _activeHealth != null && _activeHealth.MaxHealth > 0f)
+            if (!source.IsActive || !_activeHealth.IsAlive() || _activeHealth.CurrentHealth <= 0f)
             {
-                float ratio = Mathf.Clamp01(_activeHealth.CurrentHealth / _activeHealth.MaxHealth);
-                _fillImage.color = _healthGradient.Evaluate(ratio);
+                Hide();
+                return;
+            }
+            ValidateSource(source);
+            _threshold = source.EnrageHealthPercent;
+            _isEnraged = source.IsEnraged;
+            float ratio = Mathf.Clamp01(_activeHealth.CurrentHealth / _activeHealth.MaxHealth);
+            _activeView.SetEnraged(_isEnraged);
+            Render();
+            if (ratio == _targetRatio)
+            {
+                return;
+            }
+            _targetRatio = ratio;
+            if (_healthTween == null)
+            {
+                _healthTween = DOTween.To(GetDisplayedRatio, SetDisplayedRatio, ratio, _healthTweenDuration)
+                    .SetEase(Ease.OutQuad).SetUpdate(false).SetAutoKill(false);
+            }
+            else
+            {
+                _healthTween.ChangeEndValue(ratio, _healthTweenDuration, true).Restart();
             }
         }
 
-        private void UnsubscribeHealth()
+        private float GetDisplayedRatio()
         {
-            if (_activeHealth != null)
+            return _displayedRatio;
+        }
+
+        private void SetDisplayedRatio(float value)
+        {
+            _displayedRatio = value;
+            Render();
+        }
+
+        private void Render()
+        {
+            _activeView.Render(_displayedRatio, _threshold, _isEnraged);
+        }
+
+        private void KillHealthTween()
+        {
+            if (_healthTween != null)
             {
-                _activeHealth.OnHealthChanged -= Health_OnHealthChanged;
-                _activeHealth.OnNoHealth -= Health_OnNoHealth;
-                _activeHealth = null;
+                _healthTween.Kill();
+                _healthTween = null;
             }
         }
 
-        private void KillTweens()
+        private void ValidateSource(IBossHUDSource source)
         {
-            if (_sliderTween != null && _sliderTween.IsActive())
+            float threshold = source.EnrageHealthPercent;
+            float maxHealth = source.Health.MaxHealth;
+            if (!(threshold > 0f && threshold < 1f) || !(maxHealth > 0f) || float.IsInfinity(maxHealth)
+                || float.IsNaN(source.Health.CurrentHealth) || float.IsInfinity(source.Health.CurrentHealth))
             {
-                _sliderTween.Kill();
+                Hide();
+                throw new InvalidOperationException("Boss HUD requires finite health, positive maximum health and an enrage threshold strictly between zero and one.");
             }
-            _sliderTween = null;
         }
     }
 }

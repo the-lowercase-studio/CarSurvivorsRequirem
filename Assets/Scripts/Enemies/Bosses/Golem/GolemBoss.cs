@@ -82,6 +82,11 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         private bool _isEnraged;
         private readonly List<ITelegraphIndicator> _activeTelegraphs = new List<ITelegraphIndicator>();
 
+        public BossHealthBarKind HealthBarKind => BossHealthBarKind.Golem;
+        public float EnrageHealthPercent => _config.Phase2HealthPercent;
+        public bool IsActive => isActiveAndEnabled && Health != null && Health.IsAlive();
+        public event Action OnPresentationChanged;
+
         public event Action<IGolemBoss> OnBossDefeated;
 
         public bool IsOperational => isActiveAndEnabled && Health.IsAlive();
@@ -104,7 +109,6 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         {
             get
             {
-                if (CurrentPhase == 3) return _config.Phase3CooldownMultiplier;
                 if (CurrentPhase == 2) return _config.Phase2CooldownMultiplier;
                 return 1f;
             }
@@ -114,7 +118,6 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         {
             get
             {
-                if (CurrentPhase == 3) return _config.Phase3SpeedMultiplier;
                 if (CurrentPhase == 2) return _config.Phase2SpeedMultiplier;
                 return 1f;
             }
@@ -124,7 +127,6 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         {
             get
             {
-                if (CurrentPhase == 3) return _config.Phase3ArmSpeedMultiplier;
                 if (CurrentPhase == 2) return _config.Phase2ArmSpeedMultiplier;
                 return 1f;
             }
@@ -186,6 +188,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
                 GolemBossConstants.INITIAL_SKY_BARRAGE_COOLDOWN
             );
             _stateMachine.Initialize(_pursuitState);
+            OnPresentationChanged?.Invoke();
         }
 
         private void OnDisable()
@@ -208,6 +211,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
                 _linearAttackHitbox.Deactivate();
             }
             DismissAllTelegraphs();
+            OnPresentationChanged?.Invoke();
         }
 
         private void OnDestroy()
@@ -538,19 +542,15 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
 
             float healthPercentage = Health.CurrentHealth / Health.MaxHealth;
 
-            if (healthPercentage <= _config.Phase3HealthPercent && CurrentPhase < 3)
+            if (healthPercentage <= _config.Phase2HealthPercent && CurrentPhase < 2)
             {
                 TriggerEnragePhase();
-            }
-            else if (healthPercentage <= _config.Phase2HealthPercent && CurrentPhase < 2)
-            {
-                CurrentPhase = 2;
             }
         }
 
         private void TriggerEnragePhase()
         {
-            CurrentPhase = 3;
+            CurrentPhase = 2;
             _isEnraged = true;
 
             _audioClipPlayer?.PlayOneShot(GolemBossConstants.ROAR_SFX_KEY);
@@ -561,6 +561,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
             }
 
             ApplyEnrageMaterials();
+            OnPresentationChanged?.Invoke();
         }
 
         private void ApplyEnrageMaterials()

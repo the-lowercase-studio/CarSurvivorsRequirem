@@ -25,13 +25,11 @@ using Grid = Assets.Scripts.Navigation.GridSystem.Grid;
 
 namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
 {
-    public interface IMortarTowerBoss : IDamageable, IKnockable
+    public interface IMortarTowerBoss : IDamageable, IKnockable, IBossHUDSource
     {
-        IHealth Health { get; }
         MortarTowerConfigSO Config { get; }
         Transform Transform { get; }
         Transform TurretHousing { get; }
-        bool IsEnraged { get; }
         event Action<IMortarTowerBoss> OnBossDefeated;
         void StartEncounter();
         void ResetEncounter();
@@ -82,6 +80,11 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
         private Tween _barrelRecoilTween;
         private Sequence _housingRecoilSequence;
         private bool _isEnraged;
+
+        public BossHealthBarKind HealthBarKind => BossHealthBarKind.Tower;
+        public float EnrageHealthPercent => _config.EnrageHealthPercent;
+        public bool IsActive => isActiveAndEnabled && Health != null && Health.IsAlive();
+        public event Action OnPresentationChanged;
 
         public event Action<IMortarTowerBoss> OnBossDefeated;
 
@@ -271,6 +274,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
 
             _isEnraged = false;
             _stateMachine.Initialize(_idleState);
+            OnPresentationChanged?.Invoke();
         }
 
         private void OnDisable()
@@ -288,6 +292,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
             {
                 _boulderHitbox.Stop();
             }
+            OnPresentationChanged?.Invoke();
         }
 
         private void OnDestroy()
@@ -362,6 +367,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
 
             _cooldownState.ResetAttackCounter();
             _stateMachine.ChangeState(_idleState);
+            OnPresentationChanged?.Invoke();
         }
 
         public void ChangeState(IMortarTowerState newState)
@@ -577,6 +583,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
             }
 
             ApplyEnrageMaterials();
+            OnPresentationChanged?.Invoke();
         }
 
         private void ApplyEnrageMaterials()

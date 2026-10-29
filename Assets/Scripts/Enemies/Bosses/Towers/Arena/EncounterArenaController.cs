@@ -288,7 +288,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
 
                 if (_bossEncounterService != null && _boss.Health != null)
                 {
-                    _bossEncounterService.NotifyEncounterEngaged(_boss.Health, _bossDisplayName);
+                    _bossEncounterService.NotifyEncounterEngaged(_boss, _bossDisplayName);
                 }
 
                 if (_cameraController != null)
