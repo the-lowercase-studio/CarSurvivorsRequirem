@@ -13,14 +13,10 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Config
         [SerializeField] private float _expForKill = 500f;
 
         [Header("Phase Thresholds & Multipliers")]
-        [SerializeField] private float _phase2HealthPercent = 0.6f;
-        [SerializeField] private float _phase3HealthPercent = 0.3f;
-        [SerializeField] private float _phase2CooldownMultiplier = 0.7f;
-        [SerializeField] private float _phase3CooldownMultiplier = 0.4f;
-        [SerializeField] private float _phase2SpeedMultiplier = 1.15f;
-        [SerializeField] private float _phase3SpeedMultiplier = 1.35f;
-        [SerializeField] private float _phase2ArmSpeedMultiplier = 1.25f;
-        [SerializeField] private float _phase3ArmSpeedMultiplier = 1.6f;
+        [SerializeField] private float _phase2HealthPercent = 0.3f;
+        [SerializeField] private float _phase2CooldownMultiplier = 0.4f;
+        [SerializeField] private float _phase2SpeedMultiplier = 1.35f;
+        [SerializeField] private float _phase2ArmSpeedMultiplier = 1.6f;
 
         [Header("Attack 1: Leap Slam (AOE / Anti-Kiting)")]
         [SerializeField] private float _leapTriggerMaxDistance = 25f;
@@ -55,8 +51,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Config
         [SerializeField] private float _skyBarrageCooldown = 10f;
         [SerializeField] private float _skyBarrageReleaseDelay = 1.5f;
         [SerializeField] private int _skyBarrageCyclesPhase1 = 2;
-        [SerializeField] private int _skyBarrageCyclesPhase2 = 2;
-        [SerializeField] private int _skyBarrageCyclesPhase3 = 3;
+        [SerializeField] private int _skyBarrageCyclesPhase2 = 3;
         [SerializeField] private float _skyArmLaunchAirTime = 1.0f;
         [SerializeField] private float _skyArmFallSpeed = 35f;
         [SerializeField] private float _skyArmImpactRadius = 4.8f;
@@ -78,13 +73,9 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Config
         public float ExpForKill => _expForKill;
 
         public float Phase2HealthPercent => _phase2HealthPercent;
-        public float Phase3HealthPercent => _phase3HealthPercent;
         public float Phase2CooldownMultiplier => _phase2CooldownMultiplier;
-        public float Phase3CooldownMultiplier => _phase3CooldownMultiplier;
         public float Phase2SpeedMultiplier => _phase2SpeedMultiplier;
-        public float Phase3SpeedMultiplier => _phase3SpeedMultiplier;
         public float Phase2ArmSpeedMultiplier => _phase2ArmSpeedMultiplier;
-        public float Phase3ArmSpeedMultiplier => _phase3ArmSpeedMultiplier;
 
         public float LeapTriggerMaxDistance => _leapTriggerMaxDistance;
         public float LeapCooldown => _leapCooldown;
@@ -116,7 +107,6 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Config
         public float SkyBarrageReleaseDelay => _skyBarrageReleaseDelay;
         public int SkyBarrageCyclesPhase1 => _skyBarrageCyclesPhase1;
         public int SkyBarrageCyclesPhase2 => _skyBarrageCyclesPhase2;
-        public int SkyBarrageCyclesPhase3 => _skyBarrageCyclesPhase3;
         public float SkyArmLaunchAirTime => _skyArmLaunchAirTime;
         public float SkyArmFallSpeed => _skyArmFallSpeed;
         public float SkyArmImpactRadius => _skyArmImpactRadius;

@@ -67,6 +67,16 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Player death is initiated by health reaching zero. `PlayerDeathHandler` hides player visuals, disables non-wheel colliders, plays death VFX, and only calls `IPlayerDeathPresenter.EnableDeathScreen` after death VFX finishes.
   - Settings UI option components load stored/default values when enabled, subscribe to Unity UI value-change events, save changed values through their injected setting, and immediately call `Load` to apply the setting.
 
+## Contextual Boss HUD
+
+- Assets/Scripts/UI/HUD/BossHUDPresenter.cs keeps the existing scene instance and Reflex binding. Show accepts IBossHUDSource plus the designer display name; the last explicit Show owns the single HUD. Source identity comes from BossHealthBarKind, independently of title text.
+- Assets/Scripts/Enemies/Bosses/IBossHUDSource.cs exposes the existing IHealth, configured threshold, latched enrage and active state. Both boss owners publish OnPresentationChanged after committed feedback or lifecycle changes. Encounter coordination forwards the source without forwarding its events. The optional null arena encounter still suppresses swarms without showing a bar.
+- Assets/Scripts/UI/HUD/BossHealthBarView.cs renders separate scene-authored Tower/Golem layouts under the retained Visual container. Required semantic sprites and fill settings are validated, including inactive views. The legacy Slider/Gradient hierarchy is retired; title and read-only Images have raycasts disabled.
+- One 0.2-second Ease.OutQuad HP-ratio tween drives both fills. Normal is Clamp01((h-t)/(1-t)); enraged is latchedEnrage ? Clamp01(h/t) : 1. The threshold comes from each boss config, currently 0.3. Show snapshots immediately; duplicate health/presentation events do not restart interpolation or punches. Generation-checked callbacks cannot update a replacement binding.
+- Each view owns at most one repeating scaled DOTween Sequence: vertical anchored punch (2 Canvas units, 0.28 seconds, vibrato 8, elasticity 0.35), then 0.18 seconds rest. Only EnragedFillMotion moves. Hide, source invalidation, presenter disable/destroy, and view disable restore the authored baseline and kill owned tweens. Presenter disable clears its binding; re-enabling waits for an explicit Show.
+- The active presenter root remains enabled while Visual hides. Boss death hides immediately; player death retains the existing policy and scaled pause. Golem recovery retains its source and punch rhythm. No runtime layout generation, polling loop, global boss service, sprite catalog, or new DI binding is used.
+- RuinedBloodCity authors each assembly at 1400 Canvas units wide with independent aspect-correct main-background heights. Golem normal segment starts 562.2 imported sprite pixels from the main left edge; enraged starts 23.2, yielding intentional overlap. Tower segments start at 20 and 586.4 imported pixels and are adjacent. Vertical fill centers are 65 (Golem) and 62 (Tower) imported pixels above assembly bottom before uniform scaling. Imported geometry is based on the existing 2048 texture limit; sprite/import identities are unchanged.
+
 ## Rules and Invariants
 
 - Critical behavior rules:

@@ -215,16 +215,9 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         private int GetTotalCyclesForCurrentPhase()
         {
-            switch (_boss.CurrentPhase)
-            {
-                case 1:
-                    return _boss.Config.SkyBarrageCyclesPhase1;
-                case 2:
-                    return _boss.Config.SkyBarrageCyclesPhase2;
-                case 3:
-                default:
-                    return _boss.Config.SkyBarrageCyclesPhase3;
-            }
+            return _boss.CurrentPhase == 1
+                ? _boss.Config.SkyBarrageCyclesPhase1
+                : _boss.Config.SkyBarrageCyclesPhase2;
         }
 
         private void StartArmLifecycle(GolemArmProjectile arm, float initialDelay, bool isLeftArm)

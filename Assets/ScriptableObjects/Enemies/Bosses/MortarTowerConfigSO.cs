@@ -7,7 +7,7 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
     {
         [Header("Health & Phase Configuration")]
         [SerializeField] private float _maxHealth = 5000f;
-        [SerializeField] private float _enrageHealthPercent = 0.40f;
+        [SerializeField] private float _enrageHealthPercent = 0.3f;
         [SerializeField] private float _expReward = 500f;
         [SerializeField] private Color _enrageColor = new Color(1f, 0.2f, 0.1f);
         [SerializeField] [ColorUsage(true, true)] private Color _enrageEmissionColor = new Color(2f, 0.4f, 0.1f);

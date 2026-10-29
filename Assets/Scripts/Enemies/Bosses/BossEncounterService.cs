@@ -21,7 +21,7 @@ namespace Assets.Scripts.Enemies.Bosses
         int RemainingTowersCount { get; }
         void RegisterTower(IEncounterArenaController towerArena);
         void UnregisterTower(IEncounterArenaController towerArena);
-        void NotifyEncounterEngaged(IHealth bossHealth, string displayName);
+        void NotifyEncounterEngaged(IBossHUDSource source, string displayName);
         void NotifyEncounterDisengaged();
         void NotifyTowerDefeated(IEncounterArenaController towerArena);
         void SpawnGolemBoss(Vector3? spawnPosition = null);
@@ -139,13 +139,13 @@ namespace Assets.Scripts.Enemies.Bosses
             _registeredTowers.Remove(towerArena);
         }
 
-        public void NotifyEncounterEngaged(IHealth bossHealth, string displayName)
+        public void NotifyEncounterEngaged(IBossHUDSource source, string displayName)
         {
             _isEncounterEngaged = true;
 
-            if (_bossHUDPresenter != null && bossHealth != null)
+            if (_bossHUDPresenter != null && source != null)
             {
-                _bossHUDPresenter.Show(bossHealth, displayName);
+                _bossHUDPresenter.Show(source, displayName);
             }
 
             UpdateSwarmSuppression();
@@ -223,7 +223,7 @@ namespace Assets.Scripts.Enemies.Bosses
             _activeGolemInstance = Instantiate(_golemBossPrefab, finalSpawnPos, Quaternion.identity);
             _activeGolemInstance.OnBossDefeated += Golem_OnBossDefeated;
 
-            NotifyEncounterEngaged(_activeGolemInstance.Health, _golemDisplayName);
+            NotifyEncounterEngaged(_activeGolemInstance, _golemDisplayName);
 
             OnGolemSpawned?.Invoke(_activeGolemInstance);
         }

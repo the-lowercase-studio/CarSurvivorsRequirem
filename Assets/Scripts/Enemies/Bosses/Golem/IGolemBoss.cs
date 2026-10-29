@@ -13,7 +13,7 @@ using Grid = Assets.Scripts.Navigation.GridSystem.Grid;
 
 namespace Assets.Scripts.Enemies.Bosses.Golem
 {
-    public interface IGolemBoss : IHealthy
+    public interface IGolemBoss : IBossHUDSource
     {
         GolemBossConfigSO Config { get; }
         IGolemMovementController Movement { get; }
@@ -28,7 +28,6 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         float DistanceToPlayer { get; }
         Vector3 DirectionToPlayer { get; }
         int CurrentPhase { get; }
-        bool IsEnraged { get; }
         float CurrentCooldownMultiplier { get; }
         float CurrentSpeedMultiplier { get; }
         float CurrentArmSpeedMultiplier { get; }
