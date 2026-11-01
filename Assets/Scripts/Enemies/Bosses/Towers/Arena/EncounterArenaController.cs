@@ -25,6 +25,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
         event Action<float> OnLeashCountdownTick;
         event Action OnEncounterReset;
         event Action OnEncounterCompleted;
+        IBossCombatTarget BossTarget { get; }
         void NotifyDirectCombatEngaged();
     }
 
@@ -59,6 +60,8 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
         public event Action<float> OnLeashCountdownTick;
         public event Action OnEncounterReset;
         public event Action OnEncounterCompleted;
+
+        public IBossCombatTarget BossTarget => _boss;
 
         public bool IsEncounterActive
         {

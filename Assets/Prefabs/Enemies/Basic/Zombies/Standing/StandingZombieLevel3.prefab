@@ -14,7 +14,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 229474845590807783, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
       propertyPath: _dropEntries.Array.data[0]._dropChancePercent
-      value: 1.5
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 229474845590807783, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
+      propertyPath: _dropEntries.Array.data[1]._dropChancePercent
+      value: 0.06
+      objectReference: {fileID: 0}
+    - target: {fileID: 229474845590807783, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
+      propertyPath: _dropEntries.Array.data[2]._dropChancePercent
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 229474845590807783, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
+      propertyPath: _dropEntries.Array.data[3]._dropChancePercent
+      value: 0.01
       objectReference: {fileID: 0}
     - target: {fileID: 323885298071574372, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
       propertyPath: m_LocalPosition.y

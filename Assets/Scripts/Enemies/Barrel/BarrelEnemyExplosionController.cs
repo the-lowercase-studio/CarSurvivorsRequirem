@@ -58,6 +58,8 @@ namespace Assets.Scripts.Enemies.Barrel
             {
                 Debug.LogError("Barrel attack feedback is not assigned on the prefab.", this);
             }
+
+            _warning.SetFreezable(true);
         }
 
         private void OnEnable()
@@ -87,8 +89,9 @@ namespace Assets.Scripts.Enemies.Barrel
 
         private void Update()
         {
+            float currentTime = _enemy != null ? _enemy.UnfrozenTime : Time.time;
             if (_state == ExplosionState.Priming
-                && Time.time - _primingStartedAt >= EnemyAnimationConstants.MAX_ATTACK_ANIMATION_DURATION)
+                && currentTime - _primingStartedAt >= EnemyAnimationConstants.MAX_ATTACK_ANIMATION_DURATION)
             {
                 Debug.LogError("Barrel Attack failed to deliver its hit event; canceling priming.", this);
                 CancelPriming();
@@ -174,7 +177,8 @@ namespace Assets.Scripts.Enemies.Barrel
 
         private void OnPlayerContact(object sender, CollisionEventArgs e)
         {
-            if (_state != ExplosionState.Approaching || !_health.IsAlive()
+            if ((_enemy != null && _enemy.IsFrozen)
+                || _state != ExplosionState.Approaching || !_health.IsAlive()
                 || e.Collider != _playerBody || !IsPlayerEligible(_config.ActivationRange))
             {
                 return;
@@ -184,7 +188,7 @@ namespace Assets.Scripts.Enemies.Barrel
             _state = ExplosionState.Priming;
             _radius = _config.ExplosionRadius;
             _damage = _enemy.Config.Damage;
-            _primingStartedAt = Time.time;
+            _primingStartedAt = _enemy != null ? _enemy.UnfrozenTime : Time.time;
             _movement.SetPursuitSuppressed(true);
             _warning.ShowAttachedWarning(transform, _radius);
             _enemyAnimator.PlayAttackAnimation();

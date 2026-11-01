@@ -2,6 +2,7 @@ using System;
 using DG.Tweening;
 using Assets.Scripts.Indicators.Constants;
 using Assets.Scripts.Navigation.GridSystem;
+using Assets.Scripts.PowerUps.Constants;
 using UnityEngine;
 using Grid = Assets.Scripts.Navigation.GridSystem.Grid;
 
@@ -20,6 +21,7 @@ namespace Assets.Scripts.Indicators
         private Transform _reusableParent;
         private int _reusableGeneration;
         private bool _isReusable;
+        private bool _isFreezable;
 
         public Vector3 SnappedPosition { get; private set; }
 
@@ -43,6 +45,15 @@ namespace Assets.Scripts.Indicators
         private void OnDestroy()
         {
             KillActiveSequence();
+        }
+
+        public void SetFreezable(bool isFreezable)
+        {
+            _isFreezable = isFreezable;
+            if (_activeSequence != null && _activeSequence.IsActive() && isFreezable)
+            {
+                _activeSequence.SetId(TimeFreezeConstants.FREEZABLE_TWEEN_ID);
+            }
         }
 
         public Vector3 Show(Vector3 worldPosition, float radius, float duration, Grid worldGrid = null, Action onImpact = null, bool autoContractOnFillComplete = false, bool exactPosition = false)
@@ -77,7 +88,7 @@ namespace Assets.Scripts.Indicators
                 _innerFill.localScale = Vector3.zero;
             }
 
-            _activeSequence = DOTween.Sequence();
+            _activeSequence = CreateSequence();
 
             if (_outerRing != null)
             {
@@ -139,34 +150,45 @@ namespace Assets.Scripts.Indicators
 
         public void SynchronizeAttachedPosition()
         {
-            Vector3 position = _followTarget.position;
-            SnappedPosition = position;
-            position.y += IndicatorConstants.GROUND_Y_OFFSET;
-            transform.position = position;
+            if (_followTarget == null)
+            {
+                return;
+            }
+
+            Vector3 origin = _followTarget.position;
+            origin.y += IndicatorConstants.GROUND_Y_OFFSET;
+            transform.position = origin;
         }
 
         public void HideReusable()
         {
+            if (!_isReusable)
+            {
+                return;
+            }
+
             _reusableGeneration++;
             KillActiveSequence();
             _followTarget = null;
             _onImpactCallback = null;
-            if (_outerRing != null)
-            {
-                _outerRing.localScale = Vector3.zero;
-            }
-            if (_innerFill != null)
-            {
-                _innerFill.localScale = Vector3.zero;
-            }
-            RestoreReusableParent();
             gameObject.SetActive(false);
+            RestoreReusableParent();
         }
 
         public void ContractAndHideReusable(Action onHidden)
         {
+            if (!_isReusable)
+            {
+                HideReusable();
+                onHidden?.Invoke();
+                return;
+            }
+
+            _reusableGeneration++;
+            int generation = _reusableGeneration;
             KillActiveSequence();
-            int generation = ++_reusableGeneration;
+            _onImpactCallback = null;
+
             if (!gameObject.activeInHierarchy)
             {
                 HideReusable();
@@ -175,7 +197,7 @@ namespace Assets.Scripts.Indicators
             }
 
             SynchronizeAttachedPosition();
-            _activeSequence = DOTween.Sequence();
+            _activeSequence = CreateSequence();
             _activeSequence.Join(_outerRing.DOScale(Vector3.zero, _contractDuration).SetEase(Ease.InQuad));
             _activeSequence.Join(_innerFill.DOScale(Vector3.zero, _contractDuration).SetEase(Ease.InQuad));
             _activeSequence.OnComplete(() =>
@@ -211,7 +233,7 @@ namespace Assets.Scripts.Indicators
         {
             KillActiveSequence();
 
-            _activeSequence = DOTween.Sequence();
+            _activeSequence = CreateSequence();
 
             if (_outerRing != null)
             {
@@ -239,6 +261,16 @@ namespace Assets.Scripts.Indicators
                     Destroy(gameObject);
                 }
             });
+        }
+
+        private Sequence CreateSequence()
+        {
+            Sequence sequence = DOTween.Sequence();
+            if (_isFreezable)
+            {
+                sequence.SetId(TimeFreezeConstants.FREEZABLE_TWEEN_ID);
+            }
+            return sequence;
         }
 
         private Vector3 SnapToWalkableCell(Vector3 originalPos, Grid grid)

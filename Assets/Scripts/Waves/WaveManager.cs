@@ -1,4 +1,5 @@
 using Assets.Scripts.Enemies.Base;
+using Assets.Scripts.PowerUps.Freeze;
 using Assets.Scripts.Spawners.Enemies;
 using Assets.Scripts.Spawners.GridSpace;
 using Reflex.Attributes;
@@ -14,6 +15,7 @@ namespace Assets.Scripts.Waves
     public class WaveManager : MonoBehaviour, IWaveFreezer
     {
         [Inject] private readonly IOnRandomGridPosSpawner<EnemiesSpawner> _enemiesSpawner = null;
+        [Inject] private readonly ITimeFreezeState _timeFreezeState = null;
 
         [SerializeField] private WaveConfig _config;
 
@@ -32,7 +34,10 @@ namespace Assets.Scripts.Waves
 
         private void Update()
         {
-            if (IsFrozen) return;
+            if (IsFrozen || (_timeFreezeState != null && _timeFreezeState.IsFrozen))
+            {
+                return;
+            }
 
             WavesProcess();
         }

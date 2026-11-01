@@ -16,6 +16,9 @@ namespace Assets.Scripts.HealthSystem
 
         private Slider _slider;
         private Tween _shakeTween;
+        private bool _hasColorOverride;
+        private Color _overrideColor;
+        private float _overrideBlend;
 
         private void Awake()
         {
@@ -43,20 +46,50 @@ namespace Assets.Scripts.HealthSystem
                 _health.OnHealthDecreased -= Health_OnHealthDecreased;
             }
 
+            ClearColorOverride();
             _shakeTween?.Kill();
             _shakeTween = null;
         }
 
         private void OnDestroy()
         {
+            ClearColorOverride();
             _shakeTween?.Kill();
             _shakeTween = null;
         }
 
         private void UpdateSlider_OnHealthChanged(object sender, EventArgs e)
         {
-            _fillImage.color = _gradient.Evaluate(_health.CurrentHealth / _health.MaxHealth);
+            ApplyFillColor();
             _slider.value = _health.CurrentHealth;
+        }
+
+        public void SetColorOverride(Color color, float blend)
+        {
+            _hasColorOverride = true;
+            _overrideColor = color;
+            _overrideBlend = Mathf.Clamp01(blend);
+            ApplyFillColor();
+        }
+
+        public void ClearColorOverride()
+        {
+            _hasColorOverride = false;
+            _overrideBlend = 0f;
+            ApplyFillColor();
+        }
+
+        private void ApplyFillColor()
+        {
+            if (_fillImage == null || _gradient == null || _health == null || _health.MaxHealth <= 0f)
+            {
+                return;
+            }
+
+            Color gradientColor = _gradient.Evaluate(_health.CurrentHealth / _health.MaxHealth);
+            _fillImage.color = _hasColorOverride
+                ? Color.Lerp(gradientColor, _overrideColor, _overrideBlend)
+                : gradientColor;
         }
 
         private void Health_OnHealthDecreased(object sender, EventArgs e)

@@ -1,3 +1,4 @@
+using Assets.Scripts.PowerUps.Freeze;
 using System;
 using System.Collections.Generic;
 using DG.Tweening;
@@ -97,7 +98,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.Combat
 
             float duration = distance / Mathf.Max(speed, 0.1f);
 
-            _rollSequence = DOTween.Sequence();
+            _rollSequence = DOTween.Sequence().AsFreezable();
             _rollSequence.Append(transform.DOMove(endPos, duration).SetEase(Ease.Linear).OnUpdate(CheckOverlap));
             _rollSequence.OnComplete(() =>
             {

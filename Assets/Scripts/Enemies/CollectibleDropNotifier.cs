@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Assets.Scripts.Skills.ObjectsImpactingSkills.Crate;
+using Assets.Scripts.PowerUps;
+using Assets.Scripts.PowerUps.Collectibles;
 using Reflex.Attributes;
 using UnityEngine;
 using UnityEngine.Pool;
@@ -11,10 +13,18 @@ namespace Assets.Scripts.Enemies
     public interface ICollectibleDropNotifier
     {
         event EventHandler OnSkillUpgradeCollectibleCollected;
+        event Action<PowerUpType> OnPowerUpCollected;
         void SpawnCollectible(GameObject prefab, Vector3 spawnPos, Vector3 targetPos);
     }
 
-    public class CollectibleDropNotifier : MonoBehaviour, ICollectibleDropNotifier
+    public interface ICollectibleDropSuppressor
+    {
+        bool AreDropsSuppressed { get; }
+        void BeginDropSuppression();
+        void EndDropSuppression();
+    }
+
+    public class CollectibleDropNotifier : MonoBehaviour, ICollectibleDropNotifier, ICollectibleDropSuppressor
     {
         [Inject] private readonly DropAnimationConfiguration _animationConfig = null;
 
@@ -23,7 +33,25 @@ namespace Assets.Scripts.Enemies
         private readonly Dictionary<GameObject, ObjectPool<GameObject>> _pools = new();
         private readonly Dictionary<GameObject, ObjectPool<GameObject>> _instancePoolMap = new();
 
+        private int _dropSuppressionDepth;
+
         public event EventHandler OnSkillUpgradeCollectibleCollected;
+        public event Action<PowerUpType> OnPowerUpCollected;
+
+        public bool AreDropsSuppressed => _dropSuppressionDepth > 0;
+
+        public void BeginDropSuppression()
+        {
+            _dropSuppressionDepth++;
+        }
+
+        public void EndDropSuppression()
+        {
+            if (_dropSuppressionDepth > 0)
+            {
+                _dropSuppressionDepth--;
+            }
+        }
 
         private ObjectPool<GameObject> GetOrCreatePool(GameObject prefab)
         {
@@ -87,6 +115,10 @@ namespace Assets.Scripts.Enemies
                 if (collectible is ISkillUpgradeCollectible)
                 {
                     OnSkillUpgradeCollectibleCollected?.Invoke(collectible, EventArgs.Empty);
+                }
+                else if (collectible is IPowerUpCollectible powerUp)
+                {
+                    OnPowerUpCollected?.Invoke(powerUp.Type);
                 }
             }
         }

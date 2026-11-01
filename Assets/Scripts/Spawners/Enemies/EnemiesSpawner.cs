@@ -24,8 +24,13 @@ namespace Assets.Scripts.Spawners.Enemies
         bool TrySpawnEnemyAt(EnemySpawnInfo enemyInfo, Vector3 position, out Enemy enemy);
     }
 
+    public interface IActiveEnemiesProvider
+    {
+        int CopyActiveEnemies(List<Enemy> buffer);
+    }
+
     public class EnemiesSpawner : MonoBehaviour,
-        IOnRandomGridPosSpawner<EnemiesSpawner>, ISwarmEnemySpawner, IEnemySpawnDifficultyController
+        IOnRandomGridPosSpawner<EnemiesSpawner>, ISwarmEnemySpawner, IEnemySpawnDifficultyController, IActiveEnemiesProvider
     {
         [Inject] private readonly IGridManager _gridManager = null;
         [Inject] private readonly Camera _mainCamera = null;
@@ -46,6 +51,7 @@ namespace Assets.Scripts.Spawners.Enemies
         private EnemiesSpawnChanceRedistributionSystem _enemiesSpawnChanceRedistributionSystem = new();
         private Dictionary<EnemySpawnInfo, ObjectPool<Enemy>> _enemyPools = new();
         private Dictionary<Enemy, ObjectPool<Enemy>> _instancePoolMap = new();
+        private readonly HashSet<Enemy> _activeEnemies = new();
 
         private readonly Dictionary<VFXPlayer, PendingSpawn> _pendingSpawns = new();
 
@@ -129,6 +135,7 @@ namespace Assets.Scripts.Spawners.Enemies
 
         private void OnEnemyGet(Enemy enemy)
         {
+            _activeEnemies.Add(enemy);
             enemy.OnGet();
 
             enemy.OnCanBeReleased += Enemy_OnRelease;
@@ -140,6 +147,7 @@ namespace Assets.Scripts.Spawners.Enemies
 
         private void OnEnemyRelease(Enemy enemy)
         {
+            _activeEnemies.Remove(enemy);
             enemy.OnRelease();
 
             enemy.OnCanBeReleased -= Enemy_OnRelease;
@@ -302,6 +310,22 @@ namespace Assets.Scripts.Spawners.Enemies
         public void SpawnRandomEnemiesBasedOnSpawnChance(int count)
         {
             SpawnAtRandomGridPos(count);
+        }
+
+        public int CopyActiveEnemies(List<Enemy> buffer)
+        {
+            if (buffer == null)
+            {
+                throw new ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.Clear();
+            foreach (Enemy enemy in _activeEnemies)
+            {
+                buffer.Add(enemy);
+            }
+
+            return buffer.Count;
         }
 
         private EnemySpawnInfo RandomEnemyInfoBasedOnSpawnChance()

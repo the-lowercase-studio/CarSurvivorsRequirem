@@ -1,6 +1,7 @@
 using System;
 using DG.Tweening;
 using Assets.Scripts.Indicators.Constants;
+using Assets.Scripts.PowerUps.Constants;
 using UnityEngine;
 
 namespace Assets.Scripts.Indicators
@@ -14,6 +15,16 @@ namespace Assets.Scripts.Indicators
 
         private Sequence _activeSequence;
         private Action _onImpactCallback;
+        private bool _isFreezable;
+
+        public void SetFreezable(bool isFreezable)
+        {
+            _isFreezable = isFreezable;
+            if (_activeSequence != null && _activeSequence.IsActive() && isFreezable)
+            {
+                _activeSequence.SetId(TimeFreezeConstants.FREEZABLE_TWEEN_ID);
+            }
+        }
 
         public void ShowPersistent(Vector3 origin, Vector3 direction, float length, float width)
         {
@@ -100,7 +111,7 @@ namespace Assets.Scripts.Indicators
                 _innerFill.localScale = new Vector3(targetScaleX, 1f, 0f);
             }
 
-            _activeSequence = DOTween.Sequence();
+            _activeSequence = CreateSequence();
 
             if (_outerBorder != null)
             {
@@ -145,7 +156,7 @@ namespace Assets.Scripts.Indicators
         {
             KillActiveSequence();
 
-            _activeSequence = DOTween.Sequence();
+            _activeSequence = CreateSequence();
 
             if (_outerBorder != null)
             {
@@ -173,6 +184,16 @@ namespace Assets.Scripts.Indicators
                     Destroy(gameObject);
                 }
             });
+        }
+
+        private Sequence CreateSequence()
+        {
+            Sequence sequence = DOTween.Sequence();
+            if (_isFreezable)
+            {
+                sequence.SetId(TimeFreezeConstants.FREEZABLE_TWEEN_ID);
+            }
+            return sequence;
         }
 
         private void KillActiveSequence()

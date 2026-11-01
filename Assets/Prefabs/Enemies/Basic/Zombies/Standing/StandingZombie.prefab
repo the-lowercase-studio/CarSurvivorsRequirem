@@ -169,7 +169,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Enemies.EnemyDropHandler
   _dropEntries:
   - _prefab: {fileID: 8743226647122829456, guid: 2fbb8fc2b6bce83498d7142c70a1a7f0, type: 3}
-    _dropChancePercent: 1
+    _dropChancePercent: 0.1
+    _yOffset: 0.85
+  - _prefab: {fileID: 1571414545609278031, guid: c6450e9571a31ac48be4fad162c45de8, type: 3}
+    _dropChancePercent: 0.06
+    _yOffset: 0.85
+  - _prefab: {fileID: 4053205895501491920, guid: 244991b2e76b46f4eb38e189961cc87e, type: 3}
+    _dropChancePercent: 0.01
+    _yOffset: 0.85
+  - _prefab: {fileID: 895867578837592546, guid: b79e7522be1f45a4796b95222f7cf3b4, type: 3}
+    _dropChancePercent: 0.01
     _yOffset: 0.85
 --- !u!65 &4176904749440768749
 BoxCollider:

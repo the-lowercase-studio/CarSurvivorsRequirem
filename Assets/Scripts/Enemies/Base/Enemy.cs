@@ -4,6 +4,7 @@ using Assets.Scripts.DamageNumbers;
 using Assets.Scripts.HealthSystem;
 using Assets.Scripts.ObjectLifecycle.Actions;
 using Assets.Scripts.Pooling;
+using Assets.Scripts.PowerUps.Freeze;
 using Assets.Scripts.Shapes;
 using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.StatusEffects;
@@ -17,6 +18,7 @@ namespace Assets.Scripts.Enemies.Base
     public class Enemy : MonoBehaviour, IHealthy, IDamageable, IKnockable, IPoolable
     {
         [Inject] private readonly IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> _damageNumbersSpawner = null;
+        [Inject] private readonly ITimeFreezeState _timeFreezeState = null;
 
         [field: SerializeField] public EnemyConfigSO Config { get; private set; }
         [SerializeField] private VFXPlayer _bloodVfxPlayer;
@@ -30,6 +32,10 @@ namespace Assets.Scripts.Enemies.Base
         public IAudioClipPlayer AudioClipPlayer { get; private set; }
         public EnemyAnimator EnemyAnimator { get; private set; }
 
+        public bool IsFrozen => _timeFreezeState != null && _timeFreezeState.IsFrozen;
+        public float UnfrozenTime => _timeFreezeState != null ? _timeFreezeState.UnfrozenTime : Time.time;
+
+        public event Action<bool> OnFrozenChanged;
         public event EventHandler OnCanBeReleased;
 
         private void Awake()
@@ -40,6 +46,22 @@ namespace Assets.Scripts.Enemies.Base
             AudioClipPlayer = GetComponentInChildren<IAudioClipPlayer>();
             _enemyDeathSequence = GetComponent<INeedToCompleteBeforeDisable>();
             EnemyAnimator = GetComponentInChildren<EnemyAnimator>();
+        }
+
+        private void OnEnable()
+        {
+            if (_timeFreezeState != null)
+            {
+                _timeFreezeState.OnFrozenChanged += HandleFrozenChanged;
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (_timeFreezeState != null)
+            {
+                _timeFreezeState.OnFrozenChanged -= HandleFrozenChanged;
+            }
         }
 
         public void OnGet()
@@ -69,6 +91,11 @@ namespace Assets.Scripts.Enemies.Base
 
         public void ApplyKnockBack(Vector3 direction, float power, float timeToArriveAtLocation)
         {
+            if (IsFrozen)
+            {
+                return;
+            }
+
             MovementController.MoveToPositionInTimeIgnoringSpeed(transform.position + (direction * power), timeToArriveAtLocation);
         }
 
@@ -95,6 +122,11 @@ namespace Assets.Scripts.Enemies.Base
             {
                 _bloodVfxPlayer.Play(new VFXPlayConfig());
             }
+        }
+
+        private void HandleFrozenChanged(bool isFrozen)
+        {
+            OnFrozenChanged?.Invoke(isFrozen);
         }
 
         private void EnemyDeathSequence_OnCompleted(object sender, EventArgs e)

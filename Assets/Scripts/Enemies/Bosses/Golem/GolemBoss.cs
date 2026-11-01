@@ -18,6 +18,7 @@ using Assets.Scripts.LevelSystem.Exp;
 using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.Navigation.Constants;
 using Assets.Scripts.Player;
+using Assets.Scripts.PowerUps.Freeze;
 using Assets.Scripts.Shapes;
 using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.StatusEffects;
@@ -40,6 +41,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         [Inject] private readonly IGridManager _gridManager = null;
         [Inject] private readonly IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> _damageNumbersSpawner = null;
         [Inject] private readonly IInWorldSpaceSpawner<ExpParticleSpawner, float> _expParticleSpawner = null;
+        [Inject] private readonly ITimeFreezeState _timeFreezeState = null;
 
         [Header("Configuration")]
         [SerializeField] private GolemBossConfigSO _config;
@@ -221,11 +223,21 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
 
         private void Update()
         {
+            if (_timeFreezeState != null && _timeFreezeState.IsFrozen)
+            {
+                return;
+            }
+
             _stateMachine.Update();
         }
 
         private void FixedUpdate()
         {
+            if (_timeFreezeState != null && _timeFreezeState.IsFrozen)
+            {
+                return;
+            }
+
             _stateMachine.FixedUpdate();
         }
 
@@ -237,6 +249,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
             }
 
             CircularTelegraphIndicator indicator = Instantiate(_circularTelegraph);
+            indicator.SetFreezable(true);
             _activeTelegraphs.Add(indicator);
             indicator.Show(position, radius, duration, WorldGrid, onImpact, autoContractOnFillComplete, exactPosition);
             return indicator;
@@ -250,6 +263,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
             }
 
             RectangularTelegraphIndicator indicator = Instantiate(_rectangularTelegraph);
+            indicator.SetFreezable(true);
             _activeTelegraphs.Add(indicator);
             indicator.Show(origin, direction, length, width, duration, onImpact, autoContractOnFillComplete);
             return indicator;
@@ -321,7 +335,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         {
             rootPosition = default;
             surfacePosition = default;
-            if (!IsRecovering || !IsOperational || Time.deltaTime <= 0f)
+            if (!IsRecovering || !IsOperational || Time.deltaTime <= 0f || (_timeFreezeState != null && _timeFreezeState.IsFrozen))
             {
                 return false;
             }
@@ -589,9 +603,22 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
             _animator.RestorePlayback();
             _stateMachine.ChangeState(_deathState);
 
+            if (_rootCollider != null)
+            {
+                _rootCollider.enabled = false;
+            }
+
             if (_deathVfxPlayer != null)
             {
-                _deathVfxPlayer.Play(new VFXPlayConfig());
+                if (_deathVfxPlayer.HasParticleSystems)
+                {
+                    _deathVfxPlayer.transform.SetParent(null);
+                    _deathVfxPlayer.Play(new VFXPlayConfig(destroyOnEnd: true));
+                }
+                else
+                {
+                    _deathVfxPlayer.Play(new VFXPlayConfig());
+                }
             }
 
             if (_expParticleSpawner != null)
@@ -600,6 +627,8 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
             }
 
             OnBossDefeated?.Invoke(this);
+            gameObject.SetActive(false);
+            Destroy(gameObject, 5f);
         }
     }
 }

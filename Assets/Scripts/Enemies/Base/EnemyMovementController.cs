@@ -42,7 +42,7 @@ namespace Assets.Scripts.Enemies.Base
             get
             {
                 return isActiveAndEnabled && !_isMovementStopped && !_isKnockbackActive
-                    && _verticalVelocity <= 0f && IsOnGround();
+                    && _verticalVelocity <= 0f && IsOnGround() && (_enemy == null || !_enemy.IsFrozen);
             }
         }
 
@@ -80,6 +80,12 @@ namespace Assets.Scripts.Enemies.Base
 
         private void FixedUpdate()
         {
+            if (_enemy != null && _enemy.IsFrozen)
+            {
+                _currentVelocity = Vector3.zero;
+                return;
+            }
+
             MovementHandler();
         }
 

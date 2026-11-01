@@ -102,7 +102,7 @@ PrefabInstance:
       objectReference: {fileID: 2686127530441394451}
     - target: {fileID: 6489595091208934302, guid: 51bbe108060737f41995dc41eaef8a82, type: 3}
       propertyPath: _dropEntries.Array.data[0]._dropChancePercent
-      value: 1
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: 6756397437299039757, guid: 51bbe108060737f41995dc41eaef8a82, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
