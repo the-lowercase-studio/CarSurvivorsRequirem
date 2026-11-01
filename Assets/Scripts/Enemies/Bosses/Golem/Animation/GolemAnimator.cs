@@ -1,5 +1,7 @@
 using System;
 using Assets.Scripts.Enemies.Bosses.Golem.Constants;
+using Assets.Scripts.PowerUps.Freeze;
+using Reflex.Attributes;
 using UnityEngine;
 
 namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
@@ -26,6 +28,8 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
 
     public class GolemAnimator : MonoBehaviour, IGolemAnimator
     {
+        [Inject] private readonly ITimeFreezeState _timeFreezeState = null;
+
         [SerializeField] private Animator _animator;
 
         private static readonly int _isMovingHash = Animator.StringToHash(GolemBossConstants.ANIM_PARAM_IS_MOVING);
@@ -39,7 +43,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
         private static readonly int _walkingStateHash = Animator.StringToHash(GolemBossConstants.ANIM_STATE_WALKING);
 
         private bool _isHoldingAirbornePose;
-        private float _previousPlaybackSpeed;
+        private float _previousPlaybackSpeed = 1f;
 
         public event Action OnLinearFistRelease;
         public event Action OnSkyBarrageRelease;
@@ -70,9 +74,25 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
             }
         }
 
+        private void Start()
+        {
+            if (_timeFreezeState != null)
+            {
+                _timeFreezeState.OnFrozenChanged += HandleFrozenChanged;
+            }
+        }
+
         private void OnDisable()
         {
             RestorePlayback();
+        }
+
+        private void OnDestroy()
+        {
+            if (_timeFreezeState != null)
+            {
+                _timeFreezeState.OnFrozenChanged -= HandleFrozenChanged;
+            }
         }
 
         public void HoldLeapAirbornePose()
@@ -84,20 +104,20 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
             _animator.ResetTrigger(_stompHash);
             _animator.ResetTrigger(_linearFistHash);
             _animator.ResetTrigger(_skyBarrageHash);
-            _previousPlaybackSpeed = _animator.speed;
+            _previousPlaybackSpeed = _animator.speed > 0f ? _animator.speed : 1f;
             _animator.Play(GolemBossConstants.ANIM_STATE_JUMP_ATTACK, 0,
                 GolemBossConstants.AIRBORNE_ANIMATION_NORMALIZED_TIME);
             _animator.Update(0f);
-            _animator.speed = 0f;
             _isHoldingAirbornePose = true;
+            ApplyAnimatorSpeed();
         }
 
         public void RestorePlayback()
         {
             if (_isHoldingAirbornePose)
             {
-                _animator.speed = _previousPlaybackSpeed;
                 _isHoldingAirbornePose = false;
+                ApplyAnimatorSpeed();
             }
         }
 
@@ -160,6 +180,33 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Animation
         public void Call_OnStompImpact()
         {
             OnStompImpact?.Invoke();
+        }
+
+        private void HandleFrozenChanged(bool isFrozen)
+        {
+            ApplyAnimatorSpeed();
+        }
+
+        private void ApplyAnimatorSpeed()
+        {
+            if (_animator == null)
+            {
+                return;
+            }
+
+            if (_timeFreezeState != null && _timeFreezeState.IsFrozen)
+            {
+                _animator.speed = 0f;
+                return;
+            }
+
+            if (_isHoldingAirbornePose)
+            {
+                _animator.speed = 0f;
+                return;
+            }
+
+            _animator.speed = _previousPlaybackSpeed > 0f ? _previousPlaybackSpeed : 1f;
         }
     }
 }

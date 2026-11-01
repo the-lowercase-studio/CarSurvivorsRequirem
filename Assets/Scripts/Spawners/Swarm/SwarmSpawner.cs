@@ -1,3 +1,4 @@
+using Assets.Scripts.PowerUps.Freeze;
 using Assets.Scripts.Spawners.Enemies;
 using Assets.Scripts.UI.HUD;
 using Assets.Scripts.Waves;
@@ -17,6 +18,7 @@ namespace Assets.Scripts.Spawners.Swarm
         [Inject] private readonly ISwarmEnemySpawner _swarmEnemySpawner = null;
         [Inject] private readonly IWaveFreezer _waveFreezer = null;
         [Inject] private readonly ISwarmNotificationPresenter _swarmNotificationPresenter = null;
+        [Inject] private readonly ITimeFreezeState _timeFreezeState = null;
 
         [Header("Swarm Timing")]
         [SerializeField] private float _minSwarmInterval = 120f;
@@ -62,7 +64,10 @@ namespace Assets.Scripts.Spawners.Swarm
 
         private void Update()
         {
-            if (_isSwarmActive || IsSuppressed) return;
+            if (_isSwarmActive || IsSuppressed || (_timeFreezeState != null && _timeFreezeState.IsFrozen))
+            {
+                return;
+            }
 
             _nextSwarmTime -= Time.deltaTime;
 
@@ -101,6 +106,11 @@ namespace Assets.Scripts.Spawners.Swarm
             while (warningTimer > 0f)
             {
                 yield return null;
+                if (_timeFreezeState != null && _timeFreezeState.IsFrozen)
+                {
+                    continue;
+                }
+
                 warningTimer -= Time.deltaTime;
                 int currentSecond = Mathf.CeilToInt(warningTimer);
                 if (currentSecond != lastLoggedSecond && currentSecond > 0)
@@ -129,7 +139,17 @@ namespace Assets.Scripts.Spawners.Swarm
 
                 if (i < ticks - 1)
                 {
-                    yield return new WaitForSeconds(_spawnTickInterval);
+                    float waitTimer = _spawnTickInterval;
+                    while (waitTimer > 0f)
+                    {
+                        yield return null;
+                        if (_timeFreezeState != null && _timeFreezeState.IsFrozen)
+                        {
+                            continue;
+                        }
+
+                        waitTimer -= Time.deltaTime;
+                    }
                 }
             }
 

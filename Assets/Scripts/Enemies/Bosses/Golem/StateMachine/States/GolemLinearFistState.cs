@@ -1,3 +1,4 @@
+using Assets.Scripts.PowerUps.Freeze;
 using System;
 using DG.Tweening;
 using Assets.Scripts.Enemies.Bosses.Golem.Constants;
@@ -72,7 +73,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
             // 4. Fallback timer if animation event is not authored on clip
             float releaseDelay = _boss.Config.LinearFistReleaseDelay;
-            _chargeSequence = DOTween.Sequence();
+            _chargeSequence = DOTween.Sequence().AsFreezable();
             _chargeSequence.AppendInterval(releaseDelay);
             _chargeSequence.OnComplete(() =>
             {

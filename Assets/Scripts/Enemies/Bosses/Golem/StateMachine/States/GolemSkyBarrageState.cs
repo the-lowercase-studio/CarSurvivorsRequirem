@@ -1,3 +1,4 @@
+using Assets.Scripts.PowerUps.Freeze;
 using System;
 using DG.Tweening;
 using Assets.Scripts.Enemies.Bosses.Golem.Arms;
@@ -85,7 +86,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             _boss.AudioClipPlayer?.PlayOneShot(GolemBossConstants.ROAR_SFX_KEY);
 
             float releaseDelay = _boss.Config.SkyBarrageReleaseDelay;
-            _releaseSequence = DOTween.Sequence();
+            _releaseSequence = DOTween.Sequence().AsFreezable();
             _releaseSequence.AppendInterval(releaseDelay);
             _releaseSequence.OnComplete(() =>
             {
@@ -222,7 +223,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         private void StartArmLifecycle(GolemArmProjectile arm, float initialDelay, bool isLeftArm)
         {
-            Sequence armSeq = DOTween.Sequence();
+            Sequence armSeq = DOTween.Sequence().AsFreezable();
             SetArmSequence(isLeftArm, armSeq);
 
             if (initialDelay > 0f)
@@ -262,7 +263,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             CircularTelegraphIndicator telegraph = _boss.ShowCircularTelegraph(targetOffsetPos, radius, warningDuration, null, autoContractOnFillComplete: false);
             Vector3 targetLandingPos = telegraph != null ? telegraph.SnappedPosition : targetOffsetPos;
 
-            Sequence dropSeq = DOTween.Sequence();
+            Sequence dropSeq = DOTween.Sequence().AsFreezable();
             SetArmSequence(isLeftArm, dropSeq);
 
             dropSeq.AppendInterval(warningDuration * GolemBossConstants.WARNING_FRACTION_BEFORE_DROP);
@@ -287,7 +288,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             if (currentCycle < _totalCycles)
             {
                 // Prepare for next cycle independently
-                Sequence resetSeq = DOTween.Sequence();
+                Sequence resetSeq = DOTween.Sequence().AsFreezable();
                 SetArmSequence(isLeftArm, resetSeq);
 
                 float resetDelay = _boss.Config.SkyArmCycleResetDelay;

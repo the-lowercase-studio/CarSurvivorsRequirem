@@ -71,6 +71,9 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
             {
                 _laserCumulatingVFX.OnVFXFinished -= OnLaserCumulatingVfxFinished;
             }
+            StopAllCoroutines();
+            _isShowingLaser = false;
+            _currentShowLaserShootDuration = _startShowLaserShootDuration;
             ClearLaserLines();
             ClearTrackedTargets();
         }
@@ -107,7 +110,8 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
 
         private bool CanShoot()
         {
-            return _primaryTarget is not null
+            return _primaryTarget != null
+                   && _primaryTarget.enabled
                    && _isShowingLaser == false
                    && _isLookingAtTarget
                    && IsCurrentTargetInRange();
@@ -141,18 +145,23 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
         {
             _isShowingLaser = true;
 
-            while (_currentShowLaserShootDuration > 0)
+            try
             {
-                UpdateLaserLines();
+                while (_currentShowLaserShootDuration > 0)
+                {
+                    UpdateLaserLines();
 
-                _currentShowLaserShootDuration -= Time.deltaTime;
+                    _currentShowLaserShootDuration -= Time.deltaTime;
 
-                yield return _waitForEndOfFrame;
+                    yield return _waitForEndOfFrame;
+                }
             }
-
-            _isShowingLaser = false;
-            ClearLaserLines();
-            _currentShowLaserShootDuration = _startShowLaserShootDuration;
+            finally
+            {
+                _isShowingLaser = false;
+                ClearLaserLines();
+                _currentShowLaserShootDuration = _startShowLaserShootDuration;
+            }
         }
 
         private void UpdateTrackedTargets()
@@ -185,7 +194,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
             {
                 Collider target = _targetBuffer[i];
 
-                if (target is null)
+                if (target == null || !target.enabled)
                 {
                     continue;
                 }
@@ -248,11 +257,16 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
 
         private bool IsTargetValid(Collider target)
         {
-            return target is not null && IsTargetInRange(target) && IsTargetVisible(target);
+            return target != null && target.enabled && IsTargetInRange(target) && IsTargetVisible(target);
         }
 
         private bool IsTargetInRange(Collider target)
         {
+            if (target == null || !target.enabled)
+            {
+                return false;
+            }
+
             float rangeSqr = _config.Range * _config.Range;
 
             return (transform.position - target.transform.position).sqrMagnitude <= rangeSqr;
@@ -260,6 +274,11 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
 
         private bool IsTargetVisible(Collider target)
         {
+            if (target == null || !target.enabled)
+            {
+                return false;
+            }
+
             return !Physics.Linecast(
                 _gunTip.position,
                 target.ClosestPoint(_gunTip.position),
@@ -290,10 +309,14 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
         {
             for (int i = 0; i < _hitTargetsCount; i++)
             {
-                EntityManipulationHelper.Damage(
-                    _hitTargets[i],
-                    _config.ProjectileStatsSO.Damage
-                );
+                Collider target = _hitTargets[i];
+                if (target != null && target.enabled)
+                {
+                    EntityManipulationHelper.Damage(
+                        target,
+                        _config.ProjectileStatsSO.Damage
+                    );
+                }
             }
         }
 
@@ -304,7 +327,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
                 Collider target = _hitTargets[i];
                 LineRenderer lineRenderer = _laserLineRenderers[i];
 
-                if (target is not null)
+                if (target != null && target.enabled)
                 {
                     _hitTargetClosestPoints[i] = target.ClosestPoint(_gunTip.position);
                 }
@@ -336,7 +359,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
 
         private void HandleRotation()
         {
-            if (_primaryTarget is null)
+            if (_primaryTarget == null || !_primaryTarget.enabled)
             {
                 _isLookingAtTarget = false;
                 return;

@@ -17,6 +17,16 @@ namespace Assets.Scripts.UI.DevConsole.Constants
         public const string AUTO_FLAG_LONG = "--auto";
         public const string AUTO_FLAG_SHORT = "-a";
 
+        public const string POWERUP_COMMAND_NAME = "powerup";
+        public const string POWERUP_COMMAND_SYNTAX = "powerup <nuke|freeze|shield|crate>";
+        public const string POWERUP_COMMAND_DESCRIPTION = "Spawns a collectible power-up or skill crate ahead of the player.";
+        public const float POWERUP_SPAWN_Y_OFFSET = 0.85f;
+
+        public const string NUKE_PREFAB_PATH = "Assets/Prefabs/Collectibles/Nuke.prefab";
+        public const string FREEZE_TIMER_PREFAB_PATH = "Assets/Prefabs/Collectibles/FreezeTimer.prefab";
+        public const string BUBBLE_SHIELD_PREFAB_PATH = "Assets/Prefabs/Collectibles/BubbleShield.prefab";
+        public const string SKILL_CRATE_PREFAB_PATH = "Assets/Prefabs/Collectibles/SkilCrate.prefab";
+
         public const string COLOR_WARNING_HEX = "#FFCC00";
         public const string COLOR_ERROR_HEX = "#FF4444";
         public const string PROMPT_PREFIX = "> ";

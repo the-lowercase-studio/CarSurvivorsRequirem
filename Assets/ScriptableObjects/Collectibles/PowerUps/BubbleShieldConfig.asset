@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 629b26531936eca47b9cc60adba87ff1, type: 3}
+  m_Name: BubbleShieldConfig
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.PowerUps.Config.BubbleShieldConfigSO
+  _durationSeconds: 8
+  _warningWindowSeconds: 2
+  _blinkPeriodSeconds: 0.25
+  _shieldColor: {r: 0.05, g: 0.15, b: 0.6, a: 1}
+  _steadyAlpha: 0.35
+  _warningMinAlpha: 0.05
+  _appearDuration: 0.25
+  _disappearDuration: 0.15
