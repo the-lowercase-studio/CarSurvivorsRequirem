@@ -12,6 +12,7 @@ namespace Assets.Scripts.Enemies.Base
 
         public void ResetVerticalVelocity();
 
-        public void MoveToPositionInTimeIgnoringSpeed(Vector3 pos, float time);
+        void MoveToPositionInTimeIgnoringSpeed(Vector3 pos, float time);
+        void SetMovementSpeedMultiplier(float multiplier);
     }
 }

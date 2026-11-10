@@ -32,6 +32,8 @@ namespace Assets.Scripts.UI.DevConsole
         [SerializeField] private GameObject _nukePrefab;
         [SerializeField] private GameObject _freezeTimerPrefab;
         [SerializeField] private GameObject _bubbleShieldPrefab;
+        [SerializeField] private GameObject _armorPrefab;
+        [SerializeField] private GameObject _fireTailsPrefab;
         [SerializeField] private GameObject _skillCratePrefab;
 
         private static bool IsConsoleSupported
@@ -641,6 +643,38 @@ namespace Assets.Scripts.UI.DevConsole
                 if (prefab == null)
                 {
                     prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(DevConsoleConstants.BUBBLE_SHIELD_PREFAB_PATH);
+                }
+#endif
+                return true;
+            }
+
+            if (string.Equals(token, "armor", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, "armour", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, "plate", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, "plates", StringComparison.OrdinalIgnoreCase))
+            {
+                displayName = "Armor";
+                prefab = _armorPrefab;
+#if UNITY_EDITOR
+                if (prefab == null)
+                {
+                    prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(DevConsoleConstants.ARMOR_PREFAB_PATH);
+                }
+#endif
+                return true;
+            }
+
+            if (string.Equals(token, "firetails", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, "fire", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, "tails", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, "napalm", StringComparison.OrdinalIgnoreCase))
+            {
+                displayName = "Fire Tails";
+                prefab = _fireTailsPrefab;
+#if UNITY_EDITOR
+                if (prefab == null)
+                {
+                    prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(DevConsoleConstants.FIRE_TAILS_PREFAB_PATH);
                 }
 #endif
                 return true;

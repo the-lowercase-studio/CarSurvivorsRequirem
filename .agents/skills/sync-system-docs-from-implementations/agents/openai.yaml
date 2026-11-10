@@ -1,0 +1,6 @@
+interface:
+  display_name: "Sync System Docs from Implementations"
+  short_description: "Sync system docs from completed plans and summaries, then delete them."
+  default_prompt: "Use $sync-system-docs-from-implementations to update or create game-system documentation from completed implementation plans and summaries, then delete the processed plans and summaries while preserving templates."
+policy:
+  allow_implicit_invocation: false
