@@ -29,6 +29,10 @@ Material:
   - _ALPHAPREMULTIPLY_ON
   - _EMISSION
   - _ENABLEBORDER_ON
+  - _ENABLEENDCAPS_ON
+  - _ENABLEENDHAZARD_ON
+  - _ENABLEFILL_ON
+  - _ENABLEGRUNGE_ON
   - _SURFACE_TYPE_TRANSPARENT
   m_LightmapFlags: 2
   m_EnableInstancingVariants: 0
@@ -107,6 +111,7 @@ Material:
     - _Blend: 0
     - _BlendModePreserveSpecular: 1
     - _BorderGap: 0.02
+    - _BorderRoughness: 0.35
     - _BumpScale: 1
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
@@ -117,8 +122,11 @@ Material:
     - _DstBlend: 10
     - _DstBlendAlpha: 10
     - _EnableBorder: 1
-    - _EnableFill: 0
+    - _EnableEndCaps: 1
+    - _EnableEndHazard: 1
+    - _EnableFill: 1
     - _EnableGrid: 0
+    - _EnableGrunge: 1
     - _EnvironmentReflections: 1
     - _GlossMapScale: 0
     - _Glossiness: 0
@@ -126,12 +134,17 @@ Material:
     - _GridColumns: 8
     - _GridLineWidth: 0.007
     - _GridPadding: 0.012
+    - _GrungeIntensity: 0.6
+    - _GrungeScale: 12
+    - _HazardBandLength: 1
+    - _HazardStripeSlope: 1
+    - _HazardStripeWidth: 0.6
     - _InnerBorderWidth: 0.015
     - _Metallic: 0
     - _OcclusionStrength: 1
     - _OuterBorderWidth: 0.045
-    - _OuterGlowFalloff: 18
-    - _OuterGlowIntensity: 0.6
+    - _OuterGlowFalloff: 16
+    - _OuterGlowIntensity: 0.8
     - _Parallax: 0.005
     - _QueueOffset: 0
     - _ReceiveShadows: 1
@@ -148,10 +161,12 @@ Material:
     - _BaseColor: {r: 0.26415092, g: 0.26415092, b: 0.26415092, a: 0.8509804}
     - _Color: {r: 0.2641509, g: 0.2641509, b: 0.2641509, a: 0.8509804}
     - _EmissionColor: {r: 2.9220583, g: 0.6205367, b: 0.2618825, a: 1}
-    - _FillColor: {r: 0.5, g: 0.07, b: 0.05, a: 0}
+    - _FillColor: {r: 0.06, g: 0.06, b: 0.08, a: 0.55}
     - _GridColor: {r: 2.6, g: 0.7, b: 0.28, a: 0}
-    - _InnerBorderColor: {r: 3.2, g: 0.45, b: 0.35, a: 1}
-    - _OuterBorderColor: {r: 4.5, g: 0.55, b: 0.4, a: 1}
+    - _HazardStripeColor: {r: 4.5, g: 0.85, b: 0.15, a: 1}
+    - _HazardStripeDarkColor: {r: 0.05, g: 0.04, b: 0.03, a: 0.95}
+    - _InnerBorderColor: {r: 3.2, g: 0.6, b: 0.15, a: 1}
+    - _OuterBorderColor: {r: 4.5, g: 0.85, b: 0.15, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

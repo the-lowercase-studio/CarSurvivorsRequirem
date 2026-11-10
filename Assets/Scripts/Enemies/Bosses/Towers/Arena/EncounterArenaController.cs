@@ -25,6 +25,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
         event Action<float> OnLeashCountdownTick;
         event Action OnEncounterReset;
         event Action OnEncounterCompleted;
+        IBossCombatTarget BossTarget { get; }
         void NotifyDirectCombatEngaged();
     }
 
@@ -59,6 +60,8 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
         public event Action<float> OnLeashCountdownTick;
         public event Action OnEncounterReset;
         public event Action OnEncounterCompleted;
+
+        public IBossCombatTarget BossTarget => _boss;
 
         public bool IsEncounterActive
         {
@@ -288,7 +291,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
 
                 if (_bossEncounterService != null && _boss.Health != null)
                 {
-                    _bossEncounterService.NotifyEncounterEngaged(_boss.Health, _bossDisplayName);
+                    _bossEncounterService.NotifyEncounterEngaged(_boss, _bossDisplayName);
                 }
 
                 if (_cameraController != null)

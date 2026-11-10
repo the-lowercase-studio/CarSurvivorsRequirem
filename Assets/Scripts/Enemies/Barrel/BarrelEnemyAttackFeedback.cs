@@ -1,4 +1,5 @@
 using Assets.Scripts.Enemies.Barrel.Constants;
+using Assets.Scripts.PowerUps.Freeze;
 using DG.Tweening;
 using UnityEngine;
 
@@ -206,7 +207,7 @@ namespace Assets.Scripts.Enemies.Barrel
             }
             _punchTween = _visualPivot.DOPunchRotation(_punchStrength, _punchCycleDuration,
                     _punchVibrato, _punchElasticity)
-                .SetLoops(-1, LoopType.Restart).SetAutoKill(false).SetRecyclable(false).Pause();
+                .SetLoops(-1, LoopType.Restart).SetAutoKill(false).SetRecyclable(false).AsFreezable().Pause();
             _colorTimeline = DOTween.Sequence().SetAutoKill(false).SetRecyclable(false).Pause();
             foreach (ColorBinding binding in _colorBindings)
             {

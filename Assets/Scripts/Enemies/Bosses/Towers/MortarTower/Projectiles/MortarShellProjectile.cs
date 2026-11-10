@@ -1,3 +1,4 @@
+using Assets.Scripts.PowerUps.Freeze;
 using System;
 using DG.Tweening;
 using Assets.Scripts.Audio;

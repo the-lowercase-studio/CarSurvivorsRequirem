@@ -15,6 +15,7 @@ using Assets.Scripts.Indicators;
 using Assets.Scripts.LevelSystem.Exp;
 using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.Player;
+using Assets.Scripts.PowerUps.Freeze;
 using Assets.Scripts.Shapes;
 using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.StatusEffects;
@@ -25,13 +26,11 @@ using Grid = Assets.Scripts.Navigation.GridSystem.Grid;
 
 namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
 {
-    public interface IMortarTowerBoss : IDamageable, IKnockable
+    public interface IMortarTowerBoss : IBossCombatTarget, IKnockable
     {
-        IHealth Health { get; }
         MortarTowerConfigSO Config { get; }
-        Transform Transform { get; }
+
         Transform TurretHousing { get; }
-        bool IsEnraged { get; }
         event Action<IMortarTowerBoss> OnBossDefeated;
         void StartEncounter();
         void ResetEncounter();
@@ -46,6 +45,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
         [Inject] private readonly IGridManager _gridManager = null;
         [Inject] private readonly Reflex.Core.Container _container = null;
         [Inject] private readonly IInWorldSpaceSpawner<ExpParticleSpawner, float> _expParticleSpawner = null;
+        [Inject] private readonly ITimeFreezeState _timeFreezeState = null;
 
         [Header("Configuration")]
         [SerializeField] private MortarTowerConfigSO _config;
@@ -82,6 +82,11 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
         private Tween _barrelRecoilTween;
         private Sequence _housingRecoilSequence;
         private bool _isEnraged;
+
+        public BossHealthBarKind HealthBarKind => BossHealthBarKind.Tower;
+        public float EnrageHealthPercent => _config.EnrageHealthPercent;
+        public bool IsActive => isActiveAndEnabled && Health != null && Health.IsAlive();
+        public event Action OnPresentationChanged;
 
         public event Action<IMortarTowerBoss> OnBossDefeated;
 
@@ -271,6 +276,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
 
             _isEnraged = false;
             _stateMachine.Initialize(_idleState);
+            OnPresentationChanged?.Invoke();
         }
 
         private void OnDisable()
@@ -288,6 +294,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
             {
                 _boulderHitbox.Stop();
             }
+            OnPresentationChanged?.Invoke();
         }
 
         private void OnDestroy()
@@ -298,6 +305,11 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
 
         private void Update()
         {
+            if (_timeFreezeState != null && _timeFreezeState.IsFrozen)
+            {
+                return;
+            }
+
             _stateMachine.Update();
 
             if (_stateMachine.CurrentState != null && _stateMachine.CurrentState != _idleState && _stateMachine.CurrentState != _defeatedState)
@@ -321,6 +333,11 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
 
         private void FixedUpdate()
         {
+            if (_timeFreezeState != null && _timeFreezeState.IsFrozen)
+            {
+                return;
+            }
+
             _stateMachine.FixedUpdate();
         }
 
@@ -362,6 +379,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
 
             _cooldownState.ResetAttackCounter();
             _stateMachine.ChangeState(_idleState);
+            OnPresentationChanged?.Invoke();
         }
 
         public void ChangeState(IMortarTowerState newState)
@@ -429,6 +447,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
             PruneInactiveTelegraphs();
 
             CircularTelegraphIndicator indicator = Instantiate(_circularTelegraphPrefab);
+            indicator.SetFreezable(true);
             _activeTelegraphs.Add(indicator);
             indicator.Show(position, radius, duration, WorldGrid, onImpact, autoContractOnFillComplete);
             return indicator;
@@ -444,6 +463,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
             PruneInactiveTelegraphs();
 
             RectangularTelegraphIndicator indicator = Instantiate(_rectangularTelegraphPrefab);
+            indicator.SetFreezable(true);
             _activeTelegraphs.Add(indicator);
             indicator.Show(origin, direction, length, width, duration, onImpact, autoContractOnFillComplete);
             return indicator;
@@ -479,13 +499,13 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
             if (_barrelTransform != null)
             {
                 _barrelRecoilTween?.Kill(true);
-                _barrelRecoilTween = _barrelTransform.DOPunchRotation(new Vector3(-15f, 0f, 0f), 0.35f, 4, 0.5f);
+                _barrelRecoilTween = _barrelTransform.DOPunchRotation(new Vector3(-15f, 0f, 0f), 0.35f, 4, 0.5f).AsFreezable();
             }
 
             if (_turretHousing != null)
             {
                 _housingRecoilSequence?.Kill(true);
-                _housingRecoilSequence = DOTween.Sequence();
+                _housingRecoilSequence = DOTween.Sequence().AsFreezable();
                 Vector3 recoilOffset = _initialHousingLocalPosition - _turretHousing.forward * 0.35f;
                 _housingRecoilSequence.Append(_turretHousing.DOLocalMove(recoilOffset, 0.1f).SetEase(Ease.OutQuad));
                 _housingRecoilSequence.Append(_turretHousing.DOLocalMove(_initialHousingLocalPosition, 0.4f).SetEase(Ease.InOutSine));
@@ -577,6 +597,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
             }
 
             ApplyEnrageMaterials();
+            OnPresentationChanged?.Invoke();
         }
 
         private void ApplyEnrageMaterials()
@@ -655,7 +676,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
 
         public void UpdateTurretAim(float deltaTime, float turnSpeed = 5f)
         {
-            if (_turretHousing == null)
+            if (_turretHousing == null || (_timeFreezeState != null && _timeFreezeState.IsFrozen))
             {
                 return;
             }

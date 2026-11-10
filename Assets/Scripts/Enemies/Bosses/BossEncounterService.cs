@@ -21,10 +21,11 @@ namespace Assets.Scripts.Enemies.Bosses
         int RemainingTowersCount { get; }
         void RegisterTower(IEncounterArenaController towerArena);
         void UnregisterTower(IEncounterArenaController towerArena);
-        void NotifyEncounterEngaged(IHealth bossHealth, string displayName);
+        void NotifyEncounterEngaged(IBossHUDSource source, string displayName);
         void NotifyEncounterDisengaged();
         void NotifyTowerDefeated(IEncounterArenaController towerArena);
         void SpawnGolemBoss(Vector3? spawnPosition = null);
+        int CollectEngagedBosses(List<IBossCombatTarget> buffer);
         event Action<int, int> OnTowerDefeated;
         event Action<IGolemBoss> OnGolemSpawned;
         event Action<IGolemBoss> OnGolemDefeated;
@@ -139,13 +140,13 @@ namespace Assets.Scripts.Enemies.Bosses
             _registeredTowers.Remove(towerArena);
         }
 
-        public void NotifyEncounterEngaged(IHealth bossHealth, string displayName)
+        public void NotifyEncounterEngaged(IBossHUDSource source, string displayName)
         {
             _isEncounterEngaged = true;
 
-            if (_bossHUDPresenter != null && bossHealth != null)
+            if (_bossHUDPresenter != null && source != null)
             {
-                _bossHUDPresenter.Show(bossHealth, displayName);
+                _bossHUDPresenter.Show(source, displayName);
             }
 
             UpdateSwarmSuppression();
@@ -223,9 +224,38 @@ namespace Assets.Scripts.Enemies.Bosses
             _activeGolemInstance = Instantiate(_golemBossPrefab, finalSpawnPos, Quaternion.identity);
             _activeGolemInstance.OnBossDefeated += Golem_OnBossDefeated;
 
-            NotifyEncounterEngaged(_activeGolemInstance.Health, _golemDisplayName);
+            NotifyEncounterEngaged(_activeGolemInstance, _golemDisplayName);
 
             OnGolemSpawned?.Invoke(_activeGolemInstance);
+        }
+
+        public int CollectEngagedBosses(List<IBossCombatTarget> buffer)
+        {
+            if (buffer == null)
+            {
+                throw new ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.Clear();
+
+            if (IsGolemActive && _activeGolemInstance != null)
+            {
+                buffer.Add(_activeGolemInstance);
+            }
+
+            foreach (IEncounterArenaController tower in _registeredTowers)
+            {
+                if (tower != null && tower.IsEncounterActive && !tower.IsEncounterCompleted)
+                {
+                    IBossCombatTarget target = tower.BossTarget;
+                    if (target != null && target.Health != null && target.Health.IsAlive())
+                    {
+                        buffer.Add(target);
+                    }
+                }
+            }
+
+            return buffer.Count;
         }
 
         private IEnumerator DelayedSpawnGolemRoutine()

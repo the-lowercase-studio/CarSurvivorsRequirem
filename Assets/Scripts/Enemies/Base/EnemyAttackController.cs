@@ -39,7 +39,7 @@ namespace Assets.Scripts.Enemies.Base
 
         private void EnemyCollisions_OnCollisionWithPlayer(object sender, CollisionEventArgs e)
         {
-            if (_attackAnimationPlayer.IsPlayingAttackAnimation)
+            if (_enemy.IsFrozen || _attackAnimationPlayer.IsPlayingAttackAnimation)
             {
                 return;
             }

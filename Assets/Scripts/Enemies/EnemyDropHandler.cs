@@ -22,12 +22,14 @@ namespace Assets.Scripts.Enemies
     public class EnemyDropHandler : MonoBehaviour
     {
         [Inject] private readonly ICollectibleDropNotifier _dropNotifier = null;
+        [Inject] private readonly ICollectibleDropSuppressor _dropSuppressor = null;
         [Inject] private readonly IGridManager _gridManager = null;
         [Inject] private readonly DropAnimationConfiguration _animationConfig = null;
 
         [SerializeField] private CollectibleDropEntry[] _dropEntries;
 
         private Enemy _enemy;
+        private readonly System.Collections.Generic.List<CollectibleDropEntry> _chosenDrops = new();
 
         private void Awake()
         {
@@ -46,16 +48,25 @@ namespace Assets.Scripts.Enemies
 
         private void Health_OnNoHealth(object sender, EventArgs e)
         {
-            var chosenDrops = new System.Collections.Generic.List<CollectibleDropEntry>();
+            if (_dropSuppressor != null && _dropSuppressor.AreDropsSuppressed)
+            {
+                return;
+            }
+
+            _chosenDrops.Clear();
+            if (_dropEntries == null)
+            {
+                return;
+            }
             for (int i = 0; i < _dropEntries.Length; i++)
             {
                 if (UnityEngine.Random.Range(0f, 100f) <= _dropEntries[i].DropChancePercent)
                 {
-                    chosenDrops.Add(_dropEntries[i]);
+                    _chosenDrops.Add(_dropEntries[i]);
                 }
             }
 
-            int totalDrops = chosenDrops.Count;
+            int totalDrops = _chosenDrops.Count;
             if (totalDrops == 0)
             {
                 return;
@@ -65,7 +76,7 @@ namespace Assets.Scripts.Enemies
 
             for (int i = 0; i < totalDrops; i++)
             {
-                CollectibleDropEntry drop = chosenDrops[i];
+                CollectibleDropEntry drop = _chosenDrops[i];
                 float angle = (i * 360f / totalDrops) + UnityEngine.Random.Range(-15f, 15f);
                 float radian = angle * Mathf.Deg2Rad;
                 Vector3 direction = new Vector3(Mathf.Cos(radian), 0f, Mathf.Sin(radian));

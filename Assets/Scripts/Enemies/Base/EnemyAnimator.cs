@@ -29,9 +29,7 @@ namespace Assets.Scripts.Enemies.Base
         public bool IsPlayingAttackAnimation { get; private set; }
 
         public event EventHandler OnAttackAnimationStart;
-
         public event EventHandler OnAttackAnimationEnd;
-
         public event EventHandler OnAttackHitFrame;
 
         private void Awake()
@@ -42,18 +40,30 @@ namespace Assets.Scripts.Enemies.Base
         private void OnEnable()
         {
             ResetAttackAnimationState();
+            if (_enemy != null)
+            {
+                _enemy.OnFrozenChanged += HandleFrozenChanged;
+                UpdateAnimatorSpeed(_enemy.IsFrozen);
+            }
+
             InvokeRepeating(nameof(HandleTransitionPropertiesChanges), 0f, _animationResponseSpeed);
         }
 
         private void OnDisable()
         {
             CancelInvoke(nameof(HandleTransitionPropertiesChanges));
+            if (_enemy != null)
+            {
+                _enemy.OnFrozenChanged -= HandleFrozenChanged;
+            }
+
+            UpdateAnimatorSpeed(false);
             ResetAttackAnimationState();
         }
 
         public void PlayAttackAnimation()
         {
-            _attackStartTime = Time.time;
+            _attackStartTime = _enemy != null ? _enemy.UnfrozenTime : Time.time;
             _animator.SetTrigger(_attackTriggerHash);
         }
 
@@ -71,7 +81,7 @@ namespace Assets.Scripts.Enemies.Base
         public void Call_OnAttackAnimationStart()
         {
             IsPlayingAttackAnimation = true;
-            _attackStartTime = Time.time;
+            _attackStartTime = _enemy != null ? _enemy.UnfrozenTime : Time.time;
             OnAttackAnimationStart?.Invoke(this, EventArgs.Empty);
         }
 
@@ -102,6 +112,19 @@ namespace Assets.Scripts.Enemies.Base
             OnAttackHitFrame?.Invoke(this, EventArgs.Empty);
         }
 
+        private void HandleFrozenChanged(bool isFrozen)
+        {
+            UpdateAnimatorSpeed(isFrozen);
+        }
+
+        private void UpdateAnimatorSpeed(bool isFrozen)
+        {
+            if (_animator != null)
+            {
+                _animator.speed = isFrozen ? 0f : 1f;
+            }
+        }
+
         private void HandleTransitionPropertiesChanges()
         {
             SetCrawlingTransitionProperties();
@@ -119,7 +142,8 @@ namespace Assets.Scripts.Enemies.Base
                 return;
             }
 
-            if (Time.time - _attackStartTime >= EnemyAnimationConstants.MAX_ATTACK_ANIMATION_DURATION)
+            float currentTime = _enemy != null ? _enemy.UnfrozenTime : Time.time;
+            if (currentTime - _attackStartTime >= EnemyAnimationConstants.MAX_ATTACK_ANIMATION_DURATION)
             {
                 Call_OnAttackAnimationEnd();
                 return;

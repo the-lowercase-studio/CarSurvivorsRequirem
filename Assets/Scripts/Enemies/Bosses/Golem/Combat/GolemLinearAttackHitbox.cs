@@ -1,3 +1,4 @@
+using Assets.Scripts.PowerUps.Freeze;
 using System;
 using System.Collections.Generic;
 using DG.Tweening;
@@ -120,7 +121,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Combat
             float travelTime = maxDistance / Mathf.Max(speed, 0.1f);
             float returnTime = travelTime * 0.8f;
 
-            _activeSequence = DOTween.Sequence();
+            _activeSequence = DOTween.Sequence().AsFreezable();
             _activeSequence.Append(transform.DOMove(targetPosition, travelTime)
                 .SetEase(Ease.OutQuad)
                 .OnUpdate(CheckOverlap));

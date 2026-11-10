@@ -102,8 +102,11 @@ Material:
     - _DstBlend: 10
     - _DstBlendAlpha: 10
     - _EnableBorder: 0
+    - _EnableEndCaps: 0
+    - _EnableEndHazard: 0
     - _EnableFill: 0
     - _EnableGrid: 0
+    - _EnableGrunge: 0
     - _EnvironmentReflections: 1
     - _GlossMapScale: 0
     - _Glossiness: 0

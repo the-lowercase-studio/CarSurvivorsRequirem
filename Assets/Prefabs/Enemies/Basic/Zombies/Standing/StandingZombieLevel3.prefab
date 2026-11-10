@@ -13,8 +13,44 @@ PrefabInstance:
       value: 1.053
       objectReference: {fileID: 0}
     - target: {fileID: 229474845590807783, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
+      propertyPath: _dropEntries.Array.size
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 229474845590807783, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
+      propertyPath: _dropEntries.Array.data[2]._prefab
+      value: 
+      objectReference: {fileID: 3856397427642114118, guid: 2637582a6a72cf24c9a2b5751f667938, type: 3}
+    - target: {fileID: 229474845590807783, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
+      propertyPath: _dropEntries.Array.data[3]._prefab
+      value: 
+      objectReference: {fileID: 4053205895501491920, guid: 244991b2e76b46f4eb38e189961cc87e, type: 3}
+    - target: {fileID: 229474845590807783, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
+      propertyPath: _dropEntries.Array.data[4]._prefab
+      value: 
+      objectReference: {fileID: 895867578837592546, guid: b79e7522be1f45a4796b95222f7cf3b4, type: 3}
+    - target: {fileID: 229474845590807783, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
+      propertyPath: _dropEntries.Array.data[4]._yOffset
+      value: 0.85
+      objectReference: {fileID: 0}
+    - target: {fileID: 229474845590807783, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
       propertyPath: _dropEntries.Array.data[0]._dropChancePercent
-      value: 1.5
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 229474845590807783, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
+      propertyPath: _dropEntries.Array.data[1]._dropChancePercent
+      value: 0.08
+      objectReference: {fileID: 0}
+    - target: {fileID: 229474845590807783, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
+      propertyPath: _dropEntries.Array.data[2]._dropChancePercent
+      value: 0.08
+      objectReference: {fileID: 0}
+    - target: {fileID: 229474845590807783, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
+      propertyPath: _dropEntries.Array.data[3]._dropChancePercent
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 229474845590807783, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
+      propertyPath: _dropEntries.Array.data[4]._dropChancePercent
+      value: 0.01
       objectReference: {fileID: 0}
     - target: {fileID: 323885298071574372, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
       propertyPath: m_LocalPosition.y

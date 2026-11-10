@@ -1,5 +1,6 @@
 using Assets.Scripts.ReflexDI;
 using Assets.Scripts.UI.DevConsole;
+using Assets.Scripts.UI.DevConsole.Constants;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -246,6 +247,13 @@ namespace Assets.Scripts.Editor.Tools
             GameplayDevCommandsRegistrar registrar = presenter.gameObject.AddComponent<GameplayDevCommandsRegistrar>();
             Undo.RegisterCreatedObjectUndo(registrar, "Add GameplayDevCommandsRegistrar");
 
+            SerializedObject serializedRegistrar = new SerializedObject(registrar);
+            serializedRegistrar.FindProperty("_nukePrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(DevConsoleConstants.NUKE_PREFAB_PATH);
+            serializedRegistrar.FindProperty("_freezeTimerPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(DevConsoleConstants.FREEZE_TIMER_PREFAB_PATH);
+            serializedRegistrar.FindProperty("_bubbleShieldPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(DevConsoleConstants.BUBBLE_SHIELD_PREFAB_PATH);
+            serializedRegistrar.FindProperty("_skillCratePrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(DevConsoleConstants.SKILL_CRATE_PREFAB_PATH);
+            serializedRegistrar.ApplyModifiedProperties();
+
             SerializedObject serializedInstaller = new SerializedObject(installer);
             serializedInstaller.FindProperty("_devConsolePresenter").objectReferenceValue = presenter;
             serializedInstaller.FindProperty("_devCommandsRegistrar").objectReferenceValue = registrar;
@@ -263,6 +271,30 @@ namespace Assets.Scripts.Editor.Tools
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene("Assets/Scenes/RuinedBloodCity.unity");
             SetupInActiveScene();
+        }
+
+        [MenuItem("Tools/Dev Console/Wire Collectibles to Active Scene Registrar")]
+        public static void WireCollectiblesToActiveRegistrar()
+        {
+            GameplayDevCommandsRegistrar registrar = Object.FindAnyObjectByType<GameplayDevCommandsRegistrar>();
+            if (registrar == null)
+            {
+                Debug.LogError("[DevConsolePrefabBuilder] GameplayDevCommandsRegistrar not found in active scene.");
+                return;
+            }
+
+            SerializedObject serializedRegistrar = new SerializedObject(registrar);
+            serializedRegistrar.FindProperty("_nukePrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(DevConsoleConstants.NUKE_PREFAB_PATH);
+            serializedRegistrar.FindProperty("_freezeTimerPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(DevConsoleConstants.FREEZE_TIMER_PREFAB_PATH);
+            serializedRegistrar.FindProperty("_bubbleShieldPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(DevConsoleConstants.BUBBLE_SHIELD_PREFAB_PATH);
+            serializedRegistrar.FindProperty("_skillCratePrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(DevConsoleConstants.SKILL_CRATE_PREFAB_PATH);
+            serializedRegistrar.ApplyModifiedProperties();
+
+            EditorUtility.SetDirty(registrar);
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(registrar.gameObject.scene);
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(registrar.gameObject.scene);
+
+            Debug.Log("[DevConsolePrefabBuilder] Successfully wired collectible prefabs to GameplayDevCommandsRegistrar in active scene.");
         }
     }
 }

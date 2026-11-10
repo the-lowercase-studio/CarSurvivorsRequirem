@@ -6,7 +6,7 @@ namespace Assets.Scripts.StatusEffects
     {
         public static void Damage(Collider target, float damage)
         {
-            if (target is null)
+            if (target == null || !target.enabled)
             {
                 return;
             }
@@ -19,7 +19,7 @@ namespace Assets.Scripts.StatusEffects
 
         public static void Knockback(Collider target, Vector3 dir, float range, float timeToArriveAtLocation)
         {
-            if (target is null)
+            if (target == null || !target.enabled)
             {
                 return;
             }

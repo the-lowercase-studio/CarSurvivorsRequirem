@@ -5,7 +5,6 @@ using Assets.Scripts.LevelSystem;
 using Assets.Scripts.Providers;
 using Assets.Scripts.Skills;
 using UnityEngine;
-using System.Runtime.CompilerServices;
 
 namespace Assets.Scripts.Player
 {
@@ -13,6 +12,7 @@ namespace Assets.Scripts.Player
     {
         IAudioClipPlayer AudioClipPlayer { get; }
         ICarController CarController { get; }
+        ICarVfxEffectsController CarVfxEffectsController { get; }
         ILevelController LevelController { get; }
         ISkillsRegistry SkillsRegistry { get; }
     }
@@ -26,9 +26,16 @@ namespace Assets.Scripts.Player
         public ILevelController LevelController { get; private set; }
         public ISkillsRegistry SkillsRegistry { get; private set; }
         public ICarController CarController { get; private set; }
+        public ICarVfxEffectsController CarVfxEffectsController { get; private set; }
         public IAudioClipPlayer AudioClipPlayer { get; private set; }
 
-        public GameObject GameObject => gameObject;
+        public GameObject GameObject
+        {
+            get
+            {
+                return gameObject;
+            }
+        }
 
         private void Awake()
         {
@@ -36,6 +43,7 @@ namespace Assets.Scripts.Player
             LevelController = GetComponent<ILevelController>();
             SkillsRegistry = GetComponentInChildren<ISkillsRegistry>();
             CarController = GetComponent<ICarController>();
+            CarVfxEffectsController = GetComponent<ICarVfxEffectsController>();
             AudioClipPlayer = _audioClipPlayer;
         }
     }

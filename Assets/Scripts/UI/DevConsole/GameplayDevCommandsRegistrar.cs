@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using Assets.Scripts.Enemies;
 using Assets.Scripts.Enemies.Bosses;
 using Assets.Scripts.LayerMasks;
 using Assets.Scripts.LevelSystem;
@@ -25,6 +26,15 @@ namespace Assets.Scripts.UI.DevConsole
         [Inject] private readonly ISwarmEnemySpawner _swarmEnemySpawner = null;
         [Inject] private readonly ISkillUpgradePresenter _skillUpgradePresenter = null;
         [Inject] private readonly IPlayerLevelPresenter _playerLevelPresenter = null;
+        [Inject] private readonly ICollectibleDropNotifier _collectibleDropNotifier = null;
+
+        [Header("Collectible Prefabs")]
+        [SerializeField] private GameObject _nukePrefab;
+        [SerializeField] private GameObject _freezeTimerPrefab;
+        [SerializeField] private GameObject _bubbleShieldPrefab;
+        [SerializeField] private GameObject _armorPrefab;
+        [SerializeField] private GameObject _fireTailsPrefab;
+        [SerializeField] private GameObject _skillCratePrefab;
 
         private static bool IsConsoleSupported
         {
@@ -93,6 +103,13 @@ namespace Assets.Scripts.UI.DevConsole
                 "Awards EXP to player with optional automated upgrade resolution (e.g. 'exp 220 --auto').",
                 HandleExpCommand
             );
+
+            _devConsoleService.RegisterCommand(
+                DevConsoleConstants.POWERUP_COMMAND_NAME,
+                DevConsoleConstants.POWERUP_COMMAND_SYNTAX,
+                DevConsoleConstants.POWERUP_COMMAND_DESCRIPTION,
+                HandlePowerUpCommand
+            );
         }
 
         private void UnregisterCommands()
@@ -105,6 +122,7 @@ namespace Assets.Scripts.UI.DevConsole
             _devConsoleService.UnregisterCommand("golem");
             _devConsoleService.UnregisterCommand("spawn");
             _devConsoleService.UnregisterCommand("exp");
+            _devConsoleService.UnregisterCommand(DevConsoleConstants.POWERUP_COMMAND_NAME);
         }
 
         private void HandleGolemCommand(string[] args)
@@ -511,6 +529,169 @@ namespace Assets.Scripts.UI.DevConsole
             if (float.TryParse(trimmed, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsedBase))
             {
                 amount = parsedBase * multiplier;
+                return true;
+            }
+
+            return false;
+        }
+
+        private void HandlePowerUpCommand(string[] args)
+        {
+            if (args == null || args.Length == 0)
+            {
+                _devConsoleService.LogError($"Usage: {DevConsoleConstants.POWERUP_COMMAND_SYNTAX}.");
+                return;
+            }
+
+            if (_playerManager == null || _playerManager.GameObject == null)
+            {
+                _devConsoleService.LogError("Player is not available in the current scene.");
+                return;
+            }
+
+            if (_collectibleDropNotifier == null)
+            {
+                _devConsoleService.LogError("CollectibleDropNotifier is not available in the current scene.");
+                return;
+            }
+
+            if (!TryResolveCollectiblePrefab(args[0], out GameObject prefab, out string displayName))
+            {
+                _devConsoleService.LogError($"Unknown power-up type '{args[0]}'. Usage: {DevConsoleConstants.POWERUP_COMMAND_SYNTAX}.");
+                return;
+            }
+
+            if (prefab == null)
+            {
+                _devConsoleService.LogError($"Prefab for power-up '{displayName}' is not assigned.");
+                return;
+            }
+
+            Transform playerTransform = _playerManager.GameObject.transform;
+            Vector3 playerPos = playerTransform.position;
+            Vector3 forward = playerTransform.forward;
+            forward.y = 0f;
+            if (forward.sqrMagnitude < 0.01f)
+            {
+                forward = Vector3.forward;
+            }
+            forward.Normalize();
+
+            Vector3 spawnOrigin = playerPos + Vector3.up * DevConsoleConstants.POWERUP_SPAWN_Y_OFFSET;
+            Vector3 targetPos = playerPos + forward * DevConsoleConstants.DEFAULT_SPAWN_FORWARD_DISTANCE;
+
+            Vector3 rayOrigin = targetPos + Vector3.up * 5f;
+            if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit hit, 20f, TerrainLayers.Walkable))
+            {
+                targetPos = hit.point + Vector3.up * DevConsoleConstants.POWERUP_SPAWN_Y_OFFSET;
+            }
+            else
+            {
+                targetPos.y = playerPos.y + DevConsoleConstants.POWERUP_SPAWN_Y_OFFSET;
+            }
+
+            _collectibleDropNotifier.SpawnCollectible(prefab, spawnOrigin, targetPos);
+            _devConsoleService.Log($"Spawned {displayName} ahead of player.");
+        }
+
+        private bool TryResolveCollectiblePrefab(string token, out GameObject prefab, out string displayName)
+        {
+            prefab = null;
+            displayName = null;
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return false;
+            }
+
+            if (string.Equals(token, "nuke", StringComparison.OrdinalIgnoreCase))
+            {
+                displayName = "Nuke";
+                prefab = _nukePrefab;
+#if UNITY_EDITOR
+                if (prefab == null)
+                {
+                    prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(DevConsoleConstants.NUKE_PREFAB_PATH);
+                }
+#endif
+                return true;
+            }
+
+            if (string.Equals(token, "freeze", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, "freezetimer", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, "ice", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, "timefreeze", StringComparison.OrdinalIgnoreCase))
+            {
+                displayName = "Freeze Timer";
+                prefab = _freezeTimerPrefab;
+#if UNITY_EDITOR
+                if (prefab == null)
+                {
+                    prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(DevConsoleConstants.FREEZE_TIMER_PREFAB_PATH);
+                }
+#endif
+                return true;
+            }
+
+            if (string.Equals(token, "shield", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, "bubbleshield", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, "bubble", StringComparison.OrdinalIgnoreCase))
+            {
+                displayName = "Bubble Shield";
+                prefab = _bubbleShieldPrefab;
+#if UNITY_EDITOR
+                if (prefab == null)
+                {
+                    prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(DevConsoleConstants.BUBBLE_SHIELD_PREFAB_PATH);
+                }
+#endif
+                return true;
+            }
+
+            if (string.Equals(token, "armor", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, "armour", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, "plate", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, "plates", StringComparison.OrdinalIgnoreCase))
+            {
+                displayName = "Armor";
+                prefab = _armorPrefab;
+#if UNITY_EDITOR
+                if (prefab == null)
+                {
+                    prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(DevConsoleConstants.ARMOR_PREFAB_PATH);
+                }
+#endif
+                return true;
+            }
+
+            if (string.Equals(token, "firetails", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, "fire", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, "tails", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, "napalm", StringComparison.OrdinalIgnoreCase))
+            {
+                displayName = "Fire Tails";
+                prefab = _fireTailsPrefab;
+#if UNITY_EDITOR
+                if (prefab == null)
+                {
+                    prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(DevConsoleConstants.FIRE_TAILS_PREFAB_PATH);
+                }
+#endif
+                return true;
+            }
+
+            if (string.Equals(token, "crate", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, "skillcrate", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, "skill", StringComparison.OrdinalIgnoreCase))
+            {
+                displayName = "Skill Crate";
+                prefab = _skillCratePrefab;
+#if UNITY_EDITOR
+                if (prefab == null)
+                {
+                    prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(DevConsoleConstants.SKILL_CRATE_PREFAB_PATH);
+                }
+#endif
                 return true;
             }
 

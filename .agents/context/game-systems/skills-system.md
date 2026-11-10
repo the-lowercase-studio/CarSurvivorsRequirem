@@ -186,7 +186,7 @@ It is not responsible for:
   - Zero-Allocation Saw Hit Tracking: SawBlade must track enemy hit timestamps in a preallocated dictionary and clear stale entries via a pooled/cached list without runtime GC allocations.
   - Bounded Melee Impulse: Saw melee knockback must always clamp between SAW_MIN_KNOCKBACK_DISTANCE (1.2m) and SAW_MAX_KNOCKBACK_DISTANCE (3.5m), and arrival duration must clamp between 0.12s and 0.22s.
   - Minigun Visual & Ballistic Invariants:
-    - Persistent telegraph lane indicator displays border frame only (_EnableBorder = 1, _EnableGrid = 0, _EnableFill = 0); center is fully transparent.
+    - Persistent telegraph lane indicator displays distressed emissive orange border frame with outer glow, dark semi-transparent fill with embedded grunge specks, and a transverse hazard warning stripe end cap (_EnableBorder = 1, _EnableFill = 1, _EnableEndHazard = 1, _EnableGrunge = 1, _EnableGrid = 0).
     - Visual tracer bullets travel along the lane at _tracerSpeed (default 70 m/s) and terminate at the precise stopping entity (wall or final pierced enemy).
     - Time-of-flight impact delivery uses preallocated PendingHit[64] queue; zero allocations in UpdatePresentation loop.
     - Targets are verified alive before applying delayed damage; dead targets do not receive damage or consume subsequent shot budgets.
@@ -256,7 +256,7 @@ It is not responsible for:
     - Once 3 active skills are acquired, verify subsequent level-up rewards only offer stat upgrades.
     - Max out stats on active skills and verify the upgrade queue skips exhausted skills without freezing gameplay.
     - Ram into dense swarms with Saw equipped and verify steady periodic damage cadence on both enter and stay without FPS drops or GC allocations.
-    - Fire Minigun and verify holographic lane border indicator displays without central grid, visual tracer bullets stream at 70 m/s along the lane, and impact sparks trigger on enemy contact or wall collision with zero strobe flash.
+    - Fire Minigun and verify holographic lane indicator displays distressed emissive orange borders with outer glow, dark semi-transparent fill, and a transverse diagonal hazard stripe end cap at the range limit, visual tracer bullets stream at 70 m/s along the lane, and impact sparks trigger on enemy contact or wall collision with zero strobe flash.
     - Open pause menu and death screen to verify owned skill stats panel populates up to 3 columns with correct icons and unit formatting.
 
 ## Integration Notes

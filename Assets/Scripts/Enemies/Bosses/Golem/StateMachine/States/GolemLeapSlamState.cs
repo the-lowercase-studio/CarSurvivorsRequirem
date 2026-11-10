@@ -1,3 +1,4 @@
+using Assets.Scripts.PowerUps.Freeze;
 using DG.Tweening;
 using Assets.Scripts.Enemies.Bosses.Golem.Constants;
 using Assets.Scripts.Indicators;
@@ -70,7 +71,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             _boss.Animator.OnLeapTakeoffComplete += HandleTakeoffComplete;
             _boss.Animator.PlayLeapTakeoff();
             int entry = _entryGeneration;
-            _phaseSequence = DOTween.Sequence();
+            _phaseSequence = DOTween.Sequence().AsFreezable();
             _phaseSequence.AppendInterval(_boss.Config.LeapTakeoffDuration);
             _phaseSequence.OnComplete(() =>
             {
@@ -153,7 +154,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             float halfAirTime = _boss.Config.LeapAirTime * 0.5f;
             Vector3 apex = (_startPosition + _snappedTarget) * 0.5f + Vector3.up * _boss.Config.LeapMaxHeight;
             int entry = _entryGeneration;
-            _leapSequence = DOTween.Sequence();
+            _leapSequence = DOTween.Sequence().AsFreezable();
             _leapSequence.Append(_boss.Transform.DOMove(apex, halfAirTime).SetEase(Ease.OutQuad));
             _leapSequence.Append(_boss.Transform.DOMove(_snappedTarget, halfAirTime).SetEase(Ease.InQuad));
             _leapSequence.OnComplete(() =>
@@ -173,7 +174,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             _activeTelegraph = _boss.ShowCircularTelegraph(_impactSurface, _slamRadius,
                 GetWarningDuration(), exactPosition: true);
             int entry = _entryGeneration;
-            _leapSequence = DOTween.Sequence();
+            _leapSequence = DOTween.Sequence().AsFreezable();
             _leapSequence.Append(_boss.Transform.DOMove(_snappedTarget, GetWarningDuration()).SetEase(Ease.InQuad));
             _leapSequence.OnComplete(() =>
             {
@@ -208,7 +209,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
                 _activeTelegraph = null;
             }
             int entry = _entryGeneration;
-            _phaseSequence = DOTween.Sequence();
+            _phaseSequence = DOTween.Sequence().AsFreezable();
             _phaseSequence.AppendInterval(_boss.Config.LeapLandingDuration);
             _phaseSequence.OnComplete(() =>
             {

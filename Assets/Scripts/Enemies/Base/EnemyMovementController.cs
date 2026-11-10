@@ -36,13 +36,14 @@ namespace Assets.Scripts.Enemies.Base
 
         private float _movementDelayAfterAttack = 0.2f;
         private float _currentMovementDelayAfterAttack;
+        private float _movementSpeedMultiplier = 1f;
 
         public bool CanBeTeleported
         {
             get
             {
                 return isActiveAndEnabled && !_isMovementStopped && !_isKnockbackActive
-                    && _verticalVelocity <= 0f && IsOnGround();
+                    && _verticalVelocity <= 0f && IsOnGround() && (_enemy == null || !_enemy.IsFrozen);
             }
         }
 
@@ -61,6 +62,7 @@ namespace Assets.Scripts.Enemies.Base
             _currentVelocity = Vector3.zero;
 
             _currentMovementDelayAfterAttack = 0;
+            _movementSpeedMultiplier = 1f;
             _isKnockbackActive = false;
             _isPursuitSuppressed = false;
             _isMovementStopped = false;
@@ -74,12 +76,19 @@ namespace Assets.Scripts.Enemies.Base
             _isMovingToPositionUnrelatedToGrid = false;
             _verticalVelocity = 0f;
             _currentVelocity = Vector3.zero;
+            _movementSpeedMultiplier = 1f;
             _isPursuitSuppressed = false;
             _isMovementStopped = false;
         }
 
         private void FixedUpdate()
         {
+            if (_enemy != null && _enemy.IsFrozen)
+            {
+                _currentVelocity = Vector3.zero;
+                return;
+            }
+
             MovementHandler();
         }
 
@@ -158,10 +167,16 @@ namespace Assets.Scripts.Enemies.Base
             _verticalVelocity = 0f;
         }
 
+        public void SetMovementSpeedMultiplier(float multiplier)
+        {
+            _movementSpeedMultiplier = Mathf.Max(0f, multiplier);
+        }
+
         public void ResetAfterRelocation()
         {
             _verticalVelocity = 0f;
             _currentVelocity = Vector3.zero;
+            _movementSpeedMultiplier = 1f;
             _isKnockbackActive = false;
             _isMovingToPositionUnrelatedToGrid = false;
             _knockbackStartPos = transform.position;
@@ -294,11 +309,12 @@ namespace Assets.Scripts.Enemies.Base
                 else
                 {
                     Vector3 desiredDirection = _flowFieldMovementController.CalculateDesiredMovementDirection();
-                    Vector3 targetVelocity = desiredDirection * _enemy.Config.MovementSpeed;
+                    float effectiveSpeed = _enemy.Config.MovementSpeed * _movementSpeedMultiplier;
+                    Vector3 targetVelocity = desiredDirection * effectiveSpeed;
 
                     float effectiveAcceleration = _enemy.Config.Acceleration > 0f
                         ? _enemy.Config.Acceleration
-                        : _enemy.Config.MovementSpeed * EnemyMovementConstants.DEFAULT_ACCELERATION_SPEED_MULTIPLIER;
+                        : effectiveSpeed * EnemyMovementConstants.DEFAULT_ACCELERATION_SPEED_MULTIPLIER;
 
                     _currentVelocity = Vector3.MoveTowards(_currentVelocity, targetVelocity, effectiveAcceleration * Time.fixedDeltaTime);
                     Vector3 proposed = transform.position + _currentVelocity * Time.fixedDeltaTime;
@@ -307,7 +323,7 @@ namespace Assets.Scripts.Enemies.Base
                         && !_flowFieldMovementController.IsValidVoluntaryStep(transform.position, proposed))
                     {
                         Vector3 flowStep = transform.position + _flowFieldMovementController.GetFlowDirection()
-                            * (_enemy.Config.MovementSpeed * Time.fixedDeltaTime);
+                            * (effectiveSpeed * Time.fixedDeltaTime);
                         proposed = _flowFieldMovementController.IsValidVoluntaryStep(transform.position, flowStep)
                             ? flowStep : transform.position;
                         _currentVelocity = (proposed - transform.position) / Time.fixedDeltaTime;
@@ -359,7 +375,8 @@ namespace Assets.Scripts.Enemies.Base
 
         private Vector3 Move(Vector3 pos)
         {
-            Vector3 movement = Vector3.Lerp(transform.position, pos, _enemy.Config.MovementSpeed * Time.fixedDeltaTime);
+            float effectiveSpeed = _enemy.Config.MovementSpeed * _movementSpeedMultiplier;
+            Vector3 movement = Vector3.Lerp(transform.position, pos, effectiveSpeed * Time.fixedDeltaTime);
             transform.position = movement;
             return movement;
         }

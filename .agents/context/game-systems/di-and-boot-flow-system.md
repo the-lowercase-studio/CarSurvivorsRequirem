@@ -25,11 +25,13 @@ It is not responsible for:
   - Assets/Scripts/ReflexDI/ProjectInstaller.cs
   - Assets/Scripts/ReflexDI/MainMenuInstaller.cs
   - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
-  - Assets/Scripts/GameFlow/GameScenesLoader.cs
+  - Assets/Scripts/GameFlow/GameSceneLoader.cs
   - Assets/Scripts/GameFlow/GameTime.cs
 - Related docs:
   - .agents/context/game-systems/audio-system.md
   - .agents/context/game-systems/game-flow-system.md
+  - .agents/context/game-systems/power-ups-system.md
+  - .agents/context/game-systems/dev-console-system.md
   - .agents/context/game-systems/settings-system.md
   - .agents/context/game-systems/spawners-system.md
   - .agents/context/game-systems/ui-system.md
@@ -39,11 +41,19 @@ It is not responsible for:
 ## Architecture and Data Flow
 
 - Core components:
-  - Assets/Scripts/ReflexDI/ProjectInstaller.cs registers project-scoped singletons: Assets/Scripts/GameFlow/GameScenesLoader.cs (as IGameSceneLoader), Assets/Scripts/ScoreBoard/StoredScoreBoard.cs, Assets/Scripts/ScoreBoard/ScoreBoardNewScoreSaver.cs (as IScoreBoardNewScoreSaver), and Assets/Scripts/ScoreBoard/ScoreBoardBestScoreGetter.cs (as IScoreBoardBestScoreGetter).
+  - Assets/Scripts/ReflexDI/ProjectInstaller.cs registers project-scoped singletons: Assets/Scripts/GameFlow/GameSceneLoader.cs (as IGameSceneLoader), Assets/Scripts/ScoreBoard/StoredScoreBoard.cs, Assets/Scripts/ScoreBoard/ScoreBoardNewScoreSaver.cs (as IScoreBoardNewScoreSaver), and Assets/Scripts/ScoreBoard/ScoreBoardBestScoreGetter.cs (as IScoreBoardBestScoreGetter).
   - Assets/Scripts/ReflexDI/MainMenuInstaller.cs registers menu-scoped settings services (scoped lifetime): AudioVolumeSetting, GraphicSetting, FullScreenSetting, ResolutionSetting, and DamageNumbersSetting (each bound to their ISetting<TSelf, TValue> and ISettingLoader interfaces).
-  - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs binds scene object references and services: Main Camera (Camera), Player (IPlayerManager), UI Presenters (IPlayerDeathPresenter, IPlayerLevelPresenter, ISkillsVisualPresenter, ITimerPresenter, ISwarmNotificationPresenter), Grid System (IGridManager), Skill Upgrade Flow (ISkillUpgradeFlow), Spawners (IOnRandomGridPosSpawner<EnemiesSpawner>, ISwarmEnemySpawner, IEnemySpawnDifficultyController, ICollectibleDropNotifier, DropAnimationConfiguration, IInWorldSpaceSpawner<ExpParticleSpawner, float>), Waves (IWaveFreezer), and Post-Processing Volume (Volume).
+  - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs binds scene object references and services:
+    - Camera: Main Camera (Camera) and optional CinemachineCombatFollowOffsetController (ICinemachineCombatFollowOffsetController).
+    - Player: PlayerManager (IPlayerManager) and child ISkillUpgradePresenter.
+    - UI Presenters: SkillsStatsPresenter (ISkillsStatsPresenter, fail-fast validated), PausePresenter (IPausePresenter, fail-fast validated), PlayerDeathPresenter (IPlayerDeathPresenter), PlayerLevelPresenter (IPlayerLevelPresenter), SkillsVisualPresenter (ISkillsVisualPresenter), TimerPresenter (ITimerPresenter), SwarmNotificationPresenter (ISwarmNotificationPresenter), and optional BossHUDPresenter (IBossHUDPresenter), ArenaLeashWarningPresenter (IArenaLeashWarningPresenter), and PlayerSkillsHUDPresenter (IPlayerSkillsHUDPresenter).
+    - Dev Console: DevConsoleService (IDevConsoleService), and optional DevConsolePresenter (IDevConsolePresenter) and GameplayDevCommandsRegistrar (IGameplayDevCommandsRegistrar).
+    - Grid & Skill Upgrade Flow: GridManager (IGridManager) and SkillUpgradeFlow (ISkillUpgradeFlow).
+    - Spawners & Collectibles: EnemiesSpawner (IOnRandomGridPosSpawner<EnemiesSpawner>, ISwarmEnemySpawner, IEnemySpawnDifficultyController, IActiveEnemiesProvider), CollectibleDropNotifier (ICollectibleDropNotifier, ICollectibleDropSuppressor), DropAnimationConfiguration, ExpParticleSpawner (IInWorldSpaceSpawner<ExpParticleSpawner, float>), and ExplosionVfxPool (IExplosionVfxPool, fail-fast validated).
+    - Waves, Swarms & Bosses: WaveManager (IWaveFreezer), optional SwarmSpawner (ISwarmFreezer), and optional BossEncounterService (IBossEncounterService).
+    - Post-Processing & Power-Up Services: Post-Processing Volume (Volume), and fail-fast validated NukeEffectService, TimeFreezeService (bound as ITimeFreezeState), BubbleShieldService (bound as IBubbleShield), ArmorService (bound as IArmorService), and FireTailsService (bound as IFireTailsService).
   - Assets/Scripts/ReflexDI/BootLoader.cs hooks into SceneScope.OnSceneContainerBuilding to register boot-scene services into every newly created scene container. It registers AudioMixersManager (IAudioMixersManager), BackgroundAudioManager (IBackgroundAudioManager), and DamageNumbersSpawner (IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> and IEnableDisableFunctionalityTrigger<DamageNumbersSpawner>). It also inspects root scene objects for DefaultGameplaySceneInstaller to pass the main camera to DamageNumbersSpawner.
-  - Assets/Scripts/GameFlow/GameScenesLoader.cs wraps SceneManager.LoadSceneAsync, tracks CurrentLoadedScene, and fires OnStartLoadingScene and OnSceneLoaded events.
+  - Assets/Scripts/GameFlow/GameSceneLoader.cs wraps SceneManager.LoadSceneAsync, tracks CurrentLoadedScene, and fires OnStartLoadingScene and OnSceneLoaded events.
   - Assets/Scripts/GameFlow/GameTime.cs is a static helper class controlling Time.timeScale via Pause() (sets 0f) and Resume() (sets 1f).
 - Runtime flow:
   - Boot scene initializes the Reflex project container and injects IGameSceneLoader into BootLoader.
@@ -56,6 +66,7 @@ It is not responsible for:
 - Critical behavior rules:
   - Explicit dependency injection via Reflex must be preserved; avoid direct GameObject.Find, FindAnyObjectByType, or static service locators.
   - Scene-specific bindings belong in DefaultGameplaySceneInstaller.cs, menu settings in MainMenuInstaller.cs, project-lifetime singletons in ProjectInstaller.cs, and cross-scene boot singletons in BootLoader.cs.
+  - Required gameplay scene services (SkillsStatsPresenter, PausePresenter, ExplosionVfxPool, NukeEffectService, TimeFreezeService, BubbleShieldService, ArmorService, and FireTailsService) must fail fast with InvalidOperationException in DefaultGameplaySceneInstaller.InstallBindings if unassigned.
   - GameScene enum values (MainMenu = 1, RuinedBloodCity = 2) must remain consistent with Unity Build Settings scene indices.
   - GameSceneLoader.LoadNewSceneAsync must invoke GameTime.Resume() upon completion to guarantee newly loaded scenes start unpaused.
 - Ordering or sequencing guarantees:
@@ -86,7 +97,7 @@ It is not responsible for:
   - Reflex DI package handles container construction and attribute-based injection ([Inject]).
   - Unity SceneManager and Build Settings configuration.
 - Downstream consumers:
-  - UI Presenters, ScoreBoard components, Audio Managers, Spawners, and Gameplay managers consume Reflex-bound services.
+  - UI Presenters, ScoreBoard components, Audio Managers, Spawners, Power-Up Services, and Gameplay managers consume Reflex-bound services.
   - BackgroundAudioManager subscribes to IGameSceneLoader events for track switching across scene transitions.
 - Cross-system coupling risks:
   - Modifying BootLoader bindings or event subscriptions can break global audio management or damage number popups across scene loads.
@@ -103,4 +114,3 @@ It is not responsible for:
   - Should scene loading transition from integer enum indices to scene reference assets?
 - Suggested follow-up tasks:
   - Audit scene container building to ensure no redundant lookups occur on scene loads.
-

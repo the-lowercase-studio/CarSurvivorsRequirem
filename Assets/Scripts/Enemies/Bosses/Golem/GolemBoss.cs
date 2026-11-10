@@ -18,6 +18,7 @@ using Assets.Scripts.LevelSystem.Exp;
 using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.Navigation.Constants;
 using Assets.Scripts.Player;
+using Assets.Scripts.PowerUps.Freeze;
 using Assets.Scripts.Shapes;
 using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.StatusEffects;
@@ -40,6 +41,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         [Inject] private readonly IGridManager _gridManager = null;
         [Inject] private readonly IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> _damageNumbersSpawner = null;
         [Inject] private readonly IInWorldSpaceSpawner<ExpParticleSpawner, float> _expParticleSpawner = null;
+        [Inject] private readonly ITimeFreezeState _timeFreezeState = null;
 
         [Header("Configuration")]
         [SerializeField] private GolemBossConfigSO _config;
@@ -82,6 +84,11 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         private bool _isEnraged;
         private readonly List<ITelegraphIndicator> _activeTelegraphs = new List<ITelegraphIndicator>();
 
+        public BossHealthBarKind HealthBarKind => BossHealthBarKind.Golem;
+        public float EnrageHealthPercent => _config.Phase2HealthPercent;
+        public bool IsActive => isActiveAndEnabled && Health != null && Health.IsAlive();
+        public event Action OnPresentationChanged;
+
         public event Action<IGolemBoss> OnBossDefeated;
 
         public bool IsOperational => isActiveAndEnabled && Health.IsAlive();
@@ -104,7 +111,6 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         {
             get
             {
-                if (CurrentPhase == 3) return _config.Phase3CooldownMultiplier;
                 if (CurrentPhase == 2) return _config.Phase2CooldownMultiplier;
                 return 1f;
             }
@@ -114,7 +120,6 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         {
             get
             {
-                if (CurrentPhase == 3) return _config.Phase3SpeedMultiplier;
                 if (CurrentPhase == 2) return _config.Phase2SpeedMultiplier;
                 return 1f;
             }
@@ -124,7 +129,6 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         {
             get
             {
-                if (CurrentPhase == 3) return _config.Phase3ArmSpeedMultiplier;
                 if (CurrentPhase == 2) return _config.Phase2ArmSpeedMultiplier;
                 return 1f;
             }
@@ -186,6 +190,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
                 GolemBossConstants.INITIAL_SKY_BARRAGE_COOLDOWN
             );
             _stateMachine.Initialize(_pursuitState);
+            OnPresentationChanged?.Invoke();
         }
 
         private void OnDisable()
@@ -208,6 +213,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
                 _linearAttackHitbox.Deactivate();
             }
             DismissAllTelegraphs();
+            OnPresentationChanged?.Invoke();
         }
 
         private void OnDestroy()
@@ -217,11 +223,21 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
 
         private void Update()
         {
+            if (_timeFreezeState != null && _timeFreezeState.IsFrozen)
+            {
+                return;
+            }
+
             _stateMachine.Update();
         }
 
         private void FixedUpdate()
         {
+            if (_timeFreezeState != null && _timeFreezeState.IsFrozen)
+            {
+                return;
+            }
+
             _stateMachine.FixedUpdate();
         }
 
@@ -233,6 +249,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
             }
 
             CircularTelegraphIndicator indicator = Instantiate(_circularTelegraph);
+            indicator.SetFreezable(true);
             _activeTelegraphs.Add(indicator);
             indicator.Show(position, radius, duration, WorldGrid, onImpact, autoContractOnFillComplete, exactPosition);
             return indicator;
@@ -246,6 +263,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
             }
 
             RectangularTelegraphIndicator indicator = Instantiate(_rectangularTelegraph);
+            indicator.SetFreezable(true);
             _activeTelegraphs.Add(indicator);
             indicator.Show(origin, direction, length, width, duration, onImpact, autoContractOnFillComplete);
             return indicator;
@@ -317,7 +335,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         {
             rootPosition = default;
             surfacePosition = default;
-            if (!IsRecovering || !IsOperational || Time.deltaTime <= 0f)
+            if (!IsRecovering || !IsOperational || Time.deltaTime <= 0f || (_timeFreezeState != null && _timeFreezeState.IsFrozen))
             {
                 return false;
             }
@@ -538,19 +556,15 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
 
             float healthPercentage = Health.CurrentHealth / Health.MaxHealth;
 
-            if (healthPercentage <= _config.Phase3HealthPercent && CurrentPhase < 3)
+            if (healthPercentage <= _config.Phase2HealthPercent && CurrentPhase < 2)
             {
                 TriggerEnragePhase();
-            }
-            else if (healthPercentage <= _config.Phase2HealthPercent && CurrentPhase < 2)
-            {
-                CurrentPhase = 2;
             }
         }
 
         private void TriggerEnragePhase()
         {
-            CurrentPhase = 3;
+            CurrentPhase = 2;
             _isEnraged = true;
 
             _audioClipPlayer?.PlayOneShot(GolemBossConstants.ROAR_SFX_KEY);
@@ -561,6 +575,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
             }
 
             ApplyEnrageMaterials();
+            OnPresentationChanged?.Invoke();
         }
 
         private void ApplyEnrageMaterials()
@@ -588,9 +603,22 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
             _animator.RestorePlayback();
             _stateMachine.ChangeState(_deathState);
 
+            if (_rootCollider != null)
+            {
+                _rootCollider.enabled = false;
+            }
+
             if (_deathVfxPlayer != null)
             {
-                _deathVfxPlayer.Play(new VFXPlayConfig());
+                if (_deathVfxPlayer.HasParticleSystems)
+                {
+                    _deathVfxPlayer.transform.SetParent(null);
+                    _deathVfxPlayer.Play(new VFXPlayConfig(destroyOnEnd: true));
+                }
+                else
+                {
+                    _deathVfxPlayer.Play(new VFXPlayConfig());
+                }
             }
 
             if (_expParticleSpawner != null)
@@ -599,6 +627,8 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
             }
 
             OnBossDefeated?.Invoke(this);
+            gameObject.SetActive(false);
+            Destroy(gameObject, 5f);
         }
     }
 }

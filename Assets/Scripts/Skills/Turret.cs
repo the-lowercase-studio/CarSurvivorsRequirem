@@ -27,7 +27,7 @@ namespace Assets.Scripts.Skills
 
         public bool IsInitialized()
         {
-            return gameObject.activeSelf && _config is not null;
+            return gameObject.activeSelf && _config != null;
         }
     }
 }

@@ -16,13 +16,23 @@ namespace Assets.Scripts.UI.HUD
     {
         [Inject] private readonly IPlayerManager _playerManager = null;
 
+        [Header("Slot References")]
+        [Tooltip("Slot background images or holders displayed in the HUD.")]
         [SerializeField] private Image[] _skillIconHolders;
+        [Tooltip("Optional explicit foreground icon images. If not assigned, child icon images are resolved or created automatically.")]
+        [SerializeField] private Image[] _iconImages;
+        [Tooltip("Optional frames or overlays shown only when slots are empty.")]
         [SerializeField] private GameObject[] _emptySlotFrames;
+
+        [Header("Visual Settings")]
+        [Tooltip("Background color of the slot.")]
         [SerializeField] private Color _emptySlotColor = new Color(0.12f, 0.12f, 0.12f, 0.45f);
+        [Tooltip("Tint color applied to the foreground skill icon sprite.")]
         [SerializeField] private Color _filledSlotColor = Color.white;
 
         private readonly List<Tween> _activeTweens = new();
         private readonly HashSet<ISkillBase> _assignedSkills = new();
+        private readonly List<Image> _resolvedIconImages = new();
         private int _assignedSlotCount = 0;
 
         private void Start()
@@ -54,18 +64,35 @@ namespace Assets.Scripts.UI.HUD
 
         private void InitializeSlots()
         {
+            _resolvedIconImages.Clear();
+
             if (_skillIconHolders != null)
             {
                 for (int i = 0; i < _skillIconHolders.Length; i++)
                 {
-                    Image iconHolder = _skillIconHolders[i];
-                    if (iconHolder != null)
+                    Image slotBackground = _skillIconHolders[i];
+                    if (slotBackground != null)
                     {
-                        iconHolder.sprite = null;
-                        iconHolder.color = _emptySlotColor;
-                        iconHolder.preserveAspect = true;
-                        iconHolder.enabled = true;
-                        iconHolder.gameObject.SetActive(true);
+                        slotBackground.sprite = null;
+                        slotBackground.color = _emptySlotColor;
+                        slotBackground.preserveAspect = true;
+                        slotBackground.enabled = true;
+                        slotBackground.gameObject.SetActive(true);
+
+                        Image iconImage = GetOrResolveIconImage(i, slotBackground);
+                        if (iconImage != null)
+                        {
+                            iconImage.sprite = null;
+                            iconImage.color = _filledSlotColor;
+                            iconImage.preserveAspect = true;
+                            iconImage.enabled = false;
+                        }
+
+                        _resolvedIconImages.Add(iconImage);
+                    }
+                    else
+                    {
+                        _resolvedIconImages.Add(null);
                     }
                 }
             }
@@ -105,12 +132,6 @@ namespace Assets.Scripts.UI.HUD
             }
         }
 
-        private void HandleSkillInitialized(ISkillBase skill)
-        {
-            bool shouldAnimate = Time.timeSinceLevelLoad > 0.5f;
-            AssignSkillToSlot(skill, shouldAnimate);
-        }
-
         private void AssignSkillToSlot(ISkillBase skill, bool animate)
         {
             if (skill == null || skill.SkillInfo == null)
@@ -131,29 +152,82 @@ namespace Assets.Scripts.UI.HUD
             int slotIndex = _assignedSlotCount;
             _assignedSlotCount++;
 
-            Image iconHolder = _skillIconHolders[slotIndex];
-            if (iconHolder != null)
+            Image slotBackground = _skillIconHolders[slotIndex];
+            if (slotBackground != null)
             {
-                iconHolder.sprite = skill.SkillInfo.Icon;
-                iconHolder.color = _filledSlotColor;
-                iconHolder.preserveAspect = true;
-                iconHolder.enabled = true;
-                iconHolder.gameObject.SetActive(true);
+                slotBackground.color = _emptySlotColor;
+                slotBackground.enabled = true;
+                slotBackground.gameObject.SetActive(true);
+            }
+
+            Image iconImage = slotIndex < _resolvedIconImages.Count ? _resolvedIconImages[slotIndex] : null;
+            if (iconImage == null && slotBackground != null)
+            {
+                iconImage = GetOrResolveIconImage(slotIndex, slotBackground);
+            }
+
+            if (iconImage != null)
+            {
+                iconImage.sprite = skill.SkillInfo.Icon;
+                iconImage.color = _filledSlotColor;
+                iconImage.preserveAspect = true;
+                iconImage.enabled = true;
+                iconImage.gameObject.SetActive(true);
 
                 if (animate)
                 {
-                    Tween punchTween = iconHolder.transform.DOPunchScale(Vector3.one * 0.2f, 0.3f);
+                    Transform punchTarget = slotBackground != null ? slotBackground.transform : iconImage.transform;
+                    Tween punchTween = punchTarget.DOPunchScale(Vector3.one * 0.2f, 0.3f);
                     _activeTweens.Add(punchTween);
                 }
             }
 
             if (_emptySlotFrames != null && slotIndex < _emptySlotFrames.Length && _emptySlotFrames[slotIndex] != null)
             {
-                if (iconHolder == null || _emptySlotFrames[slotIndex] != iconHolder.gameObject)
+                if (slotBackground == null || _emptySlotFrames[slotIndex] != slotBackground.gameObject)
                 {
                     _emptySlotFrames[slotIndex].SetActive(false);
                 }
             }
+        }
+
+        private Image GetOrResolveIconImage(int index, Image slotBackground)
+        {
+            if (slotBackground == null)
+            {
+                return null;
+            }
+
+            if (_iconImages != null && index < _iconImages.Length && _iconImages[index] != null)
+            {
+                return _iconImages[index];
+            }
+
+            Image[] childImages = slotBackground.GetComponentsInChildren<Image>(true);
+            for (int i = 0; i < childImages.Length; i++)
+            {
+                if (childImages[i] != null && childImages[i] != slotBackground)
+                {
+                    return childImages[i];
+                }
+            }
+
+            GameObject iconGameObject = new GameObject("Icon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            iconGameObject.transform.SetParent(slotBackground.transform, false);
+
+            RectTransform rectTransform = iconGameObject.GetComponent<RectTransform>();
+            rectTransform.anchorMin = Vector2.zero;
+            rectTransform.anchorMax = Vector2.one;
+            rectTransform.offsetMin = Vector2.zero;
+            rectTransform.offsetMax = Vector2.zero;
+            rectTransform.localScale = Vector3.one;
+
+            Image iconImage = iconGameObject.GetComponent<Image>();
+            iconImage.preserveAspect = true;
+            iconImage.raycastTarget = false;
+            iconImage.enabled = false;
+
+            return iconImage;
         }
 
         private void KillTweens()
@@ -167,6 +241,12 @@ namespace Assets.Scripts.UI.HUD
             }
 
             _activeTweens.Clear();
+        }
+
+        private void HandleSkillInitialized(ISkillBase skill)
+        {
+            bool shouldAnimate = Time.timeSinceLevelLoad > 0.5f;
+            AssignSkillToSlot(skill, shouldAnimate);
         }
     }
 }

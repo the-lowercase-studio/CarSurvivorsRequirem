@@ -4,8 +4,17 @@ using UnityEngine;
 
 namespace Assets.Scripts.Player.Car
 {
+    public interface ICarVfxEffectsController
+    {
+        int RearDriftEmitterCount { get; }
+        bool TryGetRearDriftEmitterWorldCandidate(int emitterIndex, out Vector3 worldCandidate);
+        void ConfigureFireTailsTimings(float trailLifetime, float trailFadeTime);
+        void SetFireTailsActive(bool isActive);
+        void SetFireTailsFrozen(bool isFrozen);
+    }
+
     [RequireComponent(typeof(CarController))]
-    public class CarVfxEffectsController : MonoBehaviour
+    public class CarVfxEffectsController : MonoBehaviour, ICarVfxEffectsController
     {
         private sealed class DriftEmitter
         {
@@ -54,15 +63,135 @@ namespace Assets.Scripts.Player.Car
         [Tooltip("Duration in seconds over which drift skid marks smoothly fade out at the end of their lifetime.")]
         [SerializeField] private float _driftTrailFadeTime = 0.5f;
 
+        [Header("Car Fire Tails Effect")]
+        [Tooltip("Fire trail renderers assigned to the 2 rear wheels (used instead of black drift skid marks when Fire Tails is active).")]
+        [SerializeField] private TrailRenderer[] _rearFireDriftTrailRenderers;
+
+        [Tooltip("Constant flame particle systems on the 2 rear wheels active for the entire Fire Tails duration.")]
+        [SerializeField] private ParticleSystem[] _rearWheelConstantFireParticles;
+
+        [Tooltip("World-space flame particle systems on the 2 rear wheels that emit lingering ground fire particles only while drifting with Fire Tails active.")]
+        [SerializeField] private ParticleSystem[] _rearDriftFireTrailParticles;
+
         private ICarController _carController;
         private Material _carStopLightsMat;
         private DriftEmitter[] _driftEmitters;
+        private DriftEmitter[] _fireDriftEmitters;
+        private bool _isFireTailsActive;
+        private bool _isFireTailsFrozen;
         private bool _isInitialized;
+
+        public int RearDriftEmitterCount
+        {
+            get
+            {
+                int standardCount = _driftEmitters != null ? _driftEmitters.Length : (_rearDriftTrailRenderers != null ? _rearDriftTrailRenderers.Length : 0);
+                int fireCount = _fireDriftEmitters != null ? _fireDriftEmitters.Length : (_rearFireDriftTrailRenderers != null ? _rearFireDriftTrailRenderers.Length : 0);
+                return Mathf.Max(standardCount, fireCount);
+            }
+        }
+
+        public bool TryGetRearDriftEmitterWorldCandidate(int emitterIndex, out Vector3 worldCandidate)
+        {
+            if (_fireDriftEmitters != null && emitterIndex >= 0 && emitterIndex < _fireDriftEmitters.Length && _fireDriftEmitters[emitterIndex] != null)
+            {
+                DriftEmitter emitter = _fireDriftEmitters[emitterIndex];
+                worldCandidate = emitter.ContactParent == null
+                    ? emitter.LocalContactPosition
+                    : emitter.ContactParent.TransformPoint(emitter.LocalContactPosition);
+                return true;
+            }
+
+            if (_driftEmitters != null && emitterIndex >= 0 && emitterIndex < _driftEmitters.Length && _driftEmitters[emitterIndex] != null)
+            {
+                DriftEmitter emitter = _driftEmitters[emitterIndex];
+                worldCandidate = emitter.ContactParent == null
+                    ? emitter.LocalContactPosition
+                    : emitter.ContactParent.TransformPoint(emitter.LocalContactPosition);
+                return true;
+            }
+
+            if (_rearFireDriftTrailRenderers != null && emitterIndex >= 0 && emitterIndex < _rearFireDriftTrailRenderers.Length && _rearFireDriftTrailRenderers[emitterIndex] != null)
+            {
+                worldCandidate = _rearFireDriftTrailRenderers[emitterIndex].transform.position;
+                return true;
+            }
+
+            if (_rearDriftTrailRenderers != null && emitterIndex >= 0 && emitterIndex < _rearDriftTrailRenderers.Length && _rearDriftTrailRenderers[emitterIndex] != null)
+            {
+                worldCandidate = _rearDriftTrailRenderers[emitterIndex].transform.position;
+                return true;
+            }
+
+            worldCandidate = Vector3.zero;
+            return false;
+        }
+
+        public void ConfigureFireTailsTimings(float trailLifetime, float trailFadeTime)
+        {
+            SetTrailTime(_rearFireDriftTrailRenderers, trailLifetime);
+            ApplyDriftTrailFadeGradient(_rearFireDriftTrailRenderers, trailLifetime, trailFadeTime);
+
+            if (_fireDriftEmitters != null)
+            {
+                for (int i = 0; i < _fireDriftEmitters.Length; i++)
+                {
+                    if (_fireDriftEmitters[i] != null && _fireDriftEmitters[i].Template != null)
+                    {
+                        _fireDriftEmitters[i].Pool.UpdateTimingAndGradient(trailLifetime, _fireDriftEmitters[i].Template.colorGradient);
+                    }
+                }
+            }
+        }
+
+        public void SetFireTailsActive(bool isActive)
+        {
+            _isFireTailsActive = isActive;
+            if (isActive)
+            {
+                if (!_isFireTailsFrozen)
+                {
+                    SetParticleSystemsPlaying(_rearWheelConstantFireParticles, true);
+                }
+
+                EndDriftSegments(_driftEmitters);
+            }
+            else
+            {
+                SetParticleSystemsPlaying(_rearWheelConstantFireParticles, false);
+                SetParticleSystemsPlaying(_rearDriftFireTrailParticles, false);
+                EndDriftSegments(_fireDriftEmitters);
+            }
+        }
+
+        public void SetFireTailsFrozen(bool isFrozen)
+        {
+            _isFireTailsFrozen = isFrozen;
+            if (isFrozen)
+            {
+                PauseParticleSystems(_rearWheelConstantFireParticles);
+                PauseParticleSystems(_rearDriftFireTrailParticles);
+            }
+            else
+            {
+                if (_isFireTailsActive)
+                {
+                    ResumeParticleSystems(_rearWheelConstantFireParticles);
+                    if (_carController != null && _carController.IsGrounded && _carController.IsDrifting)
+                    {
+                        ResumeParticleSystems(_rearDriftFireTrailParticles);
+                    }
+                }
+            }
+        }
 
         private void Awake()
         {
             _carController = GetComponent<ICarController>();
             SetTrailEmitting(_rearDriftTrailRenderers, false);
+            SetTrailEmitting(_rearFireDriftTrailRenderers, false);
+            ClearParticleSystems(_rearWheelConstantFireParticles);
+            ClearParticleSystems(_rearDriftFireTrailParticles);
         }
 
         private void OnEnable()
@@ -98,12 +227,23 @@ namespace Assets.Scripts.Player.Car
             SetTrailEmitting(_rearTrailRenderers, false);
             SetTrailEmitting(_frontTrailRenderers, false);
             SetTrailEmitting(_rearDriftTrailRenderers, false);
+            SetTrailEmitting(_rearFireDriftTrailRenderers, false);
+
             _driftEmitters = new DriftEmitter[_rearDriftTrailRenderers == null ? 0 : _rearDriftTrailRenderers.Length];
             for (int i = 0; i < _driftEmitters.Length; i++)
             {
                 if (_rearDriftTrailRenderers[i] != null)
                 {
                     _driftEmitters[i] = new DriftEmitter(_rearDriftTrailRenderers[i]);
+                }
+            }
+
+            _fireDriftEmitters = new DriftEmitter[_rearFireDriftTrailRenderers == null ? 0 : _rearFireDriftTrailRenderers.Length];
+            for (int i = 0; i < _fireDriftEmitters.Length; i++)
+            {
+                if (_rearFireDriftTrailRenderers[i] != null)
+                {
+                    _fireDriftEmitters[i] = new DriftEmitter(_rearFireDriftTrailRenderers[i]);
                 }
             }
 
@@ -120,6 +260,8 @@ namespace Assets.Scripts.Player.Car
             SetTrailEmitting(_rearTrailRenderers, false);
             SetTrailEmitting(_frontTrailRenderers, false);
             EndDriftSegments();
+            SetParticleSystemsPlaying(_rearWheelConstantFireParticles, false);
+            SetParticleSystemsPlaying(_rearDriftFireTrailParticles, false);
         }
 
         private void LateUpdate()
@@ -130,42 +272,114 @@ namespace Assets.Scripts.Player.Car
             }
 
             float scaledTime = Time.time;
-            for (int i = 0; i < _driftEmitters.Length; i++)
+            if (_driftEmitters != null)
             {
-                DriftEmitter emitter = _driftEmitters[i];
-                if (emitter == null)
+                for (int i = 0; i < _driftEmitters.Length; i++)
                 {
-                    continue;
+                    DriftEmitter emitter = _driftEmitters[i];
+                    if (emitter != null)
+                    {
+                        emitter.Pool.TickExpiry(scaledTime);
+                    }
+                }
+            }
+
+            if (_fireDriftEmitters != null)
+            {
+                for (int i = 0; i < _fireDriftEmitters.Length; i++)
+                {
+                    DriftEmitter emitter = _fireDriftEmitters[i];
+                    if (emitter != null)
+                    {
+                        emitter.Pool.TickExpiry(scaledTime);
+                    }
+                }
+            }
+
+            bool isGroundedAndDrifting = _carController != null && _carController.IsGrounded && _carController.IsDrifting;
+
+            if (_isFireTailsActive)
+            {
+                EndDriftSegments(_driftEmitters);
+
+                if (_fireDriftEmitters != null)
+                {
+                    for (int i = 0; i < _fireDriftEmitters.Length; i++)
+                    {
+                        DriftEmitter emitter = _fireDriftEmitters[i];
+                        if (emitter == null)
+                        {
+                            continue;
+                        }
+
+                        if (emitter.Template == null || !emitter.Template.gameObject.activeInHierarchy || !isGroundedAndDrifting)
+                        {
+                            EndDriftSegment(emitter, scaledTime);
+                            continue;
+                        }
+
+                        UpdateDriftEmitter(emitter, scaledTime);
+                    }
                 }
 
-                emitter.Pool.TickExpiry(scaledTime);
-                if (emitter.Template == null || !emitter.Template.gameObject.activeInHierarchy
-                    || !_carController.IsGrounded || !_carController.IsDrifting)
+                if (isGroundedAndDrifting && !_isFireTailsFrozen)
                 {
-                    EndDriftSegment(emitter, scaledTime);
-                    continue;
+                    SetParticleSystemsPlaying(_rearDriftFireTrailParticles, true);
                 }
+                else
+                {
+                    SetParticleSystemsPlaying(_rearDriftFireTrailParticles, false);
+                }
+            }
+            else
+            {
+                EndDriftSegments(_fireDriftEmitters);
+                SetParticleSystemsPlaying(_rearDriftFireTrailParticles, false);
 
-                UpdateDriftEmitter(emitter, scaledTime);
+                if (_driftEmitters != null)
+                {
+                    for (int i = 0; i < _driftEmitters.Length; i++)
+                    {
+                        DriftEmitter emitter = _driftEmitters[i];
+                        if (emitter == null)
+                        {
+                            continue;
+                        }
+
+                        if (emitter.Template == null || !emitter.Template.gameObject.activeInHierarchy || !isGroundedAndDrifting)
+                        {
+                            EndDriftSegment(emitter, scaledTime);
+                            continue;
+                        }
+
+                        UpdateDriftEmitter(emitter, scaledTime);
+                    }
+                }
             }
         }
 
         private void OnDestroy()
         {
-            if (_driftEmitters == null)
+            DisposeEmitters(_driftEmitters);
+            DisposeEmitters(_fireDriftEmitters);
+            _driftEmitters = null;
+            _fireDriftEmitters = null;
+        }
+
+        private void DisposeEmitters(DriftEmitter[] emitters)
+        {
+            if (emitters == null)
             {
                 return;
             }
 
-            for (int i = 0; i < _driftEmitters.Length; i++)
+            for (int i = 0; i < emitters.Length; i++)
             {
-                if (_driftEmitters[i] != null)
+                if (emitters[i] != null)
                 {
-                    _driftEmitters[i].Pool.Dispose();
+                    emitters[i].Pool.Dispose();
                 }
             }
-
-            _driftEmitters = null;
         }
 
         private void StartSpeedTrailPolling()
@@ -258,18 +472,108 @@ namespace Assets.Scripts.Player.Car
             emitter.HasContinuity = false;
         }
 
-        private void EndDriftSegments()
+        private void EndDriftSegments(DriftEmitter[] emitters)
         {
-            if (_driftEmitters == null)
+            if (emitters == null)
             {
                 return;
             }
 
-            for (int i = 0; i < _driftEmitters.Length; i++)
+            for (int i = 0; i < emitters.Length; i++)
             {
-                if (_driftEmitters[i] != null)
+                if (emitters[i] != null)
                 {
-                    EndDriftSegment(_driftEmitters[i], Time.time);
+                    EndDriftSegment(emitters[i], Time.time);
+                }
+            }
+        }
+
+        private void EndDriftSegments()
+        {
+            EndDriftSegments(_driftEmitters);
+            EndDriftSegments(_fireDriftEmitters);
+            SetParticleSystemsPlaying(_rearDriftFireTrailParticles, false);
+        }
+
+        private void SetParticleSystemsPlaying(ParticleSystem[] particleSystems, bool isPlaying)
+        {
+            if (particleSystems == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < particleSystems.Length; i++)
+            {
+                ParticleSystem ps = particleSystems[i];
+                if (ps == null)
+                {
+                    continue;
+                }
+
+                if (isPlaying)
+                {
+                    if (!ps.isEmitting)
+                    {
+                        ps.Play();
+                    }
+                }
+                else
+                {
+                    if (ps.isEmitting)
+                    {
+                        ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+                    }
+                }
+            }
+        }
+
+        private void ClearParticleSystems(ParticleSystem[] particleSystems)
+        {
+            if (particleSystems == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < particleSystems.Length; i++)
+            {
+                ParticleSystem ps = particleSystems[i];
+                if (ps != null)
+                {
+                    ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                }
+            }
+        }
+
+        private void PauseParticleSystems(ParticleSystem[] particleSystems)
+        {
+            if (particleSystems == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < particleSystems.Length; i++)
+            {
+                ParticleSystem ps = particleSystems[i];
+                if (ps != null && ps.isPlaying)
+                {
+                    ps.Pause();
+                }
+            }
+        }
+
+        private void ResumeParticleSystems(ParticleSystem[] particleSystems)
+        {
+            if (particleSystems == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < particleSystems.Length; i++)
+            {
+                ParticleSystem ps = particleSystems[i];
+                if (ps != null && ps.isPaused)
+                {
+                    ps.Play();
                 }
             }
         }

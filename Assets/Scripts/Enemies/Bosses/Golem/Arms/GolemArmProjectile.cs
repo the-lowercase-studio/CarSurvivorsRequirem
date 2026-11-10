@@ -1,3 +1,4 @@
+using Assets.Scripts.PowerUps.Freeze;
 using System;
 using DG.Tweening;
 using Assets.Scripts.LayerMasks;
@@ -98,7 +99,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Arms
 
             transform.rotation = Quaternion.LookRotation(targetDirection, Vector3.up);
 
-            _activeSequence = DOTween.Sequence();
+            _activeSequence = DOTween.Sequence().AsFreezable();
             _activeSequence.Append(transform.DOMove(targetPos, travelTime).SetEase(Ease.OutQuad));
             _activeSequence.AppendCallback(() =>
             {
@@ -140,7 +141,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Arms
 
             Vector3 skyPos = transform.position + Vector3.up * launchHeight;
 
-            _activeSequence = DOTween.Sequence();
+            _activeSequence = DOTween.Sequence().AsFreezable();
             _activeSequence.Append(transform.DOMove(skyPos, duration).SetEase(Ease.InQuad));
             _activeSequence.OnComplete(() =>
             {
@@ -172,7 +173,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Arms
             float distance = Mathf.Abs(skyPos.y - targetSlamPosition.y);
             float fallDuration = distance / Mathf.Max(fallSpeed, 0.1f);
 
-            _activeSequence = DOTween.Sequence();
+            _activeSequence = DOTween.Sequence().AsFreezable();
             _activeSequence.Append(transform.DOMove(targetSlamPosition, fallDuration).SetEase(Ease.InQuad));
             _activeSequence.OnComplete(() =>
             {
@@ -208,7 +209,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Arms
                 return;
             }
 
-            _activeSequence = DOTween.Sequence();
+            _activeSequence = DOTween.Sequence().AsFreezable();
             _activeSequence.Append(transform.DOMove(_socketTransform.position, duration).SetEase(Ease.InOutQuad));
             _activeSequence.Join(transform.DORotateQuaternion(_socketTransform.rotation, duration));
             _activeSequence.OnComplete(() =>

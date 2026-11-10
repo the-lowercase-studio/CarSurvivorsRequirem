@@ -1,4 +1,6 @@
 using Assets.Scripts.Player.Constants;
+using Assets.Scripts.PowerUps.Armor;
+using Assets.Scripts.PowerUps.Shield;
 using Assets.Scripts.StatusEffects;
 using Assets.Scripts.VFX;
 using DG.Tweening;
@@ -11,6 +13,8 @@ namespace Assets.Scripts.Player
     public class PlayerDamagedHandler : MonoBehaviour, IDamageable
     {
         [Inject] private readonly IPlayerManager _playerManager = null;
+        [Inject] private readonly IBubbleShield _bubbleShield = null;
+        [Inject] private readonly IArmorService _armorService = null;
 
         [Header("Needed references")]
         [SerializeField] private VFXPlayer _damageVfxPlayer;
@@ -42,6 +46,22 @@ namespace Assets.Scripts.Player
 
         public void TakeDamage(float damage)
         {
+            if (_bubbleShield != null && _bubbleShield.IsActive)
+            {
+                _bubbleShield.NotifyDamageAbsorbed();
+                return;
+            }
+
+            if (_armorService != null && _armorService.HasArmor)
+            {
+                damage = _armorService.AbsorbDamage(damage);
+            }
+
+            if (damage <= 0f)
+            {
+                return;
+            }
+
             _playerManager.Health.DecreaseHealth(damage);
             _playerManager.AudioClipPlayer.PlayOneShot(PlayerAudioConstants.DAMAGED_AUDIO_KEY);
             if (_damageVfxPlayer != null)
@@ -55,6 +75,11 @@ namespace Assets.Scripts.Player
 
         public void TakeFullHpDamage()
         {
+            if (_armorService != null)
+            {
+                _armorService.ClearArmorImmediate();
+            }
+
             _playerManager.Health.DecreaseHealth(_playerManager.Health.MaxHealth);
         }
 
