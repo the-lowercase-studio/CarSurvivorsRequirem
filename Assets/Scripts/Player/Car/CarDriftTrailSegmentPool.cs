@@ -136,6 +136,22 @@ namespace Assets.Scripts.Player.Car
             }
         }
 
+        public void UpdateTimingAndGradient(float timeSeconds, Gradient gradient)
+        {
+            for (int i = 0; i < _renderers.Length; i++)
+            {
+                TrailRenderer renderer = _renderers[i];
+                if (renderer != null)
+                {
+                    renderer.time = timeSeconds;
+                    if (gradient != null)
+                    {
+                        renderer.colorGradient = gradient;
+                    }
+                }
+            }
+        }
+
         public void Dispose()
         {
             _activeIndex = -1;

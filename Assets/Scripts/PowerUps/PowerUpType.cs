@@ -7,6 +7,8 @@ namespace Assets.Scripts.PowerUps
     {
         Nuke,
         FreezeTimer,
-        BubbleShield
+        BubbleShield,
+        Armor,
+        FireTails
     }
 }

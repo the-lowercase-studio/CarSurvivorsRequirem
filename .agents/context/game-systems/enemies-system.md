@@ -82,6 +82,7 @@ The system is not responsible for:
   - .agents/context/game-systems/spawners-system.md
   - .agents/context/game-systems/health-system.md
   - .agents/context/game-systems/collectibles-system.md
+  - .agents/context/game-systems/power-ups-system.md
   - .agents/context/game-systems/di-and-boot-flow-system.md
   - .agents/context/game-systems/dev-console-system.md
   - .agents/context/project-coding-standards.md
@@ -94,8 +95,8 @@ The system is not responsible for:
 ## Architecture and Data Flow
 
 - Core components:
-  - Enemy: Aggregate root component for enemy GameObjects. Implements IHealthy, IDamageable, IKnockable, and IPoolable. Injects IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> via Reflex. Emits floating damage numbers in a hemisphere pattern, decrements health, triggers blood VFX, delegates knockback to EnemyMovementController, and fires OnCanBeReleased when death sequences finish. Restores MaxHealth and resets animator state in OnGet().
-  - EnemyMovementController: Implements IMovementController. Coordinates flow-field locomotion, grounding, gravity, and obstacle-checked knockback. Ground probes ignore triggers and preserve the existing 1.5-unit origin/3.5-unit range and 20-unit snapping speed. Ungrounded enemies accumulate gravity, suppress ordinary horizontal pursuit after falling one unit below the last ground sample, and die below Y = -10. Knockback continues in XZ without a world clamp while gravity owns Y. Grounded voluntary displacement is checked after separation and acceleration. CanBeTeleported excludes stopped, knocked, airborne, and falling movement; ResetAfterRelocation clears spatial state after final positioning while preserving lifecycle/attack flags.
+  - Enemy: Aggregate root component for enemy GameObjects. Implements IHealthy, IDamageable, IKnockable, and IPoolable. Injects IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> and ITimeFreezeState via Reflex. Emits floating damage numbers in a hemisphere pattern, decrements health, triggers blood VFX, delegates knockback to EnemyMovementController, and fires OnCanBeReleased when death sequences finish. Restores MaxHealth and resets animator state in OnGet().
+  - EnemyMovementController: Implements IMovementController. Coordinates flow-field locomotion, external speed multipliers (SetMovementSpeedMultiplier), grounding, gravity, and obstacle-checked knockback. Ground probes ignore triggers and preserve the existing 1.5-unit origin/3.5-unit range and 20-unit snapping speed. Ungrounded enemies accumulate gravity, suppress ordinary horizontal pursuit after falling one unit below the last ground sample, and die below Y = -10. Knockback continues in XZ without a world clamp while gravity owns Y. Grounded voluntary displacement is checked after separation and acceleration, scaling effectiveSpeed by _movementSpeedMultiplier. CanBeTeleported excludes stopped, knocked, airborne, falling, and frozen movement; ResetAfterRelocation, OnEnable, and OnDisable reset _movementSpeedMultiplier to 1f and clear spatial state while preserving lifecycle/attack flags.
   - EnemyCollisionsController: Implements ICollisionsController. Performs periodic SphereCastAll queries (default every 0.05s) on EntityLayers.All using _collisionRadius (1.0f), filtering out its own trigger colliders and emitting OnCollisionWithPlayer and OnCollisionWithOtherEnemy.
   - EnemyAttackController: Handles standard melee attacks. Subscribes to EnemyCollisionsController.OnCollisionWithPlayer. Checks if target is within _attackRange and within _attackArcAngle (default 60°), and executes a Physics.Raycast line-of-sight check against TerrainLayers.All to prevent attacking through obstacles. Plays the attack animation on EnemyAnimator, and applies Config.Damage to IDamageable targets when OnAttackHitFrame is fired.
   - EnemyAnimator: Implements IAttackAnimationPlayer. Sets Animator parameters (Speed, IsOnGround, IsMovingByCrawling, Attack). Toggles layer weights between walking layer (0) and crawling layer (1) based on Config.IsMovingByCrawling. Bridges animation events into OnAttackAnimationStart, OnAttackHitFrame, and OnAttackAnimationEnd. Periodically synchronizes attack animation state (every 0.05s), automatically calling OnAttackAnimationEnd if transition state enters falling or if duration exceeds MAX_ATTACK_ANIMATION_DURATION (3.5s).
@@ -114,7 +115,7 @@ The system is not responsible for:
   - IHealthy, IDamageable, IKnockable: Health management, damage reception, and knockback handling.
   - IPoolable: Pool lifecycle contracts (OnGet, ReturnToPool, OnRelease, OnCanBeReleased).
   - INeedToCompleteBeforeDisable: Contract delaying pool release until death presentation finishes (OnCompleted).
-  - IMovementController: Locomotion, knockback, grounding, CanBeTeleported, ResetAfterRelocation, and the retained ResetVerticalVelocity API. Concrete EnemyMovementController also owns pursuit suppression and movement stops.
+  - IMovementController: Locomotion, knockback, grounding, CanBeTeleported, ResetAfterRelocation, SetMovementSpeedMultiplier(float multiplier), and the retained ResetVerticalVelocity API. Concrete EnemyMovementController also owns pursuit suppression and movement stops.
   - IAttackAnimationPlayer: Animation event forwarding (OnAttackAnimationStart, OnAttackHitFrame, OnAttackAnimationEnd).
   - ICollisionsController: Contact detection interface emitting player and peer enemy collision events.
   - ICollectibleDropNotifier: Collectible item spawning with jump/scale animation and collection notification.
@@ -182,7 +183,7 @@ The system is not responsible for:
     1. FixedUpdate runs EnemyMovementController.MovementHandler().
     2. Raycasts downward (3.5m) against TerrainLayers.Walkable. If grounded, snaps Y smoothly to terrain point with speed 20. If ungrounded, applies 25m/s² downward gravity; if Y drops below -10m, triggers TakeFullHpDamage(). If falling past 1m below last ground point, horizontal movement is paused.
     3. Active knockback interpolates XZ toward its obstacle-checked target with sine easing while gravity continues to own Y. It is not clamped to the world rectangle; skills can knock enemies off supported terrain and outside world bounds.
-    4. When moving along flow field, samples desired direction from IFlowFieldMovementController, accelerates toward target velocity, and updates position.
+    4. When moving along flow field, samples desired direction from IFlowFieldMovementController, computes effectiveSpeed = Config.MovementSpeed * _movementSpeedMultiplier, accelerates toward target velocity, and updates position.
     5. Rotates toward movement direction with Config.RotationSpeed when squared velocity exceeds 0.001.
   - Standard Melee Attack Flow:
     1. EnemyCollisionsController detects player layer in periodic SphereCastAll and fires OnCollisionWithPlayer.
@@ -247,6 +248,7 @@ The system is not responsible for:
   - Collectible item drops scattered on enemy death must resolve to a valid walkable cell on WorldGrid.
   - Object pool release must never occur until death presentation sequences (VFX, SFX, and indicators) finish or reach their failsafe watchdog timeout.
   - Knockback paths retain obstacle SphereCasts and can cross world/ground edges. Ordinary falls retain DeathVolume and low-Y death behavior.
+  - External movement speed modifiers applied via IMovementController.SetMovementSpeedMultiplier (such as the 0.6x slow from FireTailsService) must automatically reset to 1.0f in EnemyMovementController.OnEnable(), OnDisable(), and ResetAfterRelocation() so pooled or relocated enemies never retain stale slow multipliers.
   - Spawn candidates require exact support before pool checkout. Delayed swarm candidates are revalidated for support, chunk, visibility, occupancy, and advertised height; invalid candidates are skipped. Disable invalidates pending VFX callbacks. Counts change only when an enemy is actually retrieved/released.
 - Ordering or sequencing guarantees:
   - ObjectPool<Enemy> instances are created in EnemiesSpawner.Awake() and pre-warmed in Start().

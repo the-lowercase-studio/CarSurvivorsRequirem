@@ -3,6 +3,8 @@ using Assets.Scripts.Enemies.Bosses;
 using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.LevelSystem.Exp;
 using Assets.Scripts.Player;
+using Assets.Scripts.PowerUps.Armor;
+using Assets.Scripts.PowerUps.FireTails;
 using Assets.Scripts.PowerUps.Freeze;
 using Assets.Scripts.PowerUps.Nuke;
 using Assets.Scripts.PowerUps.Shield;
@@ -56,6 +58,8 @@ namespace Assets.Scripts.ReflexDI
         [SerializeField] private NukeEffectService _nukeEffectService;
         [SerializeField] private TimeFreezeService _timeFreezeService;
         [SerializeField] private BubbleShieldService _bubbleShieldService;
+        [SerializeField] private ArmorService _armorService;
+        [SerializeField] private FireTailsService _fireTailsService;
 
         public Camera MainCamera => _mainCamera;
 
@@ -156,12 +160,14 @@ namespace Assets.Scripts.ReflexDI
             builder.AddSingleton(_explosionVfxPool, typeof(IExplosionVfxPool));
 
             //Power-Up Services
-            if (_nukeEffectService == null || _timeFreezeService == null || _bubbleShieldService == null)
+            if (_nukeEffectService == null || _timeFreezeService == null || _bubbleShieldService == null || _armorService == null || _fireTailsService == null)
             {
-                throw new System.InvalidOperationException("Gameplay scene requires authored Nuke, TimeFreeze, and BubbleShield effect services.");
+                throw new System.InvalidOperationException("Gameplay scene requires authored Nuke, TimeFreeze, BubbleShield, Armor, and FireTails effect services.");
             }
             builder.AddSingleton(_timeFreezeService, typeof(ITimeFreezeState));
             builder.AddSingleton(_bubbleShieldService, typeof(IBubbleShield));
+            builder.AddSingleton(_armorService, typeof(IArmorService));
+            builder.AddSingleton(_fireTailsService, typeof(IFireTailsService));
         }
     }
 }

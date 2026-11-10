@@ -16,4 +16,4 @@ MonoBehaviour:
   <Description>k__BackingField: Sweeping laser lanes fire instant beam shots. Upgrade
     shot delay, range, turret count, beam width, damage and enemy piercing. Impassable
     terrain stops every beam.
-  <Icon>k__BackingField: {fileID: 21300000, guid: eea3f78a5d6363141b3c878203e91e11, type: 3}
+  <Icon>k__BackingField: {fileID: -431852166, guid: ac4bc65d8ae8f3444981b3a94d0109e9, type: 3}

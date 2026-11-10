@@ -114,6 +114,7 @@ Use `.agents/skills/` as reusable workflows:
 - `gameplay-spec-writing`: write or review staff-engineer level technical specifications and implementation plans with hard Open Questions gates.
 - `preserve-coding-standards`: audit and safely fix coding-standard drift in a pointed scope.
 - `reduce-code-volume`: audit and safely reduce code volume/lines of code while keeping code readable and safe.
+- `sync-system-docs-from-implementations`: user-only workflow to update or create game-system documentation from completed implementation plans and summaries, then delete those plans and summaries while preserving templates.
 - `unity-cli`: interact with Unity CLI to control running editors, manage projects, licenses, releases, or execute batch runs.
 - `unity-pre-commit-gate`: run a comprehensive pre-commit verification gate (compilation, zero warnings, DI bindings, serialization safety, standards audit).
 - `unity-refactor-suggestions`: produce behavior-preserving Unity/C# refactor recommendations.
@@ -123,7 +124,7 @@ When a request matches a skill trigger, read the relevant `SKILL.md` before edit
 
 ## Agent Descriptors
 
-All 18 repository-local skills have an optional Codex descriptor at .agents/skills/<skill-name>/agents/openai.yaml. Each descriptor supplies display_name, short_description, and a default_prompt naming its skill. Invocation policy retains the default; descriptors do not grant action authority.
+All 19 repository-local skills have an optional Codex descriptor at .agents/skills/<skill-name>/agents/openai.yaml. Each descriptor supplies display_name, short_description, and a default_prompt naming its skill. Invocation policy retains the default except for user-only skills (`sync-system-docs-from-implementations`, which sets `allow_implicit_invocation: false`); descriptors do not grant action authority.
 
 Treat these YAML files as optional UI/default-prompt metadata for compatible tools. The portable workflow source remains each skill's SKILL.md.
 

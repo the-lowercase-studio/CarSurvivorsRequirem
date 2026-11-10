@@ -2406,6 +2406,8 @@ Transform:
   - {fileID: 1478436196}
   - {fileID: 2114560231}
   - {fileID: 409455341}
+  - {fileID: 535997332}
+  - {fileID: 741789091}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &524479611
@@ -2493,6 +2495,56 @@ MonoBehaviour:
   _nukeEffectService: {fileID: 1478436195}
   _timeFreezeService: {fileID: 2114560230}
   _bubbleShieldService: {fileID: 409455342}
+  _armorService: {fileID: 535997333}
+  _fireTailsService: {fileID: 741789092}
+--- !u!1 &535997331
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 535997332}
+  - component: {fileID: 535997333}
+  m_Layer: 0
+  m_Name: ArmorService
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &535997332
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 535997331}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 517296375}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &535997333
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 535997331}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 490b5a7f81ea4b5a914e8d336e77bafa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.PowerUps.Armor.ArmorService
+  _config: {fileID: 11400000, guid: bc4a5bcba1c5497fb62f687a3a69d51d, type: 2}
+  _armorPlatesView: {fileID: 2007183185026868725}
+  _damageVfxPlayer: {fileID: 0}
+  _audioClipPlayer: {fileID: 0}
 --- !u!1 &550934126
 GameObject:
   m_ObjectHideFlags: 0
@@ -2741,12 +2793,59 @@ MonoBehaviour:
   - {fileID: 394705958}
   - {fileID: 476687475}
   - {fileID: 323582431}
+  _iconImages: []
   _emptySlotFrames:
   - {fileID: 394705956}
   - {fileID: 476687473}
   - {fileID: 323582429}
   _emptySlotColor: {r: 0.12, g: 0.12, b: 0.12, a: 0.45}
   _filledSlotColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!1 &741789090
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 741789091}
+  - component: {fileID: 741789092}
+  m_Layer: 0
+  m_Name: FireTailsService
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &741789091
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 741789090}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 517296375}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &741789092
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 741789090}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e65967810c3a2da4d8a811643a9f1926, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.PowerUps.FireTails.FireTailsService
+  _config: {fileID: 11400000, guid: c0dab234ae5202746bcf4a6db38533fb, type: 2}
+  _audioClipPlayer: {fileID: 2007183185026868726}
 --- !u!1 &742325821
 GameObject:
   m_ObjectHideFlags: 0
@@ -6237,6 +6336,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f0fa078d4aa2c2f4c9becb2d43d11c35, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.DevConsole.GameplayDevCommandsRegistrar
+  _nukePrefab: {fileID: 0}
+  _freezeTimerPrefab: {fileID: 0}
+  _bubbleShieldPrefab: {fileID: 0}
+  _armorPrefab: {fileID: 0}
+  _fireTailsPrefab: {fileID: 3856397427642114118, guid: 2637582a6a72cf24c9a2b5751f667938, type: 3}
+  _skillCratePrefab: {fileID: 0}
 --- !u!1 &1905272533
 GameObject:
   m_ObjectHideFlags: 0
@@ -7228,6 +7333,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69df56f31ef00d148bd27610082b4535, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &2007183185026868725 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1811250483347354841, guid: cb84583e0c2818e42b12a0baeb2f6f1b, type: 3}
+  m_PrefabInstance: {fileID: 2007183185026868721}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 279ab7f3d8b54bf390a078e3b42e080c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.HealthSystem.ArmorPlatesView
+--- !u!114 &2007183185026868726 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5421320355125824894, guid: cb84583e0c2818e42b12a0baeb2f6f1b, type: 3}
+  m_PrefabInstance: {fileID: 2007183185026868721}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d795db8eefcf5674e94c6f39fdd5ddf0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Audio.AudioClipPlayer
 --- !u!1001 &3017990416229883779
 PrefabInstance:
   m_ObjectHideFlags: 0
