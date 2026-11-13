@@ -18,8 +18,10 @@ It does not own enemy AI, wave pacing, scoreboard persistence, power-up timers/h
   - Assets/Scripts/Player/Car/CarVfxEffectsController.cs
   - Assets/Scripts/Player/Car/CarDriftTrailSegmentPool.cs
   - Assets/Scripts/Player/Car/CarDriftTrailSegmentAnchor.cs
+  - Assets/Scripts/Player/Constants/CarControlConstants.cs
   - Assets/Scripts/Player/Constants/CarVfxConstants.cs
   - Assets/Scripts/Player/Constants/PlayerAudioConstants.cs
+  - Assets/Scripts/Input/GameInputService.cs
   - Assets/Scripts/HealthSystem/RegenativeHealth.cs
   - Assets/Scripts/LevelSystem/LevelController.cs
   - Assets/Scripts/Skills/SkillsRegistry.cs
@@ -38,6 +40,7 @@ It does not own enemy AI, wave pacing, scoreboard persistence, power-up timers/h
   - .agents/context/game-systems/vfx-system.md
   - .agents/context/game-systems/level-system.md
   - .agents/context/game-systems/skills-system.md
+  - .agents/context/game-systems/input-system.md
   - .agents/context/game-systems/di-and-boot-flow-system.md
   - .agents/context/project-coding-standards.md
 - Related agents or instructions:
@@ -48,7 +51,10 @@ It does not own enemy AI, wave pacing, scoreboard persistence, power-up timers/h
 
 - Core components:
   - PlayerManager: Aggregate root component attached to the player GameObject ([RequireComponent(typeof(RegenativeHealth), typeof(LevelController))]). Implements IPlayerManager (inheriting IHealthy and IGameObjectProvider) and exposes Health, LevelController, SkillsRegistry, CarController, CarVfxEffectsController, and AudioClipPlayer. Registered as a scene-scoped dependency in Reflex DI (DefaultGameplaySceneInstaller).
-  - CarController: MonoBehaviour requiring a Rigidbody. Implements ICarController. Reads global Input System actions (Move and Brake), performs down-facing raycast grounding checks across wheel origins with Mathf.SmoothDamp Y suspension positioning, applies forward/reverse acceleration and braking forces directly to Rigidbody.linearVelocity via ForceMode.VelocityChange, handles Initial D style arcade lateral grip, momentum preservation, decoupled sideways yaw drift angle (_targetDriftAngle, _counterSteerImpact), steer-intensity arc scaling, differential slip angle delta tracking (_lastAppliedDriftYaw), snap-back prevention on drift exit, rotates vehicle via Rigidbody.MoveRotation, animates visual wheel models, and manages dual top speed ceilings (_maxForwardSpeed = 16.0 m/s vs _maxOverallSpeed = 24.0 m/s).
+  - CarController: MonoBehaviour requiring a Rigidbody. Implements ICarController. Injects IGameplayInput, IInputDeviceContext, and Camera (_mainCamera), failing fast in Awake() if any injected dependency or _groundLayerMask is unassigned. Reads MoveInput, IsBrakePressed, ReverseInput, and OnBrakeStarted/OnBrakeCanceled events from IGameplayInput and resolves a stack-allocated DriveControlIntent in FixedUpdate() branched by _inputDeviceContext.ActiveScheme:
+    - KeyboardMouse: preserves classic WASD/Arrow tank-style throttle/steer + Space brake with reverse steering inversion.
+    - Gamepad: drives 360-degree camera-relative directional steering via ComputeCameraRelativeDirection (falling back to _mainCamera.transform.up when overhead forward is near-vertical), scales target forward speed by stick deflection (_gamepadStickDeadzone, _gamepadThrottleExponent), steers toward desiredDirection using yaw error (_gamepadSteerDeadbandAngle = 2 deg, _gamepadFullSteerAngle = 45 deg, _lastGamepadSteerSign tiebreaker at 180 deg opposite turns), uses dedicated analog ReverseInput (rightTrigger, _gamepadReverseDeadzone = 0.1) to decelerate forward speed at _reverseAcceleration and reverse without inverting steering, and keeps Brake/Drift on buttonEast (never reversing).
+    - Performs down-facing raycast grounding checks across wheel origins with Mathf.SmoothDamp Y suspension positioning, applies forward/reverse acceleration and braking forces directly to Rigidbody.linearVelocity via ForceMode.VelocityChange, handles Initial D style arcade lateral grip, momentum preservation, decoupled sideways yaw drift angle (_targetDriftAngle, _counterSteerImpact), steer-intensity arc scaling, differential slip angle delta tracking (_lastAppliedDriftYaw), snap-back prevention on drift exit, rotates vehicle via Rigidbody.MoveRotation, animates visual wheel models, and manages dual top speed ceilings (_maxForwardSpeed = 16.0 m/s vs _maxOverallSpeed = 24.0 m/s).
   - CarVfxEffectsController: Requires CarController on the same GameObject and implements ICarVfxEffectsController. Brake events control backlights and the CarStopLights material IsGlowing property. Speed ribbons retain periodic (0.1s) forward/reverse velocity checks. Rear drift trails maintain two parallel sets of DriftEmitter pools in LateUpdate: _driftEmitters for standard black tire skid marks (rendered via Assets/Materials/TireTrack.mat using Custom/TireTrackMultiply) and _fireDriftEmitters for Fire Tails burning ribbons (rendered via Assets/Materials/FireTailsTrail.mat using Custom/FireTailsTrail). Both pools tick expiry every frame so existing skid marks fade out naturally when Fire Tails activates and fire ribbons fade out naturally after Fire Tails expires. Also controls 2 local-space constant rear-wheel flame ParticleSystems (_rearWheelConstantFireParticles, maxParticles = 50) active throughout the Fire Tails duration and 2 world-space drift flame ParticleSystems (_rearDriftFireTrailParticles, maxParticles = 120, startLifetime = 3.5s) active only while grounded and drifting with Fire Tails. Uses ps.isEmitting checks when starting/stopping particle emission so re-drifting while older world-space flames are still decaying resumes emission immediately.
   - CarDriftTrailSegmentPool: Prewarms eight TrailRenderer segments per emitter, including the authored template renderer. Slots are Free, Active, or Fading. Active renderers enable emitting for native mesh generation; Fading renderers disable it after geometry initialization. Native transform sampling uses the finite DRIFT_NATIVE_SAMPLE_SUPPRESSION_DISTANCE (1,000,000f), while authored vertex spacing (_minVertexDistance, 0.15m on fire trails) is cached for manual filtering in AppendPoint. Exposes UpdateTimingAndGradient(float timeSeconds, Gradient gradient) so FireTailsService can synchronize fire trail lifetimes and fade gradients dynamically. Reuse waits strictly beyond retirement time plus lifetime; expired stale native points are then cleared and Free renderers disabled.
   - CarDriftTrailSegmentAnchor: One runtime helper per emitter pins occupied native renderer heads at their latest supported world positions in LateUpdate, including during VFX disablement. It performs no queries or insertion and is removed during pool disposal.
@@ -59,6 +65,18 @@ It does not own enemy AI, wave pacing, scoreboard persistence, power-up timers/h
   - ICarController: Colocated in Assets/Scripts/Player/Car/CarController.cs. Exposes OnBrakePress, OnBrakeRelease, OnDriftStart, OnDriftStop, OnDriftDirectionChanged, GetMovementSpeed(), GetMovementVelocity(), MaxForwardSpeed, MaxOverallSpeed, IsDrifting, DriftDirection (-1 Left, 1 Right, 0 None), DriftYawAngle, IsGrounded, and TryGetTireGroundContact(Vector3 worldCandidate, out RaycastHit groundHit).
   - ICarVfxEffectsController: Colocated in Assets/Scripts/Player/Car/CarVfxEffectsController.cs. Exposes RearDriftEmitterCount, TryGetRearDriftEmitterWorldCandidate(int emitterIndex, out Vector3 worldCandidate), ConfigureFireTailsTimings(float trailLifetime, float trailFadeTime), SetFireTailsActive(bool isActive), and SetFireTailsFrozen(bool isFrozen).
 - Centralized constants:
+  - CarControlConstants (Assets/Scripts/Player/Constants/CarControlConstants.cs):
+    - KEYBOARD_THROTTLE_DEADZONE = 0.05f
+    - KEYBOARD_DRIFT_START_THROTTLE_MIN = 0.1f
+    - KEYBOARD_REVERSE_STEER_THRESHOLD = -0.1f
+    - KEYBOARD_REVERSE_SPEED_THRESHOLD = -0.5f
+    - GAMEPAD_STEER_DIRECTION_THRESHOLD = 0.05f
+    - DRIFT_STEER_INIT_THRESHOLD = 0.2f
+    - DRIFT_STEER_EXIT_THRESHOLD = 0.1f
+    - CAMERA_AXIS_EPSILON_SQR = 0.0001f
+    - FULL_ROTATION_TIEBREAKER_DOT = -0.999f
+    - LATERAL_GRIP_LERP_SPEED = 4.0f
+    - TURN_MULTIPLIER_LERP_SPEED = 6.0f
   - CarVfxConstants (Assets/Scripts/Player/Constants/CarVfxConstants.cs):
     - SPEED_CHECK_FOR_TRAIL_DELAY = 0.1f
     - CAR_STOP_LIGHTS_MAT_NAME = "CarStopLights"
@@ -72,8 +90,8 @@ It does not own enemy AI, wave pacing, scoreboard persistence, power-up timers/h
   - PlayerAudioConstants (Assets/Scripts/Player/Constants/PlayerAudioConstants.cs):
     - DAMAGED_AUDIO_KEY = "Damaged"
 - Runtime flow:
-  - Setup: PlayerManager.Awake caches core components (Health, LevelController, SkillsRegistry, CarController, CarVfxEffectsController, AudioClipPlayer) and registers as scene-scoped IPlayerManager via DefaultGameplaySceneInstaller. CarController.Awake configures Rigidbody center of mass (_centerOfMass = (0, -0.5, 0)), validates _groundLayerMask, and caches InputSystem actions. CarVfxEffectsController.Start initializes both standard _driftEmitters and _fireDriftEmitters pools.
-  - Driving & Drift Processing: CarController.Update reads Move (Vector2) and Brake inputs and animates wheel models. CarController.FixedUpdate clears angular velocity, executes wheel raycasts to snap Y position with smooth dampening, updates drift state, calculates target linear velocity with smooth lateral grip interpolation (_currentLateralGrip), enforces top speed ceilings, and rotates vehicle via MoveRotation.
+  - Setup: PlayerManager.Awake caches core components (Health, LevelController, SkillsRegistry, CarController, CarVfxEffectsController, AudioClipPlayer) and registers as scene-scoped IPlayerManager via DefaultGameplaySceneInstaller. CarController.Awake validates injected IGameplayInput, IInputDeviceContext, and Camera (_mainCamera), configures Rigidbody center of mass (_centerOfMass = (0, -0.5, 0)), and validates _groundLayerMask; OnEnable/OnDisable subscribe to IGameplayInput.OnBrakeStarted and OnBrakeCanceled and reset input/drift state cleanly. CarVfxEffectsController.Start initializes both standard _driftEmitters and _fireDriftEmitters pools.
+  - Driving & Drift Processing: CarController samples IGameplayInput (MoveInput, IsBrakePressed, ReverseInput) in Update and animates wheel models. CarController.FixedUpdate clears angular velocity, executes wheel raycasts to snap Y position with smooth dampening, resolves DriveControlIntent (using stack-allocated structs and zero heap allocations), updates drift state (using intent.DriftThrottleInput and intent.RawSteerTarget so Gamepad 360-degree driving drifts in all directions including screen -Y), calculates target linear velocity with smooth lateral grip interpolation (_currentLateralGrip), enforces top speed ceilings, and rotates vehicle via MoveRotation.
   - Drift Trail & Fire Tails VFX Processing: In CarVfxEffectsController.LateUpdate, both _driftEmitters and _fireDriftEmitters tick segment expiry. When grounded and drifting:
     - If _isFireTailsActive is false, _fireDriftEmitters and _rearDriftFireTrailParticles are stopped, and standard _driftEmitters append surface-snapped points (hit.point + Vector3.up * 0.005f) rendered with Custom/TireTrackMultiply (Multiply blend DstColor Zero with Offset -1, -1 that darkens the underlying asphalt while preserving road lines and cracks, fading toward white (1, 1, 1) as vertex alpha decays).
     - If _isFireTailsActive is true, standard _driftEmitters are ended, _fireDriftEmitters append surface-snapped points rendered with Custom/FireTailsTrail (Additive blend SrcAlpha One with Offset -1, -1, cubic polynomial molten core 1 - uDist^3, hardware TMU sampling of Assets/Textures/FlameNoise.png, and vertex-alpha smoothstep ember dissolve), and _rearDriftFireTrailParticles emit lingering world-space flames (unless frozen by Time Freeze).
@@ -84,10 +102,12 @@ It does not own enemy AI, wave pacing, scoreboard persistence, power-up timers/h
 
 - Critical behavior rules:
   - PlayerManager requires RegenativeHealth and LevelController on the same GameObject.
-  - Normal throttle (W) caps top speed at _maxForwardSpeed (16.0 m/s).
+  - Normal throttle caps top speed at _maxForwardSpeed (16.0 m/s), scaled by stick deflection in Gamepad mode; analog ReverseInput (rightTrigger) overrides forward throttle, decelerates at _reverseAcceleration * ReverseThrottle to 0, and reverses up to _reverseMaxSpeed * ReverseThrottle while keeping forward heading aim active.
   - Drifting past the duration threshold (_minDriftTimeToBoost = 0.25s) unlocks acceleration towards _maxOverallSpeed (24.0 m/s) at _driftAcceleration (18.0 m/s²).
   - Upon exiting drift above _maxForwardSpeed, excess speed smoothly decays back to _maxForwardSpeed at _driftSpeedDecayRate (5.0 m/s²).
-  - Drift requires brake input, minimum speed (_minSpeedToDrift = 8.0 m/s), forward movement input, and horizontal steer input. Lateral grip drops to _driftGrip (0.25) and car posture turns sideways (_targetDriftAngle = 40°).
+  - Drift requires brake input (Space / Gamepad buttonEast), minimum speed (_minSpeedToDrift = 8.0 m/s), forward throttle/stick deflection (intent.DriftThrottleInput >= 0.1f), and horizontal steer input (|_smoothedSteerInput| >= 0.2f). Lateral grip drops to _driftGrip (0.25) and car posture turns sideways (_targetDriftAngle = 40°).
+  - Holding Brake/Drift alone decelerates to 0 and never reverses.
+  - CarController.FixedUpdate uses only stack-allocated structs and Vector3 math with zero heap allocations and zero LINQ.
   - Upon exiting drift, slip angle delta tracking (_lastAppliedDriftYaw) is zeroed so vehicle orientation remains pointing in exit heading without snap-back.
   - Speed ribbon emission is suppressed whenever IsGrounded is false or IsDrifting is true. Skid and fire ribbon insertion additionally requires each rear anchor's own nearby ground contact and an active visual hierarchy; front-wheel support cannot authorize unsupported rear marks.
   - Two authored rear standard emitters and two authored rear fire emitters each own at most eight pooled TrailRenderer segments per wheel (16 standard + 16 fire total), with at most one Active segment per emitter at a time. No new renderers, materials, or managed arrays are allocated during driving or rollover. Each emitter uses one current query and at most eight continuity probes per rendered frame.
@@ -100,7 +120,7 @@ It does not own enemy AI, wave pacing, scoreboard persistence, power-up timers/h
   - Drift trail continuity sampling and segment pool updates run in LateUpdate.
 - Constraints contributors must preserve:
   - Do not introduce static singleton accessors to the Player. Always inject IPlayerManager via Reflex.
-  - Preserve Move and Brake Input System action names.
+  - Preserve Move, Brake, and Reverse Input System action names.
   - Keep player damage routing unified through IDamageable interface on PlayerDamagedHandler.
 
 ## Extension Points
@@ -122,8 +142,8 @@ It does not own enemy AI, wave pacing, scoreboard persistence, power-up timers/h
 ## Integration Notes
 
 - Upstream dependencies:
-  - Reflex DI framework for injection of IPlayerManager, IPlayerDeathPresenter, IBubbleShield, and IArmorService.
-  - Unity Input System global actions from Assets/InputSystem/InputSystem_Actions.inputactions.
+  - Reflex DI framework for injection of IPlayerManager, IGameplayInput, IInputDeviceContext, Camera, IPlayerDeathPresenter, IBubbleShield, and IArmorService.
+  - Centralized input service (GameInputService) backed by Assets/InputSystem/InputSystem_Actions.inputactions.
   - DOTween for scale animations.
 - Downstream consumers:
   - GridManager reads player position and velocity for flow field calculations and target prediction.

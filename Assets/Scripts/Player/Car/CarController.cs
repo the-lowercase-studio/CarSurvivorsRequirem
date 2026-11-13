@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
+using Assets.Scripts.Input;
 using Assets.Scripts.Player.Constants;
+using Reflex.Attributes;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace Assets.Scripts.Player.Car
 {
@@ -74,6 +75,10 @@ namespace Assets.Scripts.Player.Car
             }
         }
 
+        [Inject] private readonly IGameplayInput _gameplayInput = null;
+        [Inject] private readonly IInputDeviceContext _inputDeviceContext = null;
+        [Inject] private readonly Camera _mainCamera = null;
+
         [Header("Engine & Acceleration")]
         [Tooltip("Standard maximum forward linear speed in m/s (e.g., 16.0).")]
         [SerializeField] private float _maxForwardSpeed = 16f;
@@ -115,6 +120,27 @@ namespace Assets.Scripts.Player.Car
         [Tooltip("Steering response speed when pressing/releasing steering inputs. Smooths input and prevents abrupt jerks (recommended: 8-12).")]
         [Range(1f, 50f)]
         [SerializeField] private float _steerResponseSpeed = 10f;
+
+        [Header("Gamepad Analog Steering")]
+        [Tooltip("Additional software deadzone applied to left stick magnitude after Input System stickDeadzone, smoothly rescaled to [0..1].")]
+        [Range(0f, 0.5f)]
+        [SerializeField] private float _gamepadStickDeadzone = 0.05f;
+
+        [Tooltip("Trigger threshold below which analog reverse input is ignored before rescaling to [0..1].")]
+        [Range(0.01f, 0.5f)]
+        [SerializeField] private float _gamepadReverseDeadzone = 0.1f;
+
+        [Tooltip("Yaw error angle in degrees at which gamepad steering reaches full 1.0 turn rate.")]
+        [Range(15f, 180f)]
+        [SerializeField] private float _gamepadFullSteerAngle = 45f;
+
+        [Tooltip("Yaw error angle in degrees within which the car drives straight without micro-steering oscillation.")]
+        [Range(0f, 10f)]
+        [SerializeField] private float _gamepadSteerDeadbandAngle = 2f;
+
+        [Tooltip("Response curve exponent applied to normalized left-stick deflection for target forward speed (1.0 = linear).")]
+        [Range(0.5f, 2.5f)]
+        [SerializeField] private float _gamepadThrottleExponent = 1f;
 
         [Header("Arcade Grip & Drift")]
         [Tooltip("Lateral grip during normal driving (0 = icy slip, 1 = perfect traction). Recommended: 0.75 - 0.85.")]
@@ -168,11 +194,34 @@ namespace Assets.Scripts.Player.Car
         [Tooltip("Local Rigidbody center of mass. Lower Y (e.g., -0.5) prevents rollovers and enhances stability.")]
         [SerializeField] private Vector3 _centerOfMass = new Vector3(0f, -0.5f, 0f);
 
+        private readonly struct DriveControlIntent
+        {
+            public float ForwardThrottle { get; }
+            public float ReverseThrottle { get; }
+            public float RawSteerTarget { get; }
+            public float DriftThrottleInput { get; }
+            public bool IsReverseSteerInverted { get; }
+
+            public DriveControlIntent(
+                float forwardThrottle,
+                float reverseThrottle,
+                float rawSteerTarget,
+                float driftThrottleInput,
+                bool isReverseSteerInverted)
+            {
+                ForwardThrottle = forwardThrottle;
+                ReverseThrottle = reverseThrottle;
+                RawSteerTarget = rawSteerTarget;
+                DriftThrottleInput = driftThrottleInput;
+                IsReverseSteerInverted = isReverseSteerInverted;
+            }
+        }
+
         private Rigidbody _rb;
-        private InputAction _moveAction;
         private Vector2 _moveInput;
-        private InputAction _brakeAction;
         private bool _brakeInput;
+        private float _reverseInput;
+        private float _lastGamepadSteerSign = 1f;
         private bool _isDrifting;
         private int _driftDirection;
         private float _currentDriftDuration;
@@ -231,10 +280,23 @@ namespace Assets.Scripts.Player.Car
 
         private void Awake()
         {
+            if (_gameplayInput == null)
+            {
+                throw new InvalidOperationException($"[{nameof(CarController)}] IGameplayInput was not injected on '{name}'.");
+            }
+
+            if (_inputDeviceContext == null)
+            {
+                throw new InvalidOperationException($"[{nameof(CarController)}] IInputDeviceContext was not injected on '{name}'.");
+            }
+
+            if (_mainCamera == null)
+            {
+                throw new InvalidOperationException($"[{nameof(CarController)}] Main Camera was not injected on '{name}'.");
+            }
+
             _rb = GetComponent<Rigidbody>();
             _rb.interpolation = RigidbodyInterpolation.Interpolate;
-            _moveAction = InputSystem.actions.FindAction("Move");
-            _brakeAction = InputSystem.actions.FindAction("Brake");
 
             _rb.centerOfMass = _centerOfMass;
             _currentLateralGrip = _normalGrip;
@@ -247,20 +309,25 @@ namespace Assets.Scripts.Player.Car
 
         private void OnEnable()
         {
-            if (_brakeAction != null)
+            if (_gameplayInput != null)
             {
-                _brakeAction.started += BrakeAction_Started;
-                _brakeAction.canceled += BrakeAction_Canceled;
+                _gameplayInput.OnBrakeStarted += HandleBrakeStarted;
+                _gameplayInput.OnBrakeCanceled += HandleBrakeCanceled;
             }
         }
 
         private void OnDisable()
         {
-            if (_brakeAction != null)
+            if (_gameplayInput != null)
             {
-                _brakeAction.started -= BrakeAction_Started;
-                _brakeAction.canceled -= BrakeAction_Canceled;
+                _gameplayInput.OnBrakeStarted -= HandleBrakeStarted;
+                _gameplayInput.OnBrakeCanceled -= HandleBrakeCanceled;
             }
+
+            _moveInput = Vector2.zero;
+            _brakeInput = false;
+            _reverseInput = 0f;
+            _lastGamepadSteerSign = 1f;
 
             if (_isDrifting || _driftDirection != 0 || !Mathf.Approximately(_currentDriftYawAngle, 0f))
             {
@@ -275,15 +342,9 @@ namespace Assets.Scripts.Player.Car
 
         private void Update()
         {
-            if (_moveAction != null)
-            {
-                _moveInput = _moveAction.ReadValue<Vector2>();
-            }
-
-            if (_brakeAction != null)
-            {
-                _brakeInput = _brakeAction.IsPressed();
-            }
+            _moveInput = _gameplayInput.MoveInput;
+            _brakeInput = _gameplayInput.IsBrakePressed;
+            _reverseInput = _gameplayInput.ReverseInput;
 
             AnimateWheelsVisuals();
         }
@@ -293,9 +354,11 @@ namespace Assets.Scripts.Player.Car
             _rb.angularVelocity = Vector3.zero;
 
             HandleRaycastGrounding();
-            UpdateDriftState();
-            HandleArcadeMovement();
-            HandleArcadeSteering();
+
+            DriveControlIntent intent = ResolveDriveControlIntent();
+            UpdateDriftState(in intent);
+            HandleArcadeMovement(in intent);
+            HandleArcadeSteering(in intent);
         }
 
         public bool TryGetTireGroundContact(Vector3 contactPosition, out RaycastHit groundHit)
@@ -475,22 +538,151 @@ namespace Assets.Scripts.Player.Car
             return _raycastOriginsCache;
         }
 
-        private void HandleArcadeMovement()
+        private DriveControlIntent ResolveDriveControlIntent()
+        {
+            if (_inputDeviceContext.ActiveScheme != InputScheme.Gamepad)
+            {
+                float kbForwardThrottle = _moveInput.y > CarControlConstants.KEYBOARD_THROTTLE_DEADZONE ? _moveInput.y : 0f;
+                float kbReverseThrottle = _moveInput.y < -CarControlConstants.KEYBOARD_THROTTLE_DEADZONE ? -_moveInput.y : 0f;
+                float forwardSpeed = Vector3.Dot(_rb.linearVelocity, transform.forward);
+                bool isReverseSteerInverted = _moveInput.y < CarControlConstants.KEYBOARD_REVERSE_STEER_THRESHOLD
+                    || (forwardSpeed < CarControlConstants.KEYBOARD_REVERSE_SPEED_THRESHOLD && _moveInput.y <= 0f);
+
+                return new DriveControlIntent(
+                    forwardThrottle: kbForwardThrottle,
+                    reverseThrottle: kbReverseThrottle,
+                    rawSteerTarget: _moveInput.x,
+                    driftThrottleInput: _moveInput.y,
+                    isReverseSteerInverted: isReverseSteerInverted);
+            }
+
+            float reverseThrottle = 0f;
+            if (_reverseInput > _gamepadReverseDeadzone)
+            {
+                float reverseDenom = Mathf.Max(0.01f, 1f - _gamepadReverseDeadzone);
+                reverseThrottle = Mathf.Clamp01((_reverseInput - _gamepadReverseDeadzone) / reverseDenom);
+            }
+
+            Vector3 desiredDirection = ComputeCameraRelativeDirection(_moveInput);
+            float rawMagnitude = _moveInput.magnitude;
+            float stickThrottle = 0f;
+
+            if (rawMagnitude > _gamepadStickDeadzone && desiredDirection != Vector3.zero)
+            {
+                float stickDenom = Mathf.Max(0.01f, 1f - _gamepadStickDeadzone);
+                float normalizedMagnitude = Mathf.Clamp01((rawMagnitude - _gamepadStickDeadzone) / stickDenom);
+                stickThrottle = Mathf.Pow(normalizedMagnitude, _gamepadThrottleExponent);
+            }
+
+            float forwardThrottle = reverseThrottle > 0f ? 0f : stickThrottle;
+            float driftThrottleInput = reverseThrottle > 0f ? 0f : stickThrottle;
+            float rawSteerTarget = 0f;
+
+            if (stickThrottle > 0f && desiredDirection != Vector3.zero)
+            {
+                Vector3 carForwardXZ = transform.forward;
+                carForwardXZ.y = 0f;
+                if (carForwardXZ.sqrMagnitude >= CarControlConstants.CAMERA_AXIS_EPSILON_SQR)
+                {
+                    carForwardXZ.Normalize();
+                }
+                else
+                {
+                    carForwardXZ = Vector3.forward;
+                }
+
+                if (Vector3.Dot(carForwardXZ, desiredDirection) < CarControlConstants.FULL_ROTATION_TIEBREAKER_DOT)
+                {
+                    rawSteerTarget = _lastGamepadSteerSign;
+                }
+                else
+                {
+                    float yawError = Vector3.SignedAngle(carForwardXZ, desiredDirection, Vector3.up);
+                    float absYaw = Mathf.Abs(yawError);
+                    if (absYaw > _gamepadSteerDeadbandAngle)
+                    {
+                        float steerRange = Mathf.Max(1f, _gamepadFullSteerAngle - _gamepadSteerDeadbandAngle);
+                        float scaled = Mathf.Clamp01((absYaw - _gamepadSteerDeadbandAngle) / steerRange);
+                        float steerSign = Mathf.Sign(yawError);
+                        rawSteerTarget = steerSign * scaled;
+
+                        if (scaled > CarControlConstants.GAMEPAD_STEER_DIRECTION_THRESHOLD)
+                        {
+                            _lastGamepadSteerSign = steerSign;
+                        }
+                    }
+                }
+            }
+
+            return new DriveControlIntent(
+                forwardThrottle: forwardThrottle,
+                reverseThrottle: reverseThrottle,
+                rawSteerTarget: rawSteerTarget,
+                driftThrottleInput: driftThrottleInput,
+                isReverseSteerInverted: false);
+        }
+
+        private Vector3 ComputeCameraRelativeDirection(Vector2 stickInput)
+        {
+            Vector3 camForward = _mainCamera.transform.forward;
+            camForward.y = 0f;
+            if (camForward.sqrMagnitude < CarControlConstants.CAMERA_AXIS_EPSILON_SQR)
+            {
+                camForward = _mainCamera.transform.up;
+                camForward.y = 0f;
+            }
+
+            if (camForward.sqrMagnitude < CarControlConstants.CAMERA_AXIS_EPSILON_SQR)
+            {
+                camForward = Vector3.forward;
+            }
+            else
+            {
+                camForward.Normalize();
+            }
+
+            Vector3 camRight = _mainCamera.transform.right;
+            camRight.y = 0f;
+            if (camRight.sqrMagnitude < CarControlConstants.CAMERA_AXIS_EPSILON_SQR)
+            {
+                camRight = Vector3.Cross(Vector3.up, camForward);
+            }
+
+            if (camRight.sqrMagnitude < CarControlConstants.CAMERA_AXIS_EPSILON_SQR)
+            {
+                camRight = Vector3.right;
+            }
+            else
+            {
+                camRight.Normalize();
+            }
+
+            Vector3 desiredDirection = camRight * stickInput.x + camForward * stickInput.y;
+            desiredDirection.y = 0f;
+            if (desiredDirection.sqrMagnitude < CarControlConstants.CAMERA_AXIS_EPSILON_SQR)
+            {
+                return Vector3.zero;
+            }
+
+            desiredDirection.Normalize();
+            return desiredDirection;
+        }
+
+        private void HandleArcadeMovement(in DriveControlIntent intent)
         {
             Vector3 currentVelocity = _rb.linearVelocity;
 
             Vector3 localVelocity = transform.InverseTransformDirection(currentVelocity);
             _currentForwardSpeed = localVelocity.z;
 
-            float inputY = _moveInput.y;
             float targetForwardSpeed;
 
             if (_isDrifting)
             {
-                if (inputY > 0.05f)
+                if (intent.ForwardThrottle > CarControlConstants.KEYBOARD_THROTTLE_DEADZONE)
                 {
                     float effectiveMaxSpeed = (_currentDriftDuration >= _minDriftTimeToBoost) ? _maxOverallSpeed : _maxForwardSpeed;
-                    float maxTargetSpeed = effectiveMaxSpeed * inputY;
+                    float maxTargetSpeed = effectiveMaxSpeed * intent.ForwardThrottle;
                     targetForwardSpeed = Mathf.MoveTowards(_currentForwardSpeed, maxTargetSpeed, _driftAcceleration * Time.fixedDeltaTime);
                 }
                 else
@@ -502,7 +694,22 @@ namespace Assets.Scripts.Player.Car
             {
                 targetForwardSpeed = Mathf.MoveTowards(_currentForwardSpeed, 0f, _brakeDeceleration * Time.fixedDeltaTime);
             }
-            else if (inputY > 0.05f)
+            else if (intent.ReverseThrottle > 0f)
+            {
+                if (_currentForwardSpeed > 0f)
+                {
+                    targetForwardSpeed = Mathf.MoveTowards(
+                        _currentForwardSpeed,
+                        0f,
+                        _reverseAcceleration * intent.ReverseThrottle * Time.fixedDeltaTime);
+                }
+                else
+                {
+                    float maxTargetSpeed = -_reverseMaxSpeed * intent.ReverseThrottle;
+                    targetForwardSpeed = Mathf.MoveTowards(_currentForwardSpeed, maxTargetSpeed, _reverseAcceleration * Time.fixedDeltaTime);
+                }
+            }
+            else if (intent.ForwardThrottle > CarControlConstants.KEYBOARD_THROTTLE_DEADZONE)
             {
                 if (_currentForwardSpeed > _maxForwardSpeed)
                 {
@@ -510,14 +717,9 @@ namespace Assets.Scripts.Player.Car
                 }
                 else
                 {
-                    float maxTargetSpeed = _maxForwardSpeed * inputY;
+                    float maxTargetSpeed = _maxForwardSpeed * intent.ForwardThrottle;
                     targetForwardSpeed = Mathf.MoveTowards(_currentForwardSpeed, maxTargetSpeed, _acceleration * Time.fixedDeltaTime);
                 }
-            }
-            else if (inputY < -0.05f)
-            {
-                float maxTargetSpeed = _reverseMaxSpeed * inputY;
-                targetForwardSpeed = Mathf.MoveTowards(_currentForwardSpeed, maxTargetSpeed, _reverseAcceleration * Time.fixedDeltaTime);
             }
             else
             {
@@ -528,7 +730,7 @@ namespace Assets.Scripts.Player.Car
             _currentForwardSpeed = targetForwardSpeed;
 
             float targetGrip = _isDrifting ? _driftGrip : _normalGrip;
-            _currentLateralGrip = Mathf.MoveTowards(_currentLateralGrip, targetGrip, 4.0f * Time.fixedDeltaTime);
+            _currentLateralGrip = Mathf.MoveTowards(_currentLateralGrip, targetGrip, CarControlConstants.LATERAL_GRIP_LERP_SPEED * Time.fixedDeltaTime);
             float targetLateralSpeed = localVelocity.x * (1f - _currentLateralGrip);
 
             Vector3 targetLocalVelocity = new Vector3(targetLateralSpeed, 0f, _currentForwardSpeed);
@@ -540,17 +742,11 @@ namespace Assets.Scripts.Player.Car
             _rb.AddForce(velocityChange, ForceMode.VelocityChange);
         }
 
-        private void HandleArcadeSteering()
+        private void HandleArcadeSteering(in DriveControlIntent intent)
         {
-            _smoothedSteerInput = Mathf.MoveTowards(_smoothedSteerInput, _moveInput.x, _steerResponseSpeed * Time.fixedDeltaTime);
+            _smoothedSteerInput = Mathf.MoveTowards(_smoothedSteerInput, intent.RawSteerTarget, _steerResponseSpeed * Time.fixedDeltaTime);
 
-            float forwardSpeed = Vector3.Dot(_rb.linearVelocity, transform.forward);
-            float directionSign = 1f;
-
-            if (_moveInput.y < -0.1f || (forwardSpeed < -0.5f && _moveInput.y <= 0f))
-            {
-                directionSign = -1f;
-            }
+            float directionSign = intent.IsReverseSteerInverted ? -1f : 1f;
 
             float targetTurnMultiplier = 1.0f;
             if (_isDrifting)
@@ -558,14 +754,15 @@ namespace Assets.Scripts.Player.Car
                 float steerIntensity = Mathf.Abs(_smoothedSteerInput);
                 targetTurnMultiplier = Mathf.Lerp(0.35f, _driftTurnMultiplier, steerIntensity);
 
-                bool isCounterSteering = (_driftDirection < 0 && _smoothedSteerInput > 0.05f) || (_driftDirection > 0 && _smoothedSteerInput < -0.05f);
+                bool isCounterSteering = (_driftDirection < 0 && _smoothedSteerInput > CarControlConstants.GAMEPAD_STEER_DIRECTION_THRESHOLD)
+                    || (_driftDirection > 0 && _smoothedSteerInput < -CarControlConstants.GAMEPAD_STEER_DIRECTION_THRESHOLD);
                 if (isCounterSteering)
                 {
                     targetTurnMultiplier *= 0.5f;
                 }
             }
 
-            _currentTurnMultiplier = Mathf.MoveTowards(_currentTurnMultiplier, targetTurnMultiplier, 6.0f * Time.fixedDeltaTime);
+            _currentTurnMultiplier = Mathf.MoveTowards(_currentTurnMultiplier, targetTurnMultiplier, CarControlConstants.TURN_MULTIPLIER_LERP_SPEED * Time.fixedDeltaTime);
             float turnAmount = _smoothedSteerInput * _turnSpeed * _currentTurnMultiplier * directionSign * Time.fixedDeltaTime;
 
             float yawDelta = _currentDriftYawAngle - _lastAppliedDriftYaw;
@@ -576,20 +773,20 @@ namespace Assets.Scripts.Player.Car
             _rb.MoveRotation(_rb.rotation * turnRotation);
         }
 
-        private void UpdateDriftState()
+        private void UpdateDriftState(in DriveControlIntent intent)
         {
             bool wasDrifting = _isDrifting;
             int oldDirection = _driftDirection;
 
             float currentSpeed = GetMovementSpeed();
             bool hasMinSpeed = currentSpeed >= _minSpeedToDrift;
-            bool isSteering = Mathf.Abs(_smoothedSteerInput) >= 0.2f;
+            bool isSteering = Mathf.Abs(_smoothedSteerInput) >= CarControlConstants.DRIFT_STEER_INIT_THRESHOLD;
 
             if (_isDrifting)
             {
                 _currentDriftDuration += Time.fixedDeltaTime;
-                bool speedOrMoveExit = !hasMinSpeed || _moveInput.y < 0.05f;
-                bool steerExitWithoutBrake = !_brakeInput && Mathf.Abs(_smoothedSteerInput) < 0.1f;
+                bool speedOrMoveExit = !hasMinSpeed || intent.DriftThrottleInput < CarControlConstants.KEYBOARD_THROTTLE_DEADZONE;
+                bool steerExitWithoutBrake = !_brakeInput && Mathf.Abs(_smoothedSteerInput) < CarControlConstants.DRIFT_STEER_EXIT_THRESHOLD;
                 if (speedOrMoveExit || steerExitWithoutBrake)
                 {
                     _isDrifting = false;
@@ -599,7 +796,10 @@ namespace Assets.Scripts.Player.Car
             else
             {
                 _currentDriftDuration = 0f;
-                bool startCondition = _brakeInput && hasMinSpeed && _moveInput.y >= 0.1f && isSteering;
+                bool startCondition = _brakeInput
+                    && hasMinSpeed
+                    && intent.DriftThrottleInput >= CarControlConstants.KEYBOARD_DRIFT_START_THROTTLE_MIN
+                    && isSteering;
                 if (startCondition)
                 {
                     _isDrifting = true;
@@ -609,11 +809,11 @@ namespace Assets.Scripts.Player.Car
 
             if (_isDrifting)
             {
-                if (_smoothedSteerInput < -0.05f)
+                if (_smoothedSteerInput < -CarControlConstants.GAMEPAD_STEER_DIRECTION_THRESHOLD)
                 {
                     _driftDirection = -1;
                 }
-                else if (_smoothedSteerInput > 0.05f)
+                else if (_smoothedSteerInput > CarControlConstants.GAMEPAD_STEER_DIRECTION_THRESHOLD)
                 {
                     _driftDirection = 1;
                 }
@@ -628,15 +828,16 @@ namespace Assets.Scripts.Player.Car
             {
                 targetAngle = _driftDirection * _targetDriftAngle;
 
-                bool isCounterSteering = (_driftDirection < 0 && _moveInput.x > 0.05f) || (_driftDirection > 0 && _moveInput.x < -0.05f);
+                bool isCounterSteering = (_driftDirection < 0 && intent.RawSteerTarget > CarControlConstants.GAMEPAD_STEER_DIRECTION_THRESHOLD)
+                    || (_driftDirection > 0 && intent.RawSteerTarget < -CarControlConstants.GAMEPAD_STEER_DIRECTION_THRESHOLD);
                 if (isCounterSteering)
                 {
-                    float counterSteerFactor = Mathf.Abs(_moveInput.x);
+                    float counterSteerFactor = Mathf.Abs(intent.RawSteerTarget);
                     targetAngle *= (1f - counterSteerFactor * _counterSteerImpact);
                 }
                 else
                 {
-                    float steerDeepenFactor = Mathf.Abs(_moveInput.x);
+                    float steerDeepenFactor = Mathf.Abs(intent.RawSteerTarget);
                     targetAngle *= Mathf.Lerp(0.85f, 1.15f, steerDeepenFactor);
                 }
             }
@@ -696,12 +897,12 @@ namespace Assets.Scripts.Player.Car
             }
         }
 
-        private void BrakeAction_Started(InputAction.CallbackContext context)
+        private void HandleBrakeStarted(object sender, EventArgs args)
         {
             OnBrakePress?.Invoke(this, EventArgs.Empty);
         }
 
-        private void BrakeAction_Canceled(InputAction.CallbackContext context)
+        private void HandleBrakeCanceled(object sender, EventArgs args)
         {
             OnBrakeRelease?.Invoke(this, EventArgs.Empty);
         }

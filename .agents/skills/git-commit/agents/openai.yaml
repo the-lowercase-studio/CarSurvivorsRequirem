@@ -1,0 +1,6 @@
+interface:
+  display_name: "Git Commit (Validated)"
+  short_description: "Run full technical and logical validation, then commit scoped changes with CSR prefixing."
+  default_prompt: "Use $git-commit to validate scoped changes through the full verification harness and logical review, then create a CSR-prefixed commit without pushing or opening a PR."
+policy:
+  allow_implicit_invocation: false

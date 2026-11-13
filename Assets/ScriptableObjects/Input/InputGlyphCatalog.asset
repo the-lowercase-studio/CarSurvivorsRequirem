@@ -1,0 +1,819 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab06415cb04f0bb45b64bef9316842cd, type: 3}
+  m_Name: InputGlyphCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.ScriptableObjects.Input.InputGlyphCatalog
+  _entries:
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: leftButton
+    _sprite: {fileID: 21300000, guid: dc08934b7c8850945a5b044307635e49, type: 3}
+    _displayLabel: LMB
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: leftButton
+    _sprite: {fileID: 21300000, guid: 9958e5312a060334d826dd827482a199, type: 3}
+    _displayLabel: LMB
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: rightButton
+    _sprite: {fileID: 21300000, guid: 88ff0a1c44c655149a3e6ce08ca02d24, type: 3}
+    _displayLabel: RMB
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: rightButton
+    _sprite: {fileID: 21300000, guid: 4c58bf66aea42294d90df9ff53f6934a, type: 3}
+    _displayLabel: RMB
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: middleButton
+    _sprite: {fileID: 21300000, guid: c4731186d49a0734b8bfbf19021e59d5, type: 3}
+    _displayLabel: MMB
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: middleButton
+    _sprite: {fileID: 21300000, guid: cb140c4b073feac4786083ca11832791, type: 3}
+    _displayLabel: MMB
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: scroll
+    _sprite: {fileID: 21300000, guid: 3e50720bef058c344af20bc29c2c3432, type: 3}
+    _displayLabel: Scroll
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: scroll
+    _sprite: {fileID: 21300000, guid: 83f0485632bc1a848ae90b82cdec17bb, type: 3}
+    _displayLabel: Scroll
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: upArrow
+    _sprite: {fileID: 21300000, guid: 2277e1ca45e43744b9b010993e25019f, type: 3}
+    _displayLabel: Up
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: upArrow
+    _sprite: {fileID: 21300000, guid: d869845ca65688b4891d5aed87652126, type: 3}
+    _displayLabel: Up
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: rightArrow
+    _sprite: {fileID: 21300000, guid: 8a857e96f23b37f4eaa92abee6fd116c, type: 3}
+    _displayLabel: Right
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: rightArrow
+    _sprite: {fileID: 21300000, guid: 2e3837830b8c083438cf7f29ee3ffd9d, type: 3}
+    _displayLabel: Right
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: downArrow
+    _sprite: {fileID: 21300000, guid: 689e9eb0b0d212241b81f2d9434c30e0, type: 3}
+    _displayLabel: Down
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: downArrow
+    _sprite: {fileID: 21300000, guid: cabeb089792ec3f46ab71361073a2a31, type: 3}
+    _displayLabel: Down
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: leftArrow
+    _sprite: {fileID: 21300000, guid: aa0d90e79f1cac547939cf4098b8ebe1, type: 3}
+    _displayLabel: Left
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: leftArrow
+    _sprite: {fileID: 21300000, guid: 32ce2c2ebe3e1994da25addcd6fd492c, type: 3}
+    _displayLabel: Left
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: q
+    _sprite: {fileID: 21300000, guid: fe3c05d16124b0742bc82f9be3664755, type: 3}
+    _displayLabel: Q
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: q
+    _sprite: {fileID: 21300000, guid: 891f09bebb00c2047bd07ea80d05d1a7, type: 3}
+    _displayLabel: Q
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: w
+    _sprite: {fileID: 21300000, guid: 3c5402d27fa65014b8f2c29138d18d3c, type: 3}
+    _displayLabel: W
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: w
+    _sprite: {fileID: 21300000, guid: 02316e057f3f84e4cac5d3029bd6fc7e, type: 3}
+    _displayLabel: W
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: e
+    _sprite: {fileID: 21300000, guid: a3433d6220ce56c41a4e555e061d727e, type: 3}
+    _displayLabel: E
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: e
+    _sprite: {fileID: 21300000, guid: 475cec25e7cdbdb46ab92a6d7e7dacea, type: 3}
+    _displayLabel: E
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: a
+    _sprite: {fileID: 21300000, guid: aee7e780e831b954eaa709921eb623d4, type: 3}
+    _displayLabel: A
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: a
+    _sprite: {fileID: 21300000, guid: 3ce31cb79fa67b444831a0a3cd3c5cbd, type: 3}
+    _displayLabel: A
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: s
+    _sprite: {fileID: 21300000, guid: 750a8c73675283841928ed9aab17b5a7, type: 3}
+    _displayLabel: S
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: s
+    _sprite: {fileID: 21300000, guid: 9a2f30100b49c424c875435a05f1c003, type: 3}
+    _displayLabel: S
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: d
+    _sprite: {fileID: 21300000, guid: 02be6b230b920624fb9e26053659a09f, type: 3}
+    _displayLabel: D
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: d
+    _sprite: {fileID: 21300000, guid: 3fd8baf5a93ac36438e47b2f5a6f9b43, type: 3}
+    _displayLabel: D
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: 0
+    _sprite: {fileID: 21300000, guid: 2269a5b791021e84abd73c6838534aa6, type: 3}
+    _displayLabel: 0
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: 0
+    _sprite: {fileID: 21300000, guid: c59afc83e68b65847bc38270f27c4109, type: 3}
+    _displayLabel: 0
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: 1
+    _sprite: {fileID: 21300000, guid: dc57eb1e4c1a97447907fb4634f2747a, type: 3}
+    _displayLabel: 1
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: 1
+    _sprite: {fileID: 21300000, guid: 7b371dede4eb8c94484fa7a85ed368be, type: 3}
+    _displayLabel: 1
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: 2
+    _sprite: {fileID: 21300000, guid: c7b6262db63b27144b55d95a93c68328, type: 3}
+    _displayLabel: 2
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: 2
+    _sprite: {fileID: 21300000, guid: dd54678ab288d8e41bffc8d6dcd026eb, type: 3}
+    _displayLabel: 2
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: 3
+    _sprite: {fileID: 21300000, guid: fef667911e170a64d838ad80d5809116, type: 3}
+    _displayLabel: 3
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: 3
+    _sprite: {fileID: 21300000, guid: 7f84e6de82fff4e47b77a4c3b055c0d2, type: 3}
+    _displayLabel: 3
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: 4
+    _sprite: {fileID: 21300000, guid: aaf3cd239d784be449803515610b6458, type: 3}
+    _displayLabel: 4
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: 4
+    _sprite: {fileID: 21300000, guid: 7b481291ce064904cba67bb22a07c862, type: 3}
+    _displayLabel: 4
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: 5
+    _sprite: {fileID: 21300000, guid: 837ca9fec08ba8c47afa6507db67cf07, type: 3}
+    _displayLabel: 5
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: 5
+    _sprite: {fileID: 21300000, guid: 84ebda3c0b8b1074aba56d3eb0a94da3, type: 3}
+    _displayLabel: 5
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: 6
+    _sprite: {fileID: 21300000, guid: f7c28f821b5bd5b4c890a9c795d7aeca, type: 3}
+    _displayLabel: 6
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: 6
+    _sprite: {fileID: 21300000, guid: 9069395df12057e4a9f1be1ad7b453ff, type: 3}
+    _displayLabel: 6
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: 7
+    _sprite: {fileID: 21300000, guid: 50cf1c45fbf5aeb49b5df8661924dcd3, type: 3}
+    _displayLabel: 7
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: 7
+    _sprite: {fileID: 21300000, guid: 41bc4f774e5d9bd449d98e6b73f8d09d, type: 3}
+    _displayLabel: 7
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: 8
+    _sprite: {fileID: 21300000, guid: 54dcdc09d8d589d478afe64e19ced53c, type: 3}
+    _displayLabel: 8
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: 8
+    _sprite: {fileID: 21300000, guid: dbec9fee3aead1046a8ba89039acbff7, type: 3}
+    _displayLabel: 8
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: 9
+    _sprite: {fileID: 21300000, guid: 07f4fec3af9ff8c479b21bb2ef3328e1, type: 3}
+    _displayLabel: 9
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: 9
+    _sprite: {fileID: 21300000, guid: 5cfac619b2406604e848f0561d2b8012, type: 3}
+    _displayLabel: 9
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: backquote
+    _sprite: {fileID: 21300000, guid: 60f8bd240fc72a44e8197585d395ec52, type: 3}
+    _displayLabel: ~
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: backquote
+    _sprite: {fileID: 21300000, guid: 950dc9befc43a2c42a14cb28882d62b7, type: 3}
+    _displayLabel: ~
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: escape
+    _sprite: {fileID: 21300000, guid: 62987b4d91bc9f54aa19ac3d044d6dee, type: 3}
+    _displayLabel: Esc
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: escape
+    _sprite: {fileID: 21300000, guid: e49b69d017f7cf54d9a42ac170df17a8, type: 3}
+    _displayLabel: Esc
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: space
+    _sprite: {fileID: 21300000, guid: 6ca63d22bbadc224a96d9bbee6a752ac, type: 3}
+    _displayLabel: Space
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: space
+    _sprite: {fileID: 21300000, guid: a26e4993f5f2e5847b8d60b4b6618f9b, type: 3}
+    _displayLabel: Space
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: enter
+    _sprite: {fileID: 21300000, guid: e1127a2f2605293498242fad0cdd4046, type: 3}
+    _displayLabel: Enter
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 1
+    _canonicalControlPath: enter
+    _sprite: {fileID: 21300000, guid: f985c5ea0b62d7b4496395e633317201, type: 3}
+    _displayLabel: Enter
+    _isSpriteOptional: 0
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: numpad1
+    _sprite: {fileID: 0}
+    _displayLabel: Num 1
+    _isSpriteOptional: 1
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: numpad2
+    _sprite: {fileID: 0}
+    _displayLabel: Num 2
+    _isSpriteOptional: 1
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: numpad3
+    _sprite: {fileID: 0}
+    _displayLabel: Num 3
+    _isSpriteOptional: 1
+  - _family: 0
+    _keyboardTheme: 0
+    _canonicalControlPath: numpadEnter
+    _sprite: {fileID: 0}
+    _displayLabel: Num Enter
+    _isSpriteOptional: 1
+  - _family: 1
+    _keyboardTheme: 0
+    _canonicalControlPath: buttonSouth
+    _sprite: {fileID: 21300000, guid: ab09654172db2064dbd490a2fd352a91, type: 3}
+    _displayLabel: A
+    _isSpriteOptional: 0
+  - _family: 1
+    _keyboardTheme: 0
+    _canonicalControlPath: buttonEast
+    _sprite: {fileID: 21300000, guid: 172f0899bab701f48894490f47c4ba3f, type: 3}
+    _displayLabel: B
+    _isSpriteOptional: 0
+  - _family: 1
+    _keyboardTheme: 0
+    _canonicalControlPath: buttonNorth
+    _sprite: {fileID: 21300000, guid: 61e30fd76e2445f4d8380522ab866a12, type: 3}
+    _displayLabel: Y
+    _isSpriteOptional: 0
+  - _family: 1
+    _keyboardTheme: 0
+    _canonicalControlPath: buttonWest
+    _sprite: {fileID: 21300000, guid: 3a70ddfee3c17544e80620dd2e2545d2, type: 3}
+    _displayLabel: X
+    _isSpriteOptional: 0
+  - _family: 1
+    _keyboardTheme: 0
+    _canonicalControlPath: leftStick
+    _sprite: {fileID: 21300000, guid: eda6bdd404d13224a99061e998e97c5c, type: 3}
+    _displayLabel: Left Stick
+    _isSpriteOptional: 0
+  - _family: 1
+    _keyboardTheme: 0
+    _canonicalControlPath: rightStick
+    _sprite: {fileID: 21300000, guid: dfb79c73cb385634f86ebfe051465781, type: 3}
+    _displayLabel: Right Stick
+    _isSpriteOptional: 0
+  - _family: 1
+    _keyboardTheme: 0
+    _canonicalControlPath: leftStickPress
+    _sprite: {fileID: 21300000, guid: 346849ab2a298f046a74472747361db8, type: 3}
+    _displayLabel: L3
+    _isSpriteOptional: 0
+  - _family: 1
+    _keyboardTheme: 0
+    _canonicalControlPath: rightStickPress
+    _sprite: {fileID: 21300000, guid: e2e8fd21e33ea684bb1c301a3bdcbcc9, type: 3}
+    _displayLabel: R3
+    _isSpriteOptional: 0
+  - _family: 1
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad
+    _sprite: {fileID: 21300000, guid: 70f0bdfea3fb1254fbcbb00716907020, type: 3}
+    _displayLabel: D-Pad
+    _isSpriteOptional: 0
+  - _family: 1
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad/up
+    _sprite: {fileID: 21300000, guid: 9d22891af4647ec4cad2f53b1659b72f, type: 3}
+    _displayLabel: D-Pad Up
+    _isSpriteOptional: 0
+  - _family: 1
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad/right
+    _sprite: {fileID: 21300000, guid: 4120dba58502a7743992721c251c5a20, type: 3}
+    _displayLabel: D-Pad Right
+    _isSpriteOptional: 0
+  - _family: 1
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad/down
+    _sprite: {fileID: 21300000, guid: 1cdee43fe8141f144a6351afaf8a5c54, type: 3}
+    _displayLabel: D-Pad Down
+    _isSpriteOptional: 0
+  - _family: 1
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad/left
+    _sprite: {fileID: 21300000, guid: e7cae4036890d07458e5ecb9396ac0ad, type: 3}
+    _displayLabel: D-Pad Left
+    _isSpriteOptional: 0
+  - _family: 1
+    _keyboardTheme: 0
+    _canonicalControlPath: leftTrigger
+    _sprite: {fileID: 21300000, guid: 7fb9c5733385d584fbc577551534266e, type: 3}
+    _displayLabel: LT
+    _isSpriteOptional: 0
+  - _family: 1
+    _keyboardTheme: 0
+    _canonicalControlPath: rightTrigger
+    _sprite: {fileID: 21300000, guid: 4de690ede5f95404d81bba9aa70a2f69, type: 3}
+    _displayLabel: RT
+    _isSpriteOptional: 0
+  - _family: 1
+    _keyboardTheme: 0
+    _canonicalControlPath: leftShoulder
+    _sprite: {fileID: 21300000, guid: 9fb22320c6c839d47a8a58d0d3120685, type: 3}
+    _displayLabel: LB
+    _isSpriteOptional: 0
+  - _family: 1
+    _keyboardTheme: 0
+    _canonicalControlPath: rightShoulder
+    _sprite: {fileID: 21300000, guid: 0673b9936233e8b42a32e3826dfc700c, type: 3}
+    _displayLabel: RB
+    _isSpriteOptional: 0
+  - _family: 1
+    _keyboardTheme: 0
+    _canonicalControlPath: select
+    _sprite: {fileID: 21300000, guid: 5ae125a8059625e41bf2f66ebcf4037a, type: 3}
+    _displayLabel: View
+    _isSpriteOptional: 0
+  - _family: 1
+    _keyboardTheme: 0
+    _canonicalControlPath: start
+    _sprite: {fileID: 21300000, guid: a0a7ca2af1f630d45881fe4b75d9d9dc, type: 3}
+    _displayLabel: Menu
+    _isSpriteOptional: 0
+  - _family: 2
+    _keyboardTheme: 0
+    _canonicalControlPath: buttonSouth
+    _sprite: {fileID: 21300000, guid: 2c0e10add18bef449ba42f8d819c0303, type: 3}
+    _displayLabel: Cross
+    _isSpriteOptional: 0
+  - _family: 2
+    _keyboardTheme: 0
+    _canonicalControlPath: buttonEast
+    _sprite: {fileID: 21300000, guid: 573871db324f28145921856f826a5b73, type: 3}
+    _displayLabel: Circle
+    _isSpriteOptional: 0
+  - _family: 2
+    _keyboardTheme: 0
+    _canonicalControlPath: buttonNorth
+    _sprite: {fileID: 21300000, guid: a2f41d55509bea045b78aef8dcb0de67, type: 3}
+    _displayLabel: Triangle
+    _isSpriteOptional: 0
+  - _family: 2
+    _keyboardTheme: 0
+    _canonicalControlPath: buttonWest
+    _sprite: {fileID: 21300000, guid: 8b9f9b7cca8248c49976f6ce8b33608d, type: 3}
+    _displayLabel: Square
+    _isSpriteOptional: 0
+  - _family: 2
+    _keyboardTheme: 0
+    _canonicalControlPath: leftStick
+    _sprite: {fileID: 21300000, guid: ddb6695a29939e841b379caf3830efa2, type: 3}
+    _displayLabel: Left Stick
+    _isSpriteOptional: 0
+  - _family: 2
+    _keyboardTheme: 0
+    _canonicalControlPath: rightStick
+    _sprite: {fileID: 21300000, guid: 80aeb31e61ceab546a0b96ee875e2fae, type: 3}
+    _displayLabel: Right Stick
+    _isSpriteOptional: 0
+  - _family: 2
+    _keyboardTheme: 0
+    _canonicalControlPath: leftStickPress
+    _sprite: {fileID: 21300000, guid: 13bcc922e09008844a8abac311bfcf86, type: 3}
+    _displayLabel: L3
+    _isSpriteOptional: 0
+  - _family: 2
+    _keyboardTheme: 0
+    _canonicalControlPath: rightStickPress
+    _sprite: {fileID: 21300000, guid: ece4dccd7eacda74cb60c577b2b4759d, type: 3}
+    _displayLabel: R3
+    _isSpriteOptional: 0
+  - _family: 2
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad
+    _sprite: {fileID: 21300000, guid: e95763e3ccb87174a8d6fb28fec14c41, type: 3}
+    _displayLabel: D-Pad
+    _isSpriteOptional: 0
+  - _family: 2
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad/up
+    _sprite: {fileID: 21300000, guid: 28d53a3b311424248bbfe9ea540676f2, type: 3}
+    _displayLabel: D-Pad Up
+    _isSpriteOptional: 0
+  - _family: 2
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad/right
+    _sprite: {fileID: 21300000, guid: 545281d50dd721d4eafd032794ffe8f7, type: 3}
+    _displayLabel: D-Pad Right
+    _isSpriteOptional: 0
+  - _family: 2
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad/down
+    _sprite: {fileID: 21300000, guid: fab8e43669e73f443ad97e5dd1a60998, type: 3}
+    _displayLabel: D-Pad Down
+    _isSpriteOptional: 0
+  - _family: 2
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad/left
+    _sprite: {fileID: 21300000, guid: eb972e87c8b55f74391905de4008b841, type: 3}
+    _displayLabel: D-Pad Left
+    _isSpriteOptional: 0
+  - _family: 2
+    _keyboardTheme: 0
+    _canonicalControlPath: leftTrigger
+    _sprite: {fileID: 21300000, guid: 02d1664e60e7ab54bafd2c7e8c4374a1, type: 3}
+    _displayLabel: L2
+    _isSpriteOptional: 0
+  - _family: 2
+    _keyboardTheme: 0
+    _canonicalControlPath: rightTrigger
+    _sprite: {fileID: 21300000, guid: 8f6406f3f6174b740b7a4d2f1b4065ee, type: 3}
+    _displayLabel: R2
+    _isSpriteOptional: 0
+  - _family: 2
+    _keyboardTheme: 0
+    _canonicalControlPath: leftShoulder
+    _sprite: {fileID: 21300000, guid: 2fba3064cc38d714e862ac578f05c43a, type: 3}
+    _displayLabel: L1
+    _isSpriteOptional: 0
+  - _family: 2
+    _keyboardTheme: 0
+    _canonicalControlPath: rightShoulder
+    _sprite: {fileID: 21300000, guid: bf30d986aace1734c9b99a5309453222, type: 3}
+    _displayLabel: R1
+    _isSpriteOptional: 0
+  - _family: 2
+    _keyboardTheme: 0
+    _canonicalControlPath: select
+    _sprite: {fileID: 21300000, guid: 2061065d83da6794a8473674921e0217, type: 3}
+    _displayLabel: Share
+    _isSpriteOptional: 0
+  - _family: 2
+    _keyboardTheme: 0
+    _canonicalControlPath: start
+    _sprite: {fileID: 21300000, guid: 2322c0fb1d7fb884e8eee8a85ad7e11c, type: 3}
+    _displayLabel: Options
+    _isSpriteOptional: 0
+  - _family: 3
+    _keyboardTheme: 0
+    _canonicalControlPath: buttonSouth
+    _sprite: {fileID: 21300000, guid: b0642ae37358991429ba36537b6f8ab9, type: 3}
+    _displayLabel: B
+    _isSpriteOptional: 0
+  - _family: 3
+    _keyboardTheme: 0
+    _canonicalControlPath: buttonEast
+    _sprite: {fileID: 21300000, guid: 71ce5bcdfd589d74cb05849bc6aa2aac, type: 3}
+    _displayLabel: A
+    _isSpriteOptional: 0
+  - _family: 3
+    _keyboardTheme: 0
+    _canonicalControlPath: buttonNorth
+    _sprite: {fileID: 21300000, guid: cd4284c79272e0e49b6bd91b29650de0, type: 3}
+    _displayLabel: X
+    _isSpriteOptional: 0
+  - _family: 3
+    _keyboardTheme: 0
+    _canonicalControlPath: buttonWest
+    _sprite: {fileID: 21300000, guid: 93ef424e457de8d4e955f17b645175b2, type: 3}
+    _displayLabel: Y
+    _isSpriteOptional: 0
+  - _family: 3
+    _keyboardTheme: 0
+    _canonicalControlPath: leftStick
+    _sprite: {fileID: 21300000, guid: 7a51307979af9bf498a1f7d1cc3b88b2, type: 3}
+    _displayLabel: Left Stick
+    _isSpriteOptional: 0
+  - _family: 3
+    _keyboardTheme: 0
+    _canonicalControlPath: rightStick
+    _sprite: {fileID: 21300000, guid: 84b87b8640ddc5a4789fe757d002bb6a, type: 3}
+    _displayLabel: Right Stick
+    _isSpriteOptional: 0
+  - _family: 3
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad
+    _sprite: {fileID: 21300000, guid: 145526af2c029cf478c5f4ff17fae91f, type: 3}
+    _displayLabel: D-Pad
+    _isSpriteOptional: 0
+  - _family: 3
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad/up
+    _sprite: {fileID: 21300000, guid: 3d1c3027ebc673e4d85849c9837b81b7, type: 3}
+    _displayLabel: D-Pad Up
+    _isSpriteOptional: 0
+  - _family: 3
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad/right
+    _sprite: {fileID: 21300000, guid: ede6dffe8afe4324192fb443bdf8a485, type: 3}
+    _displayLabel: D-Pad Right
+    _isSpriteOptional: 0
+  - _family: 3
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad/down
+    _sprite: {fileID: 21300000, guid: 4122e5008c3c47048bc6ad87b38fb4b3, type: 3}
+    _displayLabel: D-Pad Down
+    _isSpriteOptional: 0
+  - _family: 3
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad/left
+    _sprite: {fileID: 21300000, guid: a57ec21ed8fe22d4c8a7dcd73e022261, type: 3}
+    _displayLabel: D-Pad Left
+    _isSpriteOptional: 0
+  - _family: 3
+    _keyboardTheme: 0
+    _canonicalControlPath: leftTrigger
+    _sprite: {fileID: 21300000, guid: 2ccb2398e0d70dc45b351475bcf26287, type: 3}
+    _displayLabel: ZL
+    _isSpriteOptional: 0
+  - _family: 3
+    _keyboardTheme: 0
+    _canonicalControlPath: rightTrigger
+    _sprite: {fileID: 21300000, guid: dffdd778f152986448f73af383516d47, type: 3}
+    _displayLabel: ZR
+    _isSpriteOptional: 0
+  - _family: 3
+    _keyboardTheme: 0
+    _canonicalControlPath: leftShoulder
+    _sprite: {fileID: 21300000, guid: 86f6e91f5848aab4d8762e76672931d1, type: 3}
+    _displayLabel: L
+    _isSpriteOptional: 0
+  - _family: 3
+    _keyboardTheme: 0
+    _canonicalControlPath: rightShoulder
+    _sprite: {fileID: 21300000, guid: dace4a214d212d342abb1ddece8ef075, type: 3}
+    _displayLabel: R
+    _isSpriteOptional: 0
+  - _family: 3
+    _keyboardTheme: 0
+    _canonicalControlPath: select
+    _sprite: {fileID: 21300000, guid: 3069b41d52a3e7d48a471e8595927bae, type: 3}
+    _displayLabel: Minus
+    _isSpriteOptional: 0
+  - _family: 3
+    _keyboardTheme: 0
+    _canonicalControlPath: start
+    _sprite: {fileID: 21300000, guid: 5ba6ed9cf3f040b4799d51e6f9cec8ef, type: 3}
+    _displayLabel: Plus
+    _isSpriteOptional: 0
+  - _family: 4
+    _keyboardTheme: 0
+    _canonicalControlPath: buttonSouth
+    _sprite: {fileID: 0}
+    _displayLabel: South
+    _isSpriteOptional: 1
+  - _family: 4
+    _keyboardTheme: 0
+    _canonicalControlPath: buttonEast
+    _sprite: {fileID: 0}
+    _displayLabel: East
+    _isSpriteOptional: 1
+  - _family: 4
+    _keyboardTheme: 0
+    _canonicalControlPath: buttonNorth
+    _sprite: {fileID: 0}
+    _displayLabel: North
+    _isSpriteOptional: 1
+  - _family: 4
+    _keyboardTheme: 0
+    _canonicalControlPath: buttonWest
+    _sprite: {fileID: 0}
+    _displayLabel: West
+    _isSpriteOptional: 1
+  - _family: 4
+    _keyboardTheme: 0
+    _canonicalControlPath: leftStick
+    _sprite: {fileID: 0}
+    _displayLabel: Left Stick
+    _isSpriteOptional: 1
+  - _family: 4
+    _keyboardTheme: 0
+    _canonicalControlPath: rightStick
+    _sprite: {fileID: 0}
+    _displayLabel: Right Stick
+    _isSpriteOptional: 1
+  - _family: 4
+    _keyboardTheme: 0
+    _canonicalControlPath: leftStickPress
+    _sprite: {fileID: 0}
+    _displayLabel: L3
+    _isSpriteOptional: 1
+  - _family: 4
+    _keyboardTheme: 0
+    _canonicalControlPath: rightStickPress
+    _sprite: {fileID: 0}
+    _displayLabel: R3
+    _isSpriteOptional: 1
+  - _family: 4
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad
+    _sprite: {fileID: 0}
+    _displayLabel: D-Pad
+    _isSpriteOptional: 1
+  - _family: 4
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad/up
+    _sprite: {fileID: 0}
+    _displayLabel: D-Pad Up
+    _isSpriteOptional: 1
+  - _family: 4
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad/right
+    _sprite: {fileID: 0}
+    _displayLabel: D-Pad Right
+    _isSpriteOptional: 1
+  - _family: 4
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad/down
+    _sprite: {fileID: 0}
+    _displayLabel: D-Pad Down
+    _isSpriteOptional: 1
+  - _family: 4
+    _keyboardTheme: 0
+    _canonicalControlPath: dpad/left
+    _sprite: {fileID: 0}
+    _displayLabel: D-Pad Left
+    _isSpriteOptional: 1
+  - _family: 4
+    _keyboardTheme: 0
+    _canonicalControlPath: leftTrigger
+    _sprite: {fileID: 0}
+    _displayLabel: LT / L2
+    _isSpriteOptional: 1
+  - _family: 4
+    _keyboardTheme: 0
+    _canonicalControlPath: rightTrigger
+    _sprite: {fileID: 0}
+    _displayLabel: RT / R2
+    _isSpriteOptional: 1
+  - _family: 4
+    _keyboardTheme: 0
+    _canonicalControlPath: leftShoulder
+    _sprite: {fileID: 0}
+    _displayLabel: LB / L1
+    _isSpriteOptional: 1
+  - _family: 4
+    _keyboardTheme: 0
+    _canonicalControlPath: rightShoulder
+    _sprite: {fileID: 0}
+    _displayLabel: RB / R1
+    _isSpriteOptional: 1
+  - _family: 4
+    _keyboardTheme: 0
+    _canonicalControlPath: select
+    _sprite: {fileID: 0}
+    _displayLabel: Select / Back
+    _isSpriteOptional: 1
+  - _family: 4
+    _keyboardTheme: 0
+    _canonicalControlPath: start
+    _sprite: {fileID: 0}
+    _displayLabel: Start / Menu
+    _isSpriteOptional: 1

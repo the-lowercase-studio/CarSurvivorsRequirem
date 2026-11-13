@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: MinigunSkillInfo
   m_EditorClassIdentifier: 
   <Name>k__BackingField: Minigun
-  <Description>k__BackingField: Sweeping laser lanes fire instant beam shots. Upgrade
-    shot delay, range, turret count, beam width, damage and enemy piercing. Impassable
-    terrain stops every beam.
+  <Description>k__BackingField: Unleash a relentless hail of lead across a sweeping
+    arc.
   <Icon>k__BackingField: {fileID: -431852166, guid: ac4bc65d8ae8f3444981b3a94d0109e9, type: 3}

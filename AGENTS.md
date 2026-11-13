@@ -112,9 +112,11 @@ Use `.agents/skills/` as reusable workflows:
 - `game-brainstorm`: explore gameplay ideas, mechanics, weapon concepts, and architecture trade-offs before creating code or specs.
 - `game-balance-analysis`: analyze progression, enemies, swarms, bosses, and player power with reproducible Python forecasts, charts, and balance comparisons.
 - `gameplay-spec-writing`: write or review staff-engineer level technical specifications and implementation plans with hard Open Questions gates.
+- `git-commit`: user-only validated commit workflow enforcing technical, architectural, logical, system-docs sync, and `CSR-<number>` branch/commit checks before staging or committing.
+- `pre-commit-evidence`: user-only pre-commit visual verification workflow that evaluates visual provability first and captures Unity Game View or Scene View proof images in `.user-docs/evidences/` without creating a commit.
 - `preserve-coding-standards`: audit and safely fix coding-standard drift in a pointed scope.
 - `reduce-code-volume`: audit and safely reduce code volume/lines of code while keeping code readable and safe.
-- `sync-system-docs-from-implementations`: user-only workflow to update or create game-system documentation from completed implementation plans and summaries, then delete those plans and summaries while preserving templates.
+- `sync-system-docs-from-implementations`: user-only (or Phase 8 of user-invoked `git-commit`) workflow to update or create game-system documentation from completed implementation plans and summaries, deleting only processed completed files while preserving templates and unimplemented plans.
 - `unity-cli`: interact with Unity CLI to control running editors, manage projects, licenses, releases, or execute batch runs.
 - `unity-pre-commit-gate`: run a comprehensive pre-commit verification gate (compilation, zero warnings, DI bindings, serialization safety, standards audit).
 - `unity-refactor-suggestions`: produce behavior-preserving Unity/C# refactor recommendations.
@@ -124,7 +126,7 @@ When a request matches a skill trigger, read the relevant `SKILL.md` before edit
 
 ## Agent Descriptors
 
-All 19 repository-local skills have an optional Codex descriptor at .agents/skills/<skill-name>/agents/openai.yaml. Each descriptor supplies display_name, short_description, and a default_prompt naming its skill. Invocation policy retains the default except for user-only skills (`sync-system-docs-from-implementations`, which sets `allow_implicit_invocation: false`); descriptors do not grant action authority.
+All 21 repository-local skills have an optional Codex descriptor at .agents/skills/<skill-name>/agents/openai.yaml. Each descriptor supplies display_name, short_description, and a default_prompt naming its skill. Invocation policy retains the default except for user-only skills (`git-commit`, `pre-commit-evidence`, and `sync-system-docs-from-implementations`, which set `allow_implicit_invocation: false`); descriptors do not grant action authority.
 
 Treat these YAML files as optional UI/default-prompt metadata for compatible tools. The portable workflow source remains each skill's SKILL.md.
 
@@ -173,6 +175,18 @@ For C# changes, prefer a targeted project compile:
 
 ```powershell
 dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
+```
+
+For full automated pre-commit harness validation (compilation, diff-aware architecture checks, conditional tests, `.meta`/`.gitignore` hygiene, live Unity Editor checks, and `CSR-<number>` branch/prefix validation):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .agents/scripts/verify-change.ps1
+```
+
+To enable the tracked git safety hooks locally on a fresh clone:
+
+```powershell
+git config core.hooksPath .githooks
 ```
 
 For documentation-only changes, review links and paths for accuracy. A Unity Editor play-mode check is still required for scene wiring, prefab references, visual timing, audio, VFX, balance, and feel.

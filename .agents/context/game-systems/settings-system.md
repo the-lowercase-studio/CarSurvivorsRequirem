@@ -25,6 +25,7 @@ The Settings system is not responsible for owning UI layout, audio mixer impleme
   - Assets/Scripts/UI/Settings/GraphicOption.cs
   - Assets/Scripts/UI/Settings/ResolutionOption.cs
   - Assets/Scripts/UI/Settings/IOptionComponent.cs
+  - Assets/Scripts/UI/Settings/Constants/SettingsConstants.cs
 - Related runtime setup:
   - Assets/Scripts/ReflexDI/MainMenuInstaller.cs
   - Assets/Scripts/ReflexDI/BootLoader.cs
@@ -47,7 +48,7 @@ The Settings system is not responsible for owning UI layout, audio mixer impleme
   - Assets/Scripts/Settings/Resolution/ResolutionSetting.cs stores `"Resolution"` as `SerializableResolution`, validates it against available screen resolutions, and applies it through Assets/Scripts/Settings/Resolution/ScreenSerializableResolutionHelper.cs.
   - Assets/Scripts/Settings/DamageNumbersSetting.cs stores `"DamageNumbersEnabled"` as a `bool` and applies it through `IEnableDisableFunctionalityTrigger<DamageNumbersSpawner>`.
   - Assets/Scripts/Storage/AppStorage.cs serializes values into Assets/Data/AppStorage.Editor.json in the Unity Editor and Data/AppStorage.json under the build root resolved from `Directory.GetParent(Application.dataPath)`, falling back to `AppDomain.CurrentDomain.BaseDirectory` only if that parent is unavailable.
-  - Settings option UI components under Assets/Scripts/UI/Settings/ bind Unity controls to typed `ISetting<TSelf, TRepresentedBy>` instances. Assets/Scripts/UI/Settings/GraphicOption.cs rebuilds the graphics dropdown options from its hard-coded quality map in `Awake`.
+  - Settings option UI components under Assets/Scripts/UI/Settings/ bind Unity controls to typed ISetting<TSelf, TRepresentedBy> instances. Assets/Scripts/UI/Settings/AudioVolumeOption.cs configures an integer 0..100 slider (wholeNumbers = true), injects IInputActionSource and UiInputScope for 1% discrete steps and tiered hold acceleration (Assets/Scripts/UI/Settings/Constants/SettingsConstants.cs), and clamps linear volume to SettingsConstants.VOLUME_MIN_LINEAR (0.0001f) before Mathf.Log10 decibel conversion. Assets/Scripts/UI/Settings/GraphicOption.cs rebuilds the graphics dropdown options from its hard-coded quality map in Awake.
 - Key interfaces:
   - Assets/Scripts/Storage/IAppStorageValue.cs defines `DefaultValue`, `GetKey`, `GetValueOrStoredDefault`, and `SaveValue`.
   - Assets/Scripts/Settings/ISetting.cs (`ISetting<TSelf, TRepresentedBy>`) is the main typed setting contract injected into UI components.
@@ -120,9 +121,8 @@ The Settings system is not responsible for owning UI layout, audio mixer impleme
   - Assets/Scripts/Storage/AppStorage.cs's `TryGetValue` swallows deserialization exceptions and falls back to default values without diagnostics.
   - Assets/Scripts/Storage/AppStorage.cs caches values statically and does not support external file changes after its static load.
   - Assets/Scripts/Settings/GraphicSetting.cs's `Load` throws when the stored/default quality name is not present in `QualitySettings.names`.
-  - Assets/Scripts/UI/Settings/GraphicOption.cs hard-codes `Low`, `Medium`, `High`, and `Ultra`, rebuilds dropdown options from that map in `Awake`, and still requires stored/default names to exist in the map and Unity quality settings.
-  - Assets/Scripts/UI/Settings/AudioVolumeOption.cs uses `Mathf.Log10(_slider.value)`, so the slider minimum must stay above zero.
-  - Assets/Scripts/UI/Settings/ResolutionOption.cs's `LoadComponent` can set `-1` if the stored/default resolution is not in the current available-resolution list, while Assets/Scripts/Settings/Resolution/ResolutionSetting.cs's `Load` has its own fallback path.
+  - Assets/Scripts/UI/Settings/GraphicOption.cs hard-codes Low, Medium, High, and Ultra, rebuilds dropdown options from that map in Awake, and still requires stored/default names to exist in the map and Unity quality settings.
+  - Assets/Scripts/UI/Settings/ResolutionOption.cs's LoadComponent can set -1 if the stored/default resolution is not in the current available-resolution list, while Assets/Scripts/Settings/Resolution/ResolutionSetting.cs's Load has its own fallback path.
   - Assets/Scripts/Settings/Resolution/ScreenSerializableResolutionHelper.cs caches available resolutions for the process lifetime.
 - Open design questions:
   - Should setting storage keys move to domain constants with migration safeguards?
@@ -130,6 +130,6 @@ The Settings system is not responsible for owning UI layout, audio mixer impleme
   - Should display settings distinguish windowed, exclusive fullscreen, and maximized window as explicit UI options instead of a single boolean toggle?
   - Should Assets/Scripts/UI/Settings/GraphicOption.cs derive dropdown options from `QualitySettings.names` instead of maintaining a separate hard-coded map?
 - Suggested follow-up tasks:
-  - Add a focused validation helper for settings UI controls to catch zero-volume sliders, mismatched graphics names, and invalid resolution indices.
+  - Add a focused validation helper for settings UI controls to catch mismatched graphics names and invalid resolution indices.
   - Review Assets/Scripts/Storage/AppStorage.cs error handling before adding more player-facing preferences.
   - Consider a settings migration plan before changing existing keys, default values, or serialized value shapes.

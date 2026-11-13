@@ -77,6 +77,32 @@ crashlytics-build.properties
 /Data
 /Assets/Data
 
+# Modern Visual Studio solution and Rider/VS user state
+*.slnx
+*.csproj.user
+*.DotSettings.user
+
+# Unity 6 intermediate build / test / coverage artifacts
+.utmp/
+/[Tt]est[Rr]esults/
+test-results*.xml
+coverage/
+
+# Scratch, logs, backups, and OS clutter
+*.log
+*.stackdump
+*.bak
+*.orig
+*.swp
+*~
+scratch*
+Thumbs.db
+.DS_Store
+
 # Agent runtime temporary and multi-agent exchange files
 /.agents/context/tmp/*
 !/.agents/context/tmp/.gitkeep
+
+# Local user-only pre-commit visual evidence screenshots
+/.user-docs/evidences/*
+!/.user-docs/evidences/.gitkeep

@@ -1,6 +1,8 @@
 using System;
 using Assets.ScriptableObjects.UI;
+using Assets.Scripts.Input;
 using Assets.Scripts.Skills.UpgradeFlow;
+using Assets.Scripts.UI.Input;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,13 +15,19 @@ namespace Assets.Scripts.UI.Skills
         [SerializeField] private TextMeshProUGUI _text;
         [SerializeField] private Image _statIconImage;
         [SerializeField] private Image _selectKeyImage;
-        [SerializeField] private SkillUpgradeKeyboardIconMapping _keyboardIconMapping;
+        [SerializeField] private InputPromptView _inputPromptView;
         [SerializeField] private Image _rarityBackgroundImage;
         [SerializeField] private SkillUpgradeRaritySpriteMapping _raritySpriteMapping;
 
+        public InputPromptView InputPromptView
+        {
+            get { return _inputPromptView; }
+        }
+
         public void Initialize(
             string text,
-            int keyboardNumber,
+            IInputPromptProvider promptProvider,
+            InputActionId promptActionId,
             SkillUpgradeRarity rarity,
             Action onClick,
             Action onPointerEnter = null,
@@ -33,9 +41,14 @@ namespace Assets.Scripts.UI.Skills
                 return;
             }
 
+            if (_inputPromptView == null)
+            {
+                throw new InvalidOperationException($"[{nameof(SkillUpgradeButton)}] _inputPromptView is unassigned on '{name}'.");
+            }
+
             _text.text = text;
 
-            UpdateKeyboardIcon(keyboardNumber);
+            _inputPromptView.Bind(promptProvider, promptActionId);
             UpdateRarityBackground(rarity);
             UpdateStatIcon(icon);
 
@@ -124,24 +137,6 @@ namespace Assets.Scripts.UI.Skills
                 _statIconImage.sprite = null;
                 _statIconImage.enabled = false;
             }
-        }
-
-        private void UpdateKeyboardIcon(int keyboardNumber)
-        {
-            if (_selectKeyImage == null)
-            {
-                return;
-            }
-
-            if (_keyboardIconMapping != null && _keyboardIconMapping.TryGetIcon(keyboardNumber, out Sprite icon))
-            {
-                _selectKeyImage.sprite = icon;
-                _selectKeyImage.enabled = true;
-                return;
-            }
-
-            _selectKeyImage.sprite = null;
-            _selectKeyImage.enabled = false;
         }
 
         private void UpdateRarityBackground(SkillUpgradeRarity rarity)

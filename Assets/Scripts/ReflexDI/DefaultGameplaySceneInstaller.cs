@@ -16,6 +16,7 @@ using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.UI.Death;
 using Assets.Scripts.UI.DevConsole;
 using Assets.Scripts.UI.HUD;
+using Assets.Scripts.UI.Input;
 using Assets.Scripts.UI.Level;
 using Assets.Scripts.UI.Pause;
 using Assets.Scripts.UI.Skills;
@@ -60,11 +61,18 @@ namespace Assets.Scripts.ReflexDI
         [SerializeField] private BubbleShieldService _bubbleShieldService;
         [SerializeField] private ArmorService _armorService;
         [SerializeField] private FireTailsService _fireTailsService;
+        [SerializeField] private UiInputScope _uiInputScope;
 
         public Camera MainCamera => _mainCamera;
 
         public void InstallBindings(ContainerBuilder builder)
         {
+            if (_uiInputScope == null)
+            {
+                throw new System.InvalidOperationException($"[{nameof(DefaultGameplaySceneInstaller)}] _uiInputScope is unassigned.");
+            }
+
+            builder.AddSingleton(_uiInputScope);
             //Camera
             builder.AddSingleton(_mainCamera);
             if (_cinemachineCombatFollowOffsetController != null)

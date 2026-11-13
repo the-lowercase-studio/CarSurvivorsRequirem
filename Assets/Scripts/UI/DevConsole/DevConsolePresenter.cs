@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Assets.Scripts.GameFlow;
+using Assets.Scripts.Input;
 using Assets.Scripts.Player;
 using Assets.Scripts.UI.DevConsole.Constants;
 using Reflex.Attributes;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace Assets.Scripts.UI.DevConsole
@@ -25,6 +25,8 @@ namespace Assets.Scripts.UI.DevConsole
     {
         [Inject] private readonly IDevConsoleService _devConsoleService = null;
         [Inject] private readonly IPlayerManager _playerManager = null;
+        [Inject] private readonly IInputCommands _inputCommands = null;
+        [Inject] private readonly IInputContexts _inputContexts = null;
 
         [Header("UI References")]
         [SerializeField] private GameObject _rootVisual;
@@ -56,6 +58,8 @@ namespace Assets.Scripts.UI.DevConsole
         private bool _isVisible;
         private bool _isSubscribedToService;
         private bool _needsRefocus;
+        private bool _hasPendingSubmit;
+        private InputScopeToken _consoleScopeToken;
 
         public bool IsSupported
         {
@@ -108,6 +112,11 @@ namespace Assets.Scripts.UI.DevConsole
                 throw new InvalidOperationException("DevConsolePresenter requires _scrollRect to be assigned.");
             }
 
+            if (_inputCommands == null || _inputContexts == null)
+            {
+                throw new InvalidOperationException("DevConsolePresenter requires input services to be injected.");
+            }
+
             _rootVisual.SetActive(false);
             _isVisible = false;
         }
@@ -119,7 +128,7 @@ namespace Assets.Scripts.UI.DevConsole
                 return;
             }
 
-            _inputField.onSubmit.AddListener(OnInputSubmit);
+            _inputCommands.OnCommand += HandleInputCommand;
             SubscribeServiceEvents();
         }
 
@@ -146,18 +155,7 @@ namespace Assets.Scripts.UI.DevConsole
 
         private void Update()
         {
-            if (!IsConsoleSupported)
-            {
-                return;
-            }
-
-            if (Keyboard.current != null && Keyboard.current.backquoteKey.wasPressedThisFrame)
-            {
-                Toggle();
-                return;
-            }
-
-            if (!_isVisible)
+            if (!IsConsoleSupported || !_isVisible)
             {
                 return;
             }
@@ -166,30 +164,6 @@ namespace Assets.Scripts.UI.DevConsole
             {
                 _inputField.text = _inputField.text.TrimStart('`', '~');
             }
-
-            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-            {
-                Hide();
-                return;
-            }
-
-            if (Keyboard.current != null && (Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.numpadEnterKey.wasPressedThisFrame))
-            {
-                SubmitCurrentInput();
-                return;
-            }
-
-            if (Keyboard.current != null)
-            {
-                if (Keyboard.current.upArrowKey.wasPressedThisFrame)
-                {
-                    NavigateHistory(-1);
-                }
-                else if (Keyboard.current.downArrowKey.wasPressedThisFrame)
-                {
-                    NavigateHistory(1);
-                }
-            }
         }
 
         private void LateUpdate()
@@ -197,6 +171,12 @@ namespace Assets.Scripts.UI.DevConsole
             if (!IsConsoleSupported)
             {
                 return;
+            }
+
+            if (_hasPendingSubmit)
+            {
+                _hasPendingSubmit = false;
+                SubmitCurrentInput();
             }
 
             if (_isVisible && _needsRefocus)
@@ -214,7 +194,7 @@ namespace Assets.Scripts.UI.DevConsole
                 return;
             }
 
-            _inputField.onSubmit.RemoveListener(OnInputSubmit);
+            _inputCommands.OnCommand -= HandleInputCommand;
             UnsubscribeServiceEvents();
         }
 
@@ -225,6 +205,7 @@ namespace Assets.Scripts.UI.DevConsole
                 return;
             }
 
+            ReleaseConsoleScope();
             UnsubscribeServiceEvents();
         }
 
@@ -260,16 +241,16 @@ namespace Assets.Scripts.UI.DevConsole
             _wasGamePausedBeforeOpen = (Time.timeScale == 0f);
             GameTime.Pause();
 
-            InputActionMap playerMap = InputSystem.actions?.FindActionMap("Player");
-            if (playerMap != null)
+            if (!_consoleScopeToken.IsValid)
             {
-                playerMap.Disable();
+                _consoleScopeToken = _inputContexts.AcquireScope(InputContextScopeKind.DevConsole, GetEntityId().GetHashCode());
             }
 
             _rootVisual.SetActive(true);
             _isVisible = true;
             _historyIndex = _commandHistory.Count;
             _inputField.text = string.Empty;
+            _hasPendingSubmit = false;
             _needsRefocus = true;
             ScrollToBottom();
         }
@@ -287,20 +268,66 @@ namespace Assets.Scripts.UI.DevConsole
             }
 
             _needsRefocus = false;
+            _hasPendingSubmit = false;
             _rootVisual.SetActive(false);
             _isVisible = false;
             _inputField.DeactivateInputField();
 
-            InputActionMap playerMap = InputSystem.actions?.FindActionMap("Player");
-            if (playerMap != null)
-            {
-                playerMap.Enable();
-            }
+            ReleaseConsoleScope();
+            _inputContexts.ConsumeActiveControlsUntilRelease();
 
             bool isPlayerAlive = _playerManager != null && _playerManager.Health != null && _playerManager.Health.IsAlive();
             if (isPlayerAlive && !_wasGamePausedBeforeOpen)
             {
                 GameTime.Resume();
+            }
+        }
+
+        private void HandleInputCommand(InputCommand command)
+        {
+            if (!IsConsoleSupported)
+            {
+                return;
+            }
+
+            switch (command.Kind)
+            {
+                case InputCommandKind.ToggleConsole:
+                    Toggle();
+                    break;
+                case InputCommandKind.DevConsoleClose:
+                    if (_isVisible)
+                    {
+                        Hide();
+                    }
+                    break;
+                case InputCommandKind.DevConsoleSubmit:
+                    if (_isVisible)
+                    {
+                        _hasPendingSubmit = true;
+                    }
+                    break;
+                case InputCommandKind.DevConsoleHistoryPrevious:
+                    if (_isVisible)
+                    {
+                        NavigateHistory(-1);
+                    }
+                    break;
+                case InputCommandKind.DevConsoleHistoryNext:
+                    if (_isVisible)
+                    {
+                        NavigateHistory(1);
+                    }
+                    break;
+            }
+        }
+
+        private void ReleaseConsoleScope()
+        {
+            if (_consoleScopeToken.IsValid)
+            {
+                _inputContexts?.ReleaseScope(_consoleScopeToken);
+                _consoleScopeToken = default;
             }
         }
 

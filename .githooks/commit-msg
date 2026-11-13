@@ -1,0 +1,50 @@
+#!/bin/sh
+set -e
+
+MSG_FILE="$1"
+if [ -z "$MSG_FILE" ] || [ ! -f "$MSG_FILE" ]; then
+    echo "ERROR: commit-msg hook missing message file." >&2
+    exit 1
+fi
+
+SUBJECT="$(grep -v '^#' "$MSG_FILE" | sed '/^[[:space:]]*$/d' | head -n 1)"
+
+if [ -z "$SUBJECT" ]; then
+    echo "ERROR: Empty commit message." >&2
+    exit 1
+fi
+
+case "$SUBJECT" in
+    Merge\ *|Revert\ *)
+        exit 0
+        ;;
+esac
+
+BRANCH="$(git branch --show-current 2>/dev/null || true)"
+
+if [ "${ALLOW_MAIN_COMMIT:-0}" != "1" ]; then
+    case "$BRANCH" in
+        main|master|development)
+            echo "ERROR: Direct commits on '$BRANCH' are blocked. Use a CSR-<number>-<kebab-case> branch." >&2
+            exit 1
+            ;;
+    esac
+fi
+
+BRANCH_PREFIX="$(printf '%s' "$BRANCH" | sed -n 's/^\(CSR-[0-9][0-9]*\)-.*/\1/p')"
+
+if [ -n "$BRANCH_PREFIX" ]; then
+    if ! printf '%s' "$SUBJECT" | grep -Eq "^${BRANCH_PREFIX} - [[:graph:]]"; then
+        echo "ERROR: Commit message must start with '${BRANCH_PREFIX} - <summary>' to match branch '$BRANCH'." >&2
+        echo "Received: $SUBJECT" >&2
+        exit 1
+    fi
+else
+    if ! printf '%s' "$SUBJECT" | grep -Eq "^CSR-[0-9]+ - [[:graph:]]"; then
+        echo "ERROR: Commit message must start with 'CSR-<number> - <summary>'." >&2
+        echo "Received: $SUBJECT" >&2
+        exit 1
+    fi
+fi
+
+exit 0

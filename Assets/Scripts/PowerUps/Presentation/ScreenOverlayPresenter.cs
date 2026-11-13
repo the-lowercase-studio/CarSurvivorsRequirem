@@ -16,6 +16,12 @@ namespace Assets.Scripts.PowerUps.Presentation
         private void Awake()
         {
             _canvasGroup = GetComponent<CanvasGroup>();
+            _canvasGroup.blocksRaycasts = false;
+
+            if (_overlayImage != null)
+            {
+                _overlayImage.raycastTarget = false;
+            }
         }
 
         public void SetAlpha(float alpha)
