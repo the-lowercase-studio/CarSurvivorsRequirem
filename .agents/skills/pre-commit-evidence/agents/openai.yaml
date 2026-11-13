@@ -1,0 +1,6 @@
+interface:
+  display_name: "Pre-Commit Evidence"
+  short_description: "Verify visual provability and capture Unity screenshots in .user-docs/evidences/ before committing."
+  default_prompt: "Use $pre-commit-evidence to inspect pending commit changes, verify whether visual gameplay or UI proof is possible, and capture inspectable PNG evidence in .user-docs/evidences/ without creating a commit."
+policy:
+  allow_implicit_invocation: false

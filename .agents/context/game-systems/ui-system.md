@@ -23,7 +23,16 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Assets/Scripts/UI/Skills/SkillsStatsPresenter.cs
   - Assets/Scripts/UI/Pause/PausePresenter.cs
   - Assets/Scripts/UI/Death/PlayerDeathPresenter.cs
+  - Assets/Scripts/UI/Input/UiInputScope.cs
+  - Assets/Scripts/UI/Input/MenuInputCoordinator.cs
+  - Assets/Scripts/UI/Input/GameplayInputCoordinator.cs
+  - Assets/Scripts/UI/Input/InputPromptView.cs
   - Assets/Scripts/UI/Settings/
+  - Assets/Scripts/UI/Settings/Constants/SettingsConstants.cs
+  - Assets/Scripts/Effects/SelectableOutlineHighlight.cs
+  - Assets/Scripts/Effects/UISpriteSilhouetteOutline.cs
+  - Assets/Scripts/Effects/Constants/UiOutlineConstants.cs
+  - Assets/Shaders/UI/UISpriteOutline.shader
 - Related runtime code:
   - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
   - Assets/Scripts/ReflexDI/MainMenuInstaller.cs
@@ -41,6 +50,7 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - .agents/context/game-systems/collectibles-system.md
   - .agents/context/game-systems/spawners-system.md
   - .agents/context/game-systems/dev-console-system.md
+  - .agents/context/game-systems/input-system.md
   - .agents/context/technology-documentation.md
 - Related agents or instructions:
   - AGENTS.md
@@ -54,14 +64,16 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - TimerPresenter increments a scene timer once per second with InvokeRepeating, updates a TMP label, and exposes TimerValue through ITimerPresenter.
   - PlayerLevelPresenter reads IPlayerManager.LevelController, subscribes to exp and level-up events, animates the exp slider, updates the level label, and raises OnExpSliderVisualEndValueReached when a level-up visual reaches the transition point.
   - PlayerSkillsHUDPresenter (Assets/Scripts/UI/HUD/PlayerSkillsHUDPresenter.cs) implements IPlayerSkillsHUDPresenter and displays the horizontal active skill slots at the top-left of the HUD. Subscribes to IPlayerManager.SkillsRegistry.OnSkillInitialized. Separates each slot into two graphical layers: (1) a persistent slot background Image (_skillIconHolders[i]) that always remains active with sprite = null and _emptySlotColor (default Color(0.12f, 0.12f, 0.12f, 0.45f)) whether the slot is empty or filled, and (2) a foreground icon Image resolved via GetOrResolveIconImage(index, slotBackground) (checking optional _iconImages[index], existing child Image components, or dynamically instantiating a child "Icon" Image with full stretch anchors anchorMin = 0, anchorMax = 1, offsetMin = 0, offsetMax = 0, preserveAspect = true, and raycastTarget = false). While empty, the foreground icon Image is disabled; when a skill is assigned via AssignSkillToSlot, the foreground icon Image is enabled with skill.SkillInfo.Icon and _filledSlotColor (Color.white) on top of the dark translucent background quad, and optional DOPunchScale (0.2f, 0.3s) animates the slot transform so background and icon punch together.
-  - SkillUpgradePresenter reacts to collectible release events and IPlayerLevelPresenter.OnExpSliderVisualEndValueReached, queues upgrade rewards for crates, queues level rewards with a new-skill interval fallback to upgrades, renders the current queued request, passes option rarity into generated buttons, and supports Enter/number-key input.
-  - SkillUpgradeButton initializes generated upgrade buttons, resolves missing button/text/icon/background references from children, displays keyboard-number icons through SkillUpgradeKeyboardIconMapping, applies rarity background visuals through SkillUpgradeRaritySpriteMapping, and can add optional hover callbacks through PointerEnterHandler.
+  - SkillUpgradePresenter reacts to collectible release events and IPlayerLevelPresenter.OnExpSliderVisualEndValueReached, acquires an InputContextScopeKind.LiveReward scope while active (keeping driving live without pausing GameTime), queues upgrade rewards for crates, queues level rewards with a new-skill interval fallback to upgrades, renders the current queued request, passes option rarity and InputActionId prompts into buttons/skill cards, handles clickable dual-card buttons and IInputCommands UpgradeSelectChoice commands (slots 0..2), and clears consumed active controls on selection.
+  - SkillUpgradeButton initializes generated upgrade buttons, resolves missing button/text/icon/background references from children, binds its required InputPromptView through IInputPromptProvider and InputActionId, applies rarity background visuals through SkillUpgradeRaritySpriteMapping, and can add optional hover callbacks through PointerEnterHandler.
   - SkillsVisualPresenter maps SkillInfoSO.Name to scene visual objects by matching GameObject names, can hide all registered visuals, and logs a warning when a visual is missing.
-  - PlayerDeathPresenter saves the current timer score, displays final level and time alive, switches background audio to death mode, enables the death screen, and pauses GameTime.
-  - PausePresenter listens to the Input System Pause action and, for a living player, toggles its visual/time before forwarding visibility to ISkillsStatsPresenter. Dead-player toggles are ignored. IPausePresenter.HideForDeath hides pause UI without changing time; the serialized ToogleActivation Continue callback remains supported.
+  - PlayerDeathPresenter saves the current timer score, acquires an InputContextScopeKind.Death scope via IInputContexts, displays final level and time alive, switches background audio to death mode, enables the death screen, and pauses GameTime.
+  - PausePresenter subscribes to IInputCommands (InputCommandKind.Pause and UiCancel), acquires InputContextScopeKind.Pause while paused, respects PauseChildPanel and UiInputScope.TryHandleWidgetCancel before closing pause, toggles its visual/time for a living player before forwarding visibility to ISkillsStatsPresenter, and releases its pause scope on ClosePause or HideForDeath. Dead-player toggles are ignored; the serialized ToogleActivation Continue callback remains supported.
+  - UiInputScope, MenuInputCoordinator, GameplayInputCoordinator, and InputPromptView coordinate InputSystemUIInputModule setup (with cancel = null and deselectOnBackgroundClick = false), modal child-panel stacking, focus restoration across mouse/gamepad transitions, dynamic TMP_Dropdown explicit navigation + ScrollRect scrolling + immediate cancel teardown without focus bounce (_closingDropdown / PrepareDropdownListForImmediateCancel), and live device-aware glyph/text prompts.
   - MenuButtonsFunctionality backs menu button actions for scene loading, current-scene retry, application exit, and mutually exclusive panel toggling.
+  - SelectableOutlineHighlight (Assets/Scripts/Effects/SelectableOutlineHighlight.cs) and UISpriteSilhouetteOutline (Assets/Scripts/Effects/UISpriteSilhouetteOutline.cs backed by Assets/Shaders/UI/UISpriteOutline.shader and Assets/Scripts/Effects/Constants/UiOutlineConstants.cs) provide selection/hover outline and fill highlights for Main Menu subpanel controls (DropDown, VolumeOption/Slider, and top-left icon-only BackButtons with adjacent BackPromptBadge). SelectableOutlineHighlight syncs _isSelected in OnEnable(), while UISpriteSilhouetteOutline dilates radial silhouette outlines on skewed/irregular sprites without diagonal mesh gaps; CheckBox controls retain SpriteSwap without SelectableOutlineHighlight, and expanded dropdown item rows use opaque backgrounds to prevent bleed-through.
   - IOptionComponent<T> standardizes settings UI components with LoadComponent and PerformValueChange.
-  - AudioVolumeOption, DamageNumbersOption, FullScreenOption, GraphicOption, and ResolutionOption load current setting values into Unity UI controls and save/load settings when controls change. GraphicOption also rebuilds its dropdown options from its hard-coded quality map in Awake.
+  - AudioVolumeOption, DamageNumbersOption, FullScreenOption, GraphicOption, and ResolutionOption load current setting values into Unity UI controls and save/load settings when controls change. AudioVolumeOption configures an integer 0..100 slider (wholeNumbers = true), injects IInputActionSource and UiInputScope for 1% discrete steps and tiered hold acceleration (SettingsConstants), and clamps linear volume to 0.0001f before Mathf.Log10 decibel conversion. GraphicOption also rebuilds its dropdown options from its hard-coded quality map in Awake.
   - ButtonsAudioClipPlayer is intended to play button click and hover sounds through an AudioClipPlayer component.
 - Key interfaces:
   - ITimerPresenter is bound by DefaultGameplaySceneInstaller and consumed by PlayerDeathPresenter.
@@ -119,14 +131,14 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Add a new settings option by implementing IOptionComponent<T>, injecting the appropriate ISetting<TSelf, TRepresentedBy>, binding the setting in MainMenuInstaller, loading without notifying the control, and subscribing/unsubscribing in OnEnable/OnDisable.
   - Add a new gameplay presenter by creating a narrow interface only if another runtime system must consume it, then bind the scene instance in DefaultGameplaySceneInstaller.
   - Add new skill choice visuals by extending the scene objects referenced by SkillsVisualPresenter, keeping names aligned with SkillInfoSO.Name.
-  - Add or update skill-upgrade keyboard icons through Assets/ScriptableObjects/UI/SkillUpgradeKeyboardIconMapping.cs and the matching ScriptableObject asset; missing mappings hide the select-key image.
+  - Add or update input prompt glyph mappings through Assets/ScriptableObjects/Input/InputGlyphCatalog.cs and Assets/ScriptableObjects/Input/InputGlyphCatalog.asset; render prompts with InputPromptView and IInputPromptProvider.
   - Add or update skill-upgrade rarity backgrounds through Assets/ScriptableObjects/UI/SkillUpgradeRaritySpriteMapping.cs and the button prefab's mapping/background references; missing sprites or mapping references leave the existing button background unchanged.
   - Add button behaviors through MenuButtonsFunctionality only when they remain scene/menu operations; put gameplay state changes in the owning gameplay system instead.
 - Required dependencies and contracts:
   - UI contracts consumed outside UI should be explicit interfaces and registered in the appropriate Reflex installer.
   - Settings options require an ISetting<TSelf, TRepresentedBy> implementation that can save, load, and return a stored/default value.
   - Death UI requires IPlayerManager, IBackgroundAudioManager, scoreboard services, and ITimerPresenter.
-  - Skill upgrade UI requires IPlayerManager, IPlayerLevelPresenter, ISkillUpgradeFlow, ISkillsVisualPresenter, the collectible spawner release event, and scene/prefab wiring for optional keyboard icon and rarity sprite mappings.
+  - Skill upgrade UI requires IPlayerManager, IPlayerLevelPresenter, ISkillUpgradeFlow, ISkillsVisualPresenter, IInputCommands, IInputContexts, IInputPromptProvider, the collectible spawner release event, and scene/prefab wiring for InputPromptView and rarity sprite mappings.
 - Testing implications:
   - Compile after C# UI changes with dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false.
   - Play-mode validation is required for pause input, scene button wiring, settings controls, death VFX-to-screen timing, score text, audio mode changes, skill upgrade panel timing, skill upgrade rarity backgrounds, and HUD skill slot backgrounds behind equipped icons.
@@ -163,10 +175,9 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - PlayerLevelPresenter subscribes to level controller events in Start and does not currently unsubscribe; this is low risk for scene-lifetime presenters but should be reviewed before supporting presenter disable/re-enable or additive scene lifetimes.
   - SkillUpgradePresenter subscribes to collectible and level-presenter events in Start and unsubscribes in OnDestroy; this is scene-lifetime safe but should be reviewed before supporting disable/re-enable lifetimes.
   - SkillsVisualPresenter uses GameObject name matching, so a missing or renamed visual logs a warning and leaves the requested visual hidden.
-  - SkillUpgradeButton hides the select-key image when its icon mapping is missing, has no entry for the button number, or returns a null sprite.
+  - SkillUpgradeButton requires _inputPromptView and hides prompt icon images when unavailable, displaying fallback text via InputPromptView instead.
   - SkillUpgradeButton leaves the current background untouched when the rarity background image, rarity sprite mapping, or mapped sprite is missing.
   - ButtonsAudioClipPlayer declares RequireComponent(typeof(AudioClipPlayer)) but does not initialize its _audioClipPlayer field before playback.
-  - AudioVolumeOption converts slider value with Mathf.Log10; a zero slider value would produce an invalid decibel value unless the slider minimum prevents zero in the scene.
   - GraphicOption assumes the stored/default quality string exists in its hard-coded quality-level dictionary.
 - Open design questions:
   - Should skill visual lookup stop using GameObject name matching and move to explicit serialized entries keyed by skill info?

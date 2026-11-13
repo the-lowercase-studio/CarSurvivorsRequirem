@@ -1,5 +1,5 @@
 {
-  "Volume": -19.4009857,
+  "Volume": -6.55804253,
   "FullScreenMode": 3,
   "DamageNumbersEnabled": true,
   "ScoreBoard": [
@@ -10,5 +10,11 @@
     259,
     242
   ],
-  "GraphicsQuality": "High"
+  "GraphicsQuality": "High",
+  "Resolution": {
+    "Width": 1920,
+    "Height": 1080,
+    "RefreshRateNumerator": 143855,
+    "RefreshRateDenominator": 1000
+  }
 }

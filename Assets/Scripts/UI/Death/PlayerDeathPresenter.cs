@@ -1,5 +1,7 @@
+using System;
 using Assets.Scripts.Audio;
 using Assets.Scripts.GameFlow;
+using Assets.Scripts.Input;
 using Assets.Scripts.Player;
 using Assets.Scripts.ScoreBoard;
 using Assets.Scripts.UI.HUD;
@@ -26,14 +28,34 @@ namespace Assets.Scripts.UI.Death
         [Inject] private readonly ITimerPresenter _timerPresenter = null;
         [Inject] private readonly IPausePresenter _pausePresenter = null;
         [Inject] private readonly ISkillsStatsPresenter _skillsStatsPresenter = null;
+        [Inject] private readonly IInputContexts _inputContexts = null;
 
         [SerializeField] private GameObject _visual;
         [SerializeField] private TextMeshProUGUI _levelText;
         [SerializeField] private TextMeshProUGUI _timeText;
 
+        private InputScopeToken _deathScopeToken;
+
+        private void Awake()
+        {
+            if (_inputContexts == null)
+            {
+                throw new InvalidOperationException($"[{nameof(PlayerDeathPresenter)}] IInputContexts was not injected on '{name}'.");
+            }
+        }
+
         private void Start()
         {
             _backgroundAudioManager.ChangeAudioToDefaultAudioMode();
+        }
+
+        private void OnDestroy()
+        {
+            if (_deathScopeToken.IsValid)
+            {
+                _inputContexts?.ReleaseScope(_deathScopeToken);
+                _deathScopeToken = default;
+            }
         }
 
         public void EnableDeathScreen()
@@ -47,6 +69,11 @@ namespace Assets.Scripts.UI.Death
             _pausePresenter.HideForDeath();
 
             _visual.SetActive(true);
+
+            if (!_deathScopeToken.IsValid)
+            {
+                _deathScopeToken = _inputContexts.AcquireScope(InputContextScopeKind.Death, GetEntityId().GetHashCode());
+            }
 
             _backgroundAudioManager.ChangeAudioToDeathAudioMode();
 

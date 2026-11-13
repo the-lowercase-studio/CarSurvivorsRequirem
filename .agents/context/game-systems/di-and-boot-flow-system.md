@@ -30,6 +30,7 @@ It is not responsible for:
 - Related docs:
   - .agents/context/game-systems/audio-system.md
   - .agents/context/game-systems/game-flow-system.md
+  - .agents/context/game-systems/input-system.md
   - .agents/context/game-systems/power-ups-system.md
   - .agents/context/game-systems/dev-console-system.md
   - .agents/context/game-systems/settings-system.md
@@ -41,12 +42,12 @@ It is not responsible for:
 ## Architecture and Data Flow
 
 - Core components:
-  - Assets/Scripts/ReflexDI/ProjectInstaller.cs registers project-scoped singletons: Assets/Scripts/GameFlow/GameSceneLoader.cs (as IGameSceneLoader), Assets/Scripts/ScoreBoard/StoredScoreBoard.cs, Assets/Scripts/ScoreBoard/ScoreBoardNewScoreSaver.cs (as IScoreBoardNewScoreSaver), and Assets/Scripts/ScoreBoard/ScoreBoardBestScoreGetter.cs (as IScoreBoardBestScoreGetter).
-  - Assets/Scripts/ReflexDI/MainMenuInstaller.cs registers menu-scoped settings services (scoped lifetime): AudioVolumeSetting, GraphicSetting, FullScreenSetting, ResolutionSetting, and DamageNumbersSetting (each bound to their ISetting<TSelf, TValue> and ISettingLoader interfaces).
+  - Assets/Scripts/ReflexDI/ProjectInstaller.cs registers project-scoped singletons: Assets/Scripts/GameFlow/GameSceneLoader.cs (as IGameSceneLoader), Assets/Scripts/ScoreBoard/StoredScoreBoard.cs, Assets/Scripts/ScoreBoard/ScoreBoardNewScoreSaver.cs (as IScoreBoardNewScoreSaver), Assets/Scripts/ScoreBoard/ScoreBoardBestScoreGetter.cs (as IScoreBoardBestScoreGetter), Assets/Scripts/Input/GameInputService.cs (as IGameplayInput, IInputCommands, IInputContexts, IInputDeviceContext, IInputActionSource, IInputRuntime with fail-fast validation of _inputActions and _inputRuntimeConfig), and Assets/Scripts/Input/InputPromptService.cs (as IInputPromptProvider with fail-fast validation of _inputGlyphCatalog). ProjectInstaller also subscribes builder.OnContainerBuilt += SpawnInputRuntimeDriver to instantiate, AttributeInjector.Inject, and activate a persistent DontDestroyOnLoad InputRuntimeDriver before any scene Awake runs (preserving direct non-Boot scene launches while Boot's scene-placed InputRuntimeDriver yields via IInputRuntime.TryAcquireDriver()).
+  - Assets/Scripts/ReflexDI/MainMenuInstaller.cs registers menu-scoped settings services (scoped lifetime): AudioVolumeSetting, GraphicSetting, FullScreenSetting, ResolutionSetting, and DamageNumbersSetting (each bound to their ISetting<TSelf, TValue> and ISettingLoader interfaces), plus the scene UiInputScope instance (fail-fast validated).
   - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs binds scene object references and services:
     - Camera: Main Camera (Camera) and optional CinemachineCombatFollowOffsetController (ICinemachineCombatFollowOffsetController).
     - Player: PlayerManager (IPlayerManager) and child ISkillUpgradePresenter.
-    - UI Presenters: SkillsStatsPresenter (ISkillsStatsPresenter, fail-fast validated), PausePresenter (IPausePresenter, fail-fast validated), PlayerDeathPresenter (IPlayerDeathPresenter), PlayerLevelPresenter (IPlayerLevelPresenter), SkillsVisualPresenter (ISkillsVisualPresenter), TimerPresenter (ITimerPresenter), SwarmNotificationPresenter (ISwarmNotificationPresenter), and optional BossHUDPresenter (IBossHUDPresenter), ArenaLeashWarningPresenter (IArenaLeashWarningPresenter), and PlayerSkillsHUDPresenter (IPlayerSkillsHUDPresenter).
+    - UI Presenters & Input Scope: UiInputScope (fail-fast validated), SkillsStatsPresenter (ISkillsStatsPresenter, fail-fast validated), PausePresenter (IPausePresenter, fail-fast validated), PlayerDeathPresenter (IPlayerDeathPresenter), PlayerLevelPresenter (IPlayerLevelPresenter), SkillsVisualPresenter (ISkillsVisualPresenter), TimerPresenter (ITimerPresenter), SwarmNotificationPresenter (ISwarmNotificationPresenter), and optional BossHUDPresenter (IBossHUDPresenter), ArenaLeashWarningPresenter (IArenaLeashWarningPresenter), and PlayerSkillsHUDPresenter (IPlayerSkillsHUDPresenter).
     - Dev Console: DevConsoleService (IDevConsoleService), and optional DevConsolePresenter (IDevConsolePresenter) and GameplayDevCommandsRegistrar (IGameplayDevCommandsRegistrar).
     - Grid & Skill Upgrade Flow: GridManager (IGridManager) and SkillUpgradeFlow (ISkillUpgradeFlow).
     - Spawners & Collectibles: EnemiesSpawner (IOnRandomGridPosSpawner<EnemiesSpawner>, ISwarmEnemySpawner, IEnemySpawnDifficultyController, IActiveEnemiesProvider), CollectibleDropNotifier (ICollectibleDropNotifier, ICollectibleDropSuppressor), DropAnimationConfiguration, ExpParticleSpawner (IInWorldSpaceSpawner<ExpParticleSpawner, float>), and ExplosionVfxPool (IExplosionVfxPool, fail-fast validated).

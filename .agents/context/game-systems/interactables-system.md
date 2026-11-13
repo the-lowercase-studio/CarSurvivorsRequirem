@@ -5,7 +5,7 @@
 The Interactables system is responsible for spawning interactive map objectives onto the game board on scene startup and managing their lifecycle, player proximity checks, UI prompts, interaction mechanics, animation flows, and reward side-effects.
 
 In Car Survivors, map interactables include:
-1. **Difficulty Totems (`IncreaseDifficultyTotem`)**: Proximity-triggered interactable objects that accept player input (e.g. 'E' key) to permanently boost enemy spawn chance redistribution speed and wave difficulty.
+1. Difficulty Totems (IncreaseDifficultyTotem): Proximity-triggered interactable objects that display device-aware PlayerInteract prompts through InputPromptView + IInputPromptProvider and accept input through IGameplayInput.WasInteractPressedThisFrame ('E' or Gamepad buttonSouth) to permanently boost enemy spawn chance redistribution speed and wave difficulty.
 2. **Capture Points (`CapturePoint`)**: Proximity-driven objective zones that track player car residence within a capture radius, animate expanding/outline ground planes via DOTween, decay progress when the player leaves, swap mesh materials upon acquisition, and reward a skill upgrade upon reaching 100% completion.
 3. **Map Interactables Spawner (`MapInteractablesSpawner`)**: Scene component that evaluates spatial rules to place interactables on walkable grid cells during scene initialization.
 
@@ -25,6 +25,7 @@ It does not own grid coordinate generation or cell walkability logic (owned by G
 - Related docs:
   - .agents/context/game-systems/grid-system.md
   - .agents/context/game-systems/enemy-spawning-and-waves-system.md
+  - .agents/context/game-systems/input-system.md
   - .agents/context/game-systems/skills-system.md
   - .agents/context/game-systems/di-and-boot-flow-system.md
   - .agents/context/project-coding-standards.md
@@ -39,7 +40,7 @@ It does not own grid coordinate generation or cell walkability logic (owned by G
 - Core components:
   - MapInteractablesSpawner: Scene-bound spawner that reads `InteractableSpawnRule` configs to place interactables at scene start. Queries `IGridManager` for walkable cells, shuffles candidates, checks spatial distance rules (distance to impassable cells, distance to other interactables, distance to same type), instantiates prefabs, and injects dependencies via Reflex.
   - InteractableSpawnRule: Serialized configuration holding prefab references, min/max spawn counts, and distance constraints.
-  - IncreaseDifficultyTotem: Interactive totem component. Measures player distance, displays an interaction Canvas prompt when in range, listens for 'E' key press, calls `IEnemySpawnDifficultyController.IncreaseSpawnChanceRedistributionFactor`, triggers VFX, and deactivates itself.
+  - IncreaseDifficultyTotem: Interactive totem component. Validates injected IGameplayInput, IInputPromptProvider, and _interactPromptView in Start() (after GameObjectInjector.InjectRecursive completes), binds InputActionId.PlayerInteract prompt updates, measures player distance, displays an interaction Canvas prompt when in range, polls IGameplayInput.WasInteractPressedThisFrame, calls IEnemySpawnDifficultyController.IncreaseSpawnChanceRedistributionFactor, triggers VFX, and deactivates itself.
   - CapturePoint: Proximity-based area objective. Tracks player presence inside `_captureRadius` using squared distance (`sqrMagnitude`), scales an expanding ground circle plane, triggers outline plane pop-in/pulse/shrink animations via DOTween, decays progress when the player exits, swaps target mesh materials upon 100% capture, plays capture VFX, and queues a random skill upgrade request via `ISkillUpgradeFlow`.
 - Key interfaces:
   - `IPlayerManager`: Injected dependency used by interactables to query player position and `SkillsRegistry`.
@@ -48,7 +49,7 @@ It does not own grid coordinate generation or cell walkability logic (owned by G
   - `IGridManager`: Injected into `MapInteractablesSpawner` to fetch walkable cells.
 - Runtime flow:
   - **Spawning**: On scene `Start()`, `MapInteractablesSpawner` fetches walkable cells from `IGridManager.WorldGrid`, shuffles them, filters candidates using rules, instantiates interactable prefabs, and recursively injects Reflex dependencies via `GameObjectInjector.InjectRecursive`.
-  - **Totem Interaction**: `IncreaseDifficultyTotem.Update` measures distance to player. When within `_interactionRadius`, it displays `_interactionCanvas`. If 'E' is pressed (`Keyboard.current.eKey.wasPressedThisFrame`), it increases difficulty factor, hides canvas, triggers VFX, and sets `enabled = false`.
+  - Totem Interaction: IncreaseDifficultyTotem.Update measures distance to player. When within _interactionRadius, it displays _interactionCanvas. If IGameplayInput.WasInteractPressedThisFrame is true (only when interact-eligible under active input context), it increases difficulty factor, hides canvas, triggers VFX, and sets enabled = false.
   - **Capture Point Execution**: `CapturePoint.Update` measures squared distance to player. While inside radius, `_progress` increases over `_captureDurationSeconds` and `_expandingCirclePlane` scales up. An outline circle plane pops in with `Ease.OutBack`. If the player leaves, progress decays based on `_decaySpeedMultiplier` and the outline scales down. Upon reaching 1.0 progress:
     1. `_isCaptured` becomes true and progress locks.
     2. Ground and outline circle planes shrink to zero scale via DOTween before deactivating.
@@ -84,6 +85,6 @@ It does not own grid coordinate generation or cell walkability logic (owned by G
   - `SkillUpgradePresenter`: Displays skill upgrade modal UI when `CapturePoint` completes its reward flow.
   - `EnemiesSpawnChanceRedistributionSystem`: Receives difficulty multiplier increases from totems.
 
-## Known Risks and Open Questions
-
-- **Interaction Key Rebinding**: `IncreaseDifficultyTotem` directly checks `Keyboard.current.eKey`, which bypasses the Unity Input System actions asset and does not support gamepad binding out of the box.
+- Known Behavior & Lifecycle Notes:
+  - IncreaseDifficultyTotem validates [Inject] services and binds _interactPromptView in Start() rather than Awake() because MapInteractablesSpawner runs Instantiate(...) synchronously before calling Reflex.Injectors.GameObjectInjector.InjectRecursive.
+  - IncreaseDifficultyTotem's fallback TMP label (InteractKeyText) shares Layer 17 (Interactables) with KeyE_Image and uses world-space TMP sizing so fallback labels render cleanly without camera culling.

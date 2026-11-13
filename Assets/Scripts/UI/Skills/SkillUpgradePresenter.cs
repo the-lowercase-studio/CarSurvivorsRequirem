@@ -1,5 +1,6 @@
 using Assets.Scripts.Audio;
 using Assets.Scripts.Common.EventArgs;
+using Assets.Scripts.Input;
 using Assets.Scripts.LevelSystem;
 using Assets.Scripts.Player;
 using Assets.Scripts.Skills;
@@ -7,13 +8,14 @@ using Assets.Scripts.Skills.Constants;
 using Assets.Scripts.Skills.ObjectsImpactingSkills.Crate;
 using Assets.Scripts.Skills.UpgradeFlow;
 using Assets.Scripts.Enemies;
+using Assets.Scripts.UI.Input;
 using Assets.Scripts.UI.Level;
 using Assets.Scripts.UI.Constants;
 using Reflex.Attributes;
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace Assets.Scripts.UI.Skills
@@ -31,6 +33,9 @@ namespace Assets.Scripts.UI.Skills
         [Inject] private readonly ICollectibleDropNotifier _collectibleDropNotifier = null;
         [Inject] private readonly ISkillUpgradeFlow _skillUpgradeFlow = null;
         [Inject] private readonly ISkillsVisualPresenter _skillsVisualPresenter = null;
+        [Inject] private readonly IInputCommands _inputCommands = null;
+        [Inject] private readonly IInputContexts _inputContexts = null;
+        [Inject] private readonly IInputPromptProvider _promptProvider = null;
 
         [Header("Upgrade Skill")]
         [SerializeField] private GameObject _upgradeSkillSection;
@@ -40,9 +45,13 @@ namespace Assets.Scripts.UI.Skills
         [Header("New Skill Choice")]
         [SerializeField] private GameObject _newSkillSection;
         [SerializeField] private GameObject _firstSkillCard;
+        [SerializeField] private Button _firstSkillCardButton;
+        [SerializeField] private InputPromptView _firstSkillPromptView;
         [SerializeField] private TextMeshProUGUI _newSkillName;
         [SerializeField] private TextMeshProUGUI _newSkillDescription;
         [SerializeField] private GameObject _secondSkillCard;
+        [SerializeField] private Button _secondSkillCardButton;
+        [SerializeField] private InputPromptView _secondSkillPromptView;
         [SerializeField] private TextMeshProUGUI _secondSkillName;
         [SerializeField] private TextMeshProUGUI _secondSkillDescription;
 
@@ -56,10 +65,35 @@ namespace Assets.Scripts.UI.Skills
         private readonly List<SkillUpgradeButton> _upgradeButtons = new();
         private int _lastHandledInputFrame = -1;
         private IReadOnlyList<ISkillBase> _currentSkillChoices;
+        private InputScopeToken _rewardScopeToken;
+        private bool _isInitialized;
 
         private void Awake()
         {
+            if (_inputCommands == null || _inputContexts == null || _promptProvider == null)
+            {
+                throw new InvalidOperationException($"[{nameof(SkillUpgradePresenter)}] Required input dependencies were not injected on '{name}'.");
+            }
+
+            if (_firstSkillCardButton == null || _firstSkillPromptView == null || _secondSkillCardButton == null || _secondSkillPromptView == null)
+            {
+                throw new InvalidOperationException($"[{nameof(SkillUpgradePresenter)}] New skill card Button/InputPromptView references are unassigned on '{name}'.");
+            }
+
             _audioClipPlayer = _buttonsAudioPlayer != null ? _buttonsAudioPlayer : GetComponentInChildren<IAudioClipPlayer>();
+            _firstSkillCardButton.onClick.AddListener(HandleFirstSkillCardClicked);
+            _secondSkillCardButton.onClick.AddListener(HandleSecondSkillCardClicked);
+            _isInitialized = true;
+        }
+
+        private void OnEnable()
+        {
+            if (!_isInitialized)
+            {
+                return;
+            }
+
+            _inputCommands.OnCommand += HandleInputCommand;
         }
 
         private void Start()
@@ -69,40 +103,33 @@ namespace Assets.Scripts.UI.Skills
             _skillUpgradeFlow.OnRequestQueued += HandleRequestQueued;
         }
 
-        private void Update()
+        private void OnDisable()
         {
-            if (!_isShowingAnySection || Keyboard.current == null || _lastHandledInputFrame == Time.frameCount)
+            if (!_isInitialized)
             {
                 return;
             }
 
-            if (_newSkillSection.activeSelf)
-            {
-                if (Keyboard.current.digit1Key.wasPressedThisFrame || Keyboard.current.numpad1Key.wasPressedThisFrame)
-                {
-                    SelectNewSkillChoice(0);
-                    return;
-                }
-
-                if ((Keyboard.current.digit2Key.wasPressedThisFrame || Keyboard.current.numpad2Key.wasPressedThisFrame)
-                    && _currentSkillChoices != null && _currentSkillChoices.Count > 1)
-                {
-                    SelectNewSkillChoice(1);
-                    return;
-                }
-            }
-
-            if (_upgradeSkillSection.activeSelf)
-            {
-                TryHandleUpgradeButtonHotkey();
-            }
+            _inputCommands.OnCommand -= HandleInputCommand;
         }
 
         private void OnDestroy()
         {
+            if (_firstSkillCardButton != null)
+            {
+                _firstSkillCardButton.onClick.RemoveListener(HandleFirstSkillCardClicked);
+            }
+
+            if (_secondSkillCardButton != null)
+            {
+                _secondSkillCardButton.onClick.RemoveListener(HandleSecondSkillCardClicked);
+            }
+
             _collectibleDropNotifier.OnSkillUpgradeCollectibleCollected -= HandleCrateRewardRequest;
             _playerLevelPresenter.OnExpSliderVisualEndValueReached -= HandleLevelRewardRequest;
             _skillUpgradeFlow.OnRequestQueued -= HandleRequestQueued;
+
+            ReleaseRewardScope();
         }
 
         public bool IsAutoUpgradeEnabled { get; set; }
@@ -122,6 +149,8 @@ namespace Assets.Scripts.UI.Skills
                 _skillsVisualPresenter.HideAll();
             }
             _isShowingAnySection = false;
+            _currentSkillChoices = null;
+            ReleaseRewardScope();
 
             while (_skillUpgradeFlow.TryGetNextRequest(_playerManager.SkillsRegistry, out SkillUpgradeRequest request))
             {
@@ -223,6 +252,7 @@ namespace Assets.Scripts.UI.Skills
                 _newSkillSection.SetActive(false);
                 _upgradeSkillSection.SetActive(false);
                 _isShowingAnySection = false;
+                ReleaseRewardScope();
             }
         }
 
@@ -238,11 +268,15 @@ namespace Assets.Scripts.UI.Skills
 
             _skillsVisualPresenter.SetContext(SkillVisualContext.NewSkillUnlocked);
 
+            int slotCount = Math.Min(choices.Count, 2);
+            AcquireRewardScope(slotCount);
+
             if (_firstSkillCard != null)
             {
                 _firstSkillCard.SetActive(true);
             }
 
+            _firstSkillPromptView.Bind(_promptProvider, InputActionId.UpgradeSelectChoice1);
             _newSkillName.text = string.Format(UIConstants.SKILL_NAME_TEMPLATE, choices[0].SkillInfo.Name);
             _newSkillDescription.text = choices[0].SkillInfo.Description;
             _skillsVisualPresenter.ShowSkillVisual(choices[0].SkillInfo, 0);
@@ -253,6 +287,7 @@ namespace Assets.Scripts.UI.Skills
                 {
                     _secondSkillCard.SetActive(true);
                 }
+                _secondSkillPromptView.Bind(_promptProvider, InputActionId.UpgradeSelectChoice2);
                 if (_secondSkillName != null)
                 {
                     _secondSkillName.text = string.Format(UIConstants.SKILL_NAME_TEMPLATE, choices[1].SkillInfo.Name);
@@ -265,6 +300,7 @@ namespace Assets.Scripts.UI.Skills
             }
             else
             {
+                _secondSkillPromptView.Unbind();
                 if (_secondSkillCard != null)
                 {
                     _secondSkillCard.SetActive(false);
@@ -290,6 +326,7 @@ namespace Assets.Scripts.UI.Skills
             }
 
             DisplayNewButtons(skillStatsUpgradeButtonsData);
+            AcquireRewardScope(_upgradeButtons.Count);
 
             _skillsVisualPresenter.SetContext(SkillVisualContext.StatUpgrade);
             _skillsVisualPresenter.ShowSkillVisual(request.UpgradeableSkill.SkillInfo, 0);
@@ -315,7 +352,7 @@ namespace Assets.Scripts.UI.Skills
 
         private void CreateUpgradeButtons(IEnumerable<ClickableButtonData> clickableButtonsData)
         {
-            int buttonNumber = 1;
+            int slotIndex = 0;
 
             foreach (var clickableButtonData in clickableButtonsData)
             {
@@ -326,60 +363,79 @@ namespace Assets.Scripts.UI.Skills
                     button = buttonObject.AddComponent<SkillUpgradeButton>();
                 }
 
+                InputActionId slotAction = GetSlotActionId(slotIndex);
                 button.Initialize(
                     clickableButtonData.Text,
-                    buttonNumber,
+                    _promptProvider,
+                    slotAction,
                     clickableButtonData.Rarity,
                     clickableButtonData.OnClick,
                     icon: clickableButtonData.Icon);
 
                 _upgradeButtons.Add(button);
 
-                buttonNumber++;
+                slotIndex++;
             }
         }
 
-        private void TryHandleUpgradeButtonHotkey()
+        private void HandleInputCommand(InputCommand command)
         {
-            if (IsButtonHotkeyPressed(0))
-            {
-                InvokeUpgradeButton(0);
-            }
-            else if (IsButtonHotkeyPressed(1))
-            {
-                InvokeUpgradeButton(1);
-            }
-            else if (IsButtonHotkeyPressed(2))
-            {
-                InvokeUpgradeButton(2);
-            }
-        }
-
-        private bool IsButtonHotkeyPressed(int buttonIndex)
-        {
-            return buttonIndex switch
-            {
-                0 => Keyboard.current.digit1Key.wasPressedThisFrame || Keyboard.current.numpad1Key.wasPressedThisFrame,
-                1 => Keyboard.current.digit2Key.wasPressedThisFrame || Keyboard.current.numpad2Key.wasPressedThisFrame,
-                2 => Keyboard.current.digit3Key.wasPressedThisFrame || Keyboard.current.numpad3Key.wasPressedThisFrame,
-                _ => false
-            };
-        }
-
-        private void InvokeUpgradeButton(int buttonIndex)
-        {
-            if (buttonIndex >= _upgradeButtons.Count)
+            if (command.Kind != InputCommandKind.UpgradeSelectChoice || !_isShowingAnySection)
             {
                 return;
             }
 
-            _lastHandledInputFrame = Time.frameCount;
+            if (_lastHandledInputFrame == Time.frameCount)
+            {
+                return;
+            }
+
+            if (_inputContexts.EffectiveContext != InputContextScopeKind.LiveReward || !_inputContexts.IsSlotEligible(command.SlotIndex))
+            {
+                return;
+            }
+
+            if (_newSkillSection.activeSelf)
+            {
+                SelectNewSkillChoice(command.SlotIndex);
+                return;
+            }
+
+            if (_upgradeSkillSection.activeSelf)
+            {
+                InvokeUpgradeButton(command.SlotIndex);
+            }
+        }
+
+        private void HandleFirstSkillCardClicked()
+        {
+            SelectNewSkillChoice(0);
+        }
+
+        private void HandleSecondSkillCardClicked()
+        {
+            SelectNewSkillChoice(1);
+        }
+
+        private void InvokeUpgradeButton(int buttonIndex)
+        {
+            if (_lastHandledInputFrame == Time.frameCount || buttonIndex < 0 || buttonIndex >= _upgradeButtons.Count)
+            {
+                return;
+            }
+
             _upgradeButtons[buttonIndex].Invoke();
         }
 
         private void HandleSkillUpgradeOptionSelected(SkillUpgradeOption option)
         {
+            if (_lastHandledInputFrame == Time.frameCount)
+            {
+                return;
+            }
+
             _lastHandledInputFrame = Time.frameCount;
+            _inputContexts.ConsumeActiveControlsUntilRelease();
             option.Apply();
             HandleUpgradeableOrInitializableSkillsShowing();
             if (_audioClipPlayer != null)
@@ -401,6 +457,7 @@ namespace Assets.Scripts.UI.Skills
             }
 
             _lastHandledInputFrame = Time.frameCount;
+            _inputContexts.ConsumeActiveControlsUntilRelease();
 
             ISkillBase chosenSkill = _currentSkillChoices[choiceIndex];
             _currentSkillChoices = null;
@@ -413,6 +470,51 @@ namespace Assets.Scripts.UI.Skills
             }
 
             HandleUpgradeableOrInitializableSkillsShowing();
+        }
+
+        private void AcquireRewardScope(int visibleSlotCount)
+        {
+            if (!_rewardScopeToken.IsValid)
+            {
+                _rewardScopeToken = _inputContexts.AcquireScope(InputContextScopeKind.LiveReward, GetEntityId().GetHashCode());
+            }
+
+            _inputContexts.SetLiveRewardEligibleSlots(visibleSlotCount);
+        }
+
+        private void ReleaseRewardScope()
+        {
+            if (_firstSkillPromptView != null)
+            {
+                _firstSkillPromptView.Unbind();
+            }
+
+            if (_secondSkillPromptView != null)
+            {
+                _secondSkillPromptView.Unbind();
+            }
+
+            _inputContexts?.SetLiveRewardEligibleSlots(0);
+            if (_rewardScopeToken.IsValid)
+            {
+                _inputContexts?.ReleaseScope(_rewardScopeToken);
+                _rewardScopeToken = default;
+            }
+        }
+
+        private static InputActionId GetSlotActionId(int slotIndex)
+        {
+            switch (slotIndex)
+            {
+                case 0:
+                    return InputActionId.UpgradeSelectChoice1;
+                case 1:
+                    return InputActionId.UpgradeSelectChoice2;
+                case 2:
+                    return InputActionId.UpgradeSelectChoice3;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(slotIndex), slotIndex, "Reward slot index out of supported range.");
+            }
         }
     }
 }
