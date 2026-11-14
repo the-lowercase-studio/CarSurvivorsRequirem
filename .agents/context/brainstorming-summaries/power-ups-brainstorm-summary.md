@@ -29,7 +29,7 @@ The following table catalogs all currently implemented power-ups alongside newly
 | **Freeze Timer** | **Implemented** | Global Crowd Control | Scaled-time freeze (5s) halting enemy locomotion, attack controllers, animators, swarm/wave spawners, boss state machines, and freezable DOTween sequences. | Grants breathing room to reposition the car, take tight turns, or clear congested bottlenecks. |
 | **Bubble Shield** | **Implemented** | Defense / Immunity | Grants 8s of absolute combat damage immunity. Visualized by a 3D Fresnel bubble on the car with a 2s synchronized warning blink before expiry. | Encourages aggressive driving and ramming through enemy formations without taking hull damage. |
 | **Armor** | **Implemented** | Defense / Absorption | Adds up to 3 stackable armor plates (+20 / +40 / +60 HP, up to 120 Armor HP total) that absorb incoming combat damage before the player car health bar is affected. | Forgives minor driving mistakes, small obstacle clips, or stray projectile hits during high-speed runs. |
-| **Fire Tails** | **Selected for Exploration** | Area Denial / DoT & Slow | For 8s, rear tires burn with flames. While drifting, normal black tire skid marks are replaced by 2 burning fire tracks that deal non-stacking fire DoT (25 HP / 0.5s) and slow regular enemies by 40%. | **Deepest vehicle synergy:** rewards skillful handbrake drifting and donut maneuvers to trap pursuit swarms in rings of fire. |
+| **Fire Tails** | **Implemented** | Area Denial / DoT & Slow | For 8s, rear tires burn with flames. While drifting, normal black tire skid marks are replaced by 2 burning fire tracks that deal non-stacking fire DoT (25 HP / 0.5s) and slow regular enemies by 40%. | **Deepest vehicle synergy:** rewards skillful handbrake drifting and donut maneuvers to trap pursuit swarms in rings of fire. |
 | **Nitro Ram** | **Rejected** | Kinetic / Battering Ram | Temporary speed boost (+70%) turning the car into an invulnerable battering ram that instakills and flings regular enemies upon contact. | High vehicle fantasy, but overlaps heavily with Bubble Shield immunity and requires complex physics changes to enemy collision logic. |
 | **Magnetic Vortex** | **Rejected** | Utility / Resource Vacuum | Escalating electromagnetic field pulling all scattered EXP particles and Skill Crates across the entire arena directly to the car. | Useful for large-arena car navigation, but overlaps with potential passive player stats (pickup radius) and lacks combat punch. |
 | **EMP Overload** | **Rejected** | Anti-Projectile / Stun & Shock | Instant shockwave destroying active enemy projectiles in flight, followed by 6s of automatic Tesla chain lightning striking nearest targets. | Strong bullet-hell counter, but dilutes vehicle-specific gameplay by functioning essentially as an automated turret. |
@@ -40,6 +40,7 @@ The following table catalogs all currently implemented power-ups alongside newly
 ## 3. Explored Alternatives & Trade-Offs for Fire Tails
 
 ### Option 1 (Selected — High-Performance Hybrid): `FireHazardNode` Struct Buffer + Dual Fire `TrailRenderer` Pools & World-Space `ParticleSystem`s
+
 - **Architecture**:
   - **Visuals**: Reuses `CarDriftTrailSegmentPool` on `CarVfxEffectsController` with 2 fire `TrailRenderer` emitters (`_rearFireDriftTrailRenderers`) and 2 World-Space `ParticleSystem` emitters (`_rearDriftFireTrailParticles`), plus 2 local rear-wheel flame `ParticleSystem`s (`_rearWheelConstantFireParticles`).
   - **Combat**: `FireTailsService` records lightweight `FireHazardNode` structs (`Position`, `ExpireCombatTime`) in a preallocated `FireHazardNode[256]` array at `1.2m` intervals behind the two drifting rear wheels and evaluates `Physics.OverlapSphereNonAlloc` at a throttled `0.1s` (`10 Hz`) interval.
@@ -49,11 +50,13 @@ The following table catalogs all currently implemented power-ups alongside newly
   - ~85–90% lower physics CPU cost via `10 Hz` overlap throttling.
 
 ### Option 2: Dedicated Pooled Hazard Puddle GameObjects (`FireTailPuddle`)
+
 - **Architecture**: Spawning pooled `MonoBehaviour` `GameObject`s with individual quad meshes and particle systems every `1.2m`.
 - **Cons / Risks**:
   - At max drift speed (`24 m/s`) over `3.5s` across 2 wheels, up to `140` active `GameObject`s and `140` `ParticleSystem`s coexist simultaneously, causing high transparency overdraw and SRP Batcher overhead.
 
 ### Option 3: Baseline / Minimal: Reusing Existing Skills (Landmine Trap)
+
 - **Cons / Risks**:
   - Landmines detonate once and disappear; they do not provide continuous area denial, fire DoT, slow, or drift synergy.
 

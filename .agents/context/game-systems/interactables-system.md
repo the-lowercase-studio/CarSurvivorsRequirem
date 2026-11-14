@@ -17,14 +17,18 @@ It does not own grid coordinate generation or cell walkability logic (owned by G
   - Assets/Scripts/Interactables/IncreaseDifficultyTotem.cs
   - Assets/Scripts/Interactables/CapturePoint/CapturePoint.cs
   - Assets/Scripts/Spawners/MapInteractablesSpawner.cs
+  - Assets/Scripts/Spawners/Constants/MapInteractablesSpawnerConstants.cs
 - Related code:
   - Assets/Scripts/Navigation/GridSystem/GridManager.cs
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs
   - Assets/Scripts/Player/PlayerManager.cs
   - Assets/Scripts/Skills/UpgradeFlow/SkillUpgradeFlow.cs
+  - Assets/Scripts/Enemies/Bosses/BossEncounterService.cs
 - Related docs:
   - .agents/context/game-systems/grid-system.md
   - .agents/context/game-systems/enemy-spawning-and-waves-system.md
+  - .agents/context/game-systems/spawners-system.md
+  - .agents/context/game-systems/tower-boss-system.md
   - .agents/context/game-systems/input-system.md
   - .agents/context/game-systems/skills-system.md
   - .agents/context/game-systems/di-and-boot-flow-system.md
@@ -38,7 +42,7 @@ It does not own grid coordinate generation or cell walkability logic (owned by G
 ## Architecture and Data Flow
 
 - Core components:
-  - MapInteractablesSpawner: Scene-bound spawner that reads `InteractableSpawnRule` configs to place interactables at scene start. Queries `IGridManager` for walkable cells, shuffles candidates, checks spatial distance rules (distance to impassable cells, distance to other interactables, distance to same type), instantiates prefabs, and injects dependencies via Reflex.
+  - MapInteractablesSpawner: Scene-bound spawner that validates `_gridManager`/`WorldGrid` and `_playerManager`/`GameObject` (failing fast with `InvalidOperationException` when missing), optionally resolves `IBossEncounterService`, and reads `InteractableSpawnRule` configs to place interactables at scene start. Filters walkable grid cells against deterministic initial player chunk bounds (matching `GridManager` with `playerInitialCell` fallback), excludes cells inside registered tower encounter arenas plus `_towerArenaExclusionBuffer` (`MapInteractablesSpawnerConstants.DEFAULT_TOWER_ARENA_EXCLUSION_BUFFER = 5f`, negative-clamped), shuffles candidates, checks spatial distance rules (distance to impassable cells, distance to other interactables, distance to same type), instantiates prefabs, and injects dependencies via Reflex.
   - InteractableSpawnRule: Serialized configuration holding prefab references, min/max spawn counts, and distance constraints.
   - IncreaseDifficultyTotem: Interactive totem component. Validates injected IGameplayInput, IInputPromptProvider, and _interactPromptView in Start() (after GameObjectInjector.InjectRecursive completes), binds InputActionId.PlayerInteract prompt updates, measures player distance, displays an interaction Canvas prompt when in range, polls IGameplayInput.WasInteractPressedThisFrame, calls IEnemySpawnDifficultyController.IncreaseSpawnChanceRedistributionFactor, triggers VFX, and deactivates itself.
   - CapturePoint: Proximity-based area objective. Tracks player presence inside `_captureRadius` using squared distance (`sqrMagnitude`), scales an expanding ground circle plane, triggers outline plane pop-in/pulse/shrink animations via DOTween, decays progress when the player exits, swaps target mesh materials upon 100% capture, plays capture VFX, and queues a random skill upgrade request via `ISkillUpgradeFlow`.
@@ -46,9 +50,10 @@ It does not own grid coordinate generation or cell walkability logic (owned by G
   - `IPlayerManager`: Injected dependency used by interactables to query player position and `SkillsRegistry`.
   - `IEnemySpawnDifficultyController`: Injected into `IncreaseDifficultyTotem` to modify enemy spawn chance weights.
   - `ISkillUpgradeFlow`: Injected into `CapturePoint` to queue skill upgrades upon capture completion.
-  - `IGridManager`: Injected into `MapInteractablesSpawner` to fetch walkable cells.
+  - `IGridManager`: Injected into `MapInteractablesSpawner` to fetch walkable cells and player chunk geometry.
+  - `IBossEncounterService` (Optional): Resolved from `_container` in `MapInteractablesSpawner.Start()` to exclude tower boss encounter arenas via `IsPositionWithinAnyTowerArena`.
 - Runtime flow:
-  - **Spawning**: On scene `Start()`, `MapInteractablesSpawner` fetches walkable cells from `IGridManager.WorldGrid`, shuffles them, filters candidates using rules, instantiates interactable prefabs, and recursively injects Reflex dependencies via `GameObjectInjector.InjectRecursive`.
+  - **Spawning**: On scene `Start()` (after `EncounterArenaController.OnEnable()` has registered tower arenas and `IGridManager` has built grid cost fields), `MapInteractablesSpawner` fetches walkable cells from `IGridManager.WorldGrid`, excludes the deterministic initial player chunk and any tower arena + `_towerArenaExclusionBuffer`, shuffles candidates, filters using rules, instantiates interactable prefabs, and recursively injects Reflex dependencies via `GameObjectInjector.InjectRecursive`.
   - Totem Interaction: IncreaseDifficultyTotem.Update measures distance to player. When within _interactionRadius, it displays _interactionCanvas. If IGameplayInput.WasInteractPressedThisFrame is true (only when interact-eligible under active input context), it increases difficulty factor, hides canvas, triggers VFX, and sets enabled = false.
   - **Capture Point Execution**: `CapturePoint.Update` measures squared distance to player. While inside radius, `_progress` increases over `_captureDurationSeconds` and `_expandingCirclePlane` scales up. An outline circle plane pops in with `Ease.OutBack`. If the player leaves, progress decays based on `_decaySpeedMultiplier` and the outline scales down. Upon reaching 1.0 progress:
     1. `_isCaptured` becomes true and progress locks.
@@ -60,7 +65,8 @@ It does not own grid coordinate generation or cell walkability logic (owned by G
 ## Rules and Invariants
 
 - Critical behavior rules:
-  - Spawning occurs strictly on walkable cells during scene `Start()`.
+  - Spawning occurs strictly on walkable cells outside the deterministic initial player chunk and outside any registered tower encounter arena (+ `_towerArenaExclusionBuffer`) during scene `Start()`.
+  - `MapInteractablesSpawner.Start()` must fail fast (`InvalidOperationException`) if `_gridManager`/`WorldGrid` or `_playerManager`/`GameObject` is missing, while keeping `IBossEncounterService` resolution optional so test scenes without towers continue to spawn interactables.
   - Distance checks in `CapturePoint` use squared magnitude (`sqrMagnitude <= _captureRadius * _captureRadius`) to avoid square root calculations.
   - Capture progress is strictly clamped between 0.0 and 1.0.
   - Dependency injection for dynamically spawned interactables must use `Reflex.Injectors.GameObjectInjector.InjectRecursive`.
@@ -78,9 +84,10 @@ It does not own grid coordinate generation or cell walkability logic (owned by G
 ## Integration Notes
 
 - Upstream dependencies:
-  - `IGridManager`: Supplies cell walkability for spawning.
-  - `IPlayerManager`: Supplies player position.
-  - Reflex DI: Injects dependencies on dynamically spawned prefabs.
+  - `IGridManager`: Supplies cell walkability and chunk sizing for spawning.
+  - `IPlayerManager`: Supplies player position and initial spawn chunk center.
+  - `IBossEncounterService` (Optional): Supplies tower arena exclusion checks (`IsPositionWithinAnyTowerArena`).
+  - Reflex DI: Injects dependencies on dynamically spawned prefabs and optionally provides `IBossEncounterService`.
 - Downstream consumers:
   - `SkillUpgradePresenter`: Displays skill upgrade modal UI when `CapturePoint` completes its reward flow.
   - `EnemiesSpawnChanceRedistributionSystem`: Receives difficulty multiplier increases from totems.
