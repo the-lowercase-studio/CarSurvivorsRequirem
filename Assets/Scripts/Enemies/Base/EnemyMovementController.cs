@@ -37,13 +37,15 @@ namespace Assets.Scripts.Enemies.Base
         private float _movementDelayAfterAttack = 0.2f;
         private float _currentMovementDelayAfterAttack;
         private float _movementSpeedMultiplier = 1f;
+        private float _teleportAllowedUnfrozenTime;
 
         public bool CanBeTeleported
         {
             get
             {
                 return isActiveAndEnabled && !_isMovementStopped && !_isKnockbackActive
-                    && _verticalVelocity <= 0f && IsOnGround() && (_enemy == null || !_enemy.IsFrozen);
+                    && _verticalVelocity <= 0f && IsOnGround() && (_enemy == null || !_enemy.IsFrozen)
+                    && GetCurrentUnfrozenTime() >= _teleportAllowedUnfrozenTime;
             }
         }
 
@@ -66,6 +68,7 @@ namespace Assets.Scripts.Enemies.Base
             _isKnockbackActive = false;
             _isPursuitSuppressed = false;
             _isMovementStopped = false;
+            RefreshTeleportGracePeriod();
         }
 
         private void OnDisable()
@@ -79,6 +82,7 @@ namespace Assets.Scripts.Enemies.Base
             _movementSpeedMultiplier = 1f;
             _isPursuitSuppressed = false;
             _isMovementStopped = false;
+            _teleportAllowedUnfrozenTime = 0f;
         }
 
         private void FixedUpdate()
@@ -186,6 +190,7 @@ namespace Assets.Scripts.Enemies.Base
             _currentMovementPositionUnrelatedToGrid = transform.position;
             _lastPos = transform.position;
             _lastGroundedY = transform.position.y;
+            RefreshTeleportGracePeriod();
             _flowFieldMovementController.ResetAfterRelocation();
         }
 
@@ -392,6 +397,16 @@ namespace Assets.Scripts.Enemies.Base
                     _enemy.Config.RotationSpeed * Time.fixedDeltaTime
                 );
             }
+        }
+
+        private void RefreshTeleportGracePeriod()
+        {
+            _teleportAllowedUnfrozenTime = GetCurrentUnfrozenTime() + EnemyMovementConstants.POST_RELOCATION_TELEPORT_GRACE_SECONDS;
+        }
+
+        private float GetCurrentUnfrozenTime()
+        {
+            return _enemy != null ? _enemy.UnfrozenTime : Time.time;
         }
     }
 }

@@ -1,5 +1,7 @@
+using Assets.Scripts.Enemies.Bosses;
 using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.Player;
+using Assets.Scripts.Spawners.Constants;
 using Reflex.Attributes;
 using System;
 using System.Collections.Generic;
@@ -33,69 +35,42 @@ namespace Assets.Scripts.Spawners
         [Inject] private readonly Reflex.Core.Container _container = null;
 
         [SerializeField] private Transform _spawnParent;
+        [Tooltip("Extra clearance in meters beyond each Tower Boss arena radius where interactables cannot spawn.")]
+        [SerializeField] private float _towerArenaExclusionBuffer = MapInteractablesSpawnerConstants.DEFAULT_TOWER_ARENA_EXCLUSION_BUFFER;
         [SerializeField] private List<InteractableSpawnRule> _spawnRules;
+
+        private IBossEncounterService _bossEncounterService;
 
         private void Start()
         {
             if (_gridManager == null || _gridManager.WorldGrid == null)
             {
-                Debug.LogWarning("GridManager or WorldGrid is null. Cannot spawn map interactables.");
-                return;
+                throw new InvalidOperationException($"[{nameof(MapInteractablesSpawner)}] IGridManager or WorldGrid is unavailable.");
+            }
+
+            if (_playerManager == null || _playerManager.GameObject == null)
+            {
+                throw new InvalidOperationException($"[{nameof(MapInteractablesSpawner)}] IPlayerManager or player GameObject is unavailable.");
+            }
+
+            if (_bossEncounterService == null && _container != null && _container.HasBinding<IBossEncounterService>())
+            {
+                _bossEncounterService = _container.Resolve<IBossEncounterService>();
             }
 
             NavigationGrid worldGrid = _gridManager.WorldGrid;
-            int width = worldGrid.Width;
-            int height = worldGrid.Height;
-
-            Cell playerInitialCell = null;
-            if (_playerManager != null && _playerManager.GameObject != null)
-            {
-                playerInitialCell = WorldPosToCellConverter.GetCellFromGridByWorldPos(worldGrid, _playerManager.GameObject.transform.position);
-            }
-            else if (_gridManager.GridPlayerChunk != null && _gridManager.GridPlayerChunk.Cells != null)
-            {
-                NavigationGrid playerChunk = _gridManager.GridPlayerChunk;
-                playerInitialCell = playerChunk.Cells[playerChunk.Width / 2, playerChunk.Height / 2];
-            }
-
-            int playerChunkHalfWidth = _gridManager.GridPlayerChunk != null ? _gridManager.GridPlayerChunk.Width / 2 : 0;
-            int playerChunkHalfHeight = _gridManager.GridPlayerChunk != null ? _gridManager.GridPlayerChunk.Height / 2 : 0;
-
-            // Collect all walkable cells outside the player's initial chunk
-            List<Cell> walkableCells = new List<Cell>();
-            for (int x = 0; x < width; x++)
-            {
-                for (int y = 0; y < height; y++)
-                {
-                    Cell cell = worldGrid.Cells[x, y];
-                    if (cell != null && CellStatusDescriber.IsWalkable(cell))
-                    {
-                        if (playerInitialCell != null && playerChunkHalfWidth > 0 && playerChunkHalfHeight > 0)
-                        {
-                            if (Mathf.Abs(cell.WorldGridPos.x - playerInitialCell.WorldGridPos.x) <= playerChunkHalfWidth &&
-                                Mathf.Abs(cell.WorldGridPos.y - playerInitialCell.WorldGridPos.y) <= playerChunkHalfHeight)
-                            {
-                                continue;
-                            }
-                        }
-
-                        walkableCells.Add(cell);
-                    }
-                }
-            }
+            List<Cell> walkableCells = CollectValidWalkableCells(worldGrid);
 
             if (walkableCells.Count == 0)
             {
-                Debug.LogWarning("No walkable cells found on grid outside initial player chunk. Spawning aborted.");
+                Debug.LogWarning("No valid walkable cells found outside initial player chunk and boss arenas. Spawning aborted.");
                 return;
             }
 
-            // Shuffle walkable cells
             ShuffleList(walkableCells);
 
             List<Vector2Int> allSpawnedCoordinates = new List<Vector2Int>();
 
-            // Execute each rule
             foreach (InteractableSpawnRule rule in _spawnRules)
             {
                 if (rule.Prefab == null)
@@ -103,91 +78,172 @@ namespace Assets.Scripts.Spawners
                     continue;
                 }
 
-                int targetSpawnCount = UnityEngine.Random.Range(rule.MinSpawnCount, rule.MaxSpawnCount + 1);
-                int spawnedCount = 0;
-                List<Vector2Int> spawnedCoordinates = new List<Vector2Int>();
+                SpawnRuleInteractables(worldGrid, walkableCells, rule, allSpawnedCoordinates);
+            }
+        }
 
-                foreach (Cell cell in walkableCells)
+        private List<Cell> CollectValidWalkableCells(NavigationGrid worldGrid)
+        {
+            int width = worldGrid.Width;
+            int height = worldGrid.Height;
+            Cell playerInitialCell = WorldPosToCellConverter.GetCellFromGridByWorldPos(worldGrid, _playerManager.GameObject.transform.position);
+
+            GetInitialPlayerChunkBounds(
+                worldGrid,
+                _gridManager.GridPlayerChunk,
+                playerInitialCell,
+                out int minChunkX,
+                out int maxChunkX,
+                out int minChunkY,
+                out int maxChunkY);
+
+            List<Cell> walkableCells = new List<Cell>();
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
                 {
-                    if (spawnedCount >= targetSpawnCount)
-                    {
-                        break;
-                    }
-
-                    // Impassable Distance Check
-                    bool isNearImpassable = false;
-                    for (int dx = -rule.MinDistanceToImpassable; dx <= rule.MinDistanceToImpassable; dx++)
-                    {
-                        for (int dy = -rule.MinDistanceToImpassable; dy <= rule.MinDistanceToImpassable; dy++)
-                        {
-                            int checkX = cell.WorldGridPos.x + dx;
-                            int checkY = cell.WorldGridPos.y + dy;
-                            if (checkX < 0 || checkX >= width || checkY < 0 || checkY >= height ||
-                                worldGrid.Cells[checkX, checkY] == null || !CellStatusDescriber.IsWalkable(worldGrid.Cells[checkX, checkY]))
-                            {
-                                isNearImpassable = true;
-                                break;
-                            }
-                        }
-                        if (isNearImpassable)
-                        {
-                            break;
-                        }
-                    }
-
-                    if (isNearImpassable)
+                    Cell cell = worldGrid.Cells[x, y];
+                    if (cell == null || !CellStatusDescriber.IsWalkable(cell))
                     {
                         continue;
                     }
 
-                    // Proximity to Other Interactables Check
-                    bool isTooCloseToOtherInteractables = false;
-                    foreach (Vector2Int spawnedPos in allSpawnedCoordinates)
-                    {
-                        if (Mathf.Abs(cell.WorldGridPos.x - spawnedPos.x) <= rule.MinDistanceToOtherInteractable &&
-                            Mathf.Abs(cell.WorldGridPos.y - spawnedPos.y) <= rule.MinDistanceToOtherInteractable)
-                        {
-                            isTooCloseToOtherInteractables = true;
-                            break;
-                        }
-                    }
-
-                    if (isTooCloseToOtherInteractables)
+                    if (x >= minChunkX && x <= maxChunkX && y >= minChunkY && y <= maxChunkY)
                     {
                         continue;
                     }
 
-                    // Proximity to Same Type Check
-                    bool isTooCloseToSameType = false;
-                    foreach (Vector2Int spawnedPos in spawnedCoordinates)
-                    {
-                        if (Mathf.Abs(cell.WorldGridPos.x - spawnedPos.x) <= rule.MinDistanceToSameType &&
-                            Mathf.Abs(cell.WorldGridPos.y - spawnedPos.y) <= rule.MinDistanceToSameType)
-                        {
-                            isTooCloseToSameType = true;
-                            break;
-                        }
-                    }
-
-                    if (isTooCloseToSameType)
+                    if (_bossEncounterService != null &&
+                        _bossEncounterService.IsPositionWithinAnyTowerArena(cell.WorldPos, _towerArenaExclusionBuffer))
                     {
                         continue;
                     }
 
-                    // Perform spawn
-                    Quaternion randomRotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
-                    GameObject spawnedObject = Instantiate(rule.Prefab, cell.WorldPos, randomRotation, _spawnParent);
-                    Reflex.Injectors.GameObjectInjector.InjectRecursive(spawnedObject, _container);
-                    spawnedCoordinates.Add(cell.WorldGridPos);
-                    allSpawnedCoordinates.Add(cell.WorldGridPos);
-                    spawnedCount++;
-                }
-
-                if (spawnedCount < targetSpawnCount)
-                {
-                    Debug.LogWarning($"Could not spawn target count ({targetSpawnCount}) for prefab '{rule.Prefab.name}'. Only spawned {spawnedCount} due to layout constraints.");
+                    walkableCells.Add(cell);
                 }
             }
+
+            return walkableCells;
+        }
+
+        private static void GetInitialPlayerChunkBounds(
+            NavigationGrid worldGrid,
+            NavigationGrid playerChunk,
+            Cell playerInitialCell,
+            out int minChunkX,
+            out int maxChunkX,
+            out int minChunkY,
+            out int maxChunkY)
+        {
+            if (playerInitialCell == null)
+            {
+                minChunkX = 0;
+                maxChunkX = -1;
+                minChunkY = 0;
+                maxChunkY = -1;
+                return;
+            }
+
+            if (playerChunk != null && playerChunk.Width > 0 && playerChunk.Height > 0)
+            {
+                int chunkWidth = playerChunk.Width;
+                int chunkHeight = playerChunk.Height;
+                int halfWidth = chunkWidth >> 1;
+                int halfHeight = chunkHeight >> 1;
+
+                minChunkX = Mathf.Clamp(playerInitialCell.WorldGridPos.x - halfWidth, 0, Mathf.Max(0, worldGrid.Width - chunkWidth));
+                maxChunkX = Mathf.Min(worldGrid.Width - 1, minChunkX + chunkWidth - 1);
+                minChunkY = Mathf.Clamp(playerInitialCell.WorldGridPos.y - halfHeight, 0, Mathf.Max(0, worldGrid.Height - chunkHeight));
+                maxChunkY = Mathf.Min(worldGrid.Height - 1, minChunkY + chunkHeight - 1);
+                return;
+            }
+
+            minChunkX = playerInitialCell.WorldGridPos.x;
+            maxChunkX = playerInitialCell.WorldGridPos.x;
+            minChunkY = playerInitialCell.WorldGridPos.y;
+            maxChunkY = playerInitialCell.WorldGridPos.y;
+        }
+
+        private void SpawnRuleInteractables(
+            NavigationGrid worldGrid,
+            List<Cell> walkableCells,
+            InteractableSpawnRule rule,
+            List<Vector2Int> allSpawnedCoordinates)
+        {
+            int targetSpawnCount = UnityEngine.Random.Range(rule.MinSpawnCount, rule.MaxSpawnCount + 1);
+            int spawnedCount = 0;
+            List<Vector2Int> spawnedCoordinates = new List<Vector2Int>();
+
+            foreach (Cell cell in walkableCells)
+            {
+                if (spawnedCount >= targetSpawnCount)
+                {
+                    break;
+                }
+
+                if (IsNearImpassable(worldGrid, cell, rule.MinDistanceToImpassable))
+                {
+                    continue;
+                }
+
+                if (IsTooCloseToAnyPosition(cell.WorldGridPos, allSpawnedCoordinates, rule.MinDistanceToOtherInteractable))
+                {
+                    continue;
+                }
+
+                if (IsTooCloseToAnyPosition(cell.WorldGridPos, spawnedCoordinates, rule.MinDistanceToSameType))
+                {
+                    continue;
+                }
+
+                Quaternion randomRotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
+                GameObject spawnedObject = Instantiate(rule.Prefab, cell.WorldPos, randomRotation, _spawnParent);
+                Reflex.Injectors.GameObjectInjector.InjectRecursive(spawnedObject, _container);
+                spawnedCoordinates.Add(cell.WorldGridPos);
+                allSpawnedCoordinates.Add(cell.WorldGridPos);
+                spawnedCount++;
+            }
+
+            if (spawnedCount < targetSpawnCount)
+            {
+                Debug.LogWarning($"Could not spawn target count ({targetSpawnCount}) for prefab '{rule.Prefab.name}'. Only spawned {spawnedCount} due to layout constraints.");
+            }
+        }
+
+        private static bool IsNearImpassable(NavigationGrid worldGrid, Cell cell, int minDistance)
+        {
+            int width = worldGrid.Width;
+            int height = worldGrid.Height;
+
+            for (int dx = -minDistance; dx <= minDistance; dx++)
+            {
+                for (int dy = -minDistance; dy <= minDistance; dy++)
+                {
+                    int checkX = cell.WorldGridPos.x + dx;
+                    int checkY = cell.WorldGridPos.y + dy;
+                    if (checkX < 0 || checkX >= width || checkY < 0 || checkY >= height ||
+                        worldGrid.Cells[checkX, checkY] == null || !CellStatusDescriber.IsWalkable(worldGrid.Cells[checkX, checkY]))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsTooCloseToAnyPosition(Vector2Int cellPos, List<Vector2Int> existingPositions, int minDistance)
+        {
+            foreach (Vector2Int spawnedPos in existingPositions)
+            {
+                if (Mathf.Abs(cellPos.x - spawnedPos.x) <= minDistance &&
+                    Mathf.Abs(cellPos.y - spawnedPos.y) <= minDistance)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void ShuffleList<T>(List<T> list)

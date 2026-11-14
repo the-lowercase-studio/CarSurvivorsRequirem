@@ -18,6 +18,7 @@ Collectible drops from enemies are triggered directly by death events via `Enemy
   - Assets/Scripts/Spawners/ISpawnedObjectsCounter.cs
   - Assets/Scripts/Spawners/SpawnChanceInfo.cs
   - Assets/Scripts/Spawners/MapInteractablesSpawner.cs
+  - Assets/Scripts/Spawners/Constants/MapInteractablesSpawnerConstants.cs
 - Concrete implementations:
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs
   - Assets/Scripts/Enemies/CollectibleDropNotifier.cs
@@ -28,13 +29,15 @@ Collectible drops from enemies are triggered directly by death events via `Enemy
 - DI setup:
   - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
   - Assets/Scripts/ReflexDI/BootLoader.cs
-- Related docs:
+- Related code and docs:
+  - Assets/Scripts/Enemies/Bosses/BossEncounterService.cs
   - .agents/context/game-systems/enemies-system.md
   - .agents/context/game-systems/enemy-spawning-and-waves-system.md
   - .agents/context/game-systems/damage-numbers-system.md
   - .agents/context/game-systems/level-system.md
   - .agents/context/game-systems/grid-system.md
   - .agents/context/game-systems/interactables-system.md
+  - .agents/context/game-systems/tower-boss-system.md
 - Related agents or instructions:
   - .agents/skills/document-system/SKILL.md
   - .agents/skills/di-integration/SKILL.md
@@ -49,7 +52,7 @@ Collectible drops from enemies are triggered directly by death events via `Enemy
   - `IInGridSpaceSpawner<TSelf, TSpecificConfig>`: Contract for spawners that receive an explicit `Cell` plus config. Inherits `ISpawnedObjectsCounter` and `IObjectReleaseNotifier`.
   - `IInWorldSpaceSpawner<TSelf, TSpecificConfig>`: Contract for spawners that receive a world-space `Vector3` plus config. Inherits `ISpawnedObjectsCounter` and `IObjectReleaseNotifier`.
   - `SpawnChanceInfo`: Serializable chance payload used by enemy spawn entries and updated by spawn chance redistribution.
-  - `MapInteractablesSpawner`: Scene component that places interactive map objects (e.g. difficulty totems) onto walkable grid cells in `Start()` before standard gameplay waves begin.
+  - `MapInteractablesSpawner`: Scene component that places interactive map objects (e.g. difficulty totems) onto walkable grid cells in `Start()` before standard gameplay waves begin, excluding the initial player chunk, registered tower encounter arenas plus `_towerArenaExclusionBuffer` (`MapInteractablesSpawnerConstants.DEFAULT_TOWER_ARENA_EXCLUSION_BUFFER = 5f`), and configured distance margins.
 - Key interfaces:
   - `IOnRandomGridPosSpawner<TSelf>`: Method: `void SpawnAtRandomGridPos(int count = 1);`
   - `IInWorldSpaceSpawner<TSelf, TSpecificConfig>`: Method: `void Spawn(Vector3 pos, TSpecificConfig specificConfig, int count = 1);`
@@ -66,7 +69,7 @@ Collectible drops from enemies are triggered directly by death events via `Enemy
   - Consumers inject generic spawner interfaces (e.g. `IOnRandomGridPosSpawner<EnemiesSpawner>` or `IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig>`).
   - Spawn calls retrieve or instantiate objects from pools, initialize per-object data, activate GameObjects, and increment `CurrentlySpawnedObjectsCount`.
   - Object release paths deactivate objects, raise `OnSpawnedEntityReleased`, and decrement `CurrentlySpawnedObjectsCount`.
-  - **Map Interactables Initialization**: `MapInteractablesSpawner.Start` collects walkable cells outside the initial player chunk, shuffles candidates, and iterates over `InteractableSpawnRule` entries. For each candidate cell, it checks `MinDistanceToImpassable`, `MinDistanceToOtherInteractable`, and `MinDistanceToSameType`. When valid, it instantiates the prefab with a random Y rotation and injects dependencies via `Reflex.Injectors.GameObjectInjector.InjectRecursive(spawnedObject, _container)`.
+  - **Map Interactables Initialization**: `MapInteractablesSpawner.Start` fails fast with `InvalidOperationException` if `_gridManager`/`WorldGrid` or `_playerManager`/`GameObject` is missing, and optionally resolves `IBossEncounterService` from `_container`. It computes deterministic initial player chunk bounds (`GetInitialPlayerChunkBounds`, matching `GridManager` clamping or falling back to `playerInitialCell` if `GridPlayerChunk` is null or has non-positive dimensions), excludes cells inside the initial player chunk or inside any registered tower arena plus `Mathf.Max(0f, _towerArenaExclusionBuffer)` via `IBossEncounterService.IsPositionWithinAnyTowerArena`, shuffles walkable candidates, and iterates over `InteractableSpawnRule` entries. For each candidate cell, it checks `MinDistanceToImpassable`, `MinDistanceToOtherInteractable`, and `MinDistanceToSameType`. When valid, it instantiates the prefab with a random Y rotation and injects dependencies via `Reflex.Injectors.GameObjectInjector.InjectRecursive(spawnedObject, _container)`.
 
 ## Rules and Invariants
 
@@ -75,8 +78,8 @@ Collectible drops from enemies are triggered directly by death events via `Enemy
   - Scene-scoped spawners are bound via Reflex in `DefaultGameplaySceneInstaller`.
   - Increment `CurrentlySpawnedObjectsCount` only on successful object activation; decrement exactly once per completed release.
   - `OnSpawnedEntityReleased` signifies pool/world release, not initial spawn completion.
-  - `MapInteractablesSpawner` runs in `Start()` (not `Awake()` or `OnEnable()`) to guarantee `IGridManager` grid cost fields are fully computed and the DI container is available for recursive injection.
-  - Map interactables are excluded from spawning inside the initial player chunk or close to impassable walls/other interactables.
+  - `MapInteractablesSpawner` runs in `Start()` (not `Awake()` or `OnEnable()`) to guarantee `IGridManager` grid cost fields are fully computed, `EncounterArenaController.OnEnable()` has registered tower arenas with `IBossEncounterService`, and the DI container is available for recursive injection.
+  - Map interactables are excluded from spawning inside the initial player chunk, inside any tower encounter arena (`ArenaRadius` + negative-clamped `_towerArenaExclusionBuffer`), or close to impassable walls/other interactables.
 - Ordering or sequencing guarantees:
   - `EnemiesSpawner.Awake` creates pools before `Start` pre-warms pools and initializes redistribution.
   - `MapInteractablesSpawner` runs during `Start()`, placing map objects before wave spawning begins.
@@ -93,7 +96,7 @@ Collectible drops from enemies are triggered directly by death events via `Enemy
   - Add new interactable map object types by appending an `InteractableSpawnRule` to `MapInteractablesSpawner`.
 - Required dependencies and contracts:
   - Grid-based spawners require injected `IGridManager`.
-  - `MapInteractablesSpawner` requires Reflex container injection (`_container`) for recursive dependency resolution on spawned prefabs.
+  - `MapInteractablesSpawner` requires `_gridManager` (with initialized `WorldGrid`), `_playerManager` (with spawned player `GameObject`), and Reflex container injection (`_container`) for recursive dependency resolution on spawned prefabs; `IBossEncounterService` is resolved optionally so test scenes without tower arenas remain supported.
   - DI bindings must be registered in `DefaultGameplaySceneInstaller`.
 - Testing implications:
   - Compile after spawner interface or DI changes using `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`.
@@ -103,6 +106,8 @@ Collectible drops from enemies are triggered directly by death events via `Enemy
 
 - Upstream dependencies:
   - `IGridManager`: Supplies grid geometry and player chunk boundaries.
+  - `IPlayerManager`: Supplies the player's initial spawn position for chunk exclusion.
+  - `IBossEncounterService` (Optional): Supplies `IsPositionWithinAnyTowerArena` to keep interactables outside tower encounter arenas.
   - Reflex DI: Injects spawners into consumers and supplies `Container` for recursive instantiation.
   - Unity `ObjectPool<T>`: Used by enemy, damage number, exp particle, and drop spawners.
 - Downstream consumers:
@@ -114,6 +119,6 @@ Collectible drops from enemies are triggered directly by death events via `Enemy
 ## Known Risks and Open Questions
 
 - Known limitations:
-  - `IInGridSpaceSpawner<TSelf, TSpecificConfig>` is currently a defined interface without an active runtime implementation in `Assets/Scripts/`.
+  - `IInGridSpaceSpawner<TSelf, TSpecificConfig>` is currently a defined interface without an active runtime implementation in Assets/Scripts/.
   - Misspelled fields in `SpawnChanceInfo` (e.g. `TresholdToStartAddingSpawnChanceToOtherInfos`) are preserved to prevent serialized asset data loss.
 

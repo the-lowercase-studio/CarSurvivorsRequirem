@@ -91,9 +91,9 @@ Runtime flow:
    - Sets DestinationCell to null when no supported cell exists; integration and directions remain empty. Creates integration and flow fields after destination resolution.
 4. Downstream spatial queries:
    - `EnemiesSpawner`: queries `GridCellsNotVisibleByMainCamera.GetRandomWalkableCellsOutsidePlayerChunk` to select off-camera spawn points outside the player chunk with enemy density limits.
-   - `EnemiesOutsidePlayerChunkTeleporter`: checks enemies outside player chunk bounds and teleports them to hidden walkable cells within `GridPlayerChunk`.
+   - `EnemiesOutsidePlayerChunkTeleporter`: checks enemies outside exact `GridPlayerChunk` XZ bounds (computed from `Cells[0, 0]` and `Cells[Width - 1, Height - 1]` expanded by `CellSize * 0.5f`, guarding null corner cells) whose `MovementController.CanBeTeleported` permits relocation (respecting `EnemyMovementConstants.POST_RELOCATION_TELEPORT_GRACE_SECONDS = 3.0f` in unfrozen time), and teleports them to hidden walkable cells within `GridPlayerChunk`, calling `ResetAfterRelocation()`.
    - `EnemyDropHandler`: calculates walkable landing spots for collectible scatter.
-   - `MapInteractablesSpawner`: queries walkable world cells outside the initial player chunk, enforcing distance rules from impassable cells and other interactables.
+   - `MapInteractablesSpawner`: computes deterministic initial player chunk bounds (matching `GridManager` clamping with `playerInitialCell` fallback), queries walkable world cells outside that chunk and outside every registered tower arena (`IBossEncounterService.IsPositionWithinAnyTowerArena` with `_towerArenaExclusionBuffer`, default 5f), and enforces distance rules from impassable cells and other interactables.
 
 ## Rules and Invariants
 
@@ -117,7 +117,7 @@ Preserve these constraints when editing:
 
 ## Extension Points
 
-- **Spatial Query Helpers**: Add pure query functions in `Assets/Scripts/Navigation/GridSystem/` (e.g. radius scans, line-of-sight checks, path distance queries) operating over `Grid` and `Cell`.
+- **Spatial Query Helpers**: Add pure query functions in Assets/Scripts/Navigation/GridSystem/ (e.g. radius scans, line-of-sight checks, path distance queries) operating over `Grid` and `Cell`.
 - **Dynamic Grid Layers**: Extend `Cell` with additional runtime metadata (e.g. hazard zones, player scent trails, occupancy flags) when new gameplay systems require grid-based data.
 - **Custom Inspector**: Extend `GridManagerEditor` when adding new serialized tuning parameters or debug modes to `GridManager`.
 - **Custom Spawner Filters**: Utilize `GridCellsNotVisibleByMainCamera` methods to add specialized spawning or placement filters for bosses, shrines, or environmental hazards.

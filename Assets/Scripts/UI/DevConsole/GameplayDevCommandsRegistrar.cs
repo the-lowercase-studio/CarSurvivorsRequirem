@@ -152,7 +152,9 @@ namespace Assets.Scripts.UI.DevConsole
                     string.Equals(token, "mortar", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(token, "mortartower", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(token, "mortal", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(token, "mortaltower", StringComparison.OrdinalIgnoreCase))
+                    string.Equals(token, "mortaltower", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(token, "railgun", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(token, "railguntower", StringComparison.OrdinalIgnoreCase))
                 {
                     _devConsoleService.LogError("Tower bosses cannot be spawned; they are pre-placed arena encounters on the map.");
                     return;

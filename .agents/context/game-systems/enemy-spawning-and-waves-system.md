@@ -25,7 +25,7 @@ It does not own individual enemy combat AI, movement behaviors, or individual en
   - Assets/Scripts/Navigation/GridSystem/GridCellsNotVisibleByMainCamera.cs
   - Assets/Scripts/Interactables/IncreaseDifficultyTotem.cs
 - Designer-authored data:
-  - Assets/ScriptableObjects/Waves/WaveConfig.cs
+  - Assets/Scripts/Waves/WaveConfig.cs
   - Enemy prefabs and pool limits referenced by EnemiesSpawner._poolEnemiesInfo
   - Swarm spawn VFX prefab referenced by EnemiesSpawner._swarmSpawnVfxPrefab
 - DI installer:
@@ -57,7 +57,7 @@ It does not own individual enemy combat AI, movement behaviors, or individual en
   - EnemiesSpawnChanceRedistributionSystem: Pure C# system helper initialized by EnemiesSpawner. Dynamically redistributes spawn probability weights after each standard wave batch so harder enemies progressively appear.
   - EnemySpawnInfo & SpawnChanceInfo: Data structures holding enemy prefabs, max pool amounts, spawn probability weights, threshold flags, and fixed-probability overrides.
   - GridCellsNotVisibleByMainCamera: Static utility for camera-culled walkable cell sampling. Validates cell walkability, tests frustum visibility, checks occupancy caps using Physics.OverlapBoxNonAlloc against EntityLayers.Enemies, and expands search radii outside the player chunk.
-  - EnemiesOutsidePlayerChunkTeleporter: Periodic maintenance component (_checkForEnemiesOutsidePlayerChunkDelay = 2s) that queries enemies straying outside the active player chunk and teleports them to random hidden walkable cells inside the chunk, resetting vertical velocity.
+  - EnemiesOutsidePlayerChunkTeleporter: Periodic maintenance component (_checkForEnemiesOutsidePlayerChunkDelay = 2s) that computes exact `GridPlayerChunk` XZ bounds from corner cells (`Cells[0, 0]` and `Cells[Width - 1, Height - 1]` ± `CellSize * 0.5f`), queries active living enemies straying outside those bounds whose `MovementController.CanBeTeleported` passes (enforcing `EnemyMovementConstants.POST_RELOCATION_TELEPORT_GRACE_SECONDS = 3.0f` in unfrozen time), teleports them to random hidden walkable cells inside the chunk, and calls `ResetAfterRelocation()`.
   - IncreaseDifficultyTotem: Interactive map totem that calls IEnemySpawnDifficultyController to add a flat difficulty boost (RedistributionFactorBonus) to spawn chance redistribution.
   - BossEncounterService: Central service that manages boss encounters and suppresses swarm events by toggling ISwarmFreezer.IsSuppressed = true while an encounter is engaged.
 - Key interfaces:
@@ -88,9 +88,9 @@ It does not own individual enemy combat AI, movement behaviors, or individual en
     4. Spawning Phase (_swarmDuration = 5s, _spawnTickInterval = 1s): SwarmNotificationPresenter switches to ongoing text. Over ticks, SwarmSpawner calls _swarmEnemySpawner.SpawnSpecificEnemy, which samples hidden walkable cells inside the player chunk and spawns enemies (instantiating _swarmSpawnVfxPrefab and spawning upon VFX completion if configured).
     5. Completion: SwarmNotificationPresenter.Hide restores screen gamma and scales text to zero, _waveFreezer.IsFrozen is set to false, _currentSwarmIndex is incremented, and _nextSwarmTime is reset.
   - Teleportation Reconciliation Flow:
-    1. EnemiesOutsidePlayerChunkTeleporter periodically inspects all active enemies in _enemiesHolder.
-    2. Any enemy whose position lies beyond the player chunk dimensions is identified.
-    3. The teleporter samples hidden walkable cells inside the player chunk via GridCellsNotVisibleByMainCamera.FillWalkableCells, shuffles them, repositions the stray enemies, and calls ResetVerticalVelocity() on their movement controllers.
+    1. EnemiesOutsidePlayerChunkTeleporter periodically inspects all active enemies in _enemiesHolder against exact `GridPlayerChunk` corner-cell XZ bounds (`Cells[0, 0]` and `Cells[Width - 1, Height - 1]` expanded by `CellSize * 0.5f`).
+    2. Any living enemy outside those chunk XZ bounds whose `MovementController.CanBeTeleported` returns true (excluding stopped, knocked, airborne, falling, frozen, and recently enabled/relocated enemies within `POST_RELOCATION_TELEPORT_GRACE_SECONDS = 3.0f` unfrozen seconds) is identified.
+    3. The teleporter samples hidden walkable cells inside the player chunk via GridCellsNotVisibleByMainCamera.FillWalkableCells, shuffles them, validates exact ground support, repositions the stray enemies, and calls `ResetAfterRelocation()` on their movement controllers (clearing velocity/spatial state and restarting the 3.0s unfrozen teleport grace period).
   - Release Flow:
     1. Upon enemy death and presentation completion, Enemy raises OnCanBeReleased.
     2. EnemiesSpawner receives the event, releases the enemy back to its mapped ObjectPool<Enemy>, deactivates the GameObject, decrements CurrentlySpawnedObjectsCount, and raises OnSpawnedEntityReleased.
@@ -106,6 +106,7 @@ It does not own individual enemy combat AI, movement behaviors, or individual en
   - Clear-Triggered Pacing: After wave 1, if active enemy count (CurrentlySpawnedObjectsCount) reaches 0, standard wave pacing bypasses the remaining delay and spawns the next wave immediately.
   - Spawn chance redistribution runs exactly once per standard wave batch.
   - Pool instances must be pre-warmed to MaxAmount during Start() to eliminate runtime instantiation hitches.
+  - Off-chunk enemy relocation respects `EnemyMovementConstants.POST_RELOCATION_TELEPORT_GRACE_SECONDS = 3.0f` measured in `Enemy.UnfrozenTime` (`OnEnable` and `ResetAfterRelocation`), preventing newly spawned (including swarm enemies placed at the chunk edge) or just-teleported enemies from immediately thrashing back across the chunk boundary even across a FreezeTimer pause.
 - Ordering or sequencing guarantees:
   - Object pools are created in Awake() before redistribution initialization and pool pre-warming in Start().
   - Swarm warning countdown ticks once per integer second before burst spawning ticks begin.

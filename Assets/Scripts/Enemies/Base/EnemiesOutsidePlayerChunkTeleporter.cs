@@ -70,15 +70,23 @@ namespace Assets.Scripts.Enemies.Base
             enemies.Clear();
 
             NavigationGrid playerChunk = _gridManager.GridPlayerChunk;
-            Cell centerCell = playerChunk.Cells[playerChunk.Width / 2, playerChunk.Height / 2];
-            if (centerCell == null)
+            if (playerChunk == null || playerChunk.Cells == null || playerChunk.Width <= 0 || playerChunk.Height <= 0)
             {
                 return;
             }
-            Vector3 center = centerCell.WorldPos;
 
-            float width = playerChunk.Width * 0.5f * playerChunk.CellSize;
-            float height = playerChunk.Height * 0.5f * playerChunk.CellSize;
+            Cell minCell = playerChunk.Cells[0, 0];
+            Cell maxCell = playerChunk.Cells[playerChunk.Width - 1, playerChunk.Height - 1];
+            if (minCell == null || maxCell == null)
+            {
+                return;
+            }
+
+            float halfCell = playerChunk.CellSize * 0.5f;
+            float minX = minCell.WorldPos.x - halfCell;
+            float maxX = maxCell.WorldPos.x + halfCell;
+            float minZ = minCell.WorldPos.z - halfCell;
+            float maxZ = maxCell.WorldPos.z + halfCell;
 
             foreach (Transform child in _enemiesHolder)
             {
@@ -90,7 +98,7 @@ namespace Assets.Scripts.Enemies.Base
                 if (child.TryGetComponent(out Enemy enemy) && CanRelocate(enemy))
                 {
                     Vector3 enemyPos = enemy.transform.position;
-                    if (Mathf.Abs(enemyPos.x - center.x) > width || Mathf.Abs(enemyPos.z - center.z) > height)
+                    if (enemyPos.x < minX || enemyPos.x > maxX || enemyPos.z < minZ || enemyPos.z > maxZ)
                     {
                         enemies.Add(enemy);
                     }

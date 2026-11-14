@@ -106,7 +106,7 @@ It is not responsible for:
   - Faulty commands log a clear user-facing error message and forward the exception to Debug.LogException(ex), leaving the console functional.
 - Dynamic Spawning Constraints:
   - Swarm enemy spawning computes positions forward along the vehicle heading, fans out laterally across instances, and snaps down to TerrainLayers.Walkable using Physics.Raycast.
-  - Tower bosses (tower, mortar, mortartower) are explicitly forbidden from dynamic spawning because they are pre-placed arena encounters requiring specific static map geometry.
+  - Tower bosses (`tower`, `mortar`, `mortartower`, `mortal`, `mortaltower`, `railgun`, `railguntower`) are explicitly forbidden from dynamic spawning because they are pre-placed arena encounters requiring specific static map geometry.
   - Spawning clamps counts between 1 and MAX_SPAWN_COUNT (50).
 - Auto-Upgrade Progression Invariant:
   - When the --auto (or -a) flag is passed to the exp command, ISkillUpgradePresenter.IsAutoUpgradeEnabled must suppress all UI modal panels, visual tween sequences, sound effects, and input delays.

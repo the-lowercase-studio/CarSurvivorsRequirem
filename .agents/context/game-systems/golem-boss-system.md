@@ -10,6 +10,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
 
 - Primary code locations:
   - Assets/Scripts/Enemies/Bosses/BossEncounterService.cs
+  - Assets/Scripts/Enemies/Bosses/Constants/BossEncounterConstants.cs
   - Assets/Scripts/Enemies/Bosses/Golem/IGolemBoss.cs
   - Assets/Scripts/Enemies/Bosses/Golem/GolemBoss.cs
   - Assets/Scripts/Enemies/Bosses/Golem/Constants/GolemBossConstants.cs
@@ -62,7 +63,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
 ## Architecture and Data Flow
 
 - Core components:
-  - BossEncounterService: Scene-level service implementing IBossEncounterService. Injected with IBossHUDPresenter, ISwarmFreezer, and IPlayerManager. Tracks landmark tower encounters, dynamically spawns the GolemBoss prefab (either ahead of the player via _spawnOffsetDistance or at a provided position) upon defeating required towers (or via dev console commands `golem` or `spawn golem`), freezes active swarm waves during the encounter via ISwarmFreezer.IsSuppressed, initializes the Boss HUD display, listens to OnBossDefeated, restores swarm spawning on victory, and instantiates the next stage portal prefab at the defeat location. Exposes debug spawning via `SpawnGolemBoss()`.
+  - BossEncounterService: Scene-level service implementing IBossEncounterService. Injected with IBossHUDPresenter, ISwarmFreezer, and IPlayerManager. Tracks landmark tower encounters (defaulting to `BossEncounterConstants.DEFAULT_REQUIRED_TOWERS = 2`, authored as 2 in RuinedBloodCity.unity) and exposes `IsPositionWithinAnyTowerArena(Vector3 worldPosition, float extraBuffer = 0f)` for map interactable exclusion, dynamically spawns the GolemBoss prefab (either ahead of the player via _spawnOffsetDistance or at a provided position) upon defeating required towers (or via dev console commands `golem` or `spawn golem`), freezes active swarm waves during the encounter via ISwarmFreezer.IsSuppressed, initializes the Boss HUD display, listens to OnBossDefeated, restores swarm spawning on victory, and instantiates the next stage portal prefab at the defeat location. Exposes debug spawning via `SpawnGolemBoss()`.
   - GolemBoss: Root aggregate entity implementing IGolemBoss, IDamageable, and IKnockable. Requires a Health component. Injected through Reflex with IPlayerManager, IGridManager, damage number spawner, and EXP particle spawner. Manages health changes, two-phase progression (normal phase 1, enraged phase 2), enrage visual state via MaterialPropertyBlock, knockback immunity, active telegraph tracking and cleanup, linear attack hitbox deactivation, state machine updates, and defeat event emission (OnBossDefeated).
   - GolemStateMachine: Discrete state machine coordinating active IGolemState instances and ticking individual cooldown timers (LeapCooldownTimer, StompCooldownTimer, LinearFistCooldownTimer, SkyBarrageCooldownTimer). Cooldown timers initialize with staggered values (GolemBossConstants.INITIAL_*_COOLDOWN) to ensure an opening pursuit phase.
   - GolemPursuitState: Primary navigation state. Coordinates GolemMovementController to follow PlayerPosition strictly while IsMovingAnimationPlaying is true. Checks attack priorities when arms are docked and executes immediate melee stomps when within StompRadius or anti-kiting leap slams when distance exceeds LeapTriggerMaxDistance.
