@@ -2,9 +2,9 @@ using System;
 using DG.Tweening;
 using Assets.Scripts.Cameras;
 using Assets.Scripts.Enemies.Bosses;
+using Assets.Scripts.Enemies.Bosses.Towers;
 using Assets.Scripts.Enemies.Bosses.Towers.Arena.Constants;
-using Assets.Scripts.Enemies.Bosses.Towers.MortarTower;
-using Assets.Scripts.Enemies.Bosses.Towers.MortarTower.Constants;
+using Assets.Scripts.Enemies.Bosses.Towers.Constants;
 using Assets.Scripts.Indicators.Constants;
 using Assets.Scripts.Player;
 using Assets.Scripts.UI.HUD;
@@ -20,6 +20,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
         bool IsLeashCountdownActive { get; }
         float RemainingLeashSeconds { get; }
         float ArenaRadius { get; }
+        Vector3 ArenaCenter { get; }
         event Action OnPlayerEnteredArena;
         event Action OnPlayerExitedArena;
         event Action<float> OnLeashCountdownTick;
@@ -35,16 +36,16 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
         [Inject] private IPlayerManager _playerManager = null;
         [Inject] private IBossEncounterService _bossEncounterService = null;
 
-        [Tooltip("Reference to the stationary mortar tower boss.")]
-        [SerializeField] private MortarTowerBoss _boss;
+        [Tooltip("Reference to the stationary tower boss.")]
+        [SerializeField] private TowerBossBase _boss;
         [Tooltip("Visual transform representing the expanding/pulsing circular arena border.")]
         [SerializeField] private Transform _perimeterBorder;
         [Tooltip("Title shown on the Boss HUD health bar.")]
         [SerializeField] private string _bossDisplayName = "MORTAR TOWER";
         [Tooltip("Radius of the circular combat boundary in meters.")]
-        [SerializeField] private float _arenaRadius = MortarTowerConstants.DEFAULT_ARENA_RADIUS;
+        [SerializeField] private float _arenaRadius = TowerBossConstants.DEFAULT_ARENA_RADIUS;
         [Tooltip("Grace period in seconds for returning to the arena before encounter resets.")]
-        [SerializeField] private float _leashGracePeriodSeconds = MortarTowerConstants.DEFAULT_LEASH_TIME;
+        [SerializeField] private float _leashGracePeriodSeconds = TowerBossConstants.DEFAULT_LEASH_TIME;
 
         private ICinemachineCombatFollowOffsetController _cameraController;
         private IArenaLeashWarningPresenter _leashWarningPresenter;
@@ -103,11 +104,19 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
             }
         }
 
+        public Vector3 ArenaCenter
+        {
+            get
+            {
+                return transform.position;
+            }
+        }
+
         private void Awake()
         {
             if (_boss == null)
             {
-                _boss = GetComponent<MortarTowerBoss>();
+                _boss = GetComponent<TowerBossBase>();
             }
 
             ResolveOptionalDependencies();
@@ -118,7 +127,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
         {
             if (_boss == null)
             {
-                _boss = GetComponent<MortarTowerBoss>();
+                _boss = GetComponent<TowerBossBase>();
             }
 
             if (_playerManager == null || _bossEncounterService == null)
@@ -296,8 +305,8 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
 
                 if (_cameraController != null)
                 {
-                    Vector3 combatOffset = _boss.Config != null ? _boss.Config.CombatFollowOffset : MortarTowerConstants.COMBAT_FOLLOW_OFFSET;
-                    float duration = _boss.Config != null ? _boss.Config.CameraTransitionDuration : MortarTowerConstants.CAMERA_TWEEN_DURATION;
+                    Vector3 combatOffset = _boss.BaseConfig != null ? _boss.BaseConfig.CombatFollowOffset : TowerBossConstants.COMBAT_FOLLOW_OFFSET;
+                    float duration = _boss.BaseConfig != null ? _boss.BaseConfig.CameraTransitionDuration : TowerBossConstants.CAMERA_TWEEN_DURATION;
                     _cameraController.TransitionToCombatOffset(combatOffset, duration);
                 }
             }
@@ -328,7 +337,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
 
             if (_cameraController != null)
             {
-                float duration = _boss != null && _boss.Config != null ? _boss.Config.CameraTransitionDuration : MortarTowerConstants.CAMERA_TWEEN_DURATION;
+                float duration = _boss != null && _boss.BaseConfig != null ? _boss.BaseConfig.CameraTransitionDuration : TowerBossConstants.CAMERA_TWEEN_DURATION;
                 _cameraController.RestoreDefaultOffset(duration);
             }
 
@@ -342,7 +351,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
             OnEncounterReset?.Invoke();
         }
 
-        private void Boss_OnBossDefeated(IMortarTowerBoss boss)
+        private void Boss_OnBossDefeated(ITowerBoss boss)
         {
             _isEncounterCompleted = true;
             _isEncounterActive = false;
@@ -360,7 +369,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
 
             if (_cameraController != null)
             {
-                float duration = _boss != null && _boss.Config != null ? _boss.Config.CameraTransitionDuration : MortarTowerConstants.CAMERA_TWEEN_DURATION;
+                float duration = _boss != null && _boss.BaseConfig != null ? _boss.BaseConfig.CameraTransitionDuration : TowerBossConstants.CAMERA_TWEEN_DURATION;
                 _cameraController.RestoreDefaultOffset(duration);
             }
 
@@ -453,19 +462,14 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
                     _bossEncounterService = _container.Resolve<IBossEncounterService>();
                 }
             }
-
-            if (_playerManager == null)
-            {
-                _playerManager = FindAnyObjectByType<PlayerManager>();
-            }
         }
 
         private void SyncConfigWithBoss()
         {
-            if (_boss != null && _boss.Config != null)
+            if (_boss != null && _boss.BaseConfig != null)
             {
-                _arenaRadius = _boss.Config.ArenaRadius;
-                _leashGracePeriodSeconds = _boss.Config.LeashGracePeriodSeconds;
+                _arenaRadius = _boss.BaseConfig.ArenaRadius;
+                _leashGracePeriodSeconds = _boss.BaseConfig.LeashGracePeriodSeconds;
             }
         }
     }

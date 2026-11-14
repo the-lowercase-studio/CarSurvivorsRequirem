@@ -24,6 +24,7 @@ namespace Assets.Scripts.Enemies.Bosses
         void NotifyEncounterEngaged(IBossHUDSource source, string displayName);
         void NotifyEncounterDisengaged();
         void NotifyTowerDefeated(IEncounterArenaController towerArena);
+        bool IsPositionWithinAnyTowerArena(Vector3 worldPosition, float extraBuffer = 0f);
         void SpawnGolemBoss(Vector3? spawnPosition = null);
         int CollectEngagedBosses(List<IBossCombatTarget> buffer);
         event Action<int, int> OnTowerDefeated;
@@ -184,6 +185,30 @@ namespace Assets.Scripts.Enemies.Bosses
 
                 _golemSpawnCoroutine = StartCoroutine(DelayedSpawnGolemRoutine());
             }
+        }
+
+        public bool IsPositionWithinAnyTowerArena(Vector3 worldPosition, float extraBuffer = 0f)
+        {
+            float clampedBuffer = Mathf.Max(0f, extraBuffer);
+
+            foreach (IEncounterArenaController tower in _registeredTowers)
+            {
+                if (tower == null || (tower is UnityEngine.Object unityTower && unityTower == null))
+                {
+                    continue;
+                }
+
+                float effectiveRadius = Mathf.Max(0f, tower.ArenaRadius) + clampedBuffer;
+                Vector3 center = tower.ArenaCenter;
+                float dx = worldPosition.x - center.x;
+                float dz = worldPosition.z - center.z;
+                if ((dx * dx) + (dz * dz) <= effectiveRadius * effectiveRadius)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public void SpawnGolemBoss(Vector3? spawnPosition = null)

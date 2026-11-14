@@ -31,7 +31,6 @@ namespace Assets.Scripts.Indicators
             _reusableGeneration++;
             _followTarget = null;
             _onImpactCallback = null;
-            RestoreReusableParent();
         }
 
         private void LateUpdate()

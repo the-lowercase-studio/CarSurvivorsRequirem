@@ -87,11 +87,16 @@ It is not responsible for:
   - Assets/Scripts/Enemies/Bosses/Golem/StateMachine/States/GolemLeapSlamState.cs
   - Assets/Scripts/Enemies/Bosses/Golem/StateMachine/States/GolemLinearFistState.cs
   - Assets/Scripts/Enemies/Bosses/Golem/StateMachine/States/GolemSkyBarrageState.cs
+  - Assets/Scripts/Enemies/Bosses/Towers/TowerBossBase.cs
   - Assets/Scripts/Enemies/Bosses/Towers/MortarTower/MortarTowerBoss.cs
   - Assets/Scripts/Enemies/Bosses/Towers/MortarTower/Projectiles/MortarShellProjectile.cs
   - Assets/Scripts/Enemies/Bosses/Towers/MortarTower/Combat/MortarBoulderHitbox.cs
+  - Assets/Scripts/Enemies/Bosses/Towers/RailgunTower/RailgunTowerBoss.cs
+  - Assets/Scripts/Enemies/Bosses/Towers/RailgunTower/Projectiles/RailgunOrbProjectile.cs
+  - Assets/Scripts/Enemies/Bosses/Towers/RailgunTower/Combat/RailgunLinearWaveHitbox.cs
   - Assets/Scripts/Indicators/CircularTelegraphIndicator.cs
   - Assets/Scripts/Indicators/RectangularTelegraphIndicator.cs
+  - Assets/Scripts/Indicators/ArcTelegraphIndicator.cs
   - Assets/Scripts/Waves/WaveManager.cs
   - Assets/Scripts/Spawners/Swarm/SwarmSpawner.cs
   - Assets/Scripts/Player/PlayerManager.cs
@@ -153,7 +158,7 @@ It is not responsible for:
   - ICarVfxEffectsController: Exposes RearDriftEmitterCount, TryGetRearDriftEmitterWorldCandidate, ConfigureFireTailsTimings, SetFireTailsActive, and SetFireTailsFrozen. Colocated in Assets/Scripts/Player/Car/CarVfxEffectsController.cs.
   - ICollectibleDropSuppressor: Exposes AreDropsSuppressed, BeginDropSuppression(), and EndDropSuppression() using a reference-counted depth integer. Colocated in Assets/Scripts/Enemies/CollectibleDropNotifier.cs.
   - IActiveEnemiesProvider: Exposes CopyActiveEnemies(List<Enemy> buffer) on EnemiesSpawner.
-  - IBossCombatTarget: Unifies IBossHUDSource and IDamageable for engaged bosses (GolemBoss and MortarTowerBoss).
+  - IBossCombatTarget: Unifies IBossHUDSource and IDamageable for engaged bosses (GolemBoss, MortarTowerBoss, and RailgunTowerBoss).
 - Centralized constants:
   - PowerUpConstants (Assets/Scripts/PowerUps/Constants/PowerUpConstants.cs):
     - SFX_PICKUP_NUKE = "PowerUpPickupNuke"
@@ -211,12 +216,12 @@ It is not responsible for:
     1. On initial FreezeTimer pickup, TimeFreezeService sets _isFrozen = true, records _freezeStartedAt = Time.time, starts _timer with DurationSeconds, pauses all playing DOTween tweens carrying FREEZABLE_TWEEN_ID (storing them in _pausedTweens), invokes OnFrozenChanged(true), plays SFX_FREEZE_START and _freezeVfxPlayer, and starts fade-in tweens for _freezeVolume and _frostOverlayPresenter.
     2. If another FreezeTimer is collected while already frozen, StartOrResetFreeze() restarts _timer to DurationSeconds, clears _isFadingOut, kills active fade sequences, and snaps _freezeVolume.weight to 1 and _frostOverlayPresenter alpha to FrostOverlayPeakAlpha without re-pausing tweens or re-firing OnFrozenChanged.
     3. While frozen:
-       - EnemyMovementController early-returns in FixedUpdate (zeroing _currentVelocity) and blocks CanBeTeleported.
+       - EnemyMovementController early-returns in FixedUpdate (zeroing _currentVelocity), blocks CanBeTeleported, and holds `_teleportAllowedUnfrozenTime` (`POST_RELOCATION_TELEPORT_GRACE_SECONDS = 3.0f` measured in `Enemy.UnfrozenTime`) paused across freeze frames.
        - Enemy.ApplyKnockBack ignores knockback impulses, and EnemyAttackController ignores player collision triggers.
        - EnemyAnimator sets Animator.speed = 0 and uses Enemy.UnfrozenTime for its 3.5s attack watchdog so frozen time does not trip premature cancellation.
        - BarrelEnemyExplosionController uses Enemy.UnfrozenTime for its 3.5s priming watchdog, while BarrelEnemyAttackFeedback and CircularTelegraphIndicator pause their freezable tweens.
        - WaveManager and SwarmSpawner pause countdowns and coroutine wait loops while _timeFreezeState.IsFrozen is true.
-       - GolemBoss and MortarTowerBoss early-return in Update/FixedUpdate, GolemAnimator sets Animator.speed = 0, and boss attack/telegraph sequences tagged with AsFreezable() or FREEZABLE_TWEEN_ID pause in place.
+       - GolemBoss, MortarTowerBoss, and RailgunTowerBoss early-return in Update/FixedUpdate (and TowerBossBase skips frozen turret aiming), GolemAnimator sets Animator.speed = 0, and boss attack/telegraph sequences tagged with AsFreezable() or FREEZABLE_TWEEN_ID (including ArcTelegraphIndicator, RailgunOrbProjectile, and RailgunLinearWaveHitbox) pause in place.
        - FireTailsService pauses its active duration timer, _combatClock (freezing FireHazardNode expiration and burn tick timers), and calls ICarVfxEffectsController.SetFireTailsFrozen(true) to pause rear-wheel and lingering ground fire particle systems.
     4. When _timer enters FadeOutDuration, StartFadeOutPresentation() tweens volume weight and frost overlay alpha toward 0 (Ease.InQuad).
     5. When _timer.Tick(Time.deltaTime) expires, EndFreeze(notifyPresentation: true) sets _isFrozen = false, adds elapsed freeze time to _accumulatedFrozenSeconds, stops the timer, fires OnFrozenChanged(false), resumes still-active tweens in _pausedTweens, resets presentation, and plays SFX_FREEZE_END.
@@ -293,7 +298,7 @@ It is not responsible for:
     powerup <nuke|freeze|shield|armor|firetails|crate>
   - Play Mode verification checklist (editor-dependent checks; record as unverified unless run in Unity Editor):
     - Picking up Nuke kills only camera-visible enemies, spawns EXP particles without spawning secondary collectible drops, damages visible engaged bosses by 15% MaxHealth, leaves dormant towers unharmed, and plays the blast Volume and dirt overlay fade.
-    - Picking up FreezeTimer stops regular enemies, barrel priming timers/telegraphs, wave/swarm countdowns, Golem/Mortar Tower state machines, and active Fire Tails timers/particles for 5s; re-picking while frozen resets the timer to full duration and restores peak frost presentation.
+    - Picking up FreezeTimer stops regular enemies, enemy post-spawn/post-relocation teleport grace timers, barrel priming timers/telegraphs, wave/swarm countdowns, Golem/Mortar Tower/Railgun Tower state machines, and active Fire Tails timers/particles for 5s; re-picking while frozen resets the timer to full duration and restores peak frost presentation.
     - Picking up BubbleShield displays the Fresnel shield sphere, overrides the player health bar to dark blue, absorbs enemy and boss combat hits with absorb SFX/VFX without depleting Armor plates, blinks both the bubble and health bar in the final 2s, and still allows DeathVolume out-of-bounds falls to kill the player.
     - Picking up Armor stacks up to 3 plates (+20, +40, +60 HP) extending to the screen-right of the player's world-space health bar at the same vertical height with newer plates layered over older plates; taking combat damage depletes plates from outer right inward and overflows excess damage across lower plates and into base HP.
     - Picking up FireTails ignites constant rear-wheel flames for 8s; drifting suppresses black tire skid marks and emits dual glowing molten fire ribbons (Custom/FireTailsTrail shader) and lingering world-space flames that deal non-stacking 25 HP burn ticks every 0.5s to enemies/bosses and slow regular enemies by 40%.
@@ -313,8 +318,8 @@ It is not responsible for:
   - Assets/Scripts/HealthSystem/ArmorPlatesView.cs and Assets/Scripts/HealthSystem/ArmorPlateItemView.cs render the 3 cascading armor plates next to the player's HealthBar.
   - Assets/Scripts/Player/Car/CarVfxEffectsController.cs switches drift trail rendering between standard tire tracks and fire trail pools and controls rear-wheel / world-space fire particle emission via ICarVfxEffectsController.
   - Assets/Scripts/Enemies/Base/EnemyMovementController.cs applies Fire Tails movement speed slow via IMovementController.SetMovementSpeedMultiplier and resets it to 1f on enable/disable/relocation.
-  - Assets/Scripts/Enemies/Base/Enemy.cs, EnemyMovementController.cs, EnemyAttackController.cs, EnemyAnimator.cs, Assets/Scripts/Enemies/Barrel/BarrelEnemyExplosionController.cs, Assets/Scripts/Waves/WaveManager.cs, Assets/Scripts/Spawners/Swarm/SwarmSpawner.cs, Assets/Scripts/Enemies/Bosses/Golem/GolemBoss.cs, Assets/Scripts/Enemies/Bosses/Golem/Animation/GolemAnimator.cs, Assets/Scripts/Enemies/Bosses/Towers/MortarTower/MortarTowerBoss.cs, and Assets/Scripts/PowerUps/FireTails/FireTailsService.cs consume ITimeFreezeState.
-  - Barrel feedback, Golem attack states/projectiles/hitboxes, Mortar Tower recoil/boulder hitboxes, and telegraph indicators consume TimeFreezeExtensions.AsFreezable or TimeFreezeConstants.FREEZABLE_TWEEN_ID.
+  - Assets/Scripts/Enemies/Base/Enemy.cs, EnemyMovementController.cs, EnemyAttackController.cs, EnemyAnimator.cs, Assets/Scripts/Enemies/Barrel/BarrelEnemyExplosionController.cs, Assets/Scripts/Waves/WaveManager.cs, Assets/Scripts/Spawners/Swarm/SwarmSpawner.cs, Assets/Scripts/Enemies/Bosses/Golem/GolemBoss.cs, Assets/Scripts/Enemies/Bosses/Golem/Animation/GolemAnimator.cs, Assets/Scripts/Enemies/Bosses/Towers/TowerBossBase.cs, Assets/Scripts/Enemies/Bosses/Towers/MortarTower/MortarTowerBoss.cs, Assets/Scripts/Enemies/Bosses/Towers/RailgunTower/RailgunTowerBoss.cs, and Assets/Scripts/PowerUps/FireTails/FireTailsService.cs consume ITimeFreezeState.
+  - Barrel feedback, Golem attack states/projectiles/hitboxes, TowerBossBase recoil tweens, Mortar Tower shells/boulder hitboxes, Railgun Tower orbs/linear waves, and circular/rectangular/arc telegraph indicators consume TimeFreezeExtensions.AsFreezable or TimeFreezeConstants.FREEZABLE_TWEEN_ID.
 - Cross-system coupling risks:
   - DOTween allows only a single object ID (tween.id) per tween. Any system that chains .AsFreezable() cannot also assign a custom tween.SetId(...) without overwriting FREEZABLE_TWEEN_ID and breaking Time Freeze pause/resume.
   - NukeEffectService relies on EnemiesSpawner._activeEnemies and BossEncounterService._registeredTowers / _activeGolemInstance staying accurately synchronized with entity lifecycles.
