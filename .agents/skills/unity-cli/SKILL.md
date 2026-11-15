@@ -1,6 +1,6 @@
 ---
 name: unity-cli
-description: "Use when: interacting with Unity CLI from the terminal, or controlling a running/connected Unity Editor from the command line — creating or modifying GameObjects, editing scenes and assets, inspecting the hierarchy, running C# in a live Editor instead of hand-editing scene/asset files, installing or managing editors, managing modules/licenses/auth, building/testing projects, or configuring Unity MCP servers. Triggers: unity cli, unity command, unity status, drive unity editor, unity headless, unity terminal, unity-cli."
+description: "Use when: interacting with Unity CLI (executable: unity, not unity-cli) from the terminal, or controlling a running/connected Unity Editor from the command line — creating or modifying GameObjects, editing scenes and assets, inspecting the hierarchy, running C# in a live Editor instead of hand-editing scene/asset files, installing or managing editors, managing modules/licenses/auth, building/testing projects, or configuring Unity MCP servers. Triggers: unity cli, unity command, unity status, drive unity editor, unity headless, unity terminal, unity-cli."
 ---
 
 
