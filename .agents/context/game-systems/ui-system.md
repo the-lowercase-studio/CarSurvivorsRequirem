@@ -21,6 +21,11 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Assets/Scripts/UI/Skills/SkillUpgradeButton.cs
   - Assets/Scripts/UI/Skills/SkillsVisualPresenter.cs
   - Assets/Scripts/UI/Skills/SkillsStatsPresenter.cs
+  - Assets/Scripts/UI/Skills/SkillStatsGroupView.cs
+  - Assets/Scripts/UI/Skills/SkillStatRowView.cs
+  - Assets/Scripts/UI/Skills/SkillStatValueFormatter.cs
+  - Assets/Scripts/UI/Constants/SkillsStatsConstants.cs
+  - Assets/Scripts/UI/Common/ResponsiveUniformRectScaler.cs
   - Assets/Scripts/UI/Pause/PausePresenter.cs
   - Assets/Scripts/UI/Death/PlayerDeathPresenter.cs
   - Assets/Scripts/UI/Input/UiInputScope.cs
@@ -33,6 +38,11 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Assets/Scripts/Effects/UISpriteSilhouetteOutline.cs
   - Assets/Scripts/Effects/Constants/UiOutlineConstants.cs
   - Assets/Shaders/UI/UISpriteOutline.shader
+  - Assets/Prefabs/UI/PausePresenter.prefab
+  - Assets/Prefabs/UI/PlayerDeathPresenter.prefab
+  - Assets/Prefabs/UI/SkillStatsPresenter/SkillStatRow.prefab
+  - Assets/Imported/Images/UI/Skills/SkillStats/
+  - Assets/Scenes/RuinedBloodCity.unity
 - Related runtime code:
   - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
   - Assets/Scripts/ReflexDI/MainMenuInstaller.cs
@@ -71,6 +81,7 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - PausePresenter subscribes to IInputCommands (InputCommandKind.Pause and UiCancel), acquires InputContextScopeKind.Pause while paused, respects PauseChildPanel and UiInputScope.TryHandleWidgetCancel before closing pause, toggles its visual/time for a living player before forwarding visibility to ISkillsStatsPresenter, and releases its pause scope on ClosePause or HideForDeath. Dead-player toggles are ignored; the serialized ToogleActivation Continue callback remains supported.
   - UiInputScope, MenuInputCoordinator, GameplayInputCoordinator, and InputPromptView coordinate InputSystemUIInputModule setup (with cancel = null and deselectOnBackgroundClick = false), modal child-panel stacking, focus restoration across mouse/gamepad transitions, dynamic TMP_Dropdown explicit navigation + ScrollRect scrolling + immediate cancel teardown without focus bounce (_closingDropdown / PrepareDropdownListForImmediateCancel), and live device-aware glyph/text prompts.
   - MenuButtonsFunctionality backs menu button actions for scene loading, current-scene retry, application exit, and mutually exclusive panel toggling.
+  - ResponsiveUniformRectScaler (Assets/Scripts/UI/Common/ResponsiveUniformRectScaler.cs) requires a RectTransform, validates _targetRoot, positive _referenceSize, and positive _maxScale fail-fast in Awake(), and uniformly scales _targetRoot in Awake(), OnEnable(), and OnRectTransformDimensionsChange() (clamped to [0, _maxScale]) to fit canonical UI hierarchies across 16:9, 16:10, 4:3, and 21:9 aspect ratios.
   - SelectableOutlineHighlight (Assets/Scripts/Effects/SelectableOutlineHighlight.cs) and UISpriteSilhouetteOutline (Assets/Scripts/Effects/UISpriteSilhouetteOutline.cs backed by Assets/Shaders/UI/UISpriteOutline.shader and Assets/Scripts/Effects/Constants/UiOutlineConstants.cs) provide selection/hover outline and fill highlights for Main Menu subpanel controls (DropDown, VolumeOption/Slider, and top-left icon-only BackButtons with adjacent BackPromptBadge). SelectableOutlineHighlight syncs _isSelected in OnEnable(), while UISpriteSilhouetteOutline dilates radial silhouette outlines on skewed/irregular sprites without diagonal mesh gaps; CheckBox controls retain SpriteSwap without SelectableOutlineHighlight, and expanded dropdown item rows use opaque backgrounds to prevent bleed-through.
   - IOptionComponent<T> standardizes settings UI components with LoadComponent and PerformValueChange.
   - AudioVolumeOption, DamageNumbersOption, FullScreenOption, GraphicOption, and ResolutionOption load current setting values into Unity UI controls and save/load settings when controls change. AudioVolumeOption configures an integer 0..100 slider (wholeNumbers = true), injects IInputActionSource and UiInputScope for 1% discrete steps and tiered hold acceleration (SettingsConstants), and clamps linear volume to 0.0001f before Mathf.Log10 decibel conversion. GraphicOption also rebuilds its dropdown options from its hard-coded quality map in Awake.
@@ -114,6 +125,10 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Preserve skill-upgrade ownership: queueing rules stay in SkillUpgradePresenter, request storage/selection and option construction stay in ISkillUpgradeFlow, and UI rendering, generated buttons, visual display, and hotkeys stay in SkillUpgradePresenter and SkillUpgradeButton.
   - Preserve rarity as UI presentation data. Rarity backgrounds should reflect SkillUpgradeOption.Rarity without changing which stat is upgraded or how much value is applied.
   - Preserve settings option event subscription symmetry: add Unity UI listeners in OnEnable and remove them in OnDisable.
+  - Fail-fast validation on SkillsStatsPresenter (_visual != null, _visual != gameObject, and _skillSlots length matching SkillConstants.MAX_ACTIVE_SKILLS with no null or duplicate entries), SkillStatsGroupView (_skillIcon, _skillNameText, _rowsHolder, _statRowPrefab), SkillStatRowView (_statIcon, _valueText), and ResponsiveUniformRectScaler (_targetRoot, positive _referenceSize, positive _maxScale) must throw InvalidOperationException in Awake().
+  - In SkillStatsGroupView.Clear(), hide only _skillIcon, _skillNameText, and pooled SkillStatRowView rows without deactivating the column root GameObject so all 3 black IconSocket frames remain visible.
+  - Preserve top HUD clearance (OffsetMax.y = -104 below top bars at y = -12..-92) and horizontal left/right safe-viewport separation between PausePresenter/PlayerDeathPresenter and SkillsStatsPresenter across 16:9, 16:10, 4:3, and 21:9.
+  - SkillsStatsPresenter toggles _visual directly via SetActive without DOTween transitions or CanvasGroup animation wrappers; PausePresenter.HideForDeath() -> SetPauseVisible(false) followed by ShowDeathStats() preserves terminal Death precedence.
 - Ordering or sequencing guarantees:
   - PlayerLevelPresenter.OnExpSliderVisualEndValueReached is raised with the reached LevelData after level text and slider max/value are transitioned for a level-up.
   - SkillUpgradePresenter hides all skill visuals before checking the next queued request, then shows either the new-skill section or the upgrade-button section when a request exists.
@@ -134,6 +149,8 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Add or update input prompt glyph mappings through Assets/ScriptableObjects/Input/InputGlyphCatalog.cs and Assets/ScriptableObjects/Input/InputGlyphCatalog.asset; render prompts with InputPromptView and IInputPromptProvider.
   - Add or update skill-upgrade rarity backgrounds through Assets/ScriptableObjects/UI/SkillUpgradeRaritySpriteMapping.cs and the button prefab's mapping/background references; missing sprites or mapping references leave the existing button background unchanged.
   - Add button behaviors through MenuButtonsFunctionality only when they remain scene/menu operations; put gameplay state changes in the owning gameplay system instead.
+  - Reuse ResponsiveUniformRectScaler (Assets/Scripts/UI/Common/ResponsiveUniformRectScaler.cs) for fixed-size canonical UI hierarchies that must preserve aspect ratio across resolutions instead of duplicating OnRectTransformDimensionsChange() scaling code.
+  - Update SkillsStatsConstants (Assets/Scripts/UI/Constants/SkillsStatsConstants.cs) alongside pre-wired column slots when changing panel capacity or canonical dimensions.
 - Required dependencies and contracts:
   - UI contracts consumed outside UI should be explicit interfaces and registered in the appropriate Reflex installer.
   - Settings options require an ISetting<TSelf, TRepresentedBy> implementation that can save, load, and return a stored/default value.
@@ -141,7 +158,7 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Skill upgrade UI requires IPlayerManager, IPlayerLevelPresenter, ISkillUpgradeFlow, ISkillsVisualPresenter, IInputCommands, IInputContexts, IInputPromptProvider, the collectible spawner release event, and scene/prefab wiring for InputPromptView and rarity sprite mappings.
 - Testing implications:
   - Compile after C# UI changes with dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false.
-  - Play-mode validation is required for pause input, scene button wiring, settings controls, death VFX-to-screen timing, score text, audio mode changes, skill upgrade panel timing, skill upgrade rarity backgrounds, and HUD skill slot backgrounds behind equipped icons.
+  - Play-mode validation is required for pause input, scene button wiring, settings controls, death VFX-to-screen timing, score text, audio mode changes, skill upgrade panel timing, skill upgrade rarity backgrounds, HUD skill slot backgrounds behind equipped icons, Pause-to-Death transition precedence, live stat refresh while paused, and responsive layout sweeps across 16:9, 16:10, 4:3, and 21:9.
   - Manual UI checks should include repeated enable/disable cycles for settings panels to catch duplicate listeners.
 
 ## Integration Notes
@@ -188,14 +205,15 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Fix ButtonsAudioClipPlayer initialization before relying on it for shared button audio.
   - Add disable/re-enable-safe listener handling to PlayerLevelPresenter and SkillUpgradePresenter if UI objects can be disabled without scene teardown.
   - Add a small validation checklist for scene/prefab UI references when UI prefabs or canvases are edited in the Unity Editor.
+  - Confirm with designers whether unused legacy Assets/Prefabs/UI/SkillStatsPresenter/SkillStatsGroup.prefab (unreferenced after switching to pre-wired ColumnBody_0..2 slots) can be deleted or archived.
 
 ## Pause and Death Skill Stats
 
-- Assets/Scripts/UI/Skills/SkillsStatsPresenter.cs owns Hidden, Pause, and terminal Death modes. It validates authored references and hides Visual in Awake, then yields one frame from Start before reading initialized runtime configs. Early requests remain pending, with death taking precedence.
-- Scene references are explicit: the existing active MainCanvas/SkillsStatsPresenter root owns an inactive authored Visual, SkillGroups RectTransform, and SkillStatsGroupView prefab. DefaultGameplaySceneInstaller requires and binds both stats and pause scene instances.
-- Three groups with seven rows each are prewarmed once using SkillConstants.MAX_ACTIVE_SKILLS and SkillsStatsConstants.MAX_STATS_PER_SKILL. SkillGroups uses two fixed columns with 204 x 329 cells and 20 x 24 spacing. Unused groups/rows are cleared and inactive; the third owned skill starts the second row.
-- SkillStatsGroupView binds SkillInfo.Icon/Name and ordered config display records. SkillStatRowView renders stat.Icon and formatted CurrentValue. Views have no injected services or gameplay subscriptions.
-- Pause subscribes once to registry acquisition and once per unique displayed stat. Acquisition rebuilds bindings; upgrades refresh values without view creation or cap filtering. Hidden/death/disable/loading states detach only presenter-owned handlers.
-- Death captures current header/row content and releases runtime stat references. Repeated death/pause requests cannot recapture or dismiss the snapshot. Temporary root disable preserves a captured snapshot; scene loading permanently clears it.
-- PlayerDeathHandler remains unchanged. After its VFX completion callback, PlayerDeathPresenter saves score, sets labels, hides pause without resuming time, enables death UI, switches audio, pauses time, and opens stats in that order.
-- Panel graphics do not receive raycasts. Continue retains its serialized ToogleActivation callback. No new audio, tweens, per-frame loops, or layout rebuilding loops were added.
+- Assets/Scripts/UI/Skills/SkillsStatsPresenter.cs owns Hidden, Pause, and terminal Death modes. It validates authored references (_visual != null, _visual != gameObject, and a 3-element _skillSlots array matching SkillConstants.MAX_ACTIVE_SKILLS with no null or duplicate entries) and hides Visual in Awake, then yields one frame from Start before prewarming SkillsStatsConstants.MAX_STATS_PER_SKILL (7) SkillStatRowView rows per slot and reading initialized runtime configs. Early requests remain pending, with death taking precedence.
+- Scene layout uses a 3-column red-and-black SKILLS_STATS_PANEL (Assets/Imported/Images/UI/Skills/SkillStats/SKILLS_STATS_PANEL.png, sprite UPGRADES_STATS_PANEL) at canonical FitRoot size 1132 x 1287 (SkillsStatsConstants.CANONICAL_PANEL_WIDTH / CANONICAL_PANEL_HEIGHT) inside SkillsStatsPresenter/Visual/SafeViewport (AnchorMin = (0.515, 0.03), AnchorMax = (0.985, 1.0), OffsetMax.y = -104). ResponsiveUniformRectScaler (Assets/Scripts/UI/Common/ResponsiveUniformRectScaler.cs) uniformly scales FitRoot to preserve aspect ratio across 16:9, 16:10, 4:3, and 21:9 without colliding with top HUD bars or left menus.
+- SkillsStatsPresenter shows and hides Visual directly (_visual.SetActive(true/false)) without DOTween transitions, matching PausePresenter and PlayerDeathPresenter; OnDisable and OnStartLoadingScene immediately hide Visual, release runtime subscriptions, and clear non-frozen groups.
+- All three black sockets (IconSocket_0..2 using Assets/Imported/Images/UI/Skills/SkillStats/SKILLS_STATS_ICON_SLOTS.png sprites SKILLS_STATS_ICON_SLOTS_0..2) remain visible inside AnimationRoot (a plain RectTransform parent inside FitRoot without CanvasGroup or DOTween animations), while each pre-wired ColumnBody_0..2 (RectMask2D, 310 x 684) owns a SkillStatsGroupView bound to its corresponding IconSocket_i/SkillIcon, SkillNameText, and RowsHolder. Unowned slots stay visible as empty black sockets while SkillStatsGroupView.Clear() hides only _skillIcon, _skillNameText, and pooled Assets/Prefabs/UI/SkillStatsPresenter/SkillStatRow.prefab rows (h = 72, 54 x 54 StatIcon, 208 x 64 ValueText formatted by SkillStatValueFormatter using INTEGER_FORMAT "0" / FLOAT_FORMAT "0.##" with NoWrap, EnableAutoSizing 18..38, and Ellipsis overflow).
+- PausePresenter (Assets/Prefabs/UI/PausePresenter.prefab and Assets/Scenes/RuinedBloodCity.unity) wraps Content inside LeftSafeViewport (AnchorMin = (0.01, 0.03), AnchorMax = (0.50, 1.0), OffsetMax.y = -104, ResponsiveUniformRectScaler 920 x 725) with ArrowLeft/ArrowRight preserved under Continue and PauseLabel/Background tightened to 720 x 230 (raycastTarget = false).
+- PlayerDeathPresenter (Assets/Prefabs/UI/PlayerDeathPresenter.prefab and Assets/Scenes/RuinedBloodCity.unity) stretches its root, Visual, and dim Background across (0, 0)..(1, 1), wraps GameOverHeader (GameOver 680 x 158 at (474, 821) ordered behind StatsPanel 890 x 286 at (480, 645), with GameOverText fontSize = 46 and bottom margin 24) and MenuButtons (560 x 370, centered at (480, 295) directly under StatsPanel) inside LeftSafeViewport (AnchorMin = (0, 0), AnchorMax = (0.505, 1.0), OffsetMax.y = -104, ResponsiveUniformRectScaler 960 x 976), and anchors mirrored CarDecoration (225 x 143, localScale = (-1, 1, 1)) at the bottom-left corner clear of centered buttons and right-side SKILLS_STATS_PANEL.
+- Pause subscribes once to registry acquisition and once per unique displayed stat; acquisition rebuilds bindings and upgrades refresh values live. Death freezes the snapshot (FreezeSnapshot()) and releases runtime stat references. Repeated death/pause requests cannot recapture or dismiss the snapshot, temporary root disable preserves a captured snapshot, and scene loading permanently clears it.
+- PlayerDeathHandler remains unchanged. After its VFX completion callback, PlayerDeathPresenter saves score, sets labels, hides pause without resuming time, enables death UI, switches audio, pauses time, and opens stats in that order. DefaultGameplaySceneInstaller requires and binds both ISkillsStatsPresenter and IPausePresenter.

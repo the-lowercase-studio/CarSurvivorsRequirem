@@ -117,7 +117,7 @@ Use `.agents/skills/` as reusable workflows:
 - `preserve-coding-standards`: audit and safely fix coding-standard drift in a pointed scope.
 - `reduce-code-volume`: audit and safely reduce code volume/lines of code while keeping code readable and safe.
 - `sync-system-docs-from-implementations`: user-only (or Phase 8 of user-invoked `git-commit`) workflow to update or create game-system documentation from completed implementation plans and summaries, deleting only processed completed files while preserving templates and unimplemented plans.
-- `unity-cli`: interact with Unity CLI to control running editors, manage projects, licenses, releases, or execute batch runs.
+- `unity-cli`: interact with Unity CLI (invoked as `unity`, not `unity-cli`) to control running editors, manage projects, licenses, releases, or execute batch runs.
 - `unity-pre-commit-gate`: run a comprehensive pre-commit verification gate (compilation, zero warnings, DI bindings, serialization safety, standards audit).
 - `unity-refactor-suggestions`: produce behavior-preserving Unity/C# refactor recommendations.
 - `unity-root-cause`: systematically investigate and diagnose Unity runtime bugs, DI issues, and lifecycle defects in read-only mode.

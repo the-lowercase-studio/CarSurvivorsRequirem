@@ -25,11 +25,11 @@ namespace Assets.Scripts.UI.Skills
         [Inject] private readonly IPlayerManager _playerManager = null;
         [Inject] private readonly IGameSceneLoader _gameSceneLoader = null;
 
+        [Tooltip("Root visual GameObject toggled when showing or hiding the panel.")]
         [SerializeField] private GameObject _visual;
-        [SerializeField] private RectTransform _skillGroupsHolder;
-        [SerializeField] private SkillStatsGroupView _skillGroupPrefab;
+        [Tooltip("Fixed 3-slot column views matching SkillConstants.MAX_ACTIVE_SKILLS.")]
+        [SerializeField] private SkillStatsGroupView[] _skillSlots;
 
-        private readonly List<SkillStatsGroupView> _groups = new(SkillConstants.MAX_ACTIVE_SKILLS);
         private readonly List<IUpgradeableSkill> _ownedSkills = new(SkillConstants.MAX_ACTIVE_SKILLS);
         private readonly List<NameUpgradableStatPair> _stats = new(SkillsStatsConstants.MAX_STATS_PER_SKILL);
         private readonly HashSet<IUpgradeableStat> _subscribedStats = new();
@@ -52,11 +52,13 @@ namespace Assets.Scripts.UI.Skills
 
         private void Awake()
         {
-            if (_visual == null || _skillGroupsHolder == null || _skillGroupPrefab == null || _visual == gameObject)
+            if (_visual == null || _visual == gameObject)
             {
-                throw new InvalidOperationException("Skills stats presenter requires a child Visual, group holder, and group prefab.");
+                throw new InvalidOperationException(
+                    $"[{nameof(SkillsStatsPresenter)}] Requires a child Visual.");
             }
 
+            ValidateSkillSlots();
             _visual.SetActive(false);
         }
 
@@ -129,17 +131,40 @@ namespace Assets.Scripts.UI.Skills
             }
         }
 
+        private void ValidateSkillSlots()
+        {
+            if (_skillSlots == null || _skillSlots.Length != SkillConstants.MAX_ACTIVE_SKILLS)
+            {
+                throw new InvalidOperationException(
+                    $"[{nameof(SkillsStatsPresenter)}] Requires exactly {SkillConstants.MAX_ACTIVE_SKILLS} pre-wired skill slots.");
+            }
+
+            for (int i = 0; i < _skillSlots.Length; i++)
+            {
+                if (_skillSlots[i] == null)
+                {
+                    throw new InvalidOperationException($"[{nameof(SkillsStatsPresenter)}] Skill slot {i} is unassigned.");
+                }
+
+                for (int j = 0; j < i; j++)
+                {
+                    if (_skillSlots[j] == _skillSlots[i])
+                    {
+                        throw new InvalidOperationException($"[{nameof(SkillsStatsPresenter)}] Duplicate skill slot reference at index {i}.");
+                    }
+                }
+            }
+        }
+
         private IEnumerator InitializeAfterSceneStart()
         {
             // Registry.Start resets runtime configs and initializes the starting skill.
             yield return null;
 
-            while (_groups.Count < SkillConstants.MAX_ACTIVE_SKILLS)
+            for (int i = 0; i < _skillSlots.Length; i++)
             {
-                SkillStatsGroupView group = Instantiate(_skillGroupPrefab, _skillGroupsHolder);
-                group.Initialize();
-                group.Clear();
-                _groups.Add(group);
+                _skillSlots[i].Initialize();
+                _skillSlots[i].Clear();
             }
 
             _isReady = true;
@@ -152,8 +177,8 @@ namespace Assets.Scripts.UI.Skills
             if (_mode == DisplayMode.Hidden)
             {
                 ReleaseLiveReferences();
-                ClearGroups();
                 _visual.SetActive(false);
+                ClearGroups();
                 return;
             }
 
@@ -173,7 +198,7 @@ namespace Assets.Scripts.UI.Skills
             {
                 for (int i = 0; i < _ownedSkills.Count; i++)
                 {
-                    _groups[i].FreezeSnapshot();
+                    _skillSlots[i].FreezeSnapshot();
                 }
 
                 _hasDeathSnapshot = true;
@@ -213,11 +238,11 @@ namespace Assets.Scripts.UI.Skills
                 throw new InvalidOperationException("Owned skills exceed the skills stats panel capacity.");
             }
 
-            for (int i = 0; i < _groups.Count; i++)
+            for (int i = 0; i < _skillSlots.Length; i++)
             {
                 if (i >= _ownedSkills.Count)
                 {
-                    _groups[i].Clear();
+                    _skillSlots[i].Clear();
                     continue;
                 }
 
@@ -226,8 +251,9 @@ namespace Assets.Scripts.UI.Skills
                 {
                     throw new InvalidOperationException("An owned skill requires an initialized stats config.");
                 }
+
                 _ownedSkills[i].Config.AppendStatsForDisplay(_stats);
-                _groups[i].Bind(_ownedSkills[i].SkillInfo, _stats);
+                _skillSlots[i].Bind(_ownedSkills[i].SkillInfo, _stats);
                 if (_mode == DisplayMode.Pause)
                 {
                     for (int j = 0; j < _stats.Count; j++)
@@ -265,9 +291,9 @@ namespace Assets.Scripts.UI.Skills
 
         private void ClearGroups()
         {
-            for (int i = 0; i < _groups.Count; i++)
+            for (int i = 0; i < _skillSlots.Length; i++)
             {
-                _groups[i].Clear();
+                _skillSlots[i].Clear();
             }
         }
 
@@ -307,7 +333,7 @@ namespace Assets.Scripts.UI.Skills
         {
             for (int i = 0; i < _ownedSkills.Count; i++)
             {
-                _groups[i].RefreshValues();
+                _skillSlots[i].RefreshValues();
             }
         }
 

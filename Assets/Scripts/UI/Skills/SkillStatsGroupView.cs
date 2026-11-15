@@ -50,7 +50,12 @@ namespace Assets.Scripts.UI.Skills
             }
 
             _skillIcon.sprite = info.Icon;
+            _skillIcon.enabled = true;
+            _skillIcon.gameObject.SetActive(true);
+
             _skillNameText.text = info.Name;
+            _skillNameText.gameObject.SetActive(true);
+
             _boundRowCount = stats.Count;
             for (int i = 0; i < _rows.Count; i++)
             {
@@ -63,8 +68,6 @@ namespace Assets.Scripts.UI.Skills
                     _rows[i].Clear();
                 }
             }
-
-            gameObject.SetActive(true);
         }
 
         public void RefreshValues()
@@ -87,13 +90,13 @@ namespace Assets.Scripts.UI.Skills
         {
             _boundRowCount = 0;
             _skillIcon.sprite = null;
+            _skillIcon.gameObject.SetActive(false);
             _skillNameText.text = string.Empty;
+            _skillNameText.gameObject.SetActive(false);
             for (int i = 0; i < _rows.Count; i++)
             {
                 _rows[i].Clear();
             }
-
-            gameObject.SetActive(false);
         }
     }
 }
