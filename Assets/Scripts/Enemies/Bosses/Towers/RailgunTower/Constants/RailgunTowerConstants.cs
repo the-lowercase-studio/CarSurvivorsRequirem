@@ -2,10 +2,10 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.RailgunTower.Constants
 {
     public static class RailgunTowerConstants
     {
-        public const int ORB_POOL_CAPACITY = 8;
-        public const int ORB_POOL_MAX_SIZE = 16;
-        public const int WAVE_POOL_CAPACITY = 8;
-        public const int WAVE_POOL_MAX_SIZE = 16;
+        public const int ORB_POOL_CAPACITY = 16;
+        public const int ORB_POOL_MAX_SIZE = 32;
+        public const int WAVE_POOL_CAPACITY = 16;
+        public const int WAVE_POOL_MAX_SIZE = 32;
 
         public const float DEFAULT_PLAYER_MAX_FORWARD_SPEED = 16f;
         public const float FALLBACK_MUZZLE_HEIGHT = 6.75f;

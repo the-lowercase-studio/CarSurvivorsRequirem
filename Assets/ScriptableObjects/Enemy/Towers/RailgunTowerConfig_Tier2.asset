@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f25eccc854473c43855aeda27caffdc, type: 3}
+  m_Name: RailgunTowerConfig_Tier2
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.ScriptableObjects.Enemies.Bosses.RailgunTowerConfigSO
+  _maxHealth: 6000
+  _enrageHealthPercent: 0.4
+  _expReward: 1800
+  _enrageColor: {r: 1, g: 0.84, b: 0.15, a: 1}
+  _enrageEmissionColor: {r: 2.5, g: 1.85, b: 0.25, a: 1}
+  _arenaRadius: 22
+  _leashGracePeriodSeconds: 2.5
+  _combatFollowOffset: {x: 0, y: 17, z: -13}
+  _cameraTransitionDuration: 0.8
+  _cooldownMin: 2
+  _cooldownMax: 2.5
+  _enrageCooldownMin: 1.3
+  _enrageCooldownMax: 1.8
+  _attack1PreSweepWarningDuration: 0.75
+  _attack1EnragePreSweepWarningDuration: 0.6
+  _attack1NormalReaimWarningDuration: 0.45
+  _attack1EnrageReaimWarningDuration: 0.35
+  _attack1SweepAngleDegrees: 110
+  _attack1SweepDuration: 1.7
+  _attack1EnrageSweepAngleDegrees: 130
+  _attack1EnrageSweepDuration: 1.45
+  _attack1NormalPassCount: 2
+  _attack1EnragePassCount: 3
+  _attack1LaneLength: 22
+  _attack1LaneWidth: 3
+  _attack1EnrageLaneWidth: 3.5
+  _attack1WavefrontSpeed: 36
+  _attack1Damage: 36
+  _attack1EnrageDamage: 46
+  _attack2LockOnDelay: 0.6
+  _attack2ChaseDuration: 4
+  _attack2EnrageChaseDuration: 0
+  _attack2NormalRadius: 4
+  _attack2EnrageRadius: 4.8
+  _attack2NormalSpeedRatio: 0.68
+  _attack2EnrageSpeedRatio: 0.8
+  _attack2DamageTickInterval: 0.35
+  _attack2EnrageDamageTickInterval: 0.28
+  _attack2TickDamage: 18
+  _attack2EnrageTickDamage: 24
+  _attack3NormalProjectileCount: 7
+  _attack3EnrageProjectileCount: 9
+  _attack3LaunchStagger: 0.2
+  _attack3NormalFlightDuration: 0.75
+  _attack3EnrageFlightDuration: 0.65
+  _attack3CenterImpactRadius: 2.6
+  _attack3EnrageCenterImpactRadius: 3
+  _attack3CenterImpactDamage: 48
+  _attack3EnrageCenterImpactDamage: 62
+  _attack3WaveHalfLength: 12
+  _attack3EnrageWaveHalfLength: 0
+  _attack3WaveWidth: 2.5
+  _attack3EnrageWaveWidth: 2.9
+  _attack3WaveSpeed: 30
+  _attack3EnrageWaveSpeed: 35
+  _attack3WaveDamage: 30
+  _attack3EnrageWaveDamage: 38
+  _attack3AngleJitterDegrees: 10
+  _attack3TargetOffsetMin: 0
+  _attack3TargetOffsetMax: 11.5
+  _attack3MinTargetSpacing: 6.2

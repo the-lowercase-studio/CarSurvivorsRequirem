@@ -17,6 +17,9 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Config
         [SerializeField] private float _phase2CooldownMultiplier = 0.4f;
         [SerializeField] private float _phase2SpeedMultiplier = 1.35f;
         [SerializeField] private float _phase2ArmSpeedMultiplier = 1.6f;
+        [SerializeField] private float _phase2DamageMultiplier = 1f;
+        [SerializeField] private float _phase2AttackSizeMultiplier = 1f;
+        [SerializeField] private float _phase2WarningDurationMultiplier = 1f;
 
         [Header("Attack 1: Leap Slam (AOE / Anti-Kiting)")]
         [SerializeField] private float _leapTriggerMaxDistance = 25f;
@@ -76,6 +79,9 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.Config
         public float Phase2CooldownMultiplier => _phase2CooldownMultiplier;
         public float Phase2SpeedMultiplier => _phase2SpeedMultiplier;
         public float Phase2ArmSpeedMultiplier => _phase2ArmSpeedMultiplier;
+        public float Phase2DamageMultiplier => _phase2DamageMultiplier;
+        public float Phase2AttackSizeMultiplier => _phase2AttackSizeMultiplier;
+        public float Phase2WarningDurationMultiplier => _phase2WarningDurationMultiplier;
 
         public float LeapTriggerMaxDistance => _leapTriggerMaxDistance;
         public float LeapCooldown => _leapCooldown;

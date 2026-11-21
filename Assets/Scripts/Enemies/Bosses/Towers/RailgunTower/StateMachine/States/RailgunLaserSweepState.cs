@@ -27,6 +27,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.RailgunTower.StateMachine.States
         private float _sweepArc;
         private float _laneLength;
         private float _laneWidth;
+        private float _damage;
         private float _previousRadius;
         private float _warningDuration;
         private float _warningStartPitch;
@@ -45,16 +46,24 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.RailgunTower.StateMachine.States
             _hitTargets.Clear();
             _currentPass = 0;
             _isTransitioningToCooldown = false;
-            _totalPasses = _boss.IsEnraged ? Mathf.Max(1, _boss.Config.Attack1EnragePassCount) : 1;
+            bool isEnraged = _boss.IsEnraged;
+            _totalPasses = isEnraged
+                ? Mathf.Max(1, _boss.Config.Attack1EnragePassCount)
+                : Mathf.Max(1, _boss.Config.Attack1NormalPassCount);
             _laneLength = _boss.Config.Attack1LaneLength;
-            _laneWidth = _boss.Config.Attack1LaneWidth;
-            _sweepArc = _boss.IsEnraged ? _boss.Config.Attack1EnrageSweepAngleDegrees : _boss.Config.Attack1SweepAngleDegrees;
-            _sweepDuration = _boss.IsEnraged ? _boss.Config.Attack1EnrageSweepDuration : _boss.Config.Attack1SweepDuration;
+            _laneWidth = isEnraged && _boss.Config.Attack1EnrageLaneWidth > 0f
+                ? _boss.Config.Attack1EnrageLaneWidth
+                : _boss.Config.Attack1LaneWidth;
+            _damage = isEnraged && _boss.Config.Attack1EnrageDamage > 0f
+                ? _boss.Config.Attack1EnrageDamage
+                : _boss.Config.Attack1Damage;
+            _sweepArc = isEnraged ? _boss.Config.Attack1EnrageSweepAngleDegrees : _boss.Config.Attack1SweepAngleDegrees;
+            _sweepDuration = isEnraged ? _boss.Config.Attack1EnrageSweepDuration : _boss.Config.Attack1SweepDuration;
 
             Vector3 towerPos = _boss.Transform.position;
             _groundOrigin = new Vector3(towerPos.x, 0f, towerPos.z);
 
-            float initialWarningDuration = _boss.IsEnraged
+            float initialWarningDuration = isEnraged
                 ? _boss.Config.Attack1EnragePreSweepWarningDuration
                 : _boss.Config.Attack1PreSweepWarningDuration;
             BeginWarningPass(initialWarningDuration);
@@ -134,7 +143,10 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.RailgunTower.StateMachine.States
 
                 if (_currentPass < _totalPasses)
                 {
-                    BeginWarningPass(_boss.Config.Attack1EnrageReaimWarningDuration);
+                    float reaimWarning = _boss.IsEnraged
+                        ? _boss.Config.Attack1EnrageReaimWarningDuration
+                        : _boss.Config.Attack1NormalReaimWarningDuration;
+                    BeginWarningPass(reaimWarning);
                 }
                 else
                 {
@@ -257,7 +269,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.RailgunTower.StateMachine.States
                 {
                     if (_hitTargets.Add(damageable))
                     {
-                        damageable.TakeDamage(_boss.Config.Attack1Damage);
+                        damageable.TakeDamage(_damage);
                     }
                 }
             }

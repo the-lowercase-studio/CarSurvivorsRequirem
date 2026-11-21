@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5649cee329b435741a7c1a4b30b693f9, type: 3}
+  m_Name: GolemBossConfig_Tier2
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Enemies.Bosses.Golem.Config.GolemBossConfigSO
+  _maxHealth: 9500
+  _moveSpeed: 10.1
+  _rotationSpeed: 120
+  _bodyContactDamage: 35
+  _expForKill: 900
+  _phase2HealthPercent: 0.4
+  _phase2CooldownMultiplier: 0.65
+  _phase2SpeedMultiplier: 1.2
+  _phase2ArmSpeedMultiplier: 1.25
+  _phase2DamageMultiplier: 1.25
+  _phase2AttackSizeMultiplier: 1.15
+  _phase2WarningDurationMultiplier: 0.85
+  _leapTriggerMaxDistance: 25
+  _leapCooldown: 3.2
+  _leapAirTime: 1.5
+  _leapMaxHeight: 35
+  _slamRadius: 14.5
+  _slamDamage: 65
+  _leapWarningDuration: 1.2
+  _leapTakeoffDuration: 0.57
+  _leapLandingDuration: 1.27
+  _stompRadius: 4
+  _stompCooldown: 1
+  _stompDamage: 40
+  _linearFistCooldown: 2.4
+  _linearFistChargeDuration: 0.8
+  _linearFistReleaseDelay: 1.2
+  _linearFistSpeed: 48
+  _linearFistMaxDistance: 20
+  _linearFistDamage: 55
+  _linearFistWidth: 2.5
+  _linearFistWarningDuration: 0.8
+  _linearFistHitboxHeight: 2.5
+  _linearFistHitboxDepth: 1.5
+  _linearFistHitboxVerticalOffset: 1
+  _skyBarrageCooldown: 4
+  _skyBarrageReleaseDelay: 1.5
+  _skyBarrageCyclesPhase1: 5
+  _skyBarrageCyclesPhase2: 7
+  _skyArmLaunchAirTime: 1
+  _skyArmFallSpeed: 56
+  _skyArmImpactRadius: 5.4
+  _skyArmDamage: 60
+  _skyArmTargetOffsetMinRadius: 1.5
+  _skyArmTargetOffsetMaxRadius: 5.5
+  _skyArmInitialStaggerDelay: 0.4
+  _skyArmCycleResetDelay: 0.5
+  _skyArmWarningDuration: 1
+  _enrageColor: {r: 1, g: 0.84, b: 0.15, a: 1}
+  _enrageEmissionColor: {r: 2.5, g: 1.85, b: 0.25, a: 1}

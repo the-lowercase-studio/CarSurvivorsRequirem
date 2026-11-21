@@ -11,6 +11,8 @@ using Assets.Scripts.Enemies.Bosses.Golem.Constants;
 using Assets.Scripts.Enemies.Bosses.Golem.Movement;
 using Assets.Scripts.Enemies.Bosses.Golem.StateMachine;
 using Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States;
+using Assets.Scripts.GameFlow;
+using Assets.Scripts.GameFlow.Config;
 using Assets.Scripts.HealthSystem;
 using Assets.Scripts.Indicators;
 using Assets.Scripts.LayerMasks;
@@ -42,6 +44,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         [Inject] private readonly IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> _damageNumbersSpawner = null;
         [Inject] private readonly IInWorldSpaceSpawner<ExpParticleSpawner, float> _expParticleSpawner = null;
         [Inject] private readonly ITimeFreezeState _timeFreezeState = null;
+        [Inject] private readonly IRunSessionService _runSessionService = null;
 
         [Header("Configuration")]
         [SerializeField] private GolemBossConfigSO _config;
@@ -134,6 +137,33 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
             }
         }
 
+        public float CurrentDamageMultiplier
+        {
+            get
+            {
+                if (CurrentPhase == 2) return _config.Phase2DamageMultiplier;
+                return 1f;
+            }
+        }
+
+        public float CurrentAttackSizeMultiplier
+        {
+            get
+            {
+                if (CurrentPhase == 2) return _config.Phase2AttackSizeMultiplier;
+                return 1f;
+            }
+        }
+
+        public float CurrentWarningDurationMultiplier
+        {
+            get
+            {
+                if (CurrentPhase == 2) return _config.Phase2WarningDurationMultiplier;
+                return 1f;
+            }
+        }
+
         public Vector3 PlayerPosition
         {
             get
@@ -167,22 +197,41 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
                 throw new InvalidOperationException("Golem recovery requires a vertical root capsule.");
             }
             _materialPropertyBlock = new MaterialPropertyBlock();
+
+            TierBossConfig tierBossConfig = _runSessionService?.ActiveTierConfig?.BossConfig;
+            if (tierBossConfig != null && tierBossConfig.GolemConfigOverride != null)
+            {
+                _config = tierBossConfig.GolemConfigOverride;
+            }
+
             InitializeStateMachine();
         }
 
         private void OnEnable()
         {
-            if (Health != null)
-            {
-                Health.MaxHealth = _config.MaxHealth;
-                Health.OnHealthChanged += Health_OnHealthChanged;
-                Health.OnNoHealth += Health_OnNoHealth;
-            }
-
             IsRecovering = false;
             OperationGeneration++;
             CurrentPhase = 1;
             _isEnraged = false;
+
+            TierBossConfig tierBossConfig = _runSessionService?.ActiveTierConfig?.BossConfig;
+            if (tierBossConfig != null && tierBossConfig.GolemConfigOverride != null)
+            {
+                _config = tierBossConfig.GolemConfigOverride;
+            }
+
+            if (Health != null)
+            {
+                SynchronizeHealthWithConfig();
+                Health.OnHealthChanged += Health_OnHealthChanged;
+                Health.OnNoHealth += Health_OnNoHealth;
+            }
+
+            if (tierBossConfig != null && tierBossConfig.ApplyBaselineBossTint)
+            {
+                ApplyMaterialTint(tierBossConfig.BaselineBossColor, tierBossConfig.BaselineBossEmissionColor);
+            }
+
             _stateMachine.ResetCooldowns(
                 GolemBossConstants.INITIAL_LEAP_SLAM_COOLDOWN,
                 GolemBossConstants.INITIAL_STOMP_COOLDOWN,
@@ -191,6 +240,43 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
             );
             _stateMachine.Initialize(_pursuitState);
             OnPresentationChanged?.Invoke();
+        }
+
+        public void ApplyTierOverride(GolemBossConfigSO configOverride, TierBossConfig tierBossConfig)
+        {
+            if (configOverride != null)
+            {
+                _config = configOverride;
+            }
+
+            if (Health != null)
+            {
+                Health.OnHealthChanged -= Health_OnHealthChanged;
+                SynchronizeHealthWithConfig();
+                Health.OnHealthChanged += Health_OnHealthChanged;
+            }
+
+            if (tierBossConfig != null && tierBossConfig.ApplyBaselineBossTint && !_isEnraged)
+            {
+                ApplyMaterialTint(tierBossConfig.BaselineBossColor, tierBossConfig.BaselineBossEmissionColor);
+            }
+
+            OnPresentationChanged?.Invoke();
+        }
+
+        private void SynchronizeHealthWithConfig()
+        {
+            if (Health == null || _config == null)
+            {
+                return;
+            }
+
+            Health.MaxHealth = _config.MaxHealth;
+            float needed = Health.MaxHealth - Health.CurrentHealth;
+            if (needed > 0f)
+            {
+                Health.IncreaseHealth(needed);
+            }
         }
 
         private void OnDisable()
@@ -519,7 +605,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
             {
                 _damageNumbersSpawner.Spawn(
                     spawnPos,
-                    new DamageNubmersSpawnerConfig(damage, ShapeModes.Hemisphere)
+                    new DamageNubmersSpawnerConfig(damage, ShapeModes.Hemisphere, isBoss: true)
                 );
             }
 
@@ -544,7 +630,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         public void TriggerStompDamage()
         {
             _audioClipPlayer?.PlayOneShot(GolemBossConstants.STOMP_SFX_KEY);
-            _stompLegTrigger.ApplyStompDamage(_config.StompDamage);
+            _stompLegTrigger.ApplyStompDamage(_config.StompDamage * CurrentDamageMultiplier);
         }
 
         private void Health_OnHealthChanged(object sender, EventArgs e)
@@ -580,9 +666,19 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
 
         private void ApplyEnrageMaterials()
         {
+            ApplyMaterialTint(_config.EnrageColor, _config.EnrageEmissionColor);
+        }
+
+        private void ApplyMaterialTint(Color baseColor, Color emissionColor)
+        {
             if (_renderersForEnrage == null)
             {
                 return;
+            }
+
+            if (_materialPropertyBlock == null)
+            {
+                _materialPropertyBlock = new MaterialPropertyBlock();
             }
 
             foreach (Renderer rend in _renderersForEnrage)
@@ -590,8 +686,8 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
                 if (rend == null) continue;
 
                 rend.GetPropertyBlock(_materialPropertyBlock);
-                _materialPropertyBlock.SetColor(GolemBossConstants.BASE_COLOR_PROPERTY, _config.EnrageColor);
-                _materialPropertyBlock.SetColor(GolemBossConstants.EMISSION_COLOR_PROPERTY, _config.EnrageEmissionColor);
+                _materialPropertyBlock.SetColor(GolemBossConstants.BASE_COLOR_PROPERTY, baseColor);
+                _materialPropertyBlock.SetColor(GolemBossConstants.EMISSION_COLOR_PROPERTY, emissionColor);
                 rend.SetPropertyBlock(_materialPropertyBlock);
             }
         }

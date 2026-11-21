@@ -47,8 +47,8 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             _hasLaunchedAirborne = false;
             _hasLanded = false;
             _hasCompleted = false;
-            _slamRadius = _boss.Config.SlamRadius;
-            _slamDamage = _boss.Config.SlamDamage;
+            _slamRadius = _boss.Config.SlamRadius * _boss.CurrentAttackSizeMultiplier;
+            _slamDamage = _boss.Config.SlamDamage * _boss.CurrentDamageMultiplier;
             _boss.Movement.CanMove = false;
             _boss.Movement.Stop();
             _boss.Movement.SetKinematic(true);

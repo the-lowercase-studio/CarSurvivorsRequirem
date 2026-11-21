@@ -123,7 +123,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
             if (!_isLaunchingArms)
             {
-                if (_boss.DistanceToPlayer <= _boss.Config.StompRadius && _stateMachine.StompCooldownTimer <= 0f)
+                if (_boss.DistanceToPlayer <= _boss.Config.StompRadius * _boss.CurrentAttackSizeMultiplier && _stateMachine.StompCooldownTimer <= 0f)
                 {
                     _isStomping = true;
                     _hasDealtStompDamage = false;
@@ -255,9 +255,9 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             }
 
             Vector3 targetOffsetPos = GetRandomOffsetTargetPosition();
-            float radius = _boss.Config.SkyArmImpactRadius;
-            float warningDuration = _boss.Config.SkyArmWarningDuration;
-            float damage = _boss.Config.SkyArmDamage;
+            float radius = _boss.Config.SkyArmImpactRadius * _boss.CurrentAttackSizeMultiplier;
+            float warningDuration = _boss.Config.SkyArmWarningDuration * _boss.CurrentWarningDurationMultiplier;
+            float damage = _boss.Config.SkyArmDamage * _boss.CurrentDamageMultiplier;
             float fallSpeed = _boss.Config.SkyArmFallSpeed * _boss.CurrentArmSpeedMultiplier;
 
             CircularTelegraphIndicator telegraph = _boss.ShowCircularTelegraph(targetOffsetPos, radius, warningDuration, null, autoContractOnFillComplete: false);

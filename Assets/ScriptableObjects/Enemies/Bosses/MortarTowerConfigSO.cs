@@ -16,6 +16,13 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
         [SerializeField] private float _attack1SubShellExplosionRadius = 2.0f;
         [SerializeField] private float _attack1SubShellDamage = 20f;
         [SerializeField] private float _attack1EnrageSecondWaveRadius = 11.0f;
+        [SerializeField] private int _attack1NormalWaveCount = 1;
+        [SerializeField] private int _attack1EnrageWaveCount = 2;
+        [SerializeField] private int _attack1EnrageSubShellCount = 0;
+        [SerializeField] private float _attack1EnrageSubShellDuration = 0f;
+        [SerializeField] private float _attack1EnrageSubShellExplosionRadius = 0f;
+        [SerializeField] private float _attack1EnrageCenterExplosionRadius = 0f;
+        [SerializeField] private float _attack1EnrageDamageMultiplier = 1f;
 
         [Header("Attack 2: Diagonal Line Bounce")]
         [SerializeField] private float _attack2CenterMinOffset = 6.0f;
@@ -27,16 +34,23 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
         [SerializeField] private float _attack2BounceDurationPerStep = 0.45f;
         [SerializeField] private float _attack2BounceExplosionRadius = 1.8f;
         [SerializeField] private float _attack2BounceDamage = 22f;
+        [SerializeField] private int _attack2NormalSalvoCount = 1;
         [SerializeField] private int _attack2EnrageSalvoCount = 3;
         [SerializeField] private float _attack2EnrageSalvoInterval = 0.4f;
+        [SerializeField] private int _attack2EnrageBounceStepCount = 0;
+        [SerializeField] private float _attack2EnrageBounceDurationPerStep = 0f;
+        [SerializeField] private float _attack2EnrageBounceExplosionRadius = 0f;
+        [SerializeField] private float _attack2EnrageDamageMultiplier = 1f;
 
         [Header("Attack 3: Rolling Boulder")]
         [SerializeField] private float _attack3DropWarningDuration = 1.0f;
         [SerializeField] private float _attack3RollTelegraphLength = 20.0f;
         [SerializeField] private float _attack3RollTelegraphWidth = 2.5f;
+        [SerializeField] private float _attack3EnrageRollTelegraphWidth = 0f;
         [SerializeField] private float _attack3RollSpeed = 16.0f;
         [SerializeField] private float _attack3EnrageRollSpeed = 22.0f;
         [SerializeField] private float _attack3RollDamage = 35f;
+        [SerializeField] private float _attack3EnrageDamageMultiplier = 1f;
 
         public float Attack1InitialWarning
         {
@@ -88,6 +102,41 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
             get { return _attack1EnrageSecondWaveRadius; }
         }
 
+        public int Attack1NormalWaveCount
+        {
+            get { return _attack1NormalWaveCount; }
+        }
+
+        public int Attack1EnrageWaveCount
+        {
+            get { return _attack1EnrageWaveCount; }
+        }
+
+        public int Attack1EnrageSubShellCount
+        {
+            get { return _attack1EnrageSubShellCount; }
+        }
+
+        public float Attack1EnrageSubShellDuration
+        {
+            get { return _attack1EnrageSubShellDuration; }
+        }
+
+        public float Attack1EnrageSubShellExplosionRadius
+        {
+            get { return _attack1EnrageSubShellExplosionRadius; }
+        }
+
+        public float Attack1EnrageCenterExplosionRadius
+        {
+            get { return _attack1EnrageCenterExplosionRadius; }
+        }
+
+        public float Attack1EnrageDamageMultiplier
+        {
+            get { return _attack1EnrageDamageMultiplier; }
+        }
+
         public float Attack2CenterMinOffset
         {
             get { return _attack2CenterMinOffset; }
@@ -133,6 +182,11 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
             get { return _attack2BounceDamage; }
         }
 
+        public int Attack2NormalSalvoCount
+        {
+            get { return _attack2NormalSalvoCount; }
+        }
+
         public int Attack2EnrageSalvoCount
         {
             get { return _attack2EnrageSalvoCount; }
@@ -141,6 +195,26 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
         public float Attack2EnrageSalvoInterval
         {
             get { return _attack2EnrageSalvoInterval; }
+        }
+
+        public int Attack2EnrageBounceStepCount
+        {
+            get { return _attack2EnrageBounceStepCount; }
+        }
+
+        public float Attack2EnrageBounceDurationPerStep
+        {
+            get { return _attack2EnrageBounceDurationPerStep; }
+        }
+
+        public float Attack2EnrageBounceExplosionRadius
+        {
+            get { return _attack2EnrageBounceExplosionRadius; }
+        }
+
+        public float Attack2EnrageDamageMultiplier
+        {
+            get { return _attack2EnrageDamageMultiplier; }
         }
 
         public float Attack3DropWarningDuration
@@ -158,6 +232,11 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
             get { return _attack3RollTelegraphWidth; }
         }
 
+        public float Attack3EnrageRollTelegraphWidth
+        {
+            get { return _attack3EnrageRollTelegraphWidth; }
+        }
+
         public float Attack3RollSpeed
         {
             get { return _attack3RollSpeed; }
@@ -171,6 +250,11 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
         public float Attack3RollDamage
         {
             get { return _attack3RollDamage; }
+        }
+
+        public float Attack3EnrageDamageMultiplier
+        {
+            get { return _attack3EnrageDamageMultiplier; }
         }
     }
 }

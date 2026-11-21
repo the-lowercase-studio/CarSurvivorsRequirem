@@ -21,7 +21,9 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
 
             Vector3 playerPos = _boss.PlayerPosition;
             float warningDuration = _boss.Config.Attack1InitialWarning;
-            float centerRadius = _boss.Config.Attack1CenterExplosionRadius;
+            float centerRadius = _boss.IsEnraged && _boss.Config.Attack1EnrageCenterExplosionRadius > 0f
+                ? _boss.Config.Attack1EnrageCenterExplosionRadius
+                : _boss.Config.Attack1CenterExplosionRadius;
 
             var telegraph = _boss.ShowCircularTelegraph(playerPos, centerRadius, warningDuration);
             Vector3 targetPosition = telegraph != null ? telegraph.SnappedPosition : playerPos;
@@ -70,80 +72,64 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
                 return;
             }
 
+            bool isEnraged = _boss.IsEnraged;
+            float damageMultiplier = isEnraged ? _boss.Config.Attack1EnrageDamageMultiplier : 1f;
+            float centerRadius = isEnraged && _boss.Config.Attack1EnrageCenterExplosionRadius > 0f
+                ? _boss.Config.Attack1EnrageCenterExplosionRadius
+                : _boss.Config.Attack1CenterExplosionRadius;
+            float centerDamage = _boss.Config.Attack1CenterDamage * damageMultiplier;
+
             if (centerShell != null)
             {
-                centerShell.Detonate(_boss.Config.Attack1CenterExplosionRadius, _boss.Config.Attack1CenterDamage);
+                centerShell.Detonate(centerRadius, centerDamage);
             }
 
-            int count = _boss.Config.Attack1SubShellCount;
+            int waveCount = isEnraged
+                ? Mathf.Max(1, _boss.Config.Attack1EnrageWaveCount)
+                : Mathf.Max(1, _boss.Config.Attack1NormalWaveCount);
+            int count = isEnraged && _boss.Config.Attack1EnrageSubShellCount > 0
+                ? _boss.Config.Attack1EnrageSubShellCount
+                : _boss.Config.Attack1SubShellCount;
             float scatterRadius = _boss.Config.Attack1SubShellScatterRadius;
             float jumpPower = _boss.Config.Attack1SubShellJumpPower;
-            float duration = _boss.Config.Attack1SubShellDuration;
-            float explosionRadius = _boss.Config.Attack1SubShellExplosionRadius;
-            float damage = _boss.Config.Attack1SubShellDamage;
+            float duration = isEnraged && _boss.Config.Attack1EnrageSubShellDuration > 0f
+                ? _boss.Config.Attack1EnrageSubShellDuration
+                : _boss.Config.Attack1SubShellDuration;
+            float explosionRadius = isEnraged && _boss.Config.Attack1EnrageSubShellExplosionRadius > 0f
+                ? _boss.Config.Attack1EnrageSubShellExplosionRadius
+                : _boss.Config.Attack1SubShellExplosionRadius;
+            float damage = _boss.Config.Attack1SubShellDamage * damageMultiplier;
 
-            bool isEnraged = _boss.IsEnraged;
-            int totalSubShells = count + (isEnraged ? count : 0);
-            _pendingSubShells = totalSubShells;
+            _pendingSubShells = count * waveCount;
+            float ringStep = _boss.Config.Attack1EnrageSecondWaveRadius - scatterRadius;
 
-            // Wave 1: Hexagonal scatter
-            for (int i = 0; i < count; i++)
+            for (int waveIndex = 0; waveIndex < waveCount; waveIndex++)
             {
-                float angle = i * (360f / count);
-                Vector3 offset = Quaternion.Euler(0f, angle, 0f) * Vector3.forward * scatterRadius;
-                Vector3 subTarget = centerPos + offset;
+                float waveRadius = scatterRadius + waveIndex * ringStep;
+                float waveDuration = duration * (1f + 0.35f * waveIndex);
+                float waveJumpPower = jumpPower * (1f + 0.4f * waveIndex);
+                float angularOffset = (waveIndex % 2) * (180f / Mathf.Max(1, count));
 
-                var subTelegraph = _boss.ShowCircularTelegraph(subTarget, explosionRadius, duration);
-                Vector3 snappedSubTarget = subTelegraph != null ? subTelegraph.SnappedPosition : subTarget;
-
-                MortarShellProjectile subShell = _boss.ShellPool.Get();
-                if (subShell != null)
+                for (int i = 0; i < count; i++)
                 {
-                    subShell.LaunchParabolic(
-                        centerPos,
-                        snappedSubTarget,
-                        jumpPower,
-                        duration,
-                        () =>
-                        {
-                            subShell.Detonate(explosionRadius, damage);
-                            OnSubShellCompleted();
-                        }
-                    );
-                }
-                else
-                {
-                    OnSubShellCompleted();
-                }
-            }
+                    float angle = i * (360f / count) + angularOffset;
+                    Vector3 offset = Quaternion.Euler(0f, angle, 0f) * Vector3.forward * waveRadius;
+                    Vector3 subTarget = centerPos + offset;
 
-            // Wave 2: Outer concentric ring when enraged
-            if (isEnraged)
-            {
-                float wave2Radius = _boss.Config.Attack1EnrageSecondWaveRadius;
-                float wave2Duration = duration * 1.35f;
-                float wave2JumpPower = jumpPower * 1.4f;
+                    var subTelegraph = _boss.ShowCircularTelegraph(subTarget, explosionRadius, waveDuration);
+                    Vector3 snappedSubTarget = subTelegraph != null ? subTelegraph.SnappedPosition : subTarget;
 
-                for (int j = 0; j < count; j++)
-                {
-                    float angle2 = (j * (360f / count)) + 30f;
-                    Vector3 offset2 = Quaternion.Euler(0f, angle2, 0f) * Vector3.forward * wave2Radius;
-                    Vector3 subTarget2 = centerPos + offset2;
-
-                    var subTelegraph2 = _boss.ShowCircularTelegraph(subTarget2, explosionRadius, wave2Duration);
-                    Vector3 snappedSubTarget2 = subTelegraph2 != null ? subTelegraph2.SnappedPosition : subTarget2;
-
-                    MortarShellProjectile subShell2 = _boss.ShellPool.Get();
-                    if (subShell2 != null)
+                    MortarShellProjectile subShell = _boss.ShellPool.Get();
+                    if (subShell != null)
                     {
-                        subShell2.LaunchParabolic(
+                        subShell.LaunchParabolic(
                             centerPos,
-                            snappedSubTarget2,
-                            wave2JumpPower,
-                            wave2Duration,
+                            snappedSubTarget,
+                            waveJumpPower,
+                            waveDuration,
                             () =>
                             {
-                                subShell2.Detonate(explosionRadius, damage);
+                                subShell.Detonate(explosionRadius, damage);
                                 OnSubShellCompleted();
                             }
                         );

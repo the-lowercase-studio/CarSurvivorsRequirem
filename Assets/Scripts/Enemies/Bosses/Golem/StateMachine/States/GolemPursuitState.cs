@@ -29,6 +29,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
 
         public void Enter()
         {
+            _boss.Movement.SetKinematic(false);
             _boss.Movement.CanMove = true;
             _boss.Animator?.SetMoving(true, _boss.Config.MoveSpeed * _boss.CurrentSpeedMultiplier);
         }
@@ -44,7 +45,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             }
 
             // Attack 2: Melee Stomp Check (works anytime player is close and arms are docked or moving)
-            if (_boss.DistanceToPlayer <= _boss.Config.StompRadius && _stateMachine.StompCooldownTimer <= 0f)
+            if (_boss.DistanceToPlayer <= _boss.Config.StompRadius * _boss.CurrentAttackSizeMultiplier && _stateMachine.StompCooldownTimer <= 0f)
             {
                 if (_stompState != null)
                 {

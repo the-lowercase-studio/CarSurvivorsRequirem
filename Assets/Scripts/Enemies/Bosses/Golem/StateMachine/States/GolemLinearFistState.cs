@@ -58,9 +58,9 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             _boss.Transform.rotation = Quaternion.LookRotation(_attackDirection, Vector3.up);
 
             // 2. Display telegraph indicator
-            float warningDuration = _boss.Config.LinearFistWarningDuration;
+            float warningDuration = _boss.Config.LinearFistWarningDuration * _boss.CurrentWarningDurationMultiplier;
             float maxDistance = _boss.Config.LinearFistMaxDistance;
-            float width = _boss.Config.LinearFistWidth;
+            float width = _boss.Config.LinearFistWidth * _boss.CurrentAttackSizeMultiplier;
 
             _activeTelegraph = _boss.ShowRectangularTelegraph(bossPos, _attackDirection, maxDistance, width, warningDuration, null, autoContractOnFillComplete: false);
 
@@ -72,7 +72,7 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             }
 
             // 4. Fallback timer if animation event is not authored on clip
-            float releaseDelay = _boss.Config.LinearFistReleaseDelay;
+            float releaseDelay = _boss.Config.LinearFistReleaseDelay * _boss.CurrentWarningDurationMultiplier;
             _chargeSequence = DOTween.Sequence().AsFreezable();
             _chargeSequence.AppendInterval(releaseDelay);
             _chargeSequence.OnComplete(() =>
@@ -151,9 +151,9 @@ namespace Assets.Scripts.Enemies.Bosses.Golem.StateMachine.States
             _boss.AudioClipPlayer?.PlayOneShot(GolemBossConstants.ROCKET_SFX_KEY);
 
             float speed = _boss.Config.LinearFistSpeed * _boss.CurrentArmSpeedMultiplier;
-            float damage = _boss.Config.LinearFistDamage;
+            float damage = _boss.Config.LinearFistDamage * _boss.CurrentDamageMultiplier;
             float maxDistance = _boss.Config.LinearFistMaxDistance;
-            float width = _boss.Config.LinearFistWidth;
+            float width = _boss.Config.LinearFistWidth * _boss.CurrentAttackSizeMultiplier;
             float height = _boss.Config.LinearFistHitboxHeight;
             float depth = _boss.Config.LinearFistHitboxDepth;
             float verticalOffset = _boss.Config.LinearFistHitboxVerticalOffset;

@@ -86,8 +86,11 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
             }
             rollDir.Normalize();
 
+            bool isEnraged = _boss.IsEnraged;
             float rollLength = _boss.Config.Attack3RollTelegraphLength;
-            float rollWidth = _boss.Config.Attack3RollTelegraphWidth;
+            float rollWidth = isEnraged && _boss.Config.Attack3EnrageRollTelegraphWidth > 0f
+                ? _boss.Config.Attack3EnrageRollTelegraphWidth
+                : _boss.Config.Attack3RollTelegraphWidth;
 
             _activeTelegraph = _boss.ShowRectangularTelegraph(
                 snappedDropPos,
@@ -136,7 +139,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
 
             // Launch rolling boulder instantly as soon as the drop projectile impacts the ground
             float speed = _boss.IsEnraged ? _boss.Config.Attack3EnrageRollSpeed : _boss.Config.Attack3RollSpeed;
-            float damage = _boss.Config.Attack3RollDamage;
+            float damage = _boss.Config.Attack3RollDamage * (_boss.IsEnraged ? _boss.Config.Attack3EnrageDamageMultiplier : 1f);
             Vector3 endPos = snappedDropPos + rollDir * rollLength;
             endPos.y = 0f;
 
