@@ -1,6 +1,9 @@
-using Assets.Scripts.Initializers;
 using System;
 using System.Collections.Generic;
+using Assets.ScriptableObjects.Player.Skills;
+using Assets.Scripts.GameFlow;
+using Assets.Scripts.Initializers;
+using Reflex.Attributes;
 using UnityEngine;
 
 namespace Assets.Scripts.Skills
@@ -20,6 +23,8 @@ namespace Assets.Scripts.Skills
 
     public class SkillsRegistry : MonoBehaviour, ISkillsRegistry
     {
+        [Inject] private readonly IRunSessionService _runSessionService = null;
+
         public event Action<ISkillBase> OnSkillInitialized;
 
         public IReadOnlyList<ISkillBase> Skills { get; private set; }
@@ -37,6 +42,17 @@ namespace Assets.Scripts.Skills
 
             UninitializedSkillsCount = GetUninitializedSkills().Count;
             InitializedSkillsCount = GetInitializedSkills().Count;
+
+            if (_runSessionService != null
+                && _runSessionService.TryGetRestoredSkills(out IReadOnlyList<SavedSkillSnapshot> restoredSkills)
+                && restoredSkills.Count > 0)
+            {
+                RestoreSkillsFromSnapshot(restoredSkills);
+                if (InitializedSkillsCount > 0)
+                {
+                    return;
+                }
+            }
 
             if (Skills != null && Skills.Count > 0)
             {
@@ -132,6 +148,80 @@ namespace Assets.Scripts.Skills
                     upgradeableSkill.Config?.ResetRuntimeState();
                 }
             }
+        }
+
+        private void RestoreSkillsFromSnapshot(IReadOnlyList<SavedSkillSnapshot> restoredSkills)
+        {
+            if (Skills == null || restoredSkills == null)
+            {
+                return;
+            }
+
+            var statsBuffer = new List<NameUpgradableStatPair>();
+
+            for (int i = 0; i < restoredSkills.Count; i++)
+            {
+                SavedSkillSnapshot snapshot = restoredSkills[i];
+                if (snapshot == null || string.IsNullOrEmpty(snapshot.SkillName))
+                {
+                    continue;
+                }
+
+                ISkillBase matchingSkill = FindSkillByName(snapshot.SkillName);
+                if (matchingSkill == null)
+                {
+                    continue;
+                }
+
+                if (matchingSkill is IUpgradeableSkill upgradeableSkill
+                    && upgradeableSkill.Config != null
+                    && snapshot.Stats != null)
+                {
+                    statsBuffer.Clear();
+                    upgradeableSkill.Config.AppendStatsForDisplay(statsBuffer);
+
+                    for (int s = 0; s < snapshot.Stats.Count; s++)
+                    {
+                        SavedStatValue savedStat = snapshot.Stats[s];
+                        for (int p = 0; p < statsBuffer.Count; p++)
+                        {
+                            NameUpgradableStatPair pair = statsBuffer[p];
+                            if (pair.UpgradeableStat != null && string.Equals(pair.Name, savedStat.StatName, StringComparison.Ordinal))
+                            {
+                                pair.UpgradeableStat.RestoreRuntimeState(savedStat.Value, savedStat.CanBeUpgraded);
+                                break;
+                            }
+                        }
+                    }
+
+                    upgradeableSkill.Config.SyncDerivedRuntimeState();
+                }
+
+                InitializeSkill(matchingSkill);
+            }
+        }
+
+        private ISkillBase FindSkillByName(string skillName)
+        {
+            for (int i = 0; i < Skills.Count; i++)
+            {
+                ISkillBase candidate = Skills[i];
+                if (candidate == null || candidate.SkillInfo == null)
+                {
+                    continue;
+                }
+
+                string candidateKey = string.IsNullOrEmpty(candidate.SkillInfo.Name)
+                    ? candidate.SkillInfo.name
+                    : candidate.SkillInfo.Name;
+
+                if (string.Equals(candidateKey, skillName, StringComparison.Ordinal))
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
         }
     }
 }

@@ -124,8 +124,10 @@ namespace Assets.Scripts.Skills.UpgradeFlow
 
             foreach (var nameUpgradeableStatPair in upgradeableSkill.Config.GetUpgradeableStatsThatCanBeUpgraded())
             {
-                float upgradeValue = nameUpgradeableStatPair.UpgradeableStat.GetUpgradeValueBasedOnUpdateRange();
                 IUpgradeableStat upgradeableStat = nameUpgradeableStatPair.UpgradeableStat;
+                float upgradeValue = upgradeableStat.AlwaysUseMinValueForUpgrade
+                    ? upgradeableStat.UpgradeRangeMin
+                    : upgradeableStat.GetUpgradeValueBasedOnUpdateRange();
 
                 string changeInfo = upgradeableStat.IsSubstractModeOn ? "Decrease" : "Increase";
                 string statName = nameUpgradeableStatPair.Name.PascalCaseToWords();

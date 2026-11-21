@@ -12,9 +12,42 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
         [SerializeField] private LasergunTurret[] _turrets;
 
         private IItemsWithScriptableConfigsActivator<LasergunTurret, TurretConfigSO> _turretsActivator;
+        private bool _isInitialized;
+        private bool _isInitialShotPending;
+        private float _elapsed;
+
+        private void Update()
+        {
+            AdvanceFireTimer(Time.deltaTime);
+        }
+
+        private void OnDisable()
+        {
+            _elapsed = 0f;
+            _isInitialShotPending = false;
+        }
+
+        public override bool IsInitialized()
+        {
+            return _isInitialized && base.IsInitialized();
+        }
 
         public override void Initialize()
         {
+            if (_isInitialized)
+            {
+                return;
+            }
+
+            if (_config == null || _config.DelayBetweenShoots == null || _config.TurretConfig == null || _turrets == null || _turrets.Length == 0)
+            {
+                throw new InvalidOperationException("Lasergun skill requires config, shoot delay, turret config, and turrets.");
+            }
+
+            _isInitialized = true;
+            _isInitialShotPending = true;
+            _elapsed = 0f;
+
             base.Initialize();
 
             _turretsActivator =
@@ -23,22 +56,42 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
             InitializeTurretsToConfiguredCount();
             ApplyNumberOfTargetsToInitializedTurrets();
 
-            if (_config is not null)
+            if (_config.NumberOfTurrets is not null)
             {
-                if (_config.NumberOfTurrets is not null)
-                {
-                    _config.NumberOfTurrets.OnUpgrade -= OnNumberOfTurretsUpgraded;
-                    _config.NumberOfTurrets.OnUpgrade += OnNumberOfTurretsUpgraded;
-                }
-
-                if (_config.NumberOfTargets is not null)
-                {
-                    _config.NumberOfTargets.OnUpgrade -= OnNumberOfTargetsUpgraded;
-                    _config.NumberOfTargets.OnUpgrade += OnNumberOfTargetsUpgraded;
-                }
+                _config.NumberOfTurrets.OnUpgrade -= OnNumberOfTurretsUpgraded;
+                _config.NumberOfTurrets.OnUpgrade += OnNumberOfTurretsUpgraded;
             }
 
-            InvokeRepeating(nameof(ShootFromTurrets), 0f, _config.DelayBetweenShoots.Value);
+            if (_config.NumberOfTargets is not null)
+            {
+                _config.NumberOfTargets.OnUpgrade -= OnNumberOfTargetsUpgraded;
+                _config.NumberOfTargets.OnUpgrade += OnNumberOfTargetsUpgraded;
+            }
+        }
+
+        public bool AdvanceFireTimer(float deltaTime)
+        {
+            if (!_isInitialized || !isActiveAndEnabled || deltaTime <= 0f)
+            {
+                return false;
+            }
+
+            float delay = _config.DelayBetweenShoots.Value;
+            if (float.IsNaN(delay) || float.IsInfinity(delay) || delay <= 0f)
+            {
+                throw new InvalidOperationException("Lasergun shoot delay must be finite and positive.");
+            }
+
+            _elapsed += deltaTime;
+            if (!_isInitialShotPending && _elapsed < delay)
+            {
+                return false;
+            }
+
+            _elapsed = 0f;
+            _isInitialShotPending = false;
+            ShootFromTurrets();
+            return true;
         }
 
         private void OnDestroy()
@@ -61,6 +114,11 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
 
         private void ShootFromTurrets()
         {
+            if (!isActiveAndEnabled)
+            {
+                return;
+            }
+
             foreach (LasergunTurret turret in _turretsActivator.GetInitialized())
             {
                 turret.Shoot(_config.DelayBetweenShoots.MinMaxRange.Min / _config.DelayBetweenShoots.Value);

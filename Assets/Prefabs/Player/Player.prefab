@@ -959,7 +959,6 @@ MonoBehaviour:
   <_config>k__BackingField: {fileID: 11400000, guid: 18926d7209511304ebda84a7a76ec21d, type: 2}
   _landminePrefab: {fileID: 6048307613972475818, guid: f5dbe1699bc9b4d47bbf530373b001d0, type: 3}
   _landminesParent: {fileID: 0}
-  _cooldown: 2
 --- !u!1 &1742739778988627946
 GameObject:
   m_ObjectHideFlags: 0

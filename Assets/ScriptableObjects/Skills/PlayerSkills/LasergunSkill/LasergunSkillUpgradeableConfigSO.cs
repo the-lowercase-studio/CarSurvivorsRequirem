@@ -47,7 +47,31 @@ public class LasergunSkillSO : SkillUpgradeableStatsConfig
 
         PrepareProjectileConfig();
 
-        TurretConfig.ProjectileStatsSO = _projectileConfig;
+        if (TurretConfig != null)
+        {
+            TurretConfig.ProjectileStatsSO = _projectileConfig;
+        }
+    }
+
+    public override void SyncDerivedRuntimeState()
+    {
+        if (Range != null)
+        {
+            if (_projectileConfig != null)
+            {
+                _projectileConfig.Range = Range.Value;
+            }
+
+            if (_turretConfig != null)
+            {
+                _turretConfig.Range = Range.Value;
+            }
+        }
+
+        if (_projectileConfig != null && Damage != null)
+        {
+            _projectileConfig.Damage = Damage.Value;
+        }
     }
 
     private void DeepCopyUpgradeableStats()
@@ -61,10 +85,37 @@ public class LasergunSkillSO : SkillUpgradeableStatsConfig
 
     private void PrepareProjectileConfig()
     {
-        _projectileConfig.Range = Range.Value;
-        _projectileConfig.Damage = Damage.Value;
+        SyncDerivedRuntimeState();
 
-        Range.OnUpgrade += (s, e) => _projectileConfig.Range = Range.Value;
-        Damage.OnUpgrade += (s, e) => _projectileConfig.Damage = Damage.Value;
+        if (Range != null)
+        {
+            Range.OnUpgrade += HandleRangeUpgraded;
+        }
+
+        if (Damage != null)
+        {
+            Damage.OnUpgrade += HandleDamageUpgraded;
+        }
+    }
+
+    private void HandleRangeUpgraded(object sender, System.EventArgs e)
+    {
+        if (_projectileConfig != null)
+        {
+            _projectileConfig.Range = Range.Value;
+        }
+
+        if (_turretConfig != null)
+        {
+            _turretConfig.Range = Range.Value;
+        }
+    }
+
+    private void HandleDamageUpgraded(object sender, System.EventArgs e)
+    {
+        if (_projectileConfig != null)
+        {
+            _projectileConfig.Damage = Damage.Value;
+        }
     }
 }

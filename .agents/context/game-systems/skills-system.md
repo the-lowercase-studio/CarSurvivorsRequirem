@@ -49,7 +49,11 @@ It is not responsible for:
   - Assets/Scripts/Initializers/IInitializableWithScriptableConfig.cs
   - Assets/Scripts/Utils/DeepCopyUtility.cs
   - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
-  - Assets/Scripts/Editor/Tests/MinigunShotResolverTests.cs
+  - Assets/Scripts/GameFlow/RunSessionService.cs
+  - Assets/Scripts/Editor/Tests/UpgradeableStatTests.cs
+  - Assets/Scripts/Editor/Tests/SkillConfigRuntimeTests.cs
+  - Assets/Scripts/Editor/Tests/SkillUpgradeFlowTests.cs
+  - Assets/Scripts/Editor/Tests/SkillsTierCarryoverTests.cs
   - Assets/Scripts/Indicators/RectangularTelegraphIndicator.cs
   - Assets/Shaders/HolographicIndicator.shader
 - Related docs:
@@ -70,7 +74,7 @@ It is not responsible for:
 ## Architecture and Data Flow
 
 - Core components:
-  - SkillsRegistry: Discovers direct child components implementing ISkillBase in Awake, resets runtime config state and counts uninitialized skills in Start, initializes Skills[0] as the starting skill (with a safety check for non-empty collections), and raises OnSkillInitialized whenever a skill is initialized.
+  - SkillsRegistry: Discovers direct child components implementing ISkillBase in Awake. In Start, injects IRunSessionService, calls ResetRuntimeState() on all upgradeable skill configs, and checks _runSessionService.TryGetRestoredSkills(out var restoredSkills): when a multi-tier carryover snapshot exists, restores each matching skill's stats via IUpgradeableStat.RestoreRuntimeState(value, canBeUpgraded), calls ISkillUpgradeableStatsConfig.SyncDerivedRuntimeState(), and initializes the restored skills in saved order; otherwise falls back to initializing Skills[0] as the starting skill (with a safety check for non-empty collections). Raises OnSkillInitialized whenever a skill is initialized.
   - SkillConstants: Defines global constraints and tuning values:
     - MAX_ACTIVE_SKILLS = 3
     - NEW_SKILL_CHOICE_COUNT = 2
@@ -104,10 +108,10 @@ It is not responsible for:
     - Stat upgrade requests sample eligible initialized skills dynamically via RandomUpgradeableSkillFinder. If a candidate has no upgradeable stats remaining, it is skipped cleanly.
   - SkillUpgradeRequest: A readonly struct carrying RequestType (NewSkillChoice vs UpgradeSkill), SkillChoices, target UpgradeableSkill, and UpgradeOptions.
   - SkillUpgradeOption: Carries the display string, upgrade action callback, rarity tier, and stat Sprite icon for an upgrade button.
-  - SkillUpgradeableStatsConfig: Reflects over public instance properties implementing IUpgradeableStat where CanBeUpgraded is true, returning NameUpgradableStatPair records. Provides AppendStatsForDisplay for owned stats inspection.
-  - UpgradeableStat<T>, FloatUpgradeableStat, and IntUpgradeableStat: Manage stat progression. They implement ICloneable and provide a strongly-typed Clone() method. They encapsulate Value, MinMaxRange, _rangeOfPossibleValuesForUpgrade, IsSubstractModeOn, HasUnlimitedMaxValue, AlwaysUseMinValueForUpgrade, Unit, Sprite Icon, and the OnUpgrade event.
+  - SkillUpgradeableStatsConfig: Reflects over public instance properties implementing IUpgradeableStat where CanBeUpgraded is true, returning NameUpgradableStatPair records. Provides AppendStatsForDisplay for owned stats inspection and virtual SyncDerivedRuntimeState() for synchronizing derived sub-config fields after stat restoration or reset.
+  - UpgradeableStat<T>, FloatUpgradeableStat, and IntUpgradeableStat: Manage stat progression. They implement ICloneable and provide a strongly-typed Clone() method plus RestoreRuntimeState(double value, bool canBeUpgraded) for multi-tier carryover. They encapsulate Value, MinMaxRange, _rangeOfPossibleValuesForUpgrade, IsSubstractModeOn, HasUnlimitedMaxValue, AlwaysUseMinValueForUpgrade, Unit, Sprite Icon, and the OnUpgrade event.
   - DeepCopyUtility: Provides fast-path in-memory cloning via ICloneable, FloatUpgradeableStat, and IntUpgradeableStat before falling back to JSON serialization. This preserves UnityEngine.Object references (such as Sprite Icon) without modifying source ScriptableObject assets.
-  - SkillUpgradeRarityCalculator: Evaluates rolled values against the stat upgrade range, classifying options as Common, Rare (>= 0.5), or UltraRare (>= 0.8). If OverrideDefaultRarity is enabled on the stat, the manual Rarity override takes precedence.
+  - SkillUpgradeRarityCalculator: Evaluates rolled values against the stat upgrade range (using inclusive integer upper bound UpgradeRangeMax and Mathf.Approximately threshold tolerance for RARE_THRESHOLD = 0.5f and ULTRA_RARE_THRESHOLD = 0.8f), classifying options as Common, Rare (>= 0.5), or UltraRare (>= 0.8). If OverrideDefaultRarity is enabled on the stat, the manual Rarity override takes precedence.
   - SkillUpgradePresenter: Orchestrates popup presentation, subscribing to level-up events, skill-crate collection, queue notifications, and IInputCommands. Acquires InputContextScopeKind.LiveReward while active (keeping vehicle controls live), drives dual-card Buttons plus dynamic upgrade buttons, maps UpgradeSelectChoice1..2 (and slot-3 UpgradeSelectChoice3 for stat upgrades) through IInputCommands and InputPromptView badges, protected by frame-debounce checks and consumed-control clearing.
   - SkillsVisualPresenter: Manages dual 3D preview renderers (Slot 0 primary, Slot 1 secondary), changes camera background colors by context (SkillVisualContext.StatUpgrade vs SkillVisualContext.NewSkillUnlocked), and activates matching visual models by SkillInfoSO.Name.
   - PlayerSkillsHUDPresenter: Manages 3 persistent HUD slots showing empty frames or active skill 2D icons with punch-scale animations on acquisition. Registers with ISkillsRegistry.OnSkillInitialized.
@@ -119,7 +123,7 @@ It is not responsible for:
   - IUpgradeableSkill: Extends ISkillBase, exposing CanBeUpgraded() and ISkillUpgradeableStatsConfig Config.
   - ISkillsRegistry: Defines skill discovery collections, uninitialized/initialized skill counts, InitializeSkill, and the OnSkillInitialized event.
   - ISkillUpgradeFlow: Manages the reward queue, offering QueueRandomNewSkillRequest, QueueRandomSkillUpgradeRequest, TryGetNextRequest, and OnRequestQueued.
-  - ISkillUpgradeableStatsConfig: Declares ResetRuntimeState(), AppendStatsForDisplay(List<NameUpgradableStatPair>), and GetUpgradeableStatsThatCanBeUpgraded().
+  - ISkillUpgradeableStatsConfig: Declares ResetRuntimeState(), SyncDerivedRuntimeState(), AppendStatsForDisplay(List<NameUpgradableStatPair>), and GetUpgradeableStatsThatCanBeUpgraded().
   - IItemsWithScriptableConfigsActivator<TItem, TScriptableConfig>: Activates and tracks child components (blades, turrets) based on configured item counts.
   - IInitializableWithScriptableConfig<TScriptableConfig>: Interface for sub-skill entities requiring a typed ScriptableObject configuration.
   - ISkillUpgradeCollectible: Marker interface extending ICollectible for skill crates that trigger upgrade rewards.
@@ -131,7 +135,7 @@ It is not responsible for:
   - SawSkill / SawBlade:
     - SawSkill initializes child SawBlade components using ItemsWithScriptableConfigsActivator. The authored blade is active immediately; saw count is fixed at 1 (blade count stat retired). Supported runtime stats are KnockbackRange and Damage.
     - SawBlade rotates around the car using XYZRotationLoop. In UpdateRotationSpeedMultiplier, it queries ICarController to dynamically ramp spin speed during steering or drifting (steer intensity floor of 0.85 when drifting, smooth interpolation via _spinRampSpeed).
-    - Handles both OnTriggerEnter and OnTriggerStay via unified ProcessEnemyCollision logic.
+    - Handles both OnTriggerEnter and OnTriggerStay via unified ProcessEnemyCollision logic, forwarding other.ClosestPoint(transform.position) to EntityManipulationHelper.Damage so multi-collider bosses (such as RailgunTowerBoss legs) anchor damage numbers at the struck point.
     - Employs zero-allocation per-enemy attack cooldown tracking via _lastHitTimesByCollider dictionary against _config.AttackCooldown (default 0.14f fallback), purged every 3.0 seconds (SkillConstants.SAW_COOLDOWN_PURGE_INTERVAL) for entries older than 2.0 seconds using _staleCollidersCache.
     - Applies bounded knockback: base distance equals SkillConstants.DEFAULT_COLLISION_KNOCKBACK * knockbackStat, multiplied by 1.0 + (SkillConstants.SAW_KNOCKBACK_SPEED_FACTOR * speedRatio), clamped strictly between SkillConstants.SAW_MIN_KNOCKBACK_DISTANCE (1.2m) and SkillConstants.SAW_MAX_KNOCKBACK_DISTANCE (3.5m).
     - Snappy dynamic arrival duration clamped between SkillConstants.SAW_MIN_KNOCKBACK_DURATION (0.12s) and SkillConstants.SAW_MAX_KNOCKBACK_DURATION (0.22s).
@@ -142,15 +146,15 @@ It is not responsible for:
     - Firing presentation uses a persistent ground telegraph lane indicator (RectangularTelegraphIndicator with glowing border-only shader, transparent interior discarding fragments to prevent ground obscuration or shimmering).
     - Shot resolution uses MinigunShotResolver with thin oriented box overlap/sweep queries, orders and deduplicates living damageable owners, and captures at most 1 + Piercing targets. Impassable terrain (TerrainLayers.Impassable) always stops the corridor immediately. Full 64-entry buffers retry preallocated 2048-entry storage; saturated overflow rejects damage.
     - Visual bullet presentation uses a ballistic tracer particle stream (_tracerParticleSystem) traveling at _tracerSpeed (default 70 m/s). Tracers terminate precisely at the obstacle or enemy that exhausts the shot budget.
-    - Impact delivery uses a zero-allocation circular buffer of PendingHit structures (capacity 64, MinigunConstants.MAX_PENDING_HITS). Point-blank hits (<0.2m) apply damage and impact sparks immediately; distant hits and terrain endpoints are scheduled with delay distance / _tracerSpeed and executed during UpdatePresentation. Target liveness is re-verified defensively before applying delayed damage.
+    - Impact delivery uses a zero-allocation circular buffer of PendingHit structures (capacity 64, MinigunConstants.MAX_PENDING_HITS). Point-blank hits (<0.2m) apply damage (forwarding impactPosition to EntityManipulationHelper.Damage for positional damageable targets) and impact sparks immediately; distant hits and terrain endpoints are scheduled with delay distance / _tracerSpeed and executed during UpdatePresentation. Target liveness is re-verified defensively before applying delayed damage.
     - Legacy binary LineRenderer shot beam was completely removed to eliminate rapid screen strobe clutter during high fire-rate shooting.
   - LasergunSkill / LasergunTurret:
-    - LasergunSkill initializes LasergunTurret instances up to NumberOfTurrets, propagates NumberOfTargets updates event-driven to all turrets, and invokes ShootFromTurrets() at DelayBetweenShoots intervals.
+    - LasergunSkill initializes LasergunTurret instances up to NumberOfTurrets, propagates NumberOfTargets updates event-driven to all turrets, and drives firing via a scaled-time elapsed timer in Update() (AdvanceFireTimer(float deltaTime)) that reads live _config.DelayBetweenShoots.Value every frame so fire-rate upgrades take effect immediately without restarting a coroutine. LasergunSkillSO.SyncDerivedRuntimeState() synchronizes both _turretConfig.Range and _projectileConfig.Range (plus _projectileConfig.Damage) on initial setup, Range.OnUpgrade, and Tier 2 restoration.
     - LasergunTurret searches for enemies using Physics.OverlapSphereNonAlloc on EntityLayers.Enemies into a preallocated buffer (_targetBuffer, size 64).
     - Filters targets by line-of-sight against TerrainLayers.All and sorts candidates by distance.
-    - Tracks closest targets up to NumberOfTargets, rotates toward the primary target in FixedUpdate, charges cumulating VFX (_laserCumulatingVFX) scaled by shoot frequency, renders LineRenderer beams to all hit targets, plays Shoot audio, and applies instant damage.
+    - Tracks closest targets up to NumberOfTargets, rotates toward the primary target in FixedUpdate, guards Shoot() with _isChargingLaser so a faster DelayBetweenShoots cannot restart _laserCumulatingVFX mid-charge, scales _laserCumulatingVFX by shoot frequency (VFXPlayer scales each particle system duration by simulationSpeed), renders LineRenderer beams to all hit targets, plays Shoot audio, forwards _hitTargetClosestPoints[i] to EntityManipulationHelper.Damage, and calls _laserCumulatingVFX.StopPlayback() and clears _primaryTarget in OnDisable().
   - LandmineSkill / Landmine:
-    - LandmineSkill periodically performs a downward raycast checking for TerrainLayers.Ground within CAN_PLACE_MINE_RAY_DISTANCE (5m), instantiating a Landmine prefab when valid ground is detected.
+    - LandmineSkill validates _config, _config.SpawnCooldown, and _landminePrefab fail-fast in Initialize(), and drives placement via a scaled-time elapsed timer in Update() (AdvanceSpawnTimer(float deltaTime)) reading live _config.SpawnCooldown.Value every frame, performing a downward raycast checking for TerrainLayers.Ground within CAN_PLACE_MINE_RAY_DISTANCE (5m) and instantiating a Landmine prefab when valid ground is detected.
     - Landmine scales to Size.Value and activates. When an enemy enters its trigger, it queries an overlap sphere against EntityLayers.Enemies with QueryTriggerInteraction.Collide.
     - Plays explosion VFX via _deathVfxPlayer scaled to ExplosionRadius.Value, plays Explosion audio, applies damage, and calculates radial knockback directed away from the mine center. The mine visual is disabled immediately and the object is destroyed upon VFX completion.
 
@@ -246,7 +250,10 @@ It is not responsible for:
     dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
     dotnet build Assembly-CSharp-Editor.csproj -p:BuildProjectReferences=false
   - Unit tests:
-    - Assets/Scripts/Editor/Tests/MinigunShotResolverTests.cs validates Minigun shot resolution, contact ordering, piercing limits, terrain occlusion, and non-allocating hit queries.
+    - Assets/Scripts/Editor/Tests/UpgradeableStatTests.cs validates UpgradeableStat<T> cloning, clamping, subtract mode, unlimited max, and RestoreRuntimeState carryover.
+    - Assets/Scripts/Editor/Tests/SkillConfigRuntimeTests.cs validates DeepCopyUtility stat cloning, AppendStatsForDisplay, SyncDerivedRuntimeState (including Lasergun range sync), VFXPlayer simulationSpeed duration scaling, and scaled-time cadence timers in LasergunSkill and LandmineSkill.
+    - Assets/Scripts/Editor/Tests/SkillUpgradeFlowTests.cs validates JIT reward queueing, pending slot reservation, fallback to stat upgrades, AlwaysUseMinValueForUpgrade consistency, and SkillUpgradeRarityCalculator boundaries.
+    - Assets/Scripts/Editor/Tests/SkillsTierCarryoverTests.cs validates multi-tier skill and stat snapshot/restore across RunSessionService and SkillsRegistry.
   - Play-mode verification:
     - Verify initial starting skill activates and displays in HUD slot 1 with punch animation.
     - Collect skill crates and verify stat upgrade popup displays 3 options with correct stat icons and rarity borders.
@@ -285,8 +292,7 @@ It is not responsible for:
 
 - Known limitations:
   - Saw blade count upgrade is intentionally retired. SawSkill initializes the authored blade; its supported runtime stats are KnockbackRange and Damage.
-  - LandmineSkill has an unused serialized _cooldown field; active spawn intervals are controlled by _config.SpawnCooldown.Value.
-  - Starting skill selection relies on direct child hierarchy order (Skills[0]) rather than an explicit designer-selected loadout property.
+  - Starting skill selection relies on direct child hierarchy order (Skills[0]) when no carryover snapshot is active rather than an explicit designer-selected loadout property.
   - LasergunTurret dynamically instantiates additional LineRenderer components at runtime if NumberOfTargets exceeds the initial capacity, cloning from _laserLineRenderer.
 
 - Open design questions:
@@ -295,6 +301,5 @@ It is not responsible for:
   - Should crate pickups occasionally offer new skill choices, or remain strictly stat upgrades?
 
 - Suggested follow-up tasks:
-  - Remove the unused _cooldown field in LandmineSkill in a focused cleanup.
   - Pre-allocate or pool extra LineRenderer instances in LasergunTurret to avoid dynamic runtime component instantiation during target-count upgrades.
   - Keep new supported stats in each config's explicit AppendStatsForDisplay enumeration and review the UI group row capacity before expanding stats.
