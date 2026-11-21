@@ -1,3 +1,5 @@
+using Assets.Scripts.GameFlow;
+using Assets.Scripts.GameFlow.Config;
 using Assets.Scripts.PowerUps.Freeze;
 using Assets.Scripts.Spawners.Enemies;
 using Assets.Scripts.UI.HUD;
@@ -19,6 +21,7 @@ namespace Assets.Scripts.Spawners.Swarm
         [Inject] private readonly IWaveFreezer _waveFreezer = null;
         [Inject] private readonly ISwarmNotificationPresenter _swarmNotificationPresenter = null;
         [Inject] private readonly ITimeFreezeState _timeFreezeState = null;
+        [Inject] private readonly IRunSessionService _runSessionService = null;
 
         [Header("Swarm Timing")]
         [SerializeField] private float _minSwarmInterval = 120f;
@@ -33,6 +36,10 @@ namespace Assets.Scripts.Spawners.Swarm
         [SerializeField] private float _swarmDuration = 5f;
         [SerializeField] private float _spawnTickInterval = 1f;
 
+        private float _effectiveMinSwarmInterval;
+        private float _effectiveMaxSwarmInterval;
+        private int _effectiveMinSwarmSize;
+        private int _effectiveMaxSwarmSize;
         private float _nextSwarmTime;
         private int _currentSwarmIndex;
         private bool _isSwarmActive;
@@ -42,7 +49,8 @@ namespace Assets.Scripts.Spawners.Swarm
 
         private void Start()
         {
-            _nextSwarmTime = Random.Range(_minSwarmInterval, _maxSwarmInterval);
+            ApplyTierScaling();
+            _nextSwarmTime = Random.Range(_effectiveMinSwarmInterval, _effectiveMaxSwarmInterval);
         }
 
         private void OnDisable()
@@ -87,7 +95,7 @@ namespace Assets.Scripts.Spawners.Swarm
             int clampedIndex = Mathf.Min(_currentSwarmIndex, configCount - 1);
             EnemySpawnInfo selectedConfig = _swarmEnemySpawner.EnemyConfigs[clampedIndex];
 
-            int swarmSize = Random.Range(_minSwarmSize, _maxSwarmSize + 1);
+            int swarmSize = Random.Range(_effectiveMinSwarmSize, _effectiveMaxSwarmSize + 1);
             swarmSize = Mathf.Min(swarmSize, selectedConfig.MaxAmount);
 
             _waveFreezer.IsFrozen = true;
@@ -164,7 +172,25 @@ namespace Assets.Scripts.Spawners.Swarm
             _swarmCoroutine = null;
 
             _currentSwarmIndex++;
-            _nextSwarmTime = Random.Range(_minSwarmInterval, _maxSwarmInterval);
+            _nextSwarmTime = Random.Range(_effectiveMinSwarmInterval, _effectiveMaxSwarmInterval);
+        }
+
+        private void ApplyTierScaling()
+        {
+            float intervalMultiplier = 1f;
+            float sizeMultiplier = 1f;
+
+            TierEnemySpawningConfig tierSpawning = _runSessionService?.ActiveTierConfig?.EnemySpawning;
+            if (tierSpawning != null)
+            {
+                intervalMultiplier = Mathf.Max(0.1f, tierSpawning.SwarmIntervalMultiplier);
+                sizeMultiplier = Mathf.Max(0.1f, tierSpawning.SwarmSizeMultiplier);
+            }
+
+            _effectiveMinSwarmInterval = Mathf.Max(5f, _minSwarmInterval * intervalMultiplier);
+            _effectiveMaxSwarmInterval = Mathf.Max(_effectiveMinSwarmInterval, _maxSwarmInterval * intervalMultiplier);
+            _effectiveMinSwarmSize = Mathf.Max(1, Mathf.RoundToInt(_minSwarmSize * sizeMultiplier));
+            _effectiveMaxSwarmSize = Mathf.Max(_effectiveMinSwarmSize, Mathf.RoundToInt(_maxSwarmSize * sizeMultiplier));
         }
     }
 }

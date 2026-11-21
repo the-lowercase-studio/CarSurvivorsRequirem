@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 076a553c77658ca4d909724cdba5d9dd, type: 3}
+  m_Name: CrawlingZombie3Config_Tier2
+  m_EditorClassIdentifier: 
+  MaxHealth: 380
+  MovementSpeed: 1.2
+  RotationSpeed: 4
+  Acceleration: 0
+  Damage: 50
+  DangerLevel: 5
+  ExpForKill: 115
+  IsMovingByCrawling: 1
+  _isShiny: 1

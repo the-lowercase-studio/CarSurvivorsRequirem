@@ -29,6 +29,7 @@ Collectible drops from enemies are triggered directly by death events via `Enemy
 - DI setup:
   - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
   - Assets/Scripts/ReflexDI/BootLoader.cs
+  - Assets/Scripts/ReflexDI/ReflexPrefabInstantiator.cs
 - Related code and docs:
   - Assets/Scripts/Enemies/Bosses/BossEncounterService.cs
   - .agents/context/game-systems/enemies-system.md
@@ -66,6 +67,8 @@ Collectible drops from enemies are triggered directly by death events via `Enemy
   - `MapInteractablesSpawner`: Config driven grid placement component.
 - Runtime flow:
   - Scene-level spawners are bound through Reflex DI installers (`DefaultGameplaySceneInstaller`).
+  - Pooled spawners whose prefabs require Reflex injection (`EnemiesSpawner`, `ExpParticleSpawner`) create an inactive staging parent in `Awake()` via `ReflexPrefabInstantiator.CreateInactiveStagingParent` and instantiate pool entries via `ReflexPrefabInstantiator.InstantiateInjectedObject` (which injects dependencies with `GameObjectInjector.InjectObject` and executes an optional `beforeActivate` callback such as `enemy.SetBaseConfig(localInfo.ConfigOverride)` before any `OnEnable()` runs, eliminating `GameObjectSelfInjector`).
+  - Project-scoped `DamageNumbersSpawner` receives the current gameplay camera via `DefaultGameplaySceneInstaller` (`Initialize(_mainCamera)`), propagating the new camera reference to both future pool creations and all currently pooled `DamageNumber` instances across multi-tier scene reloads.
   - Consumers inject generic spawner interfaces (e.g. `IOnRandomGridPosSpawner<EnemiesSpawner>` or `IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig>`).
   - Spawn calls retrieve or instantiate objects from pools, initialize per-object data, activate GameObjects, and increment `CurrentlySpawnedObjectsCount`.
   - Object release paths deactivate objects, raise `OnSpawnedEntityReleased`, and decrement `CurrentlySpawnedObjectsCount`.

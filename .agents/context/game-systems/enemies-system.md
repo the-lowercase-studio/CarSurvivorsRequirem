@@ -29,6 +29,7 @@ The system is not responsible for:
 
 - Primary code locations:
   - Assets/Scripts/Enemies/Base/Enemy.cs
+  - Assets/Scripts/Enemies/Base/EnemyTierShineController.cs
   - Assets/Scripts/Enemies/Base/EnemyMovementController.cs
   - Assets/Scripts/Enemies/Base/EnemyAttackController.cs
   - Assets/Scripts/Enemies/Base/EnemyDeathHandler.cs
@@ -48,17 +49,27 @@ The system is not responsible for:
   - Assets/Scripts/Enemies/Constants/EnemyMovementConstants.cs
   - Assets/Scripts/Enemies/Constants/EnemyCombatConstants.cs
   - Assets/Scripts/Enemies/Constants/EnemyAnimationConstants.cs
+  - Assets/Scripts/Enemies/Constants/EnemyVisualConstants.cs
   - Assets/Scripts/Enemies/Bosses/BossEncounterService.cs
   - Assets/Scripts/Enemies/Bosses/Constants/BossEncounterConstants.cs
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawnChanceRedistributionSystem.cs
   - Assets/Scripts/Spawners/Enemies/EnemySpawnInfo.cs
+  - Assets/Scripts/ReflexDI/ReflexPrefabInstantiator.cs
+  - Assets/Scripts/Editor/Tests/TierConfigDrivenEnemySpawningTests.cs
 - Designer-authored data:
   - Assets/ScriptableObjects/Enemy/EnemyConfigSO.cs
+  - Assets/ScriptableObjects/Enemy/Basic/Tier2/CrawlingZombie3Config_Tier2.asset
+  - Assets/ScriptableObjects/Enemy/Basic/Tier2/StandingZombie3Config_Tier2.asset
+  - Assets/ScriptableObjects/Enemy/Basic/Tier2/StandingZombie4Config_Tier2.asset
+  - Assets/ScriptableObjects/Enemy/Basic/Tier2/BarrelEnemyConfig_Tier2.asset
   - Assets/ScriptableObjects/Enemy/Basic/Barrel/BarrelExplosionConfigSO.cs
+  - Assets/ScriptableObjects/GameFlow/GameLoopProgressionConfig.asset
+  - Assets/Shaders/Tier2ShinyEnemy.shader
+  - Assets/Materials/Colors/DefaultColors/
   - Assets/Scripts/Enemies/DropAnimationConfiguration.cs
-  - Standard Enemy prefabs configured with Enemy, EnemyMovementController, EnemyAttackController, EnemyDeathHandler, EnemyDropHandler, EnemyAnimator, EnemyCollisionsController, FlowFieldMovementController, Health, Collider, Rigidbody, Audio, and VFX
-  - Barrel Enemy prefabs configured with Enemy, EnemyMovementController, EnemyCollisionsController, BarrelEnemyExplosionController, BarrelEnemyDeathHandler, BarrelEnemyAttackFeedback, CircularTelegraphIndicator, EnemyAnimator, Health, BoxCollider, Rigidbody, Audio, and VFX
+  - Standard Enemy prefabs configured with Enemy, EnemyTierShineController, EnemyMovementController, EnemyAttackController, EnemyDeathHandler, EnemyDropHandler, EnemyAnimator, EnemyCollisionsController, FlowFieldMovementController, Health, Collider, Rigidbody, Audio, and VFX (no GameObjectSelfInjector)
+  - Barrel Enemy prefabs configured with Enemy, EnemyTierShineController, EnemyMovementController, EnemyCollisionsController, BarrelEnemyExplosionController, BarrelEnemyDeathHandler, BarrelEnemyAttackFeedback, CircularTelegraphIndicator, EnemyAnimator, Health, BoxCollider, Rigidbody, Audio, and VFX (no GameObjectSelfInjector)
 - Related systems:
   - Wave orchestration: Assets/Scripts/Waves/WaveManager.cs
   - Swarm events: Assets/Scripts/Spawners/Swarm/SwarmSpawner.cs
@@ -95,7 +106,8 @@ The system is not responsible for:
 ## Architecture and Data Flow
 
 - Core components:
-  - Enemy: Aggregate root component for enemy GameObjects. Implements IHealthy, IDamageable, IKnockable, and IPoolable. Injects IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> and ITimeFreezeState via Reflex. Emits floating damage numbers in a hemisphere pattern, decrements health, triggers blood VFX, delegates knockback to EnemyMovementController, and fires OnCanBeReleased when death sequences finish. Restores MaxHealth and resets animator state in OnGet().
+  - Enemy: Aggregate root component for enemy GameObjects. Implements IHealthy, IDamageable, IKnockable, and IPoolable. Injects IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> and ITimeFreezeState via Reflex (pre-activation via ReflexPrefabInstantiator). Caches serialized _config into _baseConfig in Awake() (or overrides both _baseConfig and _config via SetBaseConfig(EnemyConfigSO) before activation when EnemiesSpawner applies an EnemySpawnInfo.ConfigOverride). Exposes ApplyRuntimeConfig(EnemyConfigSO) and ApplyTierShine(bool) to synchronize Health.MaxHealth, EnemyAnimator, and _tierShineController with Config.IsShiny in Awake(), OnGet(), and runtime config switches, and restores _baseConfig in OnRelease() if a temporary runtime config override was applied. Emits floating damage numbers in a hemisphere pattern, decrements health, triggers blood VFX, delegates knockback to EnemyMovementController, and fires OnCanBeReleased when death sequences finish.
+  - EnemyTierShineController: [ExecuteAlways] visual component attached to the root of all basic enemy prefabs (CrawlingZombie.prefab, StandingZombie.prefab, BarrelEnemy.prefab) with explicit serialized _targetRenderers (pointing to the body SkinnedMeshRenderer without runtime hierarchy fallback searches, per ADR-005) and _isShineEnabled (default false). Tracks _hasAppliedShine so that when _isShineEnabled is false and shine was never enabled (Tier 1 default), RefreshPropertyBlocks() returns immediately with zero MaterialPropertyBlock allocations or writes (keeping Tier 1 enemies 100% SRP-Batcher compatible on the shared DefaultColors materials using Custom/Tier2ShinyEnemy with _ShineEnabled = 0). When _isShineEnabled is true (driven by EnemyConfigSO.IsShiny on Tier 2 configs), writes EnemyVisualConstants.SHINE_ENABLED_PROPERTY_ID (_ShineEnabled = 1f) per compatible material slot via GetPropertyBlock/SetPropertyBlock (composing cleanly with BarrelEnemyAttackFeedback), and resets _ShineEnabled to 0f if disabled after having been enabled.
   - EnemyMovementController: Implements IMovementController. Coordinates flow-field locomotion, external speed multipliers (SetMovementSpeedMultiplier), grounding, gravity, and obstacle-checked knockback. Ground probes ignore triggers and preserve the existing 1.5-unit origin/3.5-unit range and 20-unit snapping speed. Ungrounded enemies accumulate gravity, suppress ordinary horizontal pursuit after falling one unit below the last ground sample, and die below Y = -10. Knockback continues in XZ without a world clamp while gravity owns Y. Grounded voluntary displacement is checked after separation and acceleration, scaling effectiveSpeed by _movementSpeedMultiplier. CanBeTeleported excludes stopped, knocked, airborne, falling, and frozen movement, and enforces a 3.0s unfrozen grace period (`_teleportAllowedUnfrozenTime`, set via `RefreshTeleportGracePeriod()` using `Enemy.UnfrozenTime` in `OnEnable` and `ResetAfterRelocation`); ResetAfterRelocation resets _movementSpeedMultiplier to 1f, clears spatial state while preserving lifecycle/attack flags, and refreshes the teleport grace deadline, while OnDisable resets _movementSpeedMultiplier to 1f and clears `_teleportAllowedUnfrozenTime` to 0f.
   - EnemyCollisionsController: Implements ICollisionsController. Performs periodic SphereCastAll queries (default every 0.05s) on EntityLayers.All using _collisionRadius (1.0f), filtering out its own trigger colliders and emitting OnCollisionWithPlayer and OnCollisionWithOtherEnemy.
   - EnemyAttackController: Handles standard melee attacks. Subscribes to EnemyCollisionsController.OnCollisionWithPlayer. Checks if target is within _attackRange and within _attackArcAngle (default 60°), and executes a Physics.Raycast line-of-sight check against TerrainLayers.All to prevent attacking through obstacles. Plays the attack animation on EnemyAnimator, and applies Config.Damage to IDamageable targets when OnAttackHitFrame is fired.
@@ -107,9 +119,9 @@ The system is not responsible for:
   - EnemyDropHandler: Subscribes to Health.OnNoHealth. Evaluates configured CollectibleDropEntry drop chance percentages. Calculates 360° radial scatter positions with jitter and height offsets. Resolves valid walkable destination points using a 4-step algorithm: (1) direct target position, (2) stepping along ray toward start, (3) start position, (4) 5-ring spiral search around start cell, (5) fallback. Delegates instantiation to ICollectibleDropNotifier.SpawnCollectible.
   - CollectibleDropNotifier: Implements ICollectibleDropNotifier. Manages ObjectPool<GameObject> instances per collectible item prefab. Spawns items and animates them with DOTween DOScale (Ease.OutBack) and DOJump to the resolved target position. Listens to ICollectible.OnCollected and IPoolable.OnCanBeReleased to recycle items back into their pools.
   - EnemiesOutsidePlayerChunkTeleporter: Every two seconds, computes exact `GridPlayerChunk` XZ bounds from corner cells (`Cells[0, 0]` and `Cells[Width - 1, Height - 1]` expanded by `CellSize * 0.5f`, aborting safely if `playerChunk` is invalid or corner cells are null) and selects active, living, movable enemies outside those XZ bounds whose `CanBeTeleported` passes (respecting the 3.0s unfrozen post-spawn/post-relocation grace window). It rechecks eligibility before committing, validates supported hidden placements, and calls `ResetAfterRelocation()` after assignment (clearing movement state and starting a fresh 3.0s grace period). Knockback/falling enemies retain their trajectory and gravity; there is no below-chunk rescue.
-  - EnemiesSpawner: Implements IOnRandomGridPosSpawner<EnemiesSpawner>, ISwarmEnemySpawner, and IEnemySpawnDifficultyController. Manages ObjectPool<Enemy> instances per EnemySpawnInfo. Pre-warms pools on Start. Spawns standard wave enemies on off-camera walkable cells outside the player chunk (using _outerSpawnBufferCells and _maxEnemiesPerCell). Spawns swarm enemies inside the player chunk with optional spawn VFX. Drives spawn weight updates via EnemiesSpawnChanceRedistributionSystem.
-  - EnemiesSpawnChanceRedistributionSystem: Gradually decrements spawn chance of lower-tier enemies after spawn batches and redistributes probability geometrically across higher-tier enemies whose threshold flags are unlocked. Supports difficulty scalars from external game events via IncreaseSpawnChanceRedistributionFactor.
-  - BossEncounterService: Implements IBossEncounterService. Tracks tower landmarks, counts defeated towers against required threshold (default 2), pauses before spawning GolemBoss (default 10s delay), binds boss health to IBossHUDPresenter, suppresses standard swarms via ISwarmFreezer, and instantiates stage progression portals upon Golem defeat.
+  - EnemiesSpawner: Implements IOnRandomGridPosSpawner<EnemiesSpawner>, ISwarmEnemySpawner, and IEnemySpawnDifficultyController. Injects IRunSessionService and Reflex.Core.Container. In Awake(), clones active tier EnemySpawnInfo entries (from IRunSessionService.ActiveEnemyConfig.EnemySpawnInfos or scene fallback) via EnemySpawnInfo.CreateRuntimeCopy() into _runtimeEnemiesInfo so redistribution never mutates ScriptableObject assets, and instantiates pooled enemies under an inactive staging parent via ReflexPrefabInstantiator.InstantiateInjectedObject with beforeActivate: enemy => enemy.SetBaseConfig(localInfo.ConfigOverride). Pre-warms pools on Start. Spawns standard wave enemies on off-camera walkable cells outside the player chunk (using _outerSpawnBufferCells and _maxEnemiesPerCell). Spawns swarm enemies inside the player chunk with optional spawn VFX. Drives spawn weight updates via EnemiesSpawnChanceRedistributionSystem.
+  - EnemiesSpawnChanceRedistributionSystem: Gradually decrements spawn chance of lower-tier enemies after spawn batches and redistributes probability geometrically across higher-tier enemies whose threshold flags are unlocked, operating strictly on cloned runtime EnemySpawnInfo instances. Supports difficulty scalars from external game events via IncreaseSpawnChanceRedistributionFactor.
+  - BossEncounterService: Implements IBossEncounterService. Tracks tower landmarks and GolemStatue (RegisterGolemStatue, UnregisterGolemStatue), counts defeated towers against required threshold (default 2) and emits OnTowerDefeated(DefeatedTowersCount, RequiredTowersCount) to unlock GolemStatue for player-triggered Golem awakening, binds boss health to IBossHUDPresenter, suppresses standard swarms via ISwarmFreezer, applies tier boss config overrides from IRunSessionService, and instantiates ground-snapped NextStagePortal instances via ReflexPrefabInstantiator upon Golem defeat.
 
 - Key interfaces:
   - IHealthy, IDamageable, IKnockable: Health management, damage reception, and knockback handling.
@@ -163,11 +175,15 @@ The system is not responsible for:
     - BASE_COLOR_ID = Shader.PropertyToID("_BaseColor")
     - COLOR_ID = Shader.PropertyToID("_Color")
     - EMISSION_COLOR_ID = Shader.PropertyToID("_EmissionColor")
+  - EnemyVisualConstants:
+    - SHINE_ENABLED_PROPERTY_ID = Shader.PropertyToID("_ShineEnabled")
   - BossEncounterConstants:
     - DEFAULT_GOLEM_DISPLAY_NAME = "ANCIENT GOLEM"
     - DEFAULT_SPAWN_OFFSET_DISTANCE = 15f
     - DEFAULT_REQUIRED_TOWERS = 2
     - DEFAULT_DELAY_BEFORE_GOLEM_SPAWN = 10.0f
+    - PORTAL_SPAWN_RAYCAST_HEIGHT = 25f
+    - PORTAL_SPAWN_RAYCAST_DISTANCE = 60f
 
 - Runtime flows:
   - Standard Wave Spawning Flow:
@@ -364,10 +380,8 @@ The system is not responsible for:
 - Known limitations:
   - Standard EnemyDeathHandler uses hardcoded _startEffectsToFinish = 2 without a failsafe watchdog timer. If a prefab is missing an audio clip or VFX player callback, the instance hangs indefinitely and is never recycled to the pool. In contrast, BarrelEnemyDeathHandler implements an explicit 5.0s presentation watchdog.
   - CollectibleDropNotifier uses ObjectPool<GameObject> rather than strongly-typed component pools, requiring runtime TryGetComponent lookups upon retrieval and release.
-  - EnemiesSpawnChanceRedistributionSystem mutates SpawnChance on EnemySpawnInfo.SpawnChanceInfo directly in memory during runtime.
 - Open design questions:
   - Should the failsafe watchdog pattern from BarrelEnemyDeathHandler be extracted into a shared or standardized death sequence component for all enemy types?
-  - Should spawn chance redistribution operate on isolated runtime runtime copies to prevent any risk of mutating editor ScriptableObject assets during play mode?
 - Suggested follow-up tasks:
   - Standardize presentation watchdog timeouts across standard EnemyDeathHandler.
   - Convert CollectibleDropNotifier to strongly-typed component pools.

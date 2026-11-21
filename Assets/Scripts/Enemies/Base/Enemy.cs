@@ -23,8 +23,11 @@ namespace Assets.Scripts.Enemies.Base
         [field: SerializeField] public EnemyConfigSO Config { get; private set; }
         [SerializeField] private VFXPlayer _bloodVfxPlayer;
         [SerializeField] private GameObject _visual;
+        [Tooltip("Optional component toggling the tier shiny shader effect on enemy body renderers.")]
+        [SerializeField] private EnemyTierShineController _tierShineController;
 
         private INeedToCompleteBeforeDisable _enemyDeathSequence;
+        private EnemyConfigSO _baseConfig;
 
         public IHealth Health { get; private set; }
         public ICollisionsController CollisionsController { get; private set; }
@@ -46,6 +49,13 @@ namespace Assets.Scripts.Enemies.Base
             AudioClipPlayer = GetComponentInChildren<IAudioClipPlayer>();
             _enemyDeathSequence = GetComponent<INeedToCompleteBeforeDisable>();
             EnemyAnimator = GetComponentInChildren<EnemyAnimator>();
+
+            _baseConfig ??= Config;
+            if (Config != null)
+            {
+                Health.MaxHealth = Config.MaxHealth;
+                ApplyTierShine(Config.IsShiny);
+            }
         }
 
         private void OnEnable()
@@ -82,11 +92,51 @@ namespace Assets.Scripts.Enemies.Base
             OnCanBeReleased?.Invoke(this, EventArgs.Empty);
         }
 
+        public void SetBaseConfig(EnemyConfigSO baseConfig)
+        {
+            if (baseConfig == null)
+            {
+                return;
+            }
+
+            _baseConfig = baseConfig;
+            ApplyRuntimeConfig(baseConfig);
+        }
+
+        public void ApplyRuntimeConfig(EnemyConfigSO configOverride)
+        {
+            if (configOverride == null)
+            {
+                return;
+            }
+
+            _baseConfig ??= Config;
+            Config = configOverride;
+
+            IHealth health = Health != null ? Health : GetComponent<IHealth>();
+            health.MaxHealth = Config.MaxHealth;
+
+            ApplyTierShine(Config.IsShiny);
+        }
+
+        public void ApplyTierShine(bool isEnabled)
+        {
+            if (_tierShineController != null)
+            {
+                _tierShineController.SetShineEnabled(isEnabled);
+            }
+        }
+
         public void OnRelease()
         {
             _enemyDeathSequence.OnCompleted -= EnemyDeathSequence_OnCompleted;
 
             EnemyAnimator.ResetAttackAnimationState();
+
+            if (_baseConfig != null && !ReferenceEquals(Config, _baseConfig))
+            {
+                ApplyRuntimeConfig(_baseConfig);
+            }
         }
 
         public void ApplyKnockBack(Vector3 direction, float power, float timeToArriveAtLocation)

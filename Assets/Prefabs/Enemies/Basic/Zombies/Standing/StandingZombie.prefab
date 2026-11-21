@@ -16,10 +16,10 @@ GameObject:
   - component: {fileID: 2035910355702977201}
   - component: {fileID: 4599289953647572422}
   - component: {fileID: 9047880918914326983}
-  - component: {fileID: -4119674192528304505}
   - component: {fileID: 229474845590807783}
   - component: {fileID: 4176904749440768749}
   - component: {fileID: 7128695265574407790}
+  - component: {fileID: 2585597439750207548}
   m_Layer: 7
   m_Name: StandingZombie
   m_TagString: Untagged
@@ -61,6 +61,7 @@ MonoBehaviour:
   <Config>k__BackingField: {fileID: 0}
   _bloodVfxPlayer: {fileID: 6579929326629268662}
   _visual: {fileID: 8598757608740303722}
+  _tierShineController: {fileID: 2585597439750207548}
 --- !u!114 &1025450493727768952
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -142,19 +143,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _visual: {fileID: 8598757608740303722}
   _deathVfxPlayer: {fileID: 2363358761242140515}
---- !u!114 &-4119674192528304505
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3261852426992956232}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 20620ae30fdd0164c9bb5bdc717d3ada, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _injectionStrategy: 1
 --- !u!114 &229474845590807783
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -231,6 +219,21 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 80
   m_CollisionDetection: 0
+--- !u!114 &2585597439750207548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3261852426992956232}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1567c86dd305de94184d93d59f92fac5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Enemies.Base.EnemyTierShineController
+  _isShineEnabled: 0
+  _targetRenderers:
+  - {fileID: 4909408010617150076}
 --- !u!1 &8598757608740303722
 GameObject:
   m_ObjectHideFlags: 0
@@ -1729,6 +1732,11 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 3402772935746238773}
   m_SourcePrefab: {fileID: 100100000, guid: b391274d088176440a16866fa8aab180, type: 3}
+--- !u!137 &4909408010617150076 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -5928395085533954453, guid: b391274d088176440a16866fa8aab180, type: 3}
+  m_PrefabInstance: {fileID: 7609856897060529175}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &7303375517415397702 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: b391274d088176440a16866fa8aab180, type: 3}

@@ -1,10 +1,14 @@
 using Assets.Scripts.Common.Types;
 using Assets.Scripts.Enemies.Base;
+using Assets.Scripts.GameFlow;
+using Assets.Scripts.GameFlow.Config;
 using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.Pooling;
+using Assets.Scripts.ReflexDI;
 using Assets.Scripts.Spawners.GridSpace;
 using Assets.Scripts.VFX;
 using Reflex.Attributes;
+using Reflex.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -34,6 +38,8 @@ namespace Assets.Scripts.Spawners.Enemies
     {
         [Inject] private readonly IGridManager _gridManager = null;
         [Inject] private readonly Camera _mainCamera = null;
+        [Inject] private readonly IRunSessionService _runSessionService = null;
+        [Inject] private readonly Container _container = null;
 
         [Header("SpawnExpParticle Chance Settings")]
         [SerializeField] private FloatValueRange _spawnChanceDecreaseFactor;
@@ -49,11 +55,14 @@ namespace Assets.Scripts.Spawners.Enemies
         [SerializeField] private float _currentRedistributionFactorBonus = 0f;
 
         private EnemiesSpawnChanceRedistributionSystem _enemiesSpawnChanceRedistributionSystem = new();
+        private readonly List<EnemySpawnInfo> _runtimeEnemiesInfo = new();
+        private FloatValueRange _runtimeSpawnChanceDecreaseFactor;
         private Dictionary<EnemySpawnInfo, ObjectPool<Enemy>> _enemyPools = new();
         private Dictionary<Enemy, ObjectPool<Enemy>> _instancePoolMap = new();
         private readonly HashSet<Enemy> _activeEnemies = new();
 
         private readonly Dictionary<VFXPlayer, PendingSpawn> _pendingSpawns = new();
+        private Transform _injectionStagingParent;
 
         private sealed class PendingSpawn
         {
@@ -74,13 +83,24 @@ namespace Assets.Scripts.Spawners.Enemies
             _pendingSpawns.Clear();
         }
 
+        private void OnDestroy()
+        {
+            if (_injectionStagingParent != null)
+            {
+                Destroy(_injectionStagingParent.gameObject);
+                _injectionStagingParent = null;
+            }
+        }
+
         public event EventHandler OnSpawnedEntityReleased;
 
         public uint CurrentlySpawnedObjectsCount { get; private set; }
-        public IReadOnlyList<EnemySpawnInfo> EnemyConfigs => _poolEnemiesInfo;
+        public IReadOnlyList<EnemySpawnInfo> EnemyConfigs => _runtimeEnemiesInfo;
 
         private void Awake()
         {
+            _injectionStagingParent = ReflexPrefabInstantiator.CreateInactiveStagingParent(nameof(EnemiesSpawner));
+            InitializeRuntimeEnemyConfigs();
             PoolEnemies();
         }
 
@@ -88,8 +108,8 @@ namespace Assets.Scripts.Spawners.Enemies
         {
             EnemiesSpawnChanceRedistributionSystem.Configuration config = new()
             {
-                EnemiesInfo = _poolEnemiesInfo,
-                SpawnChanceDecreaseFactor = _spawnChanceDecreaseFactor
+                EnemiesInfo = _runtimeEnemiesInfo,
+                SpawnChanceDecreaseFactor = _runtimeSpawnChanceDecreaseFactor
             };
 
             _enemiesSpawnChanceRedistributionSystem.Initialize(config);
@@ -97,18 +117,67 @@ namespace Assets.Scripts.Spawners.Enemies
             PreWarmPools();
         }
 
+        private void InitializeRuntimeEnemyConfigs()
+        {
+            _runtimeEnemiesInfo.Clear();
+
+            IReadOnlyList<EnemySpawnInfo> sourceInfos = _poolEnemiesInfo;
+            FloatValueRange sourceDecreaseFactor = _spawnChanceDecreaseFactor;
+
+            TierEnemySpawningConfig tierSpawning = _runSessionService?.ActiveTierConfig?.EnemySpawning;
+            if (tierSpawning != null && tierSpawning.EnemySpawnInfos != null && tierSpawning.EnemySpawnInfos.Count > 0)
+            {
+                sourceInfos = tierSpawning.EnemySpawnInfos;
+                if (tierSpawning.SpawnChanceDecreaseFactor != null)
+                {
+                    sourceDecreaseFactor = tierSpawning.SpawnChanceDecreaseFactor;
+                }
+            }
+
+            _runtimeSpawnChanceDecreaseFactor = sourceDecreaseFactor != null
+                ? new FloatValueRange(sourceDecreaseFactor.Min, sourceDecreaseFactor.Max)
+                : new FloatValueRange(1.5f, 2.5f);
+
+            if (sourceInfos == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < sourceInfos.Count; i++)
+            {
+                EnemySpawnInfo source = sourceInfos[i];
+                if (source == null || source.EnemyPrefab == null)
+                {
+                    continue;
+                }
+
+                _runtimeEnemiesInfo.Add(source.CreateRuntimeCopy());
+            }
+        }
+
         private void PoolEnemies()
         {
-            foreach (EnemySpawnInfo poolEnemyInfo in _poolEnemiesInfo)
+            foreach (EnemySpawnInfo poolEnemyInfo in _runtimeEnemiesInfo)
             {
-                ObjectPool<Enemy> currentEnemyPool = new(createFunc: () => Instantiate(poolEnemyInfo.EnemyPrefab, _enemiesParent),
-                                                         actionOnGet: OnEnemyGet,
-                                                         actionOnRelease: OnEnemyRelease,
-                                                         actionOnDestroy: enemy => Destroy(enemy.gameObject),
-                                                         defaultCapacity: poolEnemyInfo.MaxAmount,
-                                                         maxSize: poolEnemyInfo.MaxAmount);
+                EnemySpawnInfo localInfo = poolEnemyInfo;
+                Action<Enemy> beforeActivate = localInfo.ConfigOverride != null
+                    ? enemy => enemy.SetBaseConfig(localInfo.ConfigOverride)
+                    : null;
 
-                _enemyPools.Add(poolEnemyInfo, currentEnemyPool);
+                ObjectPool<Enemy> currentEnemyPool = new(
+                    createFunc: () => ReflexPrefabInstantiator.InstantiateInjectedObject(
+                        localInfo.EnemyPrefab,
+                        _enemiesParent,
+                        _container,
+                        _injectionStagingParent,
+                        beforeActivate),
+                    actionOnGet: OnEnemyGet,
+                    actionOnRelease: OnEnemyRelease,
+                    actionOnDestroy: enemy => Destroy(enemy.gameObject),
+                    defaultCapacity: localInfo.MaxAmount,
+                    maxSize: localInfo.MaxAmount);
+
+                _enemyPools.Add(localInfo, currentEnemyPool);
             }
         }
 
@@ -331,7 +400,7 @@ namespace Assets.Scripts.Spawners.Enemies
         private EnemySpawnInfo RandomEnemyInfoBasedOnSpawnChance()
         {
             float totalChance = 0;
-            foreach (EnemySpawnInfo enemySpawnInfo in _poolEnemiesInfo)
+            foreach (EnemySpawnInfo enemySpawnInfo in _runtimeEnemiesInfo)
             {
                 totalChance += enemySpawnInfo.SpawnChanceInfo.SpawnChance;
             }
@@ -339,7 +408,7 @@ namespace Assets.Scripts.Spawners.Enemies
             float randomPoint = UnityEngine.Random.value * totalChance;
 
             float currentSum = 0;
-            foreach (EnemySpawnInfo enemySpawnInfo in _poolEnemiesInfo)
+            foreach (EnemySpawnInfo enemySpawnInfo in _runtimeEnemiesInfo)
             {
                 currentSum += enemySpawnInfo.SpawnChanceInfo.SpawnChance;
                 if (currentSum >= randomPoint)

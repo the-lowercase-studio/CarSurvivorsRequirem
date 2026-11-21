@@ -24,9 +24,15 @@ It does not own individual enemy combat AI, movement behaviors, or individual en
   - Assets/Scripts/Enemies/Base/EnemiesOutsidePlayerChunkTeleporter.cs
   - Assets/Scripts/Navigation/GridSystem/GridCellsNotVisibleByMainCamera.cs
   - Assets/Scripts/Interactables/IncreaseDifficultyTotem.cs
+  - Assets/Scripts/GameFlow/Config/GameLoopProgressionConfigSO.cs
+  - Assets/Scripts/GameFlow/RunSessionService.cs
+  - Assets/Scripts/ReflexDI/ReflexPrefabInstantiator.cs
+  - Assets/Scripts/Editor/Tests/TierConfigDrivenEnemySpawningTests.cs
 - Designer-authored data:
   - Assets/Scripts/Waves/WaveConfig.cs
-  - Enemy prefabs and pool limits referenced by EnemiesSpawner._poolEnemiesInfo
+  - Assets/ScriptableObjects/GameFlow/GameLoopProgressionConfig.asset
+  - Assets/ScriptableObjects/Enemy/Basic/Tier2/
+  - Enemy prefabs and pool limits referenced by EnemiesSpawner._poolEnemiesInfo and TierEnemySpawningConfig.EnemySpawnInfos
   - Swarm spawn VFX prefab referenced by EnemiesSpawner._swarmSpawnVfxPrefab
 - DI installer:
   - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
@@ -49,13 +55,13 @@ It does not own individual enemy combat AI, movement behaviors, or individual en
 ## Architecture and Data Flow
 
 - Core components:
-  - WaveManager: Scene MonoBehaviour driving standard wave pacing in Update. Evaluates wave delay countdown (_currentSpawnWaveDelay) and batch scaling multiplier (_maxEnemiesInWaveMultiplier = 1.2x). Injects IOnRandomGridPosSpawner<EnemiesSpawner>. Implements IWaveFreezer to pause progression during swarm events.
+  - WaveManager: Scene MonoBehaviour driving standard wave pacing in Update. Evaluates wave delay countdown (_currentSpawnWaveDelay), batch scaling multiplier (_maxEnemiesInWaveMultiplier = 1.2x), and per-tier scaling from IRunSessionService.ActiveEnemyConfig (WaveInitialCountMultiplier, WaveDelayMultiplier, WaveGrowthMultiplier, and optional MaxEnemiesInWaveCap = 36 on Tier 2). Injects IOnRandomGridPosSpawner<EnemiesSpawner> and IRunSessionService. Implements IWaveFreezer to pause progression during swarm events.
   - WaveConfig: ScriptableObject defining wave pacing parameters: _startSpawnWaveDelay (default 8s), _firstWaveDelay (default 1s), _initialMaxEnemiesInWave (default 4), and _maxEnemiesInWaveMultiplier (default 1.2x).
-  - SwarmSpawner: Scene component managing timed high-density swarm events (_minSwarmInterval = 120s, _maxSwarmInterval = 180s). Freezes standard waves via IWaveFreezer, triggers warning and HUD presentation via ISwarmNotificationPresenter, selects target swarm enemy types sequentially based on _currentSwarmIndex, and drives incremental swarm spawning over ticks. Implements ISwarmFreezer to allow boss encounters to suppress swarms.
+  - SwarmSpawner: Scene component managing timed high-density swarm events (_minSwarmInterval = 120s, _maxSwarmInterval = 180s), scaled by per-tier SwarmIntervalMultiplier and SwarmSizeMultiplier from IRunSessionService.ActiveEnemyConfig. Freezes standard waves via IWaveFreezer, triggers warning and HUD presentation via ISwarmNotificationPresenter, selects target swarm enemy types sequentially based on _currentSwarmIndex, and drives incremental swarm spawning over ticks. Implements ISwarmFreezer to allow boss encounters to suppress swarms.
   - SwarmNotificationPresenter: Implements ISwarmNotificationPresenter. Animates HUD warning text via DOTween (DOScale, DOPunchScale) and dims screen midtones by lerping URP post-processing LiftGammaGain (_targetGamma = 0.7f).
-  - EnemiesSpawner: The central DI-bound spawner component. Manages Unity ObjectPool<Enemy> per configured EnemySpawnInfo, processes standard and swarm spawn calls, filters candidate cells for visibility and occupancy, and maintains active entity count (CurrentlySpawnedObjectsCount).
-  - EnemiesSpawnChanceRedistributionSystem: Pure C# system helper initialized by EnemiesSpawner. Dynamically redistributes spawn probability weights after each standard wave batch so harder enemies progressively appear.
-  - EnemySpawnInfo & SpawnChanceInfo: Data structures holding enemy prefabs, max pool amounts, spawn probability weights, threshold flags, and fixed-probability overrides.
+  - EnemiesSpawner: The central DI-bound spawner component. Injects IGridManager, Camera, IRunSessionService, and Reflex.Core.Container. In Awake(), clones the active tier's EnemySpawnInfos (or scene _poolEnemiesInfo fallback) via EnemySpawnInfo.CreateRuntimeCopy() into _runtimeEnemiesInfo so redistribution never mutates serialized ScriptableObject data, and creates an ObjectPool<Enemy> per entry that instantiates pooled enemies under an inactive staging parent via ReflexPrefabInstantiator.InstantiateInjectedObject with beforeActivate: enemy => enemy.SetBaseConfig(localInfo.ConfigOverride). Processes standard and swarm spawn calls, filters candidate cells for visibility and occupancy, and maintains active entity count (CurrentlySpawnedObjectsCount).
+  - EnemiesSpawnChanceRedistributionSystem: Pure C# system helper initialized by EnemiesSpawner. Dynamically redistributes spawn probability weights on cloned _runtimeEnemiesInfo entries after each standard wave batch so harder enemies progressively appear.
+  - EnemySpawnInfo & SpawnChanceInfo: Data structures holding enemy prefabs, optional _configOverride (EnemyConfigSO), max pool amounts, spawn probability weights, threshold flags, fixed-probability overrides, and CreateRuntimeCopy(). Both Tier 1 and Tier 2 spawn the shared basic enemy prefabs under Assets/Prefabs/Enemies/Basic/; Tier 2 supplies a 4-enemy roster (470 total pre-warmed instances: CrawlingZombieLevel3 + CrawlingZombie3Config_Tier2 [Max 150, Chance 65, Threshold 0], StandingZombieLevel3 + StandingZombie3Config_Tier2 [Max 150, Chance 35, Threshold 25], BarrelEnemy + BarrelEnemyConfig_Tier2 [Max 40, Chance 0, Threshold 22], StandingZombieLevel4 + StandingZombie4Config_Tier2 [Max 130, Chance 0, Threshold 0]) where each Tier 2 EnemyConfigSO has IsShiny = true to activate EnemyTierShineController.
   - GridCellsNotVisibleByMainCamera: Static utility for camera-culled walkable cell sampling. Validates cell walkability, tests frustum visibility, checks occupancy caps using Physics.OverlapBoxNonAlloc against EntityLayers.Enemies, and expands search radii outside the player chunk.
   - EnemiesOutsidePlayerChunkTeleporter: Periodic maintenance component (_checkForEnemiesOutsidePlayerChunkDelay = 2s) that computes exact `GridPlayerChunk` XZ bounds from corner cells (`Cells[0, 0]` and `Cells[Width - 1, Height - 1]` ± `CellSize * 0.5f`), queries active living enemies straying outside those bounds whose `MovementController.CanBeTeleported` passes (enforcing `EnemyMovementConstants.POST_RELOCATION_TELEPORT_GRACE_SECONDS = 3.0f` in unfrozen time), teleports them to random hidden walkable cells inside the chunk, and calls `ResetAfterRelocation()`.
   - IncreaseDifficultyTotem: Interactive map totem that calls IEnemySpawnDifficultyController to add a flat difficulty boost (RedistributionFactorBonus) to spawn chance redistribution.
@@ -153,7 +159,6 @@ The EnemiesSpawnChanceRedistributionSystem executes after each standard wave bat
   - EnemiesOutsidePlayerChunkTeleporter maintains enemy proximity to the player.
 - Cross-system coupling risks:
   - Clear-Triggered Gating Deadlock: If an enemy entity gets stuck or fails to trigger its release callback upon death, CurrentlySpawnedObjectsCount will remain > 0, preventing immediate wave spawns and forcing full wave countdown delays.
-  - Serialized Asset Mutation: Runtime mutation of SpawnChanceInfo modifies scriptable data in-memory; ensure runtime chance reset is handled between Play Mode sessions if serialized assets are modified directly.
   - Post-Processing Requirement: SwarmNotificationPresenter expects a Volume profile containing a LiftGammaGain component; if missing, screen dimming is safely bypassed but warning text remains active.
 
 ## Known Risks and Open Questions
@@ -162,5 +167,4 @@ The EnemiesSpawnChanceRedistributionSystem executes after each standard wave bat
   - ObjectPool.Release vs Manual Event Flow: In EnemiesSpawner, Enemy_OnRelease looks up the instance in _instancePoolMap to call pool.Release(enemy); if not found, it falls back to OnEnemyRelease(enemy). Care should be taken when modifying pool lifecycle events.
   - Spelling Invariants: Preserved misspelling TresholdToStartAddingSpawnChanceToOtherInfos must be maintained across all call sites to ensure inspector data compatibility.
 - Open design questions:
-  - Should spawn chance redistribution operate on cloned runtime data structures to isolate inspector defaults completely from runtime state?
   - Should stray enemy teleportation include an arrival VFX/SFX telegraph similar to swarm spawns?
