@@ -29,6 +29,7 @@ namespace Assets.Scripts.UI.Death
         [Inject] private readonly IPausePresenter _pausePresenter = null;
         [Inject] private readonly ISkillsStatsPresenter _skillsStatsPresenter = null;
         [Inject] private readonly IInputContexts _inputContexts = null;
+        [Inject] private readonly IGameTimeService _gameTimeService = null;
 
         [SerializeField] private GameObject _visual;
         [SerializeField] private TextMeshProUGUI _levelText;
@@ -38,9 +39,9 @@ namespace Assets.Scripts.UI.Death
 
         private void Awake()
         {
-            if (_inputContexts == null)
+            if (_inputContexts == null || _gameTimeService == null)
             {
-                throw new InvalidOperationException($"[{nameof(PlayerDeathPresenter)}] IInputContexts was not injected on '{name}'.");
+                throw new InvalidOperationException($"[{nameof(PlayerDeathPresenter)}] Required input or game time dependencies were not injected on '{name}'.");
             }
         }
 
@@ -60,7 +61,7 @@ namespace Assets.Scripts.UI.Death
 
         public void EnableDeathScreen()
         {
-            _scoreBoardNewScoreSaver.Save(_timerPresenter.TimerValue);
+            _scoreBoardNewScoreSaver.Save(_timerPresenter.TimerValue, hasSurvived: false);
 
             SetLevelText();
 
@@ -77,7 +78,7 @@ namespace Assets.Scripts.UI.Death
 
             _backgroundAudioManager.ChangeAudioToDeathAudioMode();
 
-            GameTime.Pause();
+            _gameTimeService.Pause();
 
             _skillsStatsPresenter.ShowDeathStats();
         }
@@ -96,7 +97,8 @@ namespace Assets.Scripts.UI.Death
             string timeText = "Time Alive: " +
                 TimeConversionUtility.FormatSecondsToTimeString(_timerPresenter.TimerValue);
 
-            if (_scoreBoardBestScoreGetter.GetBestScore() == _timerPresenter.TimerValue)
+            if (_scoreBoardBestScoreGetter.TryGetBestTime(hasSurvived: false, out uint bestTime)
+                && bestTime == _timerPresenter.TimerValue)
             {
                 timeText += $" <Color=#F8D61C>(New Best!)</Color>";
             }

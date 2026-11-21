@@ -21,6 +21,7 @@ namespace Assets.Scripts.UI.Pause
         [Inject] private readonly IInputCommands _inputCommands = null;
         [Inject] private readonly IInputContexts _inputContexts = null;
         [Inject] private readonly UiInputScope _uiInputScope = null;
+        [Inject] private readonly IGameTimeService _gameTimeService = null;
 
         [SerializeField] private GameObject _visual;
 
@@ -29,9 +30,9 @@ namespace Assets.Scripts.UI.Pause
 
         private void Awake()
         {
-            if (_inputCommands == null || _inputContexts == null || _uiInputScope == null)
+            if (_inputCommands == null || _inputContexts == null || _uiInputScope == null || _gameTimeService == null)
             {
-                throw new InvalidOperationException($"[{nameof(PausePresenter)}] Required input dependencies were not injected on '{name}'.");
+                throw new InvalidOperationException($"[{nameof(PausePresenter)}] Required input or game time dependencies were not injected on '{name}'.");
             }
 
             _isInitialized = true;
@@ -126,14 +127,14 @@ namespace Assets.Scripts.UI.Pause
             }
 
             _visual.SetActive(true);
-            GameTime.Pause();
+            _gameTimeService.Pause();
             _skillsStatsPresenter.SetPauseVisible(true);
         }
 
         private void ClosePause()
         {
             _visual.SetActive(false);
-            GameTime.Resume();
+            _gameTimeService.Resume();
             _skillsStatsPresenter.SetPauseVisible(false);
             ReleasePauseScope();
             _inputContexts.ConsumeActiveControlsUntilRelease();

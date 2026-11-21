@@ -26,6 +26,7 @@ It is not responsible for:
   - Assets/Scripts/ObjectLifecycle/DontDestroyOnSceneLoad.cs
   - Assets/Scripts/ObjectLifecycle/Actions/INeedToCompleteBeforeDisable.cs
   - Assets/Scripts/ObjectLifecycle/Actions/IEnableDisableFunctionalityTrigger.cs
+  - Assets/Scripts/ReflexDI/ReflexPrefabInstantiator.cs
 - Concrete implementations and consumers:
   - Assets/Scripts/Enemies/Base/Enemy.cs (IPoolable, waits for INeedToCompleteBeforeDisable)
   - Assets/Scripts/Enemies/Base/EnemyDeathHandler.cs (INeedToCompleteBeforeDisable)
@@ -56,11 +57,12 @@ It is not responsible for:
   - INeedToCompleteBeforeDisable exposes OnCompleted event for components requiring async/presentation completion (such as EnemyDeathHandler visual sequence) before object release.
   - IEnableDisableFunctionalityTrigger<T> exposes EnableFunctionality() and DisableFunctionality() for feature toggles driven by settings.
   - DontDestroyOnSceneLoad calls DontDestroyOnLoad(gameObject) in Awake.
+  - ReflexPrefabInstantiator creates an inactive staging parent (CreateInactiveStagingParent) and instantiates injected pooled/runtime prefabs via InstantiateInjectedObject<T>(prefab, parent, container, keepActive, beforeActivate), running GameObjectInjector.InjectObject before activation and before the optional beforeActivate callback so Awake() and OnEnable() see all [Inject] dependencies without using GameObjectSelfInjector.
 - Runtime flow:
-  - Spawners create Unity ObjectPool<T> or IObjectPool<T> instances with creation, get, release, and destroy callbacks.
+  - Spawners create Unity ObjectPool<T> or IObjectPool<T> instances with creation, get, release, and destroy callbacks. Pooled prefabs with Reflex dependencies (such as Enemy and ExpParticle) are created through ReflexPrefabInstantiator.InstantiateInjectedObject under an inactive staging parent.
   - When spawning/getting, the spawner invokes OnGet(), subscribes to object release/death signals, activates the GameObject, and increments active entity counts.
   - During active play, the object raises OnCanBeReleased, OnCompleted, or a domain event when its life ends.
-  - When releasing, the spawner invokes OnRelease(), unsubscribes event handlers, deactivates the GameObject, emits OnSpawnedEntityReleased, and decrements active counts.
+  - When releasing, the spawner invokes OnRelease() (which on Enemy also restores _baseConfig if a temporary runtime config override was applied), unsubscribes event handlers, deactivates the GameObject, emits OnSpawnedEntityReleased, and decrements active counts.
   - DeathVolume applies full HP damage to IDamageable targets, or calls IPoolable.ReturnToPool() directly for non-damageable pooled entities.
 
 ## Rules and Invariants

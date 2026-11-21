@@ -255,7 +255,6 @@ GameObject:
   - component: {fileID: 2432047573316968158}
   - component: {fileID: 3206386065100887514}
   - component: {fileID: 173282884818906446}
-  - component: {fileID: -8292310607829567537}
   - component: {fileID: 9071597717056110045}
   m_Layer: 12
   m_Name: ExpParticle
@@ -341,19 +340,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _animationScaleMultiplier: 1.1
   _iterationDuration: 0.66
---- !u!114 &-8292310607829567537
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3531891143532923326}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 20620ae30fdd0164c9bb5bdc717d3ada, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _injectionStrategy: 1
 --- !u!135 &9071597717056110045
 SphereCollider:
   m_ObjectHideFlags: 0

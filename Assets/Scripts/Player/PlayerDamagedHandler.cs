@@ -1,3 +1,4 @@
+using Assets.Scripts.GameFlow;
 using Assets.Scripts.Player.Constants;
 using Assets.Scripts.PowerUps.Armor;
 using Assets.Scripts.PowerUps.Shield;
@@ -9,12 +10,18 @@ using UnityEngine;
 
 namespace Assets.Scripts.Player
 {
+    public interface IPlayerDamagedHandler
+    {
+        void SetPortalTransitionInvulnerable(bool isInvulnerable);
+    }
+
     [RequireComponent(typeof(PlayerManager))]
-    public class PlayerDamagedHandler : MonoBehaviour, IDamageable
+    public class PlayerDamagedHandler : MonoBehaviour, IDamageable, IPlayerDamagedHandler
     {
         [Inject] private readonly IPlayerManager _playerManager = null;
         [Inject] private readonly IBubbleShield _bubbleShield = null;
         [Inject] private readonly IArmorService _armorService = null;
+        [Inject] private readonly IRunSessionService _runSessionService = null;
 
         [Header("Needed references")]
         [SerializeField] private VFXPlayer _damageVfxPlayer;
@@ -27,6 +34,7 @@ namespace Assets.Scripts.Player
         private Tween _shakeTween;
         private Vector3 _originalScale;
         private bool _hasOriginalScale;
+        private bool _isPortalTransitionInvulnerable;
 
         private void Awake()
         {
@@ -44,8 +52,18 @@ namespace Assets.Scripts.Player
             KillShakeTween();
         }
 
+        public void SetPortalTransitionInvulnerable(bool isInvulnerable)
+        {
+            _isPortalTransitionInvulnerable = isInvulnerable;
+        }
+
         public void TakeDamage(float damage)
         {
+            if (_isPortalTransitionInvulnerable)
+            {
+                return;
+            }
+
             if (_bubbleShield != null && _bubbleShield.IsActive)
             {
                 _bubbleShield.NotifyDamageAbsorbed();
@@ -57,12 +75,17 @@ namespace Assets.Scripts.Player
                 damage = _armorService.AbsorbDamage(damage);
             }
 
-            if (damage <= 0f)
+            if (float.IsNaN(damage) || damage <= 0f)
             {
                 return;
             }
 
-            _playerManager.Health.DecreaseHealth(damage);
+            if (!_playerManager.Health.IsAlive())
+            {
+                return;
+            }
+
+            ApplyHealthDamage(damage);
             _playerManager.AudioClipPlayer.PlayOneShot(PlayerAudioConstants.DAMAGED_AUDIO_KEY);
             if (_damageVfxPlayer != null)
             {
@@ -75,12 +98,40 @@ namespace Assets.Scripts.Player
 
         public void TakeFullHpDamage()
         {
+            if (_isPortalTransitionInvulnerable)
+            {
+                return;
+            }
+
             if (_armorService != null)
             {
                 _armorService.ClearArmorImmediate();
             }
 
             _playerManager.Health.DecreaseHealth(_playerManager.Health.MaxHealth);
+        }
+
+        private void ApplyHealthDamage(float damage)
+        {
+            if (_runSessionService == null || !_runSessionService.IsGodModeEnabled)
+            {
+                _playerManager.Health.DecreaseHealth(damage);
+                return;
+            }
+
+            float minHealth = Mathf.Min(PlayerDamageConstants.GOD_MODE_MIN_HEALTH, _playerManager.Health.MaxHealth);
+            float currentHealth = _playerManager.Health.CurrentHealth;
+            if (currentHealth <= minHealth)
+            {
+                return;
+            }
+
+            float maxSafeDamage = currentHealth - minHealth;
+            float appliedDamage = damage < maxSafeDamage ? damage : maxSafeDamage;
+            if (appliedDamage > 0f && currentHealth > appliedDamage)
+            {
+                _playerManager.Health.DecreaseHealth(appliedDamage);
+            }
         }
 
         private void KillShakeTween()

@@ -60,3 +60,4 @@ MonoBehaviour:
   _inputActions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   _inputGlyphCatalog: {fileID: 11400000, guid: 0f11553f4f12a25498c3dcc86e1be8e9, type: 2}
   _inputRuntimeConfig: {fileID: 11400000, guid: 8d7b9c1cd92c40d4ab5b94e5e0f7c3e0, type: 2}
+  _progressionConfig: {fileID: 11400000, guid: d08cf71aeeb14b0459d0391f320c7815, type: 2}

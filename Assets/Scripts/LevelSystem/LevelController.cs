@@ -1,5 +1,7 @@
 using System;
 using Assets.Scripts.Common.EventArgs;
+using Assets.Scripts.GameFlow;
+using Reflex.Attributes;
 using UnityEngine;
 
 namespace Assets.Scripts.LevelSystem
@@ -43,6 +45,8 @@ namespace Assets.Scripts.LevelSystem
 
     public class LevelController : MonoBehaviour, ILevelController
     {
+        [Inject] private readonly IRunSessionService _runSessionService = null;
+
         [SerializeField] private AnimationCurve _expCurve;
 
         public LevelData LevelData { get; private set; } = new LevelData();
@@ -53,6 +57,14 @@ namespace Assets.Scripts.LevelSystem
 
         private void Awake()
         {
+            if (_runSessionService != null && _runSessionService.TryGetRestoredLevel(out byte restoredLevel, out float restoredExp))
+            {
+                byte safeLevel = restoredLevel < 1 ? (byte)1 : restoredLevel;
+                float safeExp = Mathf.Max(0f, restoredExp);
+                LevelData = new LevelData(safeLevel, safeExp, CalculateMaxExp(safeLevel));
+                return;
+            }
+
             LevelData = new LevelData(maxExp: CalculateMaxExp(LevelData.Lvl));
         }
 

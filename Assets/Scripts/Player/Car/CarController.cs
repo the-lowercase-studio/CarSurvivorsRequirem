@@ -351,6 +351,11 @@ namespace Assets.Scripts.Player.Car
 
         private void FixedUpdate()
         {
+            if (_rb.isKinematic)
+            {
+                return;
+            }
+
             _rb.angularVelocity = Vector3.zero;
 
             HandleRaycastGrounding();

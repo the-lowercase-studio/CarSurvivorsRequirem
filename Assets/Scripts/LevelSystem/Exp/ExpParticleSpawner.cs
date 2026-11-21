@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using Assets.Scripts.LevelSystem.Constants;
+using Assets.Scripts.ReflexDI;
 using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.Utils;
+using Reflex.Attributes;
+using Reflex.Core;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -45,6 +48,8 @@ namespace Assets.Scripts.LevelSystem.Exp
             }
         }
 
+        [Inject] private readonly Container _container = null;
+
         [SerializeField] private Transform _expParticlesParent;
         [SerializeField] private float _particlesYOffset;
         [SerializeField] private ExpParticle _expParticlePrefab;
@@ -53,6 +58,7 @@ namespace Assets.Scripts.LevelSystem.Exp
 
         private readonly Queue<ExpParticleSpawnData> _queuedExpSpawns = new();
         private IObjectPool<ExpParticle> _expParticlePool;
+        private Transform _injectionStagingParent;
 
         public event EventHandler OnSpawnedEntityReleased;
 
@@ -70,8 +76,14 @@ namespace Assets.Scripts.LevelSystem.Exp
                 Debug.LogError($"[{nameof(ExpParticleSpawner)}] ExpTresholdDeviders is empty on '{name}'!");
             }
 
+            _injectionStagingParent = ReflexPrefabInstantiator.CreateInactiveStagingParent(nameof(ExpParticleSpawner));
+
             _expParticlePool = new ObjectPool<ExpParticle>(
-                createFunc: () => Instantiate(_expParticlePrefab, transform),
+                createFunc: () => ReflexPrefabInstantiator.InstantiateInjectedObject(
+                    _expParticlePrefab,
+                    transform,
+                    _container,
+                    _injectionStagingParent),
                 actionOnGet: OnGet,
                 actionOnRelease: OnRelease,
                 defaultCapacity: 20,
@@ -91,6 +103,15 @@ namespace Assets.Scripts.LevelSystem.Exp
         private void OnDisable()
         {
             CancelInvoke(nameof(SpawnParticlesBasedOnExpAmount));
+        }
+
+        private void OnDestroy()
+        {
+            if (_injectionStagingParent != null)
+            {
+                Destroy(_injectionStagingParent.gameObject);
+                _injectionStagingParent = null;
+            }
         }
 
         public void Spawn(Vector3 pos, float expValue, int count = 1)
