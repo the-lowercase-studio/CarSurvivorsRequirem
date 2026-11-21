@@ -20,7 +20,7 @@ Rather than relying on generic, unconstrained AI responses, skills enforce stric
 
 ## 2. Skill Domains & Lifecycle
 
-The 14 repository skills are organized into 5 core engineering domains covering the entire game development lifecycle:
+The 15 repository skills described in this guide are organized into 5 core engineering domains covering the entire game development lifecycle:
 
 ```mermaid
 flowchart TD
@@ -52,6 +52,7 @@ flowchart TD
         DS["document-system"]
         CUD["create-user-doc"]
         ADR_DOC["agent-docs-review"]
+        SAD["system-architecture-diagram"]
     end
 
     GSW --> DI
@@ -64,6 +65,7 @@ flowchart TD
     UPC --> DS
     UPC --> CUD
     UPC --> ADR_DOC
+    DS -.-> SAD
     URC -.-> PCS
     CO -.-> RCV
     BCR -.-> UPC
@@ -95,6 +97,7 @@ flowchart TD
 | **`document-system`** | Documentation | Create or update technical architecture documentation for a specific game system in `.agents/context/game-systems/`. | `document system`, `document flowfield`, `document car controller` | Game System Technical Doc (`*-system.md`) | No |
 | **`create-user-doc`** | Documentation | Create or update human-oriented documentation, guides, or manuals in `.user-docs/` upon explicit user request. | `create user doc`, `user guide`, `explain system for humans` | User Documentation (`.user-docs/*.md`) | No |
 | **`agent-docs-review`** | Documentation | Review, trim, and verify AI agent context files in `.agents/` against actual code to eliminate stale guidance. | `agent docs review`, `make docs agent-friendly`, `trim agent docs` | Grounded, concise agent documentation | No |
+| **`system-architecture-diagram`** | Documentation | Draw a source-verified Mermaid architecture diagram of a pointed system or scope, with a responsibilities table for every part, upon explicit user request. | `architecture diagram`, `system architecture diagram`, `mermaid diagram of system`, `diagram responsibilities` | Architecture Doc (`.user-docs/architecture/*-architecture.md`) | No (writes only the doc + index) |
 
 ---
 
@@ -264,6 +267,19 @@ flowchart TD
   3. Restructures for maximum agent efficiency (checklists, decision tables, plain-text paths).
   4. Validates relative links and updates cross-references.
 
+### 4.15. `system-architecture-diagram`
+- **Domain**: Human-Facing Documentation
+- **Role**: Architecture illustrator for a single system or code scope.
+- **Safety Gate**: **Explicit Request Only** and **Source-Verified Edges**. Every box and arrow must trace back to a type, call, event, or DI binding in code. It never changes code, assets, or agent-facing system docs.
+- **Inputs**: System name (e.g., Skills, Health) or an explicit scope (folders, files, or a cross-system flow). Optional: audience and focus (DI wiring, event flow, data ownership).
+- **Workflow**:
+  1. Builds a component list from source: interfaces, Reflex bindings, `[Inject]` dependencies, events and their subscribers, calls, and ScriptableObject data.
+  2. Draws boundaries: each outside system appears as a single interface box.
+  3. Groups parts by role (DI, triggers, logic, core, concrete parts, data, UI, targets) and draws a `flowchart TD` diagram with labelled arrows: solid for runtime calls and events, dotted for wiring and limits.
+  4. Writes a responsibilities table per group (one row per box) and a short "Key Rules at a Glance" list.
+  5. Saves to `.user-docs/architecture/[name]-architecture.md`, adds it to `.user-docs/README.md`, and reports any mismatch between code and agent docs in chat.
+- **Example Output**: [Skills System Architecture](architecture/skills-system-architecture.md).
+
 ---
 
 ## 5. User Guide: How to Trigger Skills
@@ -306,6 +322,11 @@ To trigger any skill, simply include the skill name or its natural language trig
 - **English**: *"Create a user doc explaining how the Car Health & Armor system works for game designers."*
 - **Polish**: *"Stwórz dokumentację użytkownika opisującą działanie pancerza i zdrowia samochodu dla designerów."*
 - **Triggered Skill**: `create-user-doc`
+
+#### 8. Drawing a System Architecture Diagram
+- **English**: *"Create an architecture mermaid diagram of the Health system with responsibilities of every part."*
+- **Polish**: *"Stwórz diagram architektury mermaid systemu zdrowia z opisem odpowiedzialności każdej części."*
+- **Triggered Skill**: `system-architecture-diagram`
 
 ---
 

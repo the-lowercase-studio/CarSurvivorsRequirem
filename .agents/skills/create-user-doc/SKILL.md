@@ -14,7 +14,8 @@ Use this skill when the user explicitly requests documentation intended for huma
 3. **Human-Friendly Style**: Write in clear, accessible language. Focus on concepts, mental models, workflows, visual diagrams (Mermaid), and inspector configuration rather than raw code dumps.
 4. **Target Location**: Place all generated documents in .user-docs/<topic-name>.md (kebab-case).
 5. **Update Index**: Always update .user-docs/README.md to list the newly created or updated document.
-6. **Isolation Guarantee**: Agents must not use `.user-docs/` as an operational source of truth for implementation logic. Technical decisions must rely on source code and .agents/context/.
+6. **Architecture Diagrams**: Route requests for an architecture Mermaid diagram with per-part responsibilities of a pointed system or scope to .agents/skills/system-architecture-diagram/SKILL.md (output under .user-docs/architecture/).
+7. **Isolation Guarantee**: Agents must not use `.user-docs/` as an operational source of truth for implementation logic. Technical decisions must rely on source code and .agents/context/.
 
 ## Inputs
 

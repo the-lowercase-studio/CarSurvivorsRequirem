@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Testing"
+  short_description: "Apply Unity Test Framework EditMode, PlayMode, and NUnit patterns"
+  default_prompt: "Use $unity-testing to apply Unity Test Framework EditMode/PlayMode lifecycle, coroutine, and NUnit assertions."
