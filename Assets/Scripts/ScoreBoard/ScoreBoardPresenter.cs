@@ -1,5 +1,5 @@
-﻿using Reflex.Attributes;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Reflex.Attributes;
 using UnityEngine;
 
 namespace Assets.Scripts.ScoreBoard
@@ -13,13 +13,16 @@ namespace Assets.Scripts.ScoreBoard
 
         private void OnEnable()
         {
-            List<uint> scoreBoardValues = _storedScoreBoard.GetValueOrStoredDefault();
+            List<ScoreBoardRecord> scoreBoardRecords = _storedScoreBoard.GetValueOrStoredDefault();
+            scoreBoardRecords.Sort(ScoreBoardNewScoreSaver.CompareRecords);
 
-            for (int i = 0; i < scoreBoardValues.Count; i++)
+            for (int i = 0; i < scoreBoardRecords.Count; i++)
             {
-                var entry = Instantiate(_scoreBoardEntryPrefab, _scoreBoardEntriesParent);
+                ScoreBoardRecord record = scoreBoardRecords[i];
+                ScoreBoardEntry entry = Instantiate(_scoreBoardEntryPrefab, _scoreBoardEntriesParent);
                 entry.SetOrderNumber((byte)(i + 1));
-                entry.SetScore(scoreBoardValues[i]);
+                entry.SetScore(record.TimeSeconds);
+                entry.SetStatus(record.HasSurvived);
             }
         }
 

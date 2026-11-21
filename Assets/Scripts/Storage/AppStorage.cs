@@ -19,6 +19,11 @@ namespace Assets.Scripts.Storage
             Load();
         }
 
+        public static bool TryGetRawToken(string key, out JToken token)
+        {
+            return _settingsCache.TryGetValue(key, out token);
+        }
+
         public static bool TryGetValue<T>(string key, out T value)
         {
             if (_settingsCache.TryGetValue(key, out var result))

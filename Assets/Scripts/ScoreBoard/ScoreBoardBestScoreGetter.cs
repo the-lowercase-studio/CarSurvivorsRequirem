@@ -5,6 +5,7 @@ namespace Assets.Scripts.ScoreBoard
     public interface IScoreBoardBestScoreGetter
     {
         uint GetBestScore();
+        bool TryGetBestTime(bool hasSurvived, out uint bestTime);
     }
 
     public class ScoreBoardBestScoreGetter : IScoreBoardBestScoreGetter
@@ -18,24 +19,59 @@ namespace Assets.Scripts.ScoreBoard
 
         public uint GetBestScore()
         {
-            List<uint> scoreBoardValues = _storedScoreBoard.GetValueOrStoredDefault();
-
-            if (scoreBoardValues == null || scoreBoardValues.Count == 0)
+            List<ScoreBoardRecord> records = _storedScoreBoard.GetValueOrStoredDefault();
+            if (TryGetBestTime(records, hasSurvived: true, out uint bestSurvivedTime))
             {
-                return 0;
+                return bestSurvivedTime;
             }
 
-            uint maxScore = scoreBoardValues[0];
-            for (int i = 1; i < scoreBoardValues.Count; i++)
+            if (TryGetBestTime(records, hasSurvived: false, out uint bestDiedTime))
             {
-                if (scoreBoardValues[i] > maxScore)
+                return bestDiedTime;
+            }
+
+            return 0;
+        }
+
+        public bool TryGetBestTime(bool hasSurvived, out uint bestTime)
+        {
+            List<ScoreBoardRecord> records = _storedScoreBoard.GetValueOrStoredDefault();
+            return TryGetBestTime(records, hasSurvived, out bestTime);
+        }
+
+        public static bool TryGetBestTime(IReadOnlyList<ScoreBoardRecord> records, bool hasSurvived, out uint bestTime)
+        {
+            bestTime = 0;
+            if (records == null || records.Count == 0)
+            {
+                return false;
+            }
+
+            bool found = false;
+            for (int i = 0; i < records.Count; i++)
+            {
+                ScoreBoardRecord record = records[i];
+                if (record.HasSurvived != hasSurvived)
                 {
-                    maxScore = scoreBoardValues[i];
+                    continue;
+                }
+
+                if (!found)
+                {
+                    bestTime = record.TimeSeconds;
+                    found = true;
+                }
+                else if (hasSurvived && record.TimeSeconds < bestTime)
+                {
+                    bestTime = record.TimeSeconds;
+                }
+                else if (!hasSurvived && record.TimeSeconds > bestTime)
+                {
+                    bestTime = record.TimeSeconds;
                 }
             }
 
-            return maxScore;
+            return found;
         }
     }
 }
-
