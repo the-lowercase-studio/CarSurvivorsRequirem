@@ -156,7 +156,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
 
                 if (isImmediate)
                 {
-                    ApplyDamageIfAlive(hit.Target, hit.Health, damage);
+                    ApplyDamageIfAlive(hit.Target, hit.Health, damage, impactPosition);
                     EmitImpactSparks(impactPosition);
                 }
                 else
@@ -242,16 +242,23 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
         {
             if (!hit.IsTerrainEndpoint)
             {
-                ApplyDamageIfAlive(hit.Target, hit.Health, hit.Damage);
+                ApplyDamageIfAlive(hit.Target, hit.Health, hit.Damage, hit.ImpactPosition);
             }
             EmitImpactSparks(hit.ImpactPosition);
         }
 
-        private static void ApplyDamageIfAlive(IDamageable target, IHealth health, int damage)
+        private static void ApplyDamageIfAlive(IDamageable target, IHealth health, int damage, Vector3 impactPosition)
         {
             if (IsTargetAlive(target, health))
             {
-                target.TakeDamage(damage);
+                if (target is IPositionalDamageable positionalTarget)
+                {
+                    positionalTarget.TakeDamage(damage, impactPosition);
+                }
+                else
+                {
+                    target.TakeDamage(damage);
+                }
             }
         }
 

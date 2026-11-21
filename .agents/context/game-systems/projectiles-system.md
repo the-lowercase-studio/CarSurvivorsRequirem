@@ -54,9 +54,9 @@ It is not responsible for:
   - The owner calls `Initialize(config)`, which assigns config, resets pierce count (`_piercedCounter = config.MaxPiercing`), scales the projectile (`new Vector3(config.Size, config.Size, config.Size)`), and marks it initialized.
   - `FixedUpdate` moves only while `_isAlive` and `_isInitialized` are true.
   - `OnTriggerEnter` forwards the triggering collider to `HandleCollisions`, which scales `Physics.OverlapSphere` radius by `lossyScale`, queries against `EntityLayers.Enemies | TerrainLayers.Impassable`, and includes the triggering collider.
-  - Targets are deduplicated per projectile life via `_hitEntities` (`HashSet<IDamageable>`) and `hitObstacles` (`HashSet<GameObject>`), guaranteeing single hits against multi-collider enemies and bosses while decrementing pierce count properly.
+  - Targets are deduplicated per projectile life via `_hitEntities` (`HashSet<IDamageable>`) and `hitObstacles` (`HashSet<GameObject>`), guaranteeing single hits against multi-collider enemies and bosses while decrementing pierce count properly. When a hit `IDamageable` also implements `IPositionalDamageable`, `HandleCollisions` calls `positionalDamageable.TakeDamage(_config.Damage, collider.ClosestPoint(sphereCenter))` so positional boss damage numbers anchor to the struck collider.
   - Piercing decrements until it reaches zero; then the projectile marks `_isAlive = false` and raises `OnLifeEnd`.
-  - Range expiration plays a shrink animation using `transform.DOScale(Vector3.zero, _config.DisapearingDuration).SetEase(Ease.Flash)` and raises `OnLifeEnd` upon completion.
+  - Range expiration plays a deterministic shrink animation driven in `FixedUpdate` over `_config.DisapearingDuration` and raises `OnLifeEnd` upon completion.
   - Pool owners listen to `OnLifeEnd` and `OnCanBeReleased`, release the projectile, and call `OnRelease`.
 
 ## Rules and Invariants

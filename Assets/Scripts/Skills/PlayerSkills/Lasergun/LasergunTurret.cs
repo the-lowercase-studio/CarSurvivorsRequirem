@@ -21,6 +21,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
         private int _numberOfTargets = SkillConstants.MIN_NUMBER_OF_TARGETS;
         private int _trackedTargetsCount;
         private int _hitTargetsCount;
+        private bool _isChargingLaser;
         private bool _isShowingLaser;
         private Collider _primaryTarget;
         private bool _isLookingAtTarget;
@@ -70,8 +71,10 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
             if (_laserCumulatingVFX != null)
             {
                 _laserCumulatingVFX.OnVFXFinished -= OnLaserCumulatingVfxFinished;
+                _laserCumulatingVFX.StopPlayback();
             }
             StopAllCoroutines();
+            _isChargingLaser = false;
             _isShowingLaser = false;
             _currentShowLaserShootDuration = _startShowLaserShootDuration;
             ClearLaserLines();
@@ -95,6 +98,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
 
             if (_laserCumulatingVFX != null)
             {
+                _isChargingLaser = true;
                 _laserCumulatingVFX.Play(new VFXPlayConfig(simulationSpeed: shootPreparingAnimationSpeed));
             }
             else
@@ -105,6 +109,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
 
         private void OnLaserCumulatingVfxFinished(object sender, System.EventArgs e)
         {
+            _isChargingLaser = false;
             FireLaserBeam();
         }
 
@@ -112,6 +117,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
         {
             return _primaryTarget != null
                    && _primaryTarget.enabled
+                   && !_isChargingLaser
                    && _isShowingLaser == false
                    && _isLookingAtTarget
                    && IsCurrentTargetInRange();
@@ -314,7 +320,8 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
                 {
                     EntityManipulationHelper.Damage(
                         target,
-                        _config.ProjectileStatsSO.Damage
+                        _config.ProjectileStatsSO.Damage,
+                        _hitTargetClosestPoints[i]
                     );
                 }
             }
@@ -355,6 +362,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
             }
 
             _trackedTargetsCount = 0;
+            _primaryTarget = null;
         }
 
         private void HandleRotation()

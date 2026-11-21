@@ -11,9 +11,26 @@ namespace Assets.Scripts.StatusEffects
                 return;
             }
 
+            Damage(target, damage, target.bounds.center);
+        }
+
+        public static void Damage(Collider target, float damage, Vector3 hitWorldPosition)
+        {
+            if (target == null || !target.enabled)
+            {
+                return;
+            }
+
             if (target.TryGetComponent(out IDamageable damageable) || (damageable = target.GetComponentInParent<IDamageable>()) != null)
             {
-                damageable.TakeDamage(damage);
+                if (damageable is IPositionalDamageable positionalDamageable)
+                {
+                    positionalDamageable.TakeDamage(damage, hitWorldPosition);
+                }
+                else
+                {
+                    damageable.TakeDamage(damage);
+                }
             }
         }
 

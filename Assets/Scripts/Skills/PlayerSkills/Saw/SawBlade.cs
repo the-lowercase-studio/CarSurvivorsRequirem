@@ -200,11 +200,8 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
                 _audioClipPlayer.Play("Attack");
             }
 
-            if (other.TryGetComponent(out IDamageable damageable) || (damageable = other.GetComponentInParent<IDamageable>()) != null)
-            {
-                int damage = _config != null && _config.Damage != null ? _config.Damage.Value : 0;
-                damageable.TakeDamage(damage);
-            }
+            int damage = _config != null && _config.Damage != null ? _config.Damage.Value : 0;
+            EntityManipulationHelper.Damage(other, damage, other.ClosestPoint(transform.position));
 
             if (other.TryGetComponent(out IKnockable knockable) || (knockable = other.GetComponentInParent<IKnockable>()) != null)
             {

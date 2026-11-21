@@ -31,26 +31,23 @@ namespace Assets.Scripts.Effects
             _mainCamera = mainCamera;
         }
 
+        /// <summary>
+        /// Immediately snaps rotation toward the active camera without smoothing.
+        /// </summary>
+        public void SnapToTargetRotation()
+        {
+            if (TryGetDesiredRotation(out Quaternion desiredRotation))
+            {
+                transform.rotation = desiredRotation;
+            }
+        }
+
         private void LateUpdate()
         {
-            if (_mainCamera == null)
+            if (!TryGetDesiredRotation(out Quaternion desiredRotation))
             {
                 return;
             }
-
-            Vector3 desiredDirection = _mainCamera.transform.position - transform.position;
-
-            if (_isDirectionFlipped)
-            {
-                desiredDirection = -desiredDirection;
-            }
-
-            if (desiredDirection.sqrMagnitude <= Mathf.Epsilon)
-            {
-                return;
-            }
-
-            Quaternion desiredRotation = ClampRotation(Quaternion.LookRotation(desiredDirection));
 
             if (_rotationSmoothSpeed <= 0f)
             {
@@ -62,8 +59,38 @@ namespace Assets.Scripts.Effects
             transform.rotation = Quaternion.Slerp(transform.rotation, desiredRotation, interpolation);
         }
 
+        private bool TryGetDesiredRotation(out Quaternion desiredRotation)
+        {
+            if (_mainCamera == null)
+            {
+                desiredRotation = default;
+                return false;
+            }
+
+            Vector3 desiredDirection = _mainCamera.transform.position - transform.position;
+
+            if (_isDirectionFlipped)
+            {
+                desiredDirection = -desiredDirection;
+            }
+
+            if (desiredDirection.sqrMagnitude <= Mathf.Epsilon)
+            {
+                desiredRotation = default;
+                return false;
+            }
+
+            desiredRotation = ClampRotation(Quaternion.LookRotation(desiredDirection));
+            return true;
+        }
+
         private Quaternion ClampRotation(Quaternion rotation)
         {
+            if (_maxXRotation >= 180f && _maxYRotation >= 180f)
+            {
+                return rotation;
+            }
+
             Vector3 eulerAngles = rotation.eulerAngles;
             float xRotation = Mathf.Clamp(NormalizeAngle(eulerAngles.x), -_maxXRotation, _maxXRotation);
             float yRotation = Mathf.Clamp(NormalizeAngle(eulerAngles.y), -_maxYRotation, _maxYRotation);

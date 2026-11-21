@@ -181,7 +181,14 @@ namespace Assets.Scripts.Projectiles
 
                     if (_config != null)
                     {
-                        damageable.TakeDamage(_config.Damage);
+                        if (damageable is IPositionalDamageable positionalDamageable)
+                        {
+                            positionalDamageable.TakeDamage(_config.Damage, collider.ClosestPoint(sphereCenter));
+                        }
+                        else
+                        {
+                            damageable.TakeDamage(_config.Damage);
+                        }
                     }
                 }
                 else

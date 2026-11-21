@@ -26,10 +26,11 @@ namespace Assets.Scripts.DamageNumbers
         private DamageNumberConfig _config;
         private Vector3 _startPosition;
         private Vector3 _targetPosition;
-        private Vector3 _targetScale;
         private float _duration;
         private float _elapsedTime;
         private bool _isAnimating;
+
+        public Vector3 TargetScale { get; private set; }
 
         public event EventHandler OnLifeEnd;
 
@@ -47,7 +48,7 @@ namespace Assets.Scripts.DamageNumbers
             float positionT = -(Mathf.Cos(Mathf.PI * t) - 1f) * 0.5f;
             transform.position = Vector3.Lerp(_startPosition, _targetPosition, positionT);
 
-            transform.localScale = _targetScale * Mathf.Sin(t * Mathf.PI);
+            transform.localScale = TargetScale * Mathf.Sin(t * Mathf.PI);
 
             if (t >= 1f)
             {
@@ -79,7 +80,7 @@ namespace Assets.Scripts.DamageNumbers
             SetTextApearance(config);
 
             var (_, growScaleMultiplier, _) = _config.DamagePopupApearance;
-            _targetScale = Vector3.one * growScaleMultiplier;
+            TargetScale = Vector3.one * growScaleMultiplier;
 
             transform.position = startPos;
             transform.localScale = Vector3.zero;
