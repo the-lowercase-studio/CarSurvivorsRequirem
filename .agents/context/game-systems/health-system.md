@@ -15,8 +15,18 @@ It does not own damage calculation, target selection, enemy/player death present
   - Assets/Scripts/HealthSystem/ArmorPlatesView.cs
   - Assets/Scripts/HealthSystem/ArmorPlateItemView.cs
   - Assets/Scripts/HealthSystem/Constants/HealthConstants.cs
+  - Assets/Scripts/Player/Constants/PlayerDamageConstants.cs
 - Prefabs and authored assets:
   - Assets/Prefabs/UI/HealthBarCanvas.prefab
+  - Assets/Prefabs/Player/Player.prefab
+  - Assets/Prefabs/Collectibles/Armor.prefab
+  - Assets/ScriptableObjects/Collectibles/PowerUps/ArmorConfig.asset
+- Automated tests:
+  - Assets/Scripts/Editor/Tests/HealthTests.cs
+  - Assets/Scripts/Editor/Tests/RegenativeHealthTests.cs
+  - Assets/Scripts/Editor/Tests/HealthBarAndArmorViewsTests.cs
+  - Assets/Scripts/Editor/Tests/ArmorPowerUpAndDamagePipelineTests.cs
+  - Assets/Scripts/Editor/Tests/HealthAssetsIntegrityTests.cs
 - Main integration points:
   - Assets/Scripts/Enemies/Base/Enemy.cs
   - Assets/Scripts/Enemies/Base/EnemyDeathHandler.cs
@@ -49,8 +59,8 @@ It does not own damage calculation, target selection, enemy/player death present
 
 - Core components:
   - Health is the base MonoBehaviour implementation of IHealth. It stores MaxHealth, CurrentHealth, alive state (_isAlive), and the events used by gameplay and UI.
-  - RegenativeHealth (note the spelling in filename and class name) inherits Health and adds timed automatic healing through Update when current health is below max health. It heals only base player IHealth and never regenerates Armor plates.
-  - HealthBar requires a Unity Slider, reads a serialized Health reference, updates the slider and fill color on health changes, supports external fill color overrides (SetColorOverride and ClearColorOverride used by BubbleShieldService), and shakes on health decrease through DOTween using HealthConstants.
+  - RegenativeHealth (note the spelling in filename and class name) inherits Health and adds timed automatic healing through Update -> AdvanceRegeneration(float deltaTime) when current health is below max health. It heals only base player IHealth and never regenerates Armor plates.
+  - HealthBar requires a Unity Slider, reads a serialized Health reference, synchronizes slider max/value from MaxHealth/CurrentHealth and applies the gradient fill color via SyncHealthDisplay() in both OnEnable and UpdateSlider_OnHealthChanged, supports external fill color overrides (SetColorOverride and ClearColorOverride used by BubbleShieldService), and shakes on health decrease through DOTween using HealthConstants.
   - ArmorPlatesView is attached to the player's world-space HealthBarCanvas alongside HealthBar. It validates a serialized _baseHealthBarRect and an array of 3 ArmorPlateItemView elements in Awake(), computes proportional plate widths from ArmorConfigSO, positions plates on the screen-right side of the health bar at the same vertical center height, enforces Canvas sibling indices so newer plates render on top of older plates, updates plate visibility and fill ratios, and triggers DOTween position shake feedback on armor hits.
   - ArmorPlateItemView represents an individual armor plate mini-bar with a background Image and a horizontally filled foreground Image (_fillImage.fillOrigin = Image.OriginHorizontal.Right) that depletes from the outer right edge inward toward the base health bar.
   - IHealthy is a narrow provider interface for objects that expose an IHealth reference.
@@ -70,20 +80,22 @@ It does not own damage calculation, target selection, enemy/player death present
     - HEALTH_BAR_SHAKE_FADE_OUT = true
 - Runtime flow:
   - Aggregate Event Forwarding Chain: Health.OnEnable subscribes InvokeOnHealthChanged to its own narrow events: OnHealthDecreased, OnHealthIncreased, and OnNoHealth. Raising any of these narrow events automatically invokes OnHealthChanged to notify general observers (such as HealthBar). These subscriptions are unsubscribed in OnDisable to avoid duplicate forwarding across re-enable cycles of pooled objects.
-  - Health.DecreaseHealth exits when already dead. If remaining health is greater than incoming damage, it subtracts the value and raises OnHealthDecreased; otherwise it sets health to zero, marks dead (_isAlive = false), and raises OnNoHealth.
-  - Health.IncreaseHealth exits when dead. If the increase stays below max health, it adds health and raises OnHealthIncreased; otherwise it clamps to MaxHealth without raising OnHealthIncreased or OnHealthChanged.
+  - Health.DecreaseHealth exits when already dead or when incoming damage is non-positive or non-finite (<= 0, NaN, Infinity). If remaining health is greater than incoming damage, it subtracts the value and raises OnHealthDecreased; otherwise it sets health to zero, marks dead (_isAlive = false), and raises OnNoHealth.
+  - Health.IncreaseHealth exits when dead, when incoming heal is non-positive or non-finite (<= 0, NaN, Infinity), or when CurrentHealth >= MaxHealth. Otherwise it clamps the resulting health to MaxHealth and, when health increases, raises OnHealthIncreased (which forwards OnHealthChanged).
   - RegenativeHealth.OnEnable resets regeneration amount and delay from serialized values after base health reset.
-  - RegenativeHealth.Update runs regeneration every frame when CurrentHealth < MaxHealth and both regeneration amount and delay configs are positive.
-  - Regeneration Process: RegenativeHealth.RegenerationProcess checks if CurrentRegenerationDelay is greater than 0. If so, it decrements it by Time.deltaTime. Otherwise, if CurrentHealth > 0 (preventing regeneration from dead state), it calls IncreaseHealth(MaxRegenerationAmount) and resets the delay to StartRegenerationDelay.
-  - Enemy.OnGet sets Health.MaxHealth from EnemyConfigSO.MaxHealth. Because pooled enemies are activated after this setup, Health.OnEnable then resets CurrentHealth to the configured max health.
+  - RegenativeHealth.Update delegates to public void AdvanceRegeneration(float deltaTime) with Time.deltaTime. AdvanceRegeneration exits immediately when deltaTime is non-positive or non-finite (<= 0, NaN, Infinity), and otherwise runs RegenerationProcess(deltaTime) when CurrentHealth < MaxHealth and both MaxRegenerationAmount and StartRegenerationDelay are positive.
+  - Regeneration Process: RegenativeHealth.RegenerationProcess checks if CurrentRegenerationDelay is greater than 0. If so, it decrements it by deltaTime. Otherwise, if CurrentHealth > 0 (preventing regeneration from dead state), it calls IncreaseHealth(MaxRegenerationAmount) and resets the delay to StartRegenerationDelay.
+  - Enemy.SetBaseConfig / ApplyRuntimeConfig / OnGet set Health.MaxHealth from EnemyConfigSO.MaxHealth before or upon activation so Health.OnEnable resets CurrentHealth to the configured max health.
   - Enemy.TakeDamage spawns a damage number, decreases health, and only plays blood VFX when Health.IsAlive() remains true.
   - EnemyDeathHandler listens to Health.OnNoHealth, disables physical interaction and visuals, plays death feedback, spawns experience, and completes the pool-release sequence after VFX and audio finish.
   - PlayerManager.Awake caches IHealth from the player object. Player damage and death handlers use the injected IPlayerManager.Health reference.
   - PlayerDamagedHandler.TakeDamage evaluates combat protection in strict priority order:
-    1. If IBubbleShield.IsActive is true, calls _bubbleShield.NotifyDamageAbsorbed() and returns immediately.
-    2. If IArmorService.HasArmor is true, calls damage = _armorService.AbsorbDamage(damage), which depletes active armor plates from highest level downward and shakes ArmorPlatesView. If damage is fully absorbed (damage <= 0f), returns before reducing base health.
-    3. If remaining damage > 0f, decreases base player health via _playerManager.Health.DecreaseHealth(damage), plays damage audio/VFX, and shakes the car visual scale.
-  - PlayerDamagedHandler.TakeFullHpDamage (used for environmental out-of-bounds kills) calls _armorService.ClearArmorImmediate() and then decreases base health by MaxHealth, bypassing Bubble Shield.
+    1. If _isPortalTransitionInvulnerable is true (during NextStagePortal or loadtier transition), returns immediately.
+    2. If IBubbleShield.IsActive is true, calls _bubbleShield.NotifyDamageAbsorbed() and returns immediately.
+    3. If IArmorService.HasArmor is true, calls damage = _armorService.AbsorbDamage(damage), which depletes active armor plates from highest level downward and shakes ArmorPlatesView.
+    4. If remaining damage <= 0f, float.IsNaN(damage), or !_playerManager.Health.IsAlive(), returns before reducing base health.
+    5. Reduces base player health via ApplyHealthDamage(damage) (which calls _playerManager.Health.DecreaseHealth(damage) normally, or clamps health reduction to Mathf.Min(PlayerDamageConstants.GOD_MODE_MIN_HEALTH, MaxHealth) = 1f when IRunSessionService.IsGodModeEnabled is true), plays damage audio/VFX, and shakes the car visual scale.
+  - PlayerDamagedHandler.TakeFullHpDamage (used for environmental out-of-bounds kills by DeathVolume) returns only if _isPortalTransitionInvulnerable is true; otherwise it calls _armorService.ClearArmorImmediate() and decreases base health by MaxHealth, bypassing both Bubble Shield and god mode.
   - ArmorPlatesView Layout and Layering Flow:
     1. Because HealthBarCanvas uses FaceMainCameraDirection with local +Z facing the camera, local +X maps to screen-left and local -X maps to screen-right.
     2. ArmorPlatesView.Initialize(ArmorConfigSO) computes baseVisualRightEdge = _baseHealthBarRect.anchoredPosition.x - (baseWidth * _baseHealthBarRect.pivot.x) and baseCenterY.
@@ -135,9 +147,13 @@ It does not own damage calculation, target selection, enemy/player death present
   - DOTween is required for health bar and armor plate shake behavior.
 - Testing implications:
   - Compile after C# edits with dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false.
-  - For health logic changes, test damage smaller than current health, damage equal to current health, overkill damage, dead-state repeated damage, healing below max, healing to max, and healing while dead.
-  - For regeneration changes, test delay countdown, repeated regeneration, max-health clamping, zero regeneration amount, and zero delay.
-  - In Unity, verify player death screen timing, enemy death VFX/audio completion, experience spawn, pooled enemy health reset, health bar updates, Bubble Shield color override, and Armor plate cascading layout and right-to-left depletion.
+  - EditMode test coverage is provided by 5 dedicated fixtures under Assets/Scripts/Editor/Tests/:
+    - Assets/Scripts/Editor/Tests/HealthTests.cs (Health initialization, clamping, event firing including full-heal clamping to MaxHealth, dead-state guards, and non-positive/NaN/Infinity rejection).
+    - Assets/Scripts/Editor/Tests/RegenativeHealthTests.cs (delay countdown, tick cadence, MaxHealth clamping, dead-state and non-positive guards).
+    - Assets/Scripts/Editor/Tests/HealthBarAndArmorViewsTests.cs (immediate OnEnable gradient color initialization, color overrides, slider binding, and ArmorPlatesView layout/depletion).
+    - Assets/Scripts/Editor/Tests/ArmorPowerUpAndDamagePipelineTests.cs (ArmorService plate math and PlayerDamagedHandler priority pipeline).
+    - Assets/Scripts/Editor/Tests/HealthAssetsIntegrityTests.cs (prefab and ScriptableObject asset wiring validation).
+  - In Unity Play Mode, verify player death screen timing, enemy death VFX/audio completion, experience spawn, pooled enemy health reset, health bar updates, Bubble Shield color override, and Armor plate cascading layout and right-to-left depletion.
 
 ## Integration Notes
 
@@ -163,15 +179,9 @@ It does not own damage calculation, target selection, enemy/player death present
 
 - Known limitations:
   - RegenativeHealth is misspelled in the type and filename; renaming it would require Unity serialization and reference migration care.
-  - Health.IncreaseHealth does not raise OnHealthIncreased or OnHealthChanged when it clamps to MaxHealth.
-  - HealthBar.OnEnable initializes slider max/value but does not initialize the fill color until the first health event or color override call.
-  - DecreaseHealth and IncreaseHealth do not validate negative values, so callers are responsible for passing positive damage or healing.
   - Regeneration delay does not reset when damage is taken; it only resets after a regeneration tick.
 - Open design questions:
-  - Should healing-to-max fire health change events so UI and observers always receive a notification?
   - Should regeneration be interrupted or its delay reset by taking damage?
   - Should HealthBar depend on a component type that implements IHealth through an adapter-friendly serialized reference pattern?
 - Suggested follow-up tasks:
-  - Add focused edit-mode tests for Health event semantics and boundary values.
-  - Review whether max-health healing should emit events before changing UI assumptions.
   - Consider a dedicated serialization-safe cleanup for the RegenativeHealth spelling if the project can tolerate asset migration.

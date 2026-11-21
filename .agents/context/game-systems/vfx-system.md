@@ -52,7 +52,7 @@ It is not responsible for:
 ## Architecture and Data Flow
 
 - Core components:
-  - VFXPlayer: MonoBehaviour attached to VFX prefabs. On Awake, it caches all child ParticleSystem components. In Play(VFXPlayConfig), it iterates through them, updates their local scale and simulation speed, triggers playback, and schedules a completion callback matching the longest particle's main duration. Also exposes StopPlayback() to cancel pending invokes and clear particles immediately.
+  - VFXPlayer: MonoBehaviour attached to VFX prefabs. On Awake, it caches all child ParticleSystem components (HasParticleSystems). Exposes static CalculateEffectiveDuration(float particleDuration, float simulationSpeed) (guarding NaN/Infinity and dividing by Mathf.Max(0.01f, simulationSpeed) with fallback 1f) and LastScheduledDuration. In Play(VFXPlayConfig), if _particleSystems is empty it immediately calls FinishPlayback() (invoking OnVFXFinished and optional DestroyOnEnd); otherwise it iterates through child ParticleSystems, updates their local scale and simulation speed, computes the longest effective duration scaled by simulationSpeed, triggers playback, and schedules a single-shot Invoke(nameof(OnAllParticlesFinished), _longestParticleDuration). Also exposes StopPlayback() to cancel pending invokes and clear particles immediately.
   - VFXPlayConfig: Configuration class containing parameters for playing a VFX (Scale, SimulationSpeed, DestroyOnEnd).
   - ExplosionVfxPool and PooledExplosionEffect: Scene-scoped pool (IExplosionVfxPool) registered in DefaultGameplaySceneInstaller that prewarms PooledExplosionEffect instances (default 32, capacity limit 32) and recycles them in Update once all nested ParticleSystems finish or a scaled watchdog timeout (8s) elapses.
   - CarVfxEffectsController: Implements ICarVfxEffectsController. Listens to ICarController brake and drift events to toggle emission on the stop-light material (CarStopLights material name, setting IsGlowing float parameter) and backlights holder, polls forward/reverse speed every 0.1s for speed trail emission, manages parallel DriftEmitter pools (_driftEmitters for standard tire skid marks and _fireDriftEmitters for Fire Tails burning ribbons) in LateUpdate, and controls rear-wheel constant flame ParticleSystems (_rearWheelConstantFireParticles) and lingering world-space drift flame ParticleSystems (_rearDriftFireTrailParticles).
@@ -87,7 +87,7 @@ It is not responsible for:
 ## Rules and Invariants
 
 - Critical behavior rules:
-  - VFXPlayer computes _longestParticleDuration from main.duration of the child particle systems.
+  - VFXPlayer computes _longestParticleDuration from each child particle system's main.duration scaled by CalculateEffectiveDuration(particle.main.duration, config.SimulationSpeed) and schedules completion with a single-shot Invoke rather than InvokeRepeating. If a VFXPlayer has zero ParticleSystem children, Play() completes immediately via FinishPlayback().
   - VFXPlayConfig.Scale modifies transform.localScale of each individual child particle system rather than the root parent GameObject.
   - Custom trail shaders (Custom/TireTrackMultiply and Custom/FireTailsTrail) must declare all material properties inside CBUFFER_START(UnityPerMaterial) to preserve URP SRP Batcher compatibility and include Offset -1, -1 to prevent Z-fighting against road geometry.
   - CarVfxEffectsController.SetParticleSystemsPlaying must gate Play() and Stop(true, ParticleSystemStopBehavior.StopEmitting) on ps.isEmitting rather than ps.isPlaying so world-space emitters with decaying particles can restart emission immediately.
@@ -122,17 +122,13 @@ It is not responsible for:
   - BarrelEnemyExplosionController, LandMine, and MortarShellProjectile trigger pooled explosions via IExplosionVfxPool.
   - LasergunTurret and EnemiesSpawner pace gameplay events (shooting beams, spawning enemies) based on VFX timing.
 - Cross-system coupling risks:
-  - VFXPlayer relies on Unity's standard InvokeRepeating which keeps firing if the object is not destroyed, disabled, or stopped via StopPlayback().
   - If a particle system loops infinitely, OnVFXFinished will still fire once after _longestParticleDuration, which may cause state transitions while particles continue emitting.
 
 ## Known Risks and Open Questions
 
 - Known limitations:
-  - VFXPlayer uses InvokeRepeating to trigger OnAllParticlesFinished. While _particlesStartedPlaying = false prevents duplicate OnVFXFinished invocations after the first callback, the repeating timer remains scheduled until Play(), StopPlayback(), OnDisable, or Destroy occurs.
   - main.duration does not account for startDelay or startLifetime of particles when computing the total effect duration, which might lead to OnVFXFinished firing before the last particles fully fade out (PooledExplosionEffect works around this by polling particle.IsAlive(true) directly).
 - Open design questions:
-  - Should VFXPlayer use a single-shot Invoke or CancelInvoke inside OnAllParticlesFinished instead of InvokeRepeating?
   - Should VFXPlayer implement IPoolable directly to automatically cancel active invocations and clear event handlers upon release?
 - Suggested follow-up tasks:
-  - Cancel the repeating invoke inside VFXPlayer.OnAllParticlesFinished once _particlesStartedPlaying is cleared.
   - Add validation to check if any child particle systems on one-shot VFXPlayer prefabs are set to loop infinitely.

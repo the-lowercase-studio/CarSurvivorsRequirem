@@ -27,8 +27,7 @@ namespace Assets.Scripts.HealthSystem
 
         private void OnEnable()
         {
-            _slider.maxValue = _health.MaxHealth;
-            _slider.value = _health.MaxHealth;
+            SyncHealthDisplay();
             _health.OnHealthChanged += UpdateSlider_OnHealthChanged;
 
             if (_shakeOnHealthDecrease)
@@ -60,8 +59,7 @@ namespace Assets.Scripts.HealthSystem
 
         private void UpdateSlider_OnHealthChanged(object sender, EventArgs e)
         {
-            ApplyFillColor();
-            _slider.value = _health.CurrentHealth;
+            SyncHealthDisplay();
         }
 
         public void SetColorOverride(Color color, float blend)
@@ -76,6 +74,13 @@ namespace Assets.Scripts.HealthSystem
         {
             _hasColorOverride = false;
             _overrideBlend = 0f;
+            ApplyFillColor();
+        }
+
+        private void SyncHealthDisplay()
+        {
+            _slider.maxValue = _health.MaxHealth;
+            _slider.value = _health.CurrentHealth;
             ApplyFillColor();
         }
 
