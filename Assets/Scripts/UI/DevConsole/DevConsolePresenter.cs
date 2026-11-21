@@ -27,6 +27,7 @@ namespace Assets.Scripts.UI.DevConsole
         [Inject] private readonly IPlayerManager _playerManager = null;
         [Inject] private readonly IInputCommands _inputCommands = null;
         [Inject] private readonly IInputContexts _inputContexts = null;
+        [Inject] private readonly IGameTimeService _gameTimeService = null;
 
         [Header("UI References")]
         [SerializeField] private GameObject _rootVisual;
@@ -112,9 +113,9 @@ namespace Assets.Scripts.UI.DevConsole
                 throw new InvalidOperationException("DevConsolePresenter requires _scrollRect to be assigned.");
             }
 
-            if (_inputCommands == null || _inputContexts == null)
+            if (_inputCommands == null || _inputContexts == null || _gameTimeService == null)
             {
-                throw new InvalidOperationException("DevConsolePresenter requires input services to be injected.");
+                throw new InvalidOperationException("DevConsolePresenter requires input and game time services to be injected.");
             }
 
             _rootVisual.SetActive(false);
@@ -238,8 +239,8 @@ namespace Assets.Scripts.UI.DevConsole
                 return;
             }
 
-            _wasGamePausedBeforeOpen = (Time.timeScale == 0f);
-            GameTime.Pause();
+            _wasGamePausedBeforeOpen = _gameTimeService.IsPaused || (Time.timeScale == 0f);
+            _gameTimeService.Pause();
 
             if (!_consoleScopeToken.IsValid)
             {
@@ -279,7 +280,7 @@ namespace Assets.Scripts.UI.DevConsole
             bool isPlayerAlive = _playerManager != null && _playerManager.Health != null && _playerManager.Health.IsAlive();
             if (isPlayerAlive && !_wasGamePausedBeforeOpen)
             {
-                GameTime.Resume();
+                _gameTimeService.Resume();
             }
         }
 

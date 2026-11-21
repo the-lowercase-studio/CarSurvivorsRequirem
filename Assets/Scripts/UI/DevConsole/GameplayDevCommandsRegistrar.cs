@@ -2,11 +2,15 @@ using System;
 using System.Globalization;
 using Assets.Scripts.Enemies;
 using Assets.Scripts.Enemies.Bosses;
+using Assets.Scripts.GameFlow;
+using Assets.Scripts.GameFlow.Config;
 using Assets.Scripts.LayerMasks;
 using Assets.Scripts.LevelSystem;
 using Assets.Scripts.Player;
+using Assets.Scripts.Player.Constants;
 using Assets.Scripts.Spawners.Enemies;
 using Assets.Scripts.UI.DevConsole.Constants;
+using Assets.Scripts.UI.HUD;
 using Assets.Scripts.UI.Level;
 using Assets.Scripts.UI.Skills;
 using Reflex.Attributes;
@@ -27,6 +31,10 @@ namespace Assets.Scripts.UI.DevConsole
         [Inject] private readonly ISkillUpgradePresenter _skillUpgradePresenter = null;
         [Inject] private readonly IPlayerLevelPresenter _playerLevelPresenter = null;
         [Inject] private readonly ICollectibleDropNotifier _collectibleDropNotifier = null;
+        [Inject] private readonly IGameTimeService _gameTimeService = null;
+        [Inject] private readonly IRunSessionService _runSessionService = null;
+        [Inject] private readonly IGameSceneLoader _gameSceneLoader = null;
+        [Inject] private readonly ITimerPresenter _timerPresenter = null;
 
         [Header("Collectible Prefabs")]
         [SerializeField] private GameObject _nukePrefab;
@@ -74,6 +82,10 @@ namespace Assets.Scripts.UI.DevConsole
             }
 
             UnregisterCommands();
+            if (_gameTimeService != null)
+            {
+                _gameTimeService.Reset();
+            }
         }
 
         private void RegisterCommands()
@@ -110,6 +122,27 @@ namespace Assets.Scripts.UI.DevConsole
                 DevConsoleConstants.POWERUP_COMMAND_DESCRIPTION,
                 HandlePowerUpCommand
             );
+
+            _devConsoleService.RegisterCommand(
+                DevConsoleConstants.LOAD_TIER_COMMAND_NAME,
+                DevConsoleConstants.LOAD_TIER_COMMAND_SYNTAX,
+                DevConsoleConstants.LOAD_TIER_COMMAND_DESCRIPTION,
+                HandleLoadTierCommand
+            );
+
+            _devConsoleService.RegisterCommand(
+                DevConsoleConstants.GOD_MODE_COMMAND_NAME,
+                DevConsoleConstants.GOD_MODE_COMMAND_SYNTAX,
+                DevConsoleConstants.GOD_MODE_COMMAND_DESCRIPTION,
+                HandleGodModeCommand
+            );
+
+            _devConsoleService.RegisterCommand(
+                DevConsoleConstants.TIMESCALE_COMMAND_NAME,
+                DevConsoleConstants.TIMESCALE_COMMAND_SYNTAX,
+                DevConsoleConstants.TIMESCALE_COMMAND_DESCRIPTION,
+                HandleTimeScaleCommand
+            );
         }
 
         private void UnregisterCommands()
@@ -123,6 +156,9 @@ namespace Assets.Scripts.UI.DevConsole
             _devConsoleService.UnregisterCommand("spawn");
             _devConsoleService.UnregisterCommand("exp");
             _devConsoleService.UnregisterCommand(DevConsoleConstants.POWERUP_COMMAND_NAME);
+            _devConsoleService.UnregisterCommand(DevConsoleConstants.LOAD_TIER_COMMAND_NAME);
+            _devConsoleService.UnregisterCommand(DevConsoleConstants.GOD_MODE_COMMAND_NAME);
+            _devConsoleService.UnregisterCommand(DevConsoleConstants.TIMESCALE_COMMAND_NAME);
         }
 
         private void HandleGolemCommand(string[] args)
@@ -596,6 +632,77 @@ namespace Assets.Scripts.UI.DevConsole
             _devConsoleService.Log($"Spawned {displayName} ahead of player.");
         }
 
+        private void HandleTimeScaleCommand(string[] args)
+        {
+            if (_gameTimeService == null)
+            {
+                _devConsoleService.LogError("GameTimeService is not available in the current scene.");
+                return;
+            }
+
+            if (args == null || args.Length == 0)
+            {
+                string currentScale = _gameTimeService.TargetTimeScale.ToString(
+                    DevConsoleConstants.TIMESCALE_DISPLAY_FORMAT,
+                    CultureInfo.InvariantCulture
+                );
+                string minScale = DevConsoleConstants.TIMESCALE_MIN_MULTIPLIER.ToString(
+                    DevConsoleConstants.TIMESCALE_DISPLAY_FORMAT,
+                    CultureInfo.InvariantCulture
+                );
+                string maxScale = DevConsoleConstants.TIMESCALE_MAX_MULTIPLIER.ToString(
+                    DevConsoleConstants.TIMESCALE_DISPLAY_FORMAT,
+                    CultureInfo.InvariantCulture
+                );
+                _devConsoleService.Log(
+                    $"Current time scale: {currentScale}x. Usage: {DevConsoleConstants.TIMESCALE_COMMAND_SYNTAX} (range: {minScale}-{maxScale}, use 'timescale 1' to reset)."
+                );
+                return;
+            }
+
+            if (args.Length > 1)
+            {
+                _devConsoleService.LogError($"Usage: {DevConsoleConstants.TIMESCALE_COMMAND_SYNTAX}");
+                return;
+            }
+
+            string rawValue = args[0];
+            if (!float.TryParse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsedScale) ||
+                float.IsNaN(parsedScale) ||
+                float.IsInfinity(parsedScale))
+            {
+                _devConsoleService.LogError(
+                    $"Invalid time scale '{rawValue}'. Usage: {DevConsoleConstants.TIMESCALE_COMMAND_SYNTAX} (e.g. 'timescale 2.5')."
+                );
+                return;
+            }
+
+            if (parsedScale < DevConsoleConstants.TIMESCALE_MIN_MULTIPLIER ||
+                parsedScale > DevConsoleConstants.TIMESCALE_MAX_MULTIPLIER)
+            {
+                string minScale = DevConsoleConstants.TIMESCALE_MIN_MULTIPLIER.ToString(
+                    DevConsoleConstants.TIMESCALE_DISPLAY_FORMAT,
+                    CultureInfo.InvariantCulture
+                );
+                string maxScale = DevConsoleConstants.TIMESCALE_MAX_MULTIPLIER.ToString(
+                    DevConsoleConstants.TIMESCALE_DISPLAY_FORMAT,
+                    CultureInfo.InvariantCulture
+                );
+                _devConsoleService.LogError(
+                    $"Time scale multiplier must be between {minScale} and {maxScale} (use 'timescale 1' to reset)."
+                );
+                return;
+            }
+
+            _gameTimeService.SetTimeScale(parsedScale);
+            string appliedScale = _gameTimeService.TargetTimeScale.ToString(
+                DevConsoleConstants.TIMESCALE_DISPLAY_FORMAT,
+                CultureInfo.InvariantCulture
+            );
+            string statusSuffix = _gameTimeService.IsPaused ? " (applies on resume)" : string.Empty;
+            _devConsoleService.Log($"Time scale set to {appliedScale}x{statusSuffix}.");
+        }
+
         private bool TryResolveCollectiblePrefab(string token, out GameObject prefab, out string displayName)
         {
             prefab = null;
@@ -694,6 +801,240 @@ namespace Assets.Scripts.UI.DevConsole
                     prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(DevConsoleConstants.SKILL_CRATE_PREFAB_PATH);
                 }
 #endif
+                return true;
+            }
+
+            return false;
+        }
+
+        private void HandleLoadTierCommand(string[] args)
+        {
+            if (_runSessionService == null)
+            {
+                _devConsoleService.LogError("RunSessionService is not available in the current scene.");
+                return;
+            }
+
+            if (_runSessionService.TotalTiersCount <= 0)
+            {
+                _devConsoleService.LogError("No tiers are configured in GameLoopProgressionConfigSO.");
+                return;
+            }
+
+            if (_gameSceneLoader == null)
+            {
+                _devConsoleService.LogError("GameSceneLoader is not available in the current scene.");
+                return;
+            }
+
+            if (!TryParseLoadTierArgs(args, _runSessionService.TotalTiersCount, out int tierNumber, out bool isReset, out string errorMessage))
+            {
+                _devConsoleService.LogError(errorMessage);
+                return;
+            }
+
+            if (_gameSceneLoader.IsLoading)
+            {
+                _devConsoleService.LogWarning("A scene load is already in progress. Ignoring loadtier command.");
+                return;
+            }
+
+            if (!isReset && (_playerManager == null || _playerManager.LevelController == null))
+            {
+                _devConsoleService.LogError("Player LevelController is not available; use '--reset' to load the tier without preserving player state.");
+                return;
+            }
+
+            int targetTierIndex = tierNumber - DevConsoleConstants.MIN_TIER_NUMBER;
+
+            // Update RunSessionService before triggering scene load so LoadingOverlayPresenter reads the target tier during OnStartLoadingScene.
+            if (isReset)
+            {
+                _runSessionService.ResetSessionToTier(targetTierIndex);
+            }
+            else
+            {
+                uint elapsedSeconds = _timerPresenter != null ? _timerPresenter.TimerValue : _runSessionService.AccumulatedRunSeconds;
+                _runSessionService.CaptureSnapshotAndSetTier(targetTierIndex, _playerManager, elapsedSeconds);
+            }
+
+            if (_skillUpgradePresenter != null)
+            {
+                _skillUpgradePresenter.HideForStageTransition();
+            }
+
+            if (_timerPresenter != null)
+            {
+                _timerPresenter.SetPaused(true);
+            }
+
+            if (_playerManager != null && _playerManager.DamagedHandler != null)
+            {
+                _playerManager.DamagedHandler.SetPortalTransitionInvulnerable(true);
+            }
+
+            LoopTierConfig targetTierConfig = _runSessionService.ActiveTierConfig;
+            AsyncOperation loadOperation = targetTierConfig != null && targetTierConfig.OverrideScene
+                ? _gameSceneLoader.LoadNewSceneAsync(targetTierConfig.SceneOverride)
+                : _gameSceneLoader.ReloadCurrentSceneAsync();
+
+            if (loadOperation == null)
+            {
+                _devConsoleService.LogError($"Failed to start scene load for Tier {tierNumber}.");
+                return;
+            }
+
+            string modeLabel = isReset ? "fresh reset" : "preserving run progress";
+            _devConsoleService.Log($"Loading Tier {tierNumber} ({modeLabel})...");
+        }
+
+        private bool TryParseLoadTierArgs(string[] args, int totalTiers, out int tierNumber, out bool isReset, out string errorMessage)
+        {
+            tierNumber = 0;
+            isReset = false;
+            errorMessage = null;
+
+            if (args == null || args.Length == 0)
+            {
+                errorMessage = $"Usage: {DevConsoleConstants.LOAD_TIER_COMMAND_SYNTAX} (valid tiers: {DevConsoleConstants.MIN_TIER_NUMBER}-{totalTiers}).";
+                return false;
+            }
+
+            string tierToken = null;
+            for (int i = 0; i < args.Length; i++)
+            {
+                string arg = args[i];
+                if (string.Equals(arg, DevConsoleConstants.RESET_FLAG_LONG, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(arg, DevConsoleConstants.RESET_FLAG_SHORT, StringComparison.OrdinalIgnoreCase))
+                {
+                    isReset = true;
+                    continue;
+                }
+
+                if (tierToken == null)
+                {
+                    tierToken = arg;
+                }
+                else
+                {
+                    errorMessage = $"Unexpected argument '{arg}'. Usage: {DevConsoleConstants.LOAD_TIER_COMMAND_SYNTAX}.";
+                    return false;
+                }
+            }
+
+            if (string.IsNullOrEmpty(tierToken))
+            {
+                errorMessage = $"Missing tier number. Usage: {DevConsoleConstants.LOAD_TIER_COMMAND_SYNTAX}.";
+                return false;
+            }
+
+            if (!int.TryParse(tierToken, NumberStyles.Integer, CultureInfo.InvariantCulture, out tierNumber))
+            {
+                errorMessage = $"Invalid tier '{tierToken}'. Expected an integer between {DevConsoleConstants.MIN_TIER_NUMBER} and {totalTiers}.";
+                return false;
+            }
+
+            if (tierNumber < DevConsoleConstants.MIN_TIER_NUMBER || tierNumber > totalTiers)
+            {
+                errorMessage = $"Tier {tierNumber} is out of range. Available tiers: {DevConsoleConstants.MIN_TIER_NUMBER}-{totalTiers}.";
+                return false;
+            }
+
+            return true;
+        }
+
+        private void HandleGodModeCommand(string[] args)
+        {
+            if (args != null && args.Length > 1)
+            {
+                _devConsoleService.LogError($"Usage: {DevConsoleConstants.GOD_MODE_COMMAND_SYNTAX}");
+                return;
+            }
+
+            bool hasExplicitState = args != null && args.Length == 1;
+            bool explicitState = false;
+            if (hasExplicitState && !TryParseGodModeArg(args[0], out explicitState))
+            {
+                _devConsoleService.LogError($"Invalid argument '{args[0]}'. Usage: {DevConsoleConstants.GOD_MODE_COMMAND_SYNTAX}");
+                return;
+            }
+
+            if (_runSessionService == null)
+            {
+                _devConsoleService.LogError("RunSessionService is not available in the current scene.");
+                return;
+            }
+
+            if (_playerManager == null || _playerManager.Health == null)
+            {
+                _devConsoleService.LogError("Player Health is not available in the current scene.");
+                return;
+            }
+
+            if (!_playerManager.Health.IsAlive())
+            {
+                _devConsoleService.LogError("Cannot use godmode while the player is dead.");
+                return;
+            }
+
+            bool wasEnabled = _runSessionService.IsGodModeEnabled;
+            bool targetState = hasExplicitState ? explicitState : !wasEnabled;
+            _runSessionService.SetGodModeEnabled(targetState);
+
+            if (targetState)
+            {
+                float minHealth = Mathf.Min(PlayerDamageConstants.GOD_MODE_MIN_HEALTH, _playerManager.Health.MaxHealth);
+                float currentHealth = _playerManager.Health.CurrentHealth;
+                bool alignedHealth = false;
+
+                if (currentHealth < minHealth)
+                {
+                    _playerManager.Health.IncreaseHealth(minHealth - currentHealth);
+                    alignedHealth = true;
+                }
+
+                if (wasEnabled)
+                {
+                    _devConsoleService.Log(alignedHealth
+                        ? "God mode is already enabled (minimum 1 HP enforced; health aligned to 1 HP)."
+                        : "God mode is already enabled (minimum 1 HP enforced).");
+                }
+                else
+                {
+                    _devConsoleService.Log(alignedHealth
+                        ? "God mode enabled (minimum 1 HP enforced; health aligned to 1 HP; DeathVolume still kills)."
+                        : "God mode enabled (minimum 1 HP enforced; DeathVolume still kills).");
+                }
+
+                return;
+            }
+
+            _devConsoleService.Log(wasEnabled
+                ? "God mode disabled."
+                : "God mode is already disabled.");
+        }
+
+        private bool TryParseGodModeArg(string token, out bool targetState)
+        {
+            targetState = false;
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return false;
+            }
+
+            if (string.Equals(token, DevConsoleConstants.GOD_MODE_ON_ARG, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, DevConsoleConstants.GOD_MODE_TRUE_ARG, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, DevConsoleConstants.GOD_MODE_ONE_ARG, StringComparison.OrdinalIgnoreCase))
+            {
+                targetState = true;
+                return true;
+            }
+
+            if (string.Equals(token, DevConsoleConstants.GOD_MODE_OFF_ARG, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, DevConsoleConstants.GOD_MODE_FALSE_ARG, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(token, DevConsoleConstants.GOD_MODE_ZERO_ARG, StringComparison.OrdinalIgnoreCase))
+            {
+                targetState = false;
                 return true;
             }
 
