@@ -68,7 +68,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.LandmineTrap
 
         private void OnDeathVfxFinished(object sender, System.EventArgs e)
         {
-            Destroy(gameObject);
+            DestroySelf();
         }
 
         private void Explode()
@@ -78,15 +78,6 @@ namespace Assets.Scripts.Skills.PlayerSkills.LandmineTrap
             if (colliders.Length == 0)
             {
                 return;
-            }
-
-            if (_deathVfxPlayer != null)
-            {
-                _deathVfxPlayer.Play(new VFXPlayConfig(scale: _config.ExplosionRadius.Value));
-            }
-            else
-            {
-                Destroy(gameObject);
             }
 
             foreach (Collider collider in colliders)
@@ -99,6 +90,27 @@ namespace Assets.Scripts.Skills.PlayerSkills.LandmineTrap
             }
 
             _landmineVisual.SetActive(false);
+
+            if (_deathVfxPlayer != null)
+            {
+                _deathVfxPlayer.Play(new VFXPlayConfig(scale: _config.ExplosionRadius.Value));
+            }
+            else
+            {
+                DestroySelf();
+            }
+        }
+
+        private void DestroySelf()
+        {
+            if (Application.isPlaying)
+            {
+                Destroy(gameObject);
+            }
+            else
+            {
+                DestroyImmediate(gameObject);
+            }
         }
 
         private void ApplyExplosionKnockbackOnKnockableEntity(Collider collider, float timeToArriveAtLocation)

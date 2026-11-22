@@ -34,10 +34,8 @@ namespace Assets.Scripts.Skills.PlayerSkills.Lasergun
         private readonly Collider[] _targetBuffer = new Collider[SkillConstants.TARGET_BUFFER_SIZE];
         private readonly WaitForEndOfFrame _waitForEndOfFrame = new();
 
-        protected override void Awake()
+        protected void Awake()
         {
-            base.Awake();
-
             _audioClipPlayer = GetComponentInChildren<IAudioClipPlayer>();
             _laserLineRenderers = new[] { _laserLineRenderer };
         }

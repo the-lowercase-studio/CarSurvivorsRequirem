@@ -100,6 +100,20 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
                 return;
             }
 
+            int gridWidth = grid.Cells.GetLength(0);
+            int gridHeight = grid.Cells.GetLength(1);
+            for (int x = 0; x < gridWidth; x++)
+            {
+                for (int y = 0; y < gridHeight; y++)
+                {
+                    Cell cell = grid.Cells[x, y];
+                    if (cell != null)
+                    {
+                        cell.BestCost = ushort.MaxValue;
+                    }
+                }
+            }
+
             destinationCell.BestCost = 0;
 
             _cellsToCheck.Clear();

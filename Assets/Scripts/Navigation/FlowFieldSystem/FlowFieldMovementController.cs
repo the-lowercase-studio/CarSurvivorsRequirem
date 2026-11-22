@@ -35,6 +35,14 @@ namespace Assets.Scripts.Navigation.FlowFieldSystem
 
         private void FixedUpdate()
         {
+            StepSeparation();
+        }
+
+        /// <summary>
+        /// Evaluates neighboring enemy colliders to update the local separation vector.
+        /// </summary>
+        public void StepSeparation()
+        {
             PreventEntitiesFromStackingOnEachOther();
         }
 

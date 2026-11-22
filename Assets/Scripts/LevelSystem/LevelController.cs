@@ -49,7 +49,7 @@ namespace Assets.Scripts.LevelSystem
 
         [SerializeField] private AnimationCurve _expCurve;
 
-        public LevelData LevelData { get; private set; } = new LevelData();
+        public LevelData LevelData { get; private set; } = new LevelData(lvl: 1);
 
         public event EventHandler<ValueEventArgs<LevelData>> OnLvlUp;
 
@@ -65,12 +65,12 @@ namespace Assets.Scripts.LevelSystem
                 return;
             }
 
-            LevelData = new LevelData(maxExp: CalculateMaxExp(LevelData.Lvl));
+            LevelData = new LevelData(lvl: 1, maxExp: CalculateMaxExp(1));
         }
 
         public void AddExp(float value)
         {
-            if (LevelData.Lvl == byte.MaxValue)
+            if (value <= 0f || float.IsNaN(value) || float.IsInfinity(value) || LevelData.Lvl == byte.MaxValue)
             {
                 return;
             }

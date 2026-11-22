@@ -146,7 +146,6 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
 
         private void ScheduleOrApplyShotHits(Vector3 origin, Vector3 direction, int damage, MinigunShotResult result)
         {
-            bool isImmediate = result.Distance < MinigunConstants.MIN_TRACER_SPAWN_DISTANCE;
             int targetCount = _resolver.SelectedCount;
 
             for (int i = 0; i < targetCount; i++)
@@ -154,7 +153,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
                 MinigunTargetHit hit = _resolver.GetSelectedHit(i);
                 Vector3 impactPosition = origin + direction * hit.Distance;
 
-                if (isImmediate)
+                if (hit.Distance < MinigunConstants.MIN_TRACER_SPAWN_DISTANCE)
                 {
                     ApplyDamageIfAlive(hit.Target, hit.Health, damage, impactPosition);
                     EmitImpactSparks(impactPosition);
@@ -177,7 +176,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
             if (result.StopReason != MinigunShotStopReason.Range)
             {
                 Vector3 endpointPosition = origin + direction * result.Distance;
-                if (isImmediate)
+                if (result.Distance < MinigunConstants.MIN_TRACER_SPAWN_DISTANCE)
                 {
                     EmitImpactSparks(endpointPosition);
                 }

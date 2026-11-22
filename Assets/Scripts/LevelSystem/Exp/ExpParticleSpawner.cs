@@ -109,7 +109,15 @@ namespace Assets.Scripts.LevelSystem.Exp
         {
             if (_injectionStagingParent != null)
             {
-                Destroy(_injectionStagingParent.gameObject);
+                if (Application.isPlaying)
+                {
+                    Destroy(_injectionStagingParent.gameObject);
+                }
+                else
+                {
+                    DestroyImmediate(_injectionStagingParent.gameObject);
+                }
+
                 _injectionStagingParent = null;
             }
         }
@@ -120,6 +128,14 @@ namespace Assets.Scripts.LevelSystem.Exp
             {
                 _queuedExpSpawns.Enqueue(new ExpParticleSpawnData(pos, expValue));
             }
+        }
+
+        /// <summary>
+        /// Drains all queued exp spawn requests immediately.
+        /// </summary>
+        public void DrainQueuedSpawns()
+        {
+            SpawnParticlesBasedOnExpAmount();
         }
 
         private void OnGet(ExpParticle expParticle)
@@ -165,7 +181,7 @@ namespace Assets.Scripts.LevelSystem.Exp
                 float expPart = exp / expTresholdDevider.Divider;
                 for (int i = 0; i < expTresholdDevider.Divider; i++)
                 {
-                    ExpParticle expParticle = SpawnExpParticleOnRandomPointInSphere(exp, sphereCenterPos);
+                    ExpParticle expParticle = SpawnExpParticleOnRandomPointInSphere(expPart, sphereCenterPos);
                     expParticle.OnExpReachedTarget += ExpParticle_OnExpReachedTarget;
                 }
             }

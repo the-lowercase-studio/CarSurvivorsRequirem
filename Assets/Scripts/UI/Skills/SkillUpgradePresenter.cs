@@ -350,9 +350,17 @@ namespace Assets.Scripts.UI.Skills
         {
             _upgradeButtons.Clear();
 
-            foreach (Transform child in _buttonsHolder)
+            for (int i = _buttonsHolder.childCount - 1; i >= 0; i--)
             {
-                Destroy(child.gameObject);
+                GameObject childGo = _buttonsHolder.GetChild(i).gameObject;
+                if (Application.isPlaying)
+                {
+                    Destroy(childGo);
+                }
+                else
+                {
+                    DestroyImmediate(childGo);
+                }
             }
         }
 
