@@ -30,17 +30,27 @@ namespace Assets.Scripts.HealthSystem
 
         private void Update()
         {
+            AdvanceRegeneration(Time.deltaTime);
+        }
+
+        public void AdvanceRegeneration(float deltaTime)
+        {
+            if (deltaTime <= 0f || float.IsNaN(deltaTime) || float.IsInfinity(deltaTime))
+            {
+                return;
+            }
+
             if (CurrentHealth < MaxHealth && MaxRegenerationAmount > 0 && StartRegenerationDelay > 0)
             {
-                RegenerationProcess();
+                RegenerationProcess(deltaTime);
             }
         }
 
-        private void RegenerationProcess()
+        private void RegenerationProcess(float deltaTime)
         {
             if (CurrentRegenerationDelay > 0)
             {
-                CurrentRegenerationDelay -= Time.deltaTime;
+                CurrentRegenerationDelay -= deltaTime;
             }
             else
             {

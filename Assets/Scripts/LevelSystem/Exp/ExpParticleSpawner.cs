@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using Assets.Scripts.LevelSystem.Constants;
+using Assets.Scripts.ReflexDI;
 using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.Utils;
+using Reflex.Attributes;
+using Reflex.Core;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -45,6 +48,8 @@ namespace Assets.Scripts.LevelSystem.Exp
             }
         }
 
+        [Inject] private readonly Container _container = null;
+
         [SerializeField] private Transform _expParticlesParent;
         [SerializeField] private float _particlesYOffset;
         [SerializeField] private ExpParticle _expParticlePrefab;
@@ -53,6 +58,7 @@ namespace Assets.Scripts.LevelSystem.Exp
 
         private readonly Queue<ExpParticleSpawnData> _queuedExpSpawns = new();
         private IObjectPool<ExpParticle> _expParticlePool;
+        private Transform _injectionStagingParent;
 
         public event EventHandler OnSpawnedEntityReleased;
 
@@ -70,8 +76,14 @@ namespace Assets.Scripts.LevelSystem.Exp
                 Debug.LogError($"[{nameof(ExpParticleSpawner)}] ExpTresholdDeviders is empty on '{name}'!");
             }
 
+            _injectionStagingParent = ReflexPrefabInstantiator.CreateInactiveStagingParent(nameof(ExpParticleSpawner));
+
             _expParticlePool = new ObjectPool<ExpParticle>(
-                createFunc: () => Instantiate(_expParticlePrefab, transform),
+                createFunc: () => ReflexPrefabInstantiator.InstantiateInjectedObject(
+                    _expParticlePrefab,
+                    transform,
+                    _container,
+                    _injectionStagingParent),
                 actionOnGet: OnGet,
                 actionOnRelease: OnRelease,
                 defaultCapacity: 20,
@@ -93,12 +105,37 @@ namespace Assets.Scripts.LevelSystem.Exp
             CancelInvoke(nameof(SpawnParticlesBasedOnExpAmount));
         }
 
+        private void OnDestroy()
+        {
+            if (_injectionStagingParent != null)
+            {
+                if (Application.isPlaying)
+                {
+                    Destroy(_injectionStagingParent.gameObject);
+                }
+                else
+                {
+                    DestroyImmediate(_injectionStagingParent.gameObject);
+                }
+
+                _injectionStagingParent = null;
+            }
+        }
+
         public void Spawn(Vector3 pos, float expValue, int count = 1)
         {
             for (int i = 0; i < count; i++)
             {
                 _queuedExpSpawns.Enqueue(new ExpParticleSpawnData(pos, expValue));
             }
+        }
+
+        /// <summary>
+        /// Drains all queued exp spawn requests immediately.
+        /// </summary>
+        public void DrainQueuedSpawns()
+        {
+            SpawnParticlesBasedOnExpAmount();
         }
 
         private void OnGet(ExpParticle expParticle)
@@ -144,7 +181,7 @@ namespace Assets.Scripts.LevelSystem.Exp
                 float expPart = exp / expTresholdDevider.Divider;
                 for (int i = 0; i < expTresholdDevider.Divider; i++)
                 {
-                    ExpParticle expParticle = SpawnExpParticleOnRandomPointInSphere(exp, sphereCenterPos);
+                    ExpParticle expParticle = SpawnExpParticleOnRandomPointInSphere(expPart, sphereCenterPos);
                     expParticle.OnExpReachedTarget += ExpParticle_OnExpReachedTarget;
                 }
             }

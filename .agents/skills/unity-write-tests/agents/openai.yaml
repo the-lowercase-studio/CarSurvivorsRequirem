@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Write Tests"
+  short_description: "Write thorough Car Survivors Unity tests via chained quality skills"
+  default_prompt: "Use $unity-write-tests to design, write, audit, and verify thorough EditMode or PlayMode tests for this Car Survivors system."

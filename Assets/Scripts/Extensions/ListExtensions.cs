@@ -20,28 +20,5 @@ namespace Assets.Scripts.Extensions
                 (list[randomIndex], list[count]) = (list[count], list[randomIndex]);
             }
         }
-
-        public static List<T> Shuffle<T>(this IList<T> list)
-        {
-            if (list == null)
-            {
-                return new List<T>();
-            }
-
-            List<T> shuffled = new(list);
-            shuffled.ShuffleInPlace();
-            return shuffled;
-        }
-
-        public static List<T> Shuffle<T>(this IEnumerable<T> collection)
-        {
-            if (collection == null)
-            {
-                return new List<T>();
-            }
-
-            List<T> list = new(collection);
-            return list.Shuffle();
-        }
     }
 }

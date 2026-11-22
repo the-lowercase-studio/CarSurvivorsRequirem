@@ -17,6 +17,7 @@ This folder contains project documentation for *Car Survivors* aimed directly at
 
 | Document | Category | Description |
 | :--- | :--- | :--- |
-| [Agent Skills Guide](agent-skills-guide.md) | Tooling & Workflow | Comprehensive guide to 14 AI agent skills, trigger tables, workflows, and code safety gates. |
+| [Agent Skills Guide](agent-skills-guide.md) | Tooling & Workflow | Comprehensive guide to 15 AI agent skills, trigger tables, workflows, and code safety gates. |
+| [Skills System Architecture](architecture/skills-system-architecture.md) | Architecture | Mermaid architecture diagram of the Skills system with responsibilities of every component (DI, reward sources, upgrade flow, registry, concrete skills, stats data, UI). |
 | [Pre-Commit Evidences](evidences/) | Visual Verification | Local gitignored folder storing Play Mode and Scene View PNG proof captures generated on request by `pre-commit-evidence` before running `git-commit`. |
 

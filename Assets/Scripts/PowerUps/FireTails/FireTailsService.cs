@@ -48,6 +48,7 @@ namespace Assets.Scripts.PowerUps.FireTails
         private readonly bool[] _hasTrackContinuity = new bool[FireTailsConstants.REAR_TIRE_TRACK_COUNT];
         private readonly Collider[] _overlapBuffer = new Collider[FireTailsConstants.OVERLAP_COLLIDER_BUFFER_SIZE];
         private readonly HashSet<IDamageable> _touchedDamageablesThisScan = new HashSet<IDamageable>();
+        private readonly Dictionary<IDamageable, Vector3> _hitPositionByTargetThisScan = new Dictionary<IDamageable, Vector3>(FireTailsConstants.TARGET_TRACKING_INITIAL_CAPACITY);
         private readonly Dictionary<IDamageable, float> _nextBurnTickTimeByTarget = new Dictionary<IDamageable, float>(FireTailsConstants.TARGET_TRACKING_INITIAL_CAPACITY);
         private readonly List<IDamageable> _staleTargetsScratch = new List<IDamageable>(FireTailsConstants.TARGET_TRACKING_INITIAL_CAPACITY);
         private readonly HashSet<IMovementController> _slowedMoversThisScan = new HashSet<IMovementController>();
@@ -233,6 +234,7 @@ namespace Assets.Scripts.PowerUps.FireTails
             _slowedMoversPreviousScan.Clear();
             _slowedMoversThisScan.Clear();
             _touchedDamageablesThisScan.Clear();
+            _hitPositionByTargetThisScan.Clear();
             _nextBurnTickTimeByTarget.Clear();
             _activeHazardNodeCount = 0;
         }
@@ -322,6 +324,7 @@ namespace Assets.Scripts.PowerUps.FireTails
         private void EvaluateHazardCombatOverlaps()
         {
             _touchedDamageablesThisScan.Clear();
+            _hitPositionByTargetThisScan.Clear();
             _slowedMoversThisScan.Clear();
 
             for (int i = 0; i < _activeHazardNodeCount; i++)
@@ -350,6 +353,10 @@ namespace Assets.Scripts.PowerUps.FireTails
                     if (damageable != null)
                     {
                         _touchedDamageablesThisScan.Add(damageable);
+                        if (damageable is IPositionalDamageable)
+                        {
+                            _hitPositionByTargetThisScan[damageable] = col.ClosestPoint(_hazardNodes[i].Position);
+                        }
                     }
 
                     if (EntityLayers.Enemy.ContainsLayer(col.gameObject.layer))
@@ -392,7 +399,16 @@ namespace Assets.Scripts.PowerUps.FireTails
 
                 if (!_nextBurnTickTimeByTarget.TryGetValue(target, out float nextTickTime) || _combatClock >= nextTickTime)
                 {
-                    target.TakeDamage(_config.DamagePerTick);
+                    if (target is IPositionalDamageable positionalTarget
+                        && _hitPositionByTargetThisScan.TryGetValue(target, out Vector3 hitPosition))
+                    {
+                        positionalTarget.TakeDamage(_config.DamagePerTick, hitPosition);
+                    }
+                    else
+                    {
+                        target.TakeDamage(_config.DamagePerTick);
+                    }
+
                     _nextBurnTickTimeByTarget[target] = _combatClock + _config.TickIntervalSeconds;
                 }
             }

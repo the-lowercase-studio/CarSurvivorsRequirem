@@ -29,10 +29,13 @@ Consult official sources through .agents/context/technology-documentation.md bef
 
 ### 1. Compilation and Warnings
 
-For C# changes, execute:
+For C# changes, compile the affected `.asmdef`-generated `.csproj` projects cleanly (for example `CarSurvivors.Runtime.csproj`, `CarSurvivors.Editor.csproj`, `CarSurvivors.Editor.Tests.csproj`, `CarSurvivors.PlayMode.Tests.csproj`):
 
 ```powershell
-dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
+dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false
+dotnet build CarSurvivors.Editor.csproj -p:BuildProjectReferences=false
+dotnet build CarSurvivors.Editor.Tests.csproj -p:BuildProjectReferences=false
+dotnet build CarSurvivors.PlayMode.Tests.csproj -p:BuildProjectReferences=false
 ```
 
 Require exit code 0, zero errors, and zero warnings. Report actual diagnostics and distinguish baseline from introduced failures. For documentation-only changes, record compilation as N/A with a reason.

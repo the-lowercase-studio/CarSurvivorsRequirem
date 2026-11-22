@@ -1,0 +1,4 @@
+interface:
+  display_name: "System Architecture Diagram"
+  short_description: "Draw a source-verified Mermaid architecture diagram with per-part responsibilities in .user-docs/architecture/."
+  default_prompt: "Use $system-architecture-diagram to create a human-facing architecture Mermaid diagram with responsibilities of every part for this system or scope."

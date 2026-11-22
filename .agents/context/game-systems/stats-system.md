@@ -28,8 +28,11 @@ It is not responsible for:
   - Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs
   - Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs
   - Assets/Scripts/Skills/UpgradeableSkill.cs
+  - Assets/Scripts/Skills/SkillsRegistry.cs
+  - Assets/Scripts/GameFlow/RunSessionService.cs
   - Assets/ScriptableObjects/Skills/PlayerSkills
   - Assets/Scripts/Skills/PlayerSkills
+  - Assets/Scripts/Editor/Tests/UpgradeableStatTests.cs
 - Related docs:
   - .agents/context/game-systems/skills-system.md
   - .agents/context/game-systems/projectiles-system.md
@@ -40,8 +43,8 @@ It is not responsible for:
 ## Architecture and Data Flow
 
 - Core components:
-  - Assets/Scripts/Stats/UpgradeableStat.cs exposes `CanBeUpgraded`, `HasUnlimitedMaxValue`, `IsSubstractModeOn`, `AlwaysUseMinValueForUpgrade`, `IsIntegerUpgradeRange`, upgrade range metadata (`UpgradeRangeMin`, `UpgradeRangeMax`), optional rarity override metadata (`OverrideDefaultRarity`, `Rarity`), `Icon` (`Sprite`), `SetIcon(Sprite icon)`, `StatsUnits Unit`, upgrade calculation methods, `Upgrade(float)`, and `OnUpgrade`.
-  - Assets/Scripts/Stats/UpgradeableStat.cs stores a typed `Value`, min/max range, upgrade-value range, unit, subtract mode, unlimited-max flag, rarity override fields, icon, and upgrade availability.
+  - Assets/Scripts/Stats/UpgradeableStat.cs exposes CanBeUpgraded, HasUnlimitedMaxValue, IsSubstractModeOn, AlwaysUseMinValueForUpgrade, IsIntegerUpgradeRange, upgrade range metadata (UpgradeRangeMin, UpgradeRangeMax), optional rarity override metadata (OverrideDefaultRarity, Rarity), Icon (Sprite), SetIcon(Sprite icon), StatsUnits Unit, upgrade calculation methods, Upgrade(float), RestoreRuntimeState(double value, bool canBeUpgraded), and OnUpgrade.
+  - Assets/Scripts/Stats/UpgradeableStat.cs stores a typed Value, min/max range, upgrade-value range, unit, subtract mode, unlimited-max flag, rarity override fields, icon, and upgrade availability. RestoreRuntimeState(double value, bool canBeUpgraded) restores persisted stat values across multi-tier transitions (using Mathf.RoundToInt for int stats before Convert.ChangeType).
   - Assets/Scripts/Stats/FloatUpgradeableStat.cs and Assets/Scripts/Stats/IntUpgradeableStat.cs provide non-generic serializable Unity variants.
   - Assets/Scripts/Common/Types/ValueRange.cs currently supports random upgrade values for `float` and `int`; byte ranges are no longer implemented.
   - Assets/Scripts/Skills/StatsUnits.cs defines `None`, `Percentage`, `Seconds`, and `Meters`; `ToDisplayString` maps them to UI suffixes.
@@ -94,6 +97,7 @@ It is not responsible for:
   - Public stat properties must remain accessible to reflection in Assets/ScriptableObjects/Skills/SkillUpgradeableStatsConfig.cs.
 - Testing implications:
   - Compile after stat or config code changes.
+  - EditMode tests in Assets/Scripts/Editor/Tests/UpgradeableStatTests.cs cover clamping, unlimited-max behavior, subtract mode, int conversion, RestoreRuntimeState carryover, and upgrade event firing.
   - In Unity, validate upgrade button text, rarity visuals, icon rendering, value changes, maxed-stat removal, unlimited-max behavior, subtract-mode behavior, and runtime reset on scene/domain reload.
   - For new units, validate UI suffix and percent display calculations.
 
@@ -122,12 +126,10 @@ It is not responsible for:
   - `ByteUpgradeableStat` and `ByteValueRange` have been removed; references to byte upgrade stats are stale.
   - UI percentage display behavior is specialized and should be verified before changing `GetWhatPercentOfValueIsUpgradeValue`.
 - Open design questions:
-  - Should stat upgrade math be covered by edit-mode tests?
-  - Should runtime stat state live in a run-state service instead of ScriptableObject `ResetRuntimeState()` copies?
+  - Should runtime stat state live in a run-state service instead of ScriptableObject ResetRuntimeState() copies?
   - Should spelling errors be migrated with serialized/API compatibility handling?
 - Suggested follow-up tasks:
-  - Add focused tests for clamp behavior, unlimited max behavior, subtract mode, int conversion, and upgrade event firing.
-  - Review `ValueRange<T>.GetRandomValueInRange` before adding more concrete stat types.
+  - Review ValueRange<T>.GetRandomValueInRange before adding more concrete stat types.
 
 ## Current Value Display
 

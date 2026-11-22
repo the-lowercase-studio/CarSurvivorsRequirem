@@ -14,12 +14,14 @@ namespace Assets.Scripts.Skills.UpgradeFlow
 
             if (TryGetNormalizedRangePosition(upgradeableStat, upgradeValue, out float normalizedRangePosition))
             {
-                if (normalizedRangePosition >= SkillConstants.ULTRA_RARE_THRESHOLD)
+                if (normalizedRangePosition >= SkillConstants.ULTRA_RARE_THRESHOLD
+                    || Mathf.Approximately(normalizedRangePosition, SkillConstants.ULTRA_RARE_THRESHOLD))
                 {
                     return SkillUpgradeRarity.UltraRare;
                 }
 
-                if (normalizedRangePosition >= SkillConstants.RARE_THRESHOLD)
+                if (normalizedRangePosition >= SkillConstants.RARE_THRESHOLD
+                    || Mathf.Approximately(normalizedRangePosition, SkillConstants.RARE_THRESHOLD))
                 {
                     return SkillUpgradeRarity.Rare;
                 }
@@ -34,9 +36,7 @@ namespace Assets.Scripts.Skills.UpgradeFlow
             out float normalizedRangePosition)
         {
             float min = upgradeableStat.UpgradeRangeMin;
-            float max = upgradeableStat.IsIntegerUpgradeRange
-                ? upgradeableStat.UpgradeRangeMax - 1f
-                : upgradeableStat.UpgradeRangeMax;
+            float max = upgradeableStat.UpgradeRangeMax;
 
             if (max <= min || Mathf.Approximately(max, min))
             {

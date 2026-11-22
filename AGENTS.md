@@ -57,7 +57,7 @@ When behavior depends on Unity, Reflex, DOTween, or package-specific APIs, consu
 - Colocate a narrow interface above its primary implementation when it is primarily owned by that implementation.
 - Do not reintroduce singleton patterns, static mutable service state, or `FindAnyObjectByType`-style lookup as a shortcut.
 - Preserve inspector-driven workflows and serialized data compatibility.
-- Do not edit `.prefab`, `.unity`, `.asset`, or `.meta` files directly unless the user explicitly asks and the change is safe to review as text.
+- Agents are authorized to edit `.prefab`, `.unity`, `.asset`, or `.meta` files directly (including removing confirmed-unused serialized fields) only when the change is safe to review as text and after presenting the full edit scope to the user for approval (see `.agents/context/adr/ADR-004-designer-authored-data-and-prefabs.md`).
 
 ## Coding Standards
 
@@ -105,6 +105,7 @@ Use `.agents/skills/` as reusable workflows:
 - `batch-codebase-review`: partition and orchestrate project-wide architecture review and coding standards preservation via subagents or generated prompt roadmaps.
 - `batch-system-docs-update`: refresh existing system documentation through size-aware batches of one to three systems, delegated workers, and cross-batch verification.
 - `check-optimalization`: inspect performance risks and propose optimizations before implementing them.
+- `code-testing`: companion skill (chained by `unity-write-tests`) for requirement-coverage matrices and mutation-relevant unit test design.
 - `create-dev-console-command`: prepare dev console system context and draft a specification for a new in-game CLI command via gameplay-spec-writing.
 - `create-user-doc`: create or update human-facing, user-oriented project documentation in `.user-docs/` upon explicit user request.
 - `di-integration`: add or review Reflex bindings, injected services, and dependency boundaries.
@@ -113,20 +114,28 @@ Use `.agents/skills/` as reusable workflows:
 - `game-balance-analysis`: analyze progression, enemies, swarms, bosses, and player power with reproducible Python forecasts, charts, and balance comparisons.
 - `gameplay-spec-writing`: write or review staff-engineer level technical specifications and implementation plans with hard Open Questions gates.
 - `git-commit`: user-only validated commit workflow enforcing technical, architectural, logical, system-docs sync, and `CSR-<number>` branch/commit checks before staging or committing.
+- `git-pr`: user-only GitHub CLI pull request cycle (open PR from committed CSR branch, wait for CI checks, approve and squash-merge without deleting branch, pull `main`, and create next `CSR-<max+1>` branch with unstaged carryover).
 - `pre-commit-evidence`: user-only pre-commit visual verification workflow that evaluates visual provability first and captures Unity Game View or Scene View proof images in `.user-docs/evidences/` without creating a commit.
 - `preserve-coding-standards`: audit and safely fix coding-standard drift in a pointed scope.
 - `reduce-code-volume`: audit and safely reduce code volume/lines of code while keeping code readable and safe.
 - `sync-system-docs-from-implementations`: user-only (or Phase 8 of user-invoked `git-commit`) workflow to update or create game-system documentation from completed implementation plans and summaries, deleting only processed completed files while preserving templates and unimplemented plans.
+- `system-architecture-diagram`: create or refresh a human-facing, source-verified Mermaid architecture diagram with per-part responsibilities for a pointed system or scope in `.user-docs/architecture/` upon explicit user request.
+- `test-anti-patterns`: companion skill (chained by `unity-write-tests`) for auditing test suites against false confidence, tautologies, flakiness, and isolation flaws.
 - `unity-cli`: interact with Unity CLI (invoked as `unity`, not `unity-cli`) to control running editors, manage projects, licenses, releases, or execute batch runs.
 - `unity-pre-commit-gate`: run a comprehensive pre-commit verification gate (compilation, zero warnings, DI bindings, serialization safety, standards audit).
 - `unity-refactor-suggestions`: produce behavior-preserving Unity/C# refactor recommendations.
 - `unity-root-cause`: systematically investigate and diagnose Unity runtime bugs, DI issues, and lifecycle defects in read-only mode.
+- `unity-testability`: companion skill (chained by `unity-write-tests`) for separating pure C# rules from `MonoBehaviour` state and identifying test seams.
+- `unity-testing`: companion skill (chained by `unity-write-tests`) for Unity Test Framework EditMode/PlayMode patterns, coroutines, and NUnit assertions.
+- `unity-write-tests`: primary Car Survivors test-authoring meta-skill orchestrating `unity-testability`, `code-testing`, `writing-unit-tests`, `unity-testing`, `test-anti-patterns`, and `verification-before-completion` under project NUnit, Reflex DI, and coding standards.
+- `verification-before-completion`: companion verification gate (chained by `unity-write-tests`) requiring fresh command execution evidence before claiming success.
+- `writing-unit-tests`: companion skill (chained by `unity-write-tests`) enforcing contract-first, deterministic, independent-oracle, single-behavior unit tests.
 
 When a request matches a skill trigger, read the relevant `SKILL.md` before editing.
 
 ## Agent Descriptors
 
-All 21 repository-local skills have an optional Codex descriptor at .agents/skills/<skill-name>/agents/openai.yaml. Each descriptor supplies display_name, short_description, and a default_prompt naming its skill. Invocation policy retains the default except for user-only skills (`git-commit`, `pre-commit-evidence`, and `sync-system-docs-from-implementations`, which set `allow_implicit_invocation: false`); descriptors do not grant action authority.
+All 30 repository-local skills have an optional Codex descriptor at .agents/skills/<skill-name>/agents/openai.yaml. Each descriptor supplies display_name, short_description, and a default_prompt naming its skill. Invocation policy retains the default except for user-only skills (`git-commit`, `git-pr`, `pre-commit-evidence`, and `sync-system-docs-from-implementations`, which set `allow_implicit_invocation: false`); descriptors do not grant action authority.
 
 Treat these YAML files as optional UI/default-prompt metadata for compatible tools. The portable workflow source remains each skill's SKILL.md.
 
@@ -171,10 +180,10 @@ For every non-trivial task, feature, or refactor, follow this two-phase reposito
 
 ## Validation
 
-For C# changes, prefer a targeted project compile:
+For C# changes, compile the affected `.asmdef`-generated projects (`CarSurvivors.Runtime.csproj`, `CarSurvivors.Editor.csproj`, `CarSurvivors.Editor.Tests.csproj`, `CarSurvivors.PlayMode.Tests.csproj`):
 
 ```powershell
-dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
+dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false
 ```
 
 For full automated pre-commit harness validation (compilation, diff-aware architecture checks, conditional tests, `.meta`/`.gitignore` hygiene, live Unity Editor checks, and `CSR-<number>` branch/prefix validation):

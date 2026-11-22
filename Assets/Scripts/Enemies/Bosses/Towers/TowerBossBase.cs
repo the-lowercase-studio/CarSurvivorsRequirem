@@ -6,6 +6,8 @@ using Assets.Scripts.Audio;
 using Assets.Scripts.DamageNumbers;
 using Assets.Scripts.Enemies.Bosses.Towers.Arena;
 using Assets.Scripts.Enemies.Bosses.Towers.Constants;
+using Assets.Scripts.GameFlow;
+using Assets.Scripts.GameFlow.Config;
 using Assets.Scripts.HealthSystem;
 using Assets.Scripts.Indicators;
 using Assets.Scripts.LevelSystem.Exp;
@@ -41,13 +43,14 @@ namespace Assets.Scripts.Enemies.Bosses.Towers
     }
 
     [RequireComponent(typeof(Health))]
-    public abstract class TowerBossBase : MonoBehaviour, ITowerBoss
+    public abstract class TowerBossBase : MonoBehaviour, ITowerBoss, IPositionalDamageable
     {
         [Inject] private IPlayerManager _playerManager = null;
         [Inject] private readonly IGridManager _gridManager = null;
         [Inject] private readonly Reflex.Core.Container _container = null;
         [Inject] private readonly IInWorldSpaceSpawner<ExpParticleSpawner, float> _expParticleSpawner = null;
         [Inject] private readonly ITimeFreezeState _timeFreezeState = null;
+        [Inject] private readonly IRunSessionService _runSessionService = null;
 
         [Header("Telegraphs & Rig")]
         [Tooltip("Prefab instantiated for circular ground warning telegraphs.")]
@@ -237,6 +240,8 @@ namespace Assets.Scripts.Enemies.Bosses.Towers
 
         protected virtual void Awake()
         {
+            ApplyTierConfigOverrideIfAvailable();
+
             Health = GetComponent<IHealth>();
             _arenaController = GetComponent<EncounterArenaController>();
             _materialPropertyBlock = new MaterialPropertyBlock();
@@ -255,6 +260,8 @@ namespace Assets.Scripts.Enemies.Bosses.Towers
 
         protected virtual void OnEnable()
         {
+            ApplyTierConfigOverrideIfAvailable();
+
             TowerBossConfigSO config = BaseConfig;
             if (Health != null && config != null)
             {
@@ -270,6 +277,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers
             }
 
             _isEnraged = false;
+            ApplyBaselineMaterials();
             InitializeStateMachineForEnable();
             RaisePresentationChanged();
         }
@@ -364,39 +372,12 @@ namespace Assets.Scripts.Enemies.Bosses.Towers
 
         public void TakeDamage(float damage)
         {
-            if (Health == null || !Health.IsAlive())
-            {
-                return;
-            }
+            TakeDamageInternal(damage, null);
+        }
 
-            if (IsIdleStateActive)
-            {
-                if (_arenaController != null)
-                {
-                    _arenaController.NotifyDirectCombatEngaged();
-                }
-                else
-                {
-                    StartEncounter();
-                }
-            }
-
-            Vector3 spawnPos = transform.position + Vector3.up * DamageNumberYOffset;
-
-            if (_damageNumbersSpawner != null)
-            {
-                _damageNumbersSpawner.Spawn(
-                    spawnPos,
-                    new DamageNubmersSpawnerConfig(damage, ShapeModes.Hemisphere)
-                );
-            }
-
-            Health.DecreaseHealth(damage);
-
-            if (Health.IsAlive() && _hitVfxPlayer != null)
-            {
-                _hitVfxPlayer.Play(new VFXPlayConfig());
-            }
+        public void TakeDamage(float damage, Vector3 hitWorldPosition)
+        {
+            TakeDamageInternal(damage, hitWorldPosition);
         }
 
         public void TakeFullHpDamage()
@@ -607,6 +588,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers
             }
         }
 
+        protected abstract void ApplyTierConfigOverride(TierBossConfig tierBossConfig);
         protected abstract void InitializeTower();
         protected abstract void InitializeStateMachineForEnable();
         protected abstract void MarkFootprintImpassable();
@@ -629,6 +611,48 @@ namespace Assets.Scripts.Enemies.Bosses.Towers
 
         protected virtual void OnResolveAdditionalDependencies(Reflex.Core.Container container)
         {
+        }
+
+        protected virtual Vector3 GetDamageNumberSpawnPosition(Vector3? hitWorldPosition)
+        {
+            return transform.position + Vector3.up * DamageNumberYOffset;
+        }
+
+        private void TakeDamageInternal(float damage, Vector3? hitWorldPosition)
+        {
+            if (Health == null || !Health.IsAlive())
+            {
+                return;
+            }
+
+            if (IsIdleStateActive)
+            {
+                if (_arenaController != null)
+                {
+                    _arenaController.NotifyDirectCombatEngaged();
+                }
+                else
+                {
+                    StartEncounter();
+                }
+            }
+
+            Vector3 spawnPos = GetDamageNumberSpawnPosition(hitWorldPosition);
+
+            if (_damageNumbersSpawner != null)
+            {
+                _damageNumbersSpawner.Spawn(
+                    spawnPos,
+                    new DamageNubmersSpawnerConfig(damage, ShapeModes.Hemisphere, isBoss: true)
+                );
+            }
+
+            Health.DecreaseHealth(damage);
+
+            if (Health.IsAlive() && _hitVfxPlayer != null)
+            {
+                _hitVfxPlayer.Play(new VFXPlayConfig());
+            }
         }
 
         protected void RaisePresentationChanged()
@@ -714,6 +738,13 @@ namespace Assets.Scripts.Enemies.Bosses.Towers
                 return;
             }
 
+            TierBossConfig tierBossConfig = _runSessionService?.ActiveTierConfig?.BossConfig;
+            if (tierBossConfig != null && tierBossConfig.ApplyBaselineBossTint)
+            {
+                ApplyMaterialTint(tierBossConfig.BaselineBossColor, tierBossConfig.BaselineBossEmissionColor);
+                return;
+            }
+
             for (int i = 0; i < _renderersForEnrage.Length; i++)
             {
                 Renderer rend = _renderersForEnrage[i];
@@ -723,6 +754,51 @@ namespace Assets.Scripts.Enemies.Bosses.Towers
                 }
 
                 rend.SetPropertyBlock(null);
+            }
+        }
+
+        private void ApplyTierConfigOverrideIfAvailable()
+        {
+            TierBossConfig tierBossConfig = _runSessionService?.ActiveTierConfig?.BossConfig;
+            if (tierBossConfig != null)
+            {
+                ApplyTierConfigOverride(tierBossConfig);
+            }
+        }
+
+        private void ApplyBaselineMaterials()
+        {
+            TierBossConfig tierBossConfig = _runSessionService?.ActiveTierConfig?.BossConfig;
+            if (tierBossConfig != null && tierBossConfig.ApplyBaselineBossTint)
+            {
+                ApplyMaterialTint(tierBossConfig.BaselineBossColor, tierBossConfig.BaselineBossEmissionColor);
+            }
+        }
+
+        private void ApplyMaterialTint(Color baseColor, Color emissionColor)
+        {
+            if (_renderersForEnrage == null)
+            {
+                return;
+            }
+
+            if (_materialPropertyBlock == null)
+            {
+                _materialPropertyBlock = new MaterialPropertyBlock();
+            }
+
+            for (int i = 0; i < _renderersForEnrage.Length; i++)
+            {
+                Renderer rend = _renderersForEnrage[i];
+                if (rend == null)
+                {
+                    continue;
+                }
+
+                rend.GetPropertyBlock(_materialPropertyBlock);
+                _materialPropertyBlock.SetColor(TowerBossConstants.BASE_COLOR_PROPERTY, baseColor);
+                _materialPropertyBlock.SetColor(TowerBossConstants.EMISSION_COLOR_PROPERTY, emissionColor);
+                rend.SetPropertyBlock(_materialPropertyBlock);
             }
         }
 

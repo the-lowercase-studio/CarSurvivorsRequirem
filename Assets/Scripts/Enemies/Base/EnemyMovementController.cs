@@ -44,7 +44,7 @@ namespace Assets.Scripts.Enemies.Base
             get
             {
                 return isActiveAndEnabled && !_isMovementStopped && !_isKnockbackActive
-                    && _verticalVelocity <= 0f && IsOnGround() && (_enemy == null || !_enemy.IsFrozen)
+                    && _verticalVelocity <= 0f && IsOnGround() && (_enemy == null || (!_enemy.IsFrozen && !_enemy.IsMaterializing))
                     && GetCurrentUnfrozenTime() >= _teleportAllowedUnfrozenTime;
             }
         }
@@ -87,7 +87,7 @@ namespace Assets.Scripts.Enemies.Base
 
         private void FixedUpdate()
         {
-            if (_enemy != null && _enemy.IsFrozen)
+            if (_enemy != null && (_enemy.IsFrozen || _enemy.IsMaterializing))
             {
                 _currentVelocity = Vector3.zero;
                 return;
@@ -133,7 +133,7 @@ namespace Assets.Scripts.Enemies.Base
 
         public void MoveToPositionInTimeIgnoringSpeed(Vector3 pos, float time)
         {
-            if (_isMovementStopped)
+            if (_isMovementStopped || (_enemy != null && _enemy.IsMaterializing))
             {
                 return;
             }
@@ -164,11 +164,6 @@ namespace Assets.Scripts.Enemies.Base
             _knockbackElapsed = 0f;
             _isKnockbackActive = true;
             _isMovingToPositionUnrelatedToGrid = true;
-        }
-
-        public void ResetVerticalVelocity()
-        {
-            _verticalVelocity = 0f;
         }
 
         public void SetMovementSpeedMultiplier(float multiplier)

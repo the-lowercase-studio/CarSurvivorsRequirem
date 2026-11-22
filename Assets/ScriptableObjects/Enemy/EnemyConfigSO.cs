@@ -16,4 +16,9 @@ public class EnemyConfigSO : ScriptableObject
     public float ExpForKill;
 
     public bool IsMovingByCrawling;
+
+    [Tooltip("Enables the tier shiny shader effect via MaterialPropertyBlock on enemies using this configuration.")]
+    [SerializeField] private bool _isShiny;
+
+    public bool IsShiny => _isShiny;
 }

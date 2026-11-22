@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Assets.Scripts.Common.Types;
 using Assets.Scripts.DamageNumbers.Constants;
 using Assets.Scripts.Effects;
@@ -16,16 +17,20 @@ namespace Assets.Scripts.DamageNumbers
         public float Damage;
         public ShapeModes SpawnShapeMode;
 
-        public DamageNubmersSpawnerConfig(float damage, ShapeModes spawnShapeMode)
+        public bool IsBoss { get; private set; }
+
+        public DamageNubmersSpawnerConfig(float damage, ShapeModes spawnShapeMode, bool isBoss = false)
         {
             Damage = damage;
             SpawnShapeMode = spawnShapeMode;
+            IsBoss = isBoss;
         }
 
-        public void Deconstruct(out float damage, out ShapeModes spawnShapeMode)
+        public void Deconstruct(out float damage, out ShapeModes spawnShapeMode, out bool isBoss)
         {
             damage = Damage;
             spawnShapeMode = SpawnShapeMode;
+            isBoss = IsBoss;
         }
     }
 
@@ -54,12 +59,6 @@ namespace Assets.Scripts.DamageNumbers
                     return _damagePopupApearance;
                 }
             }
-
-            public VisualApearanceByDamageTreshold(float treshold, DamageNumberApearance damagePopupApearance)
-            {
-                _treshold = treshold;
-                _damagePopupApearance = damagePopupApearance;
-            }
         }
 
         [SerializeField] private float _damagePopupVisibilityDuration;
@@ -67,7 +66,11 @@ namespace Assets.Scripts.DamageNumbers
         [SerializeField] private VisualApearanceByDamageTreshold[] _visualApearanceByDamageTresholds;
         [SerializeField] private FloatValueRange _popupsSpeedRange;
         [SerializeField] private float _popupsMovementRange = DamageNumberConstants.DEFAULT_POPUPS_MOVEMENT_RANGE;
+        [Tooltip("Scale multiplier applied to damage numbers spawned by bosses.")]
+        [SerializeField] private float _bossDamagePopupScaleMultiplier = DamageNumberConstants.BOSS_SCALE_MULTIPLIER;
 
+        private readonly Dictionary<DamageNumber, FaceMainCameraDirection[]> _cameraFacingEffectsByDamageNumber =
+            new Dictionary<DamageNumber, FaceMainCameraDirection[]>();
         private Camera _mainCamera;
         private bool _isPopupsEnabled = true;
         private IObjectPool<DamageNumber> _damageNumberPool;
@@ -92,7 +95,7 @@ namespace Assets.Scripts.DamageNumbers
                 createFunc: CreateDamageNumber,
                 actionOnGet: (obj) => obj.gameObject.SetActive(true),
                 actionOnRelease: (obj) => obj.gameObject.SetActive(false),
-                actionOnDestroy: (obj) => Destroy(obj.gameObject),
+                actionOnDestroy: DestroyDamageNumber,
                 collectionCheck: false,
                 defaultCapacity: DamageNumberConstants.DEFAULT_POOL_CAPACITY,
                 maxSize: DamageNumberConstants.MAX_POOL_SIZE
@@ -112,6 +115,16 @@ namespace Assets.Scripts.DamageNumbers
         public void Initialize(Camera mainCamera)
         {
             _mainCamera = mainCamera;
+
+            foreach (KeyValuePair<DamageNumber, FaceMainCameraDirection[]> entry in _cameraFacingEffectsByDamageNumber)
+            {
+                if (entry.Key == null)
+                {
+                    continue;
+                }
+
+                ApplyCameraToEffects(entry.Value, mainCamera);
+            }
         }
 
         public void Spawn(Vector3 pos, DamageNubmersSpawnerConfig specificConfig, int count = 1)
@@ -125,9 +138,9 @@ namespace Assets.Scripts.DamageNumbers
             {
                 DamageNumber damageNumber = _damageNumberPool.Get();
                 damageNumber.transform.position = pos;
-                damageNumber.transform.rotation = Quaternion.identity;
+                OrientDamageNumberToCamera(damageNumber);
 
-                var (damage, spawnShapeMode) = specificConfig;
+                var (damage, spawnShapeMode, isBoss) = specificConfig;
 
                 VisualApearanceByDamageTreshold? visualApearanceByDamageTreshold
                     = FindCorrectVisualApearanceByTreshold(damage);
@@ -138,8 +151,17 @@ namespace Assets.Scripts.DamageNumbers
                     return;
                 }
 
+                DamageNumberApearance appearance = visualApearanceByDamageTreshold.Value.DamagePopupApearance;
+                if (isBoss)
+                {
+                    float bossScale = _bossDamagePopupScaleMultiplier > 0f
+                        ? _bossDamagePopupScaleMultiplier
+                        : DamageNumberConstants.BOSS_SCALE_MULTIPLIER;
+                    appearance.GrowFontSizeAnimationScaleMultiplier *= bossScale;
+                }
+
                 Vector3 dest = GetDestinationBasedOnSpawnShapeMode(pos, spawnShapeMode);
-                damageNumber.Initialize(new DamageNumberConfig(damage, visualApearanceByDamageTreshold.Value.DamagePopupApearance), pos, dest, _damagePopupVisibilityDuration);
+                damageNumber.Initialize(new DamageNumberConfig(damage, appearance), pos, dest, _damagePopupVisibilityDuration);
 
                 damageNumber.OnLifeEnd += DamageNumber_OnLifeEnd;
 
@@ -150,24 +172,69 @@ namespace Assets.Scripts.DamageNumbers
         private DamageNumber CreateDamageNumber()
         {
             DamageNumber damageNumber = Instantiate(_damagePopupPrefab, transform);
-            InitializeCameraFacingEffects(damageNumber);
+            CacheAndInitializeCameraFacingEffects(damageNumber);
 
             return damageNumber;
         }
 
-        private void InitializeCameraFacingEffects(DamageNumber damageNumber)
+        private void DestroyDamageNumber(DamageNumber damageNumber)
         {
+            if (damageNumber != null)
+            {
+                _cameraFacingEffectsByDamageNumber.Remove(damageNumber);
+                Destroy(damageNumber.gameObject);
+            }
+        }
+
+        private void CacheAndInitializeCameraFacingEffects(DamageNumber damageNumber)
+        {
+            FaceMainCameraDirection[] cameraFacingEffects =
+                damageNumber.GetComponentsInChildren<FaceMainCameraDirection>(true);
+            _cameraFacingEffectsByDamageNumber[damageNumber] = cameraFacingEffects;
+            ApplyCameraToEffects(cameraFacingEffects, _mainCamera);
+        }
+
+        private void OrientDamageNumberToCamera(DamageNumber damageNumber)
+        {
+            damageNumber.transform.rotation = Quaternion.identity;
+
             if (_mainCamera == null)
             {
                 return;
             }
 
-            FaceMainCameraDirection[] cameraFacingEffects =
-                damageNumber.GetComponentsInChildren<FaceMainCameraDirection>(true);
+            if (!_cameraFacingEffectsByDamageNumber.TryGetValue(damageNumber, out FaceMainCameraDirection[] cameraFacingEffects))
+            {
+                CacheAndInitializeCameraFacingEffects(damageNumber);
+                cameraFacingEffects = _cameraFacingEffectsByDamageNumber[damageNumber];
+            }
+            else
+            {
+                ApplyCameraToEffects(cameraFacingEffects, _mainCamera);
+            }
 
             foreach (FaceMainCameraDirection cameraFacingEffect in cameraFacingEffects)
             {
-                cameraFacingEffect.Initialize(_mainCamera);
+                if (cameraFacingEffect != null)
+                {
+                    cameraFacingEffect.SnapToTargetRotation();
+                }
+            }
+        }
+
+        private void ApplyCameraToEffects(FaceMainCameraDirection[] cameraFacingEffects, Camera mainCamera)
+        {
+            if (mainCamera == null || cameraFacingEffects == null)
+            {
+                return;
+            }
+
+            foreach (FaceMainCameraDirection cameraFacingEffect in cameraFacingEffects)
+            {
+                if (cameraFacingEffect != null)
+                {
+                    cameraFacingEffect.Initialize(mainCamera);
+                }
             }
         }
 

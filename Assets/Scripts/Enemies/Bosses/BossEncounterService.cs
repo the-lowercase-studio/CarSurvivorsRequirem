@@ -1,11 +1,15 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using Assets.Scripts.Enemies.Bosses.Constants;
 using Assets.Scripts.Enemies.Bosses.Golem;
+using Assets.Scripts.Enemies.Bosses.Golem.Config;
 using Assets.Scripts.Enemies.Bosses.Towers.Arena;
-using Assets.Scripts.HealthSystem;
+using Assets.Scripts.GameFlow;
+using Assets.Scripts.GameFlow.Config;
+using Assets.Scripts.Interactables;
+using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.Player;
+using Assets.Scripts.ReflexDI;
 using Assets.Scripts.Spawners.Swarm;
 using Assets.Scripts.UI.HUD;
 using Reflex.Attributes;
@@ -21,6 +25,8 @@ namespace Assets.Scripts.Enemies.Bosses
         int RemainingTowersCount { get; }
         void RegisterTower(IEncounterArenaController towerArena);
         void UnregisterTower(IEncounterArenaController towerArena);
+        void RegisterGolemStatue(IGolemStatue statue);
+        void UnregisterGolemStatue(IGolemStatue statue);
         void NotifyEncounterEngaged(IBossHUDSource source, string displayName);
         void NotifyEncounterDisengaged();
         void NotifyTowerDefeated(IEncounterArenaController towerArena);
@@ -28,8 +34,6 @@ namespace Assets.Scripts.Enemies.Bosses
         void SpawnGolemBoss(Vector3? spawnPosition = null);
         int CollectEngagedBosses(List<IBossCombatTarget> buffer);
         event Action<int, int> OnTowerDefeated;
-        event Action<IGolemBoss> OnGolemSpawned;
-        event Action<IGolemBoss> OnGolemDefeated;
     }
 
     public class BossEncounterService : MonoBehaviour, IBossEncounterService
@@ -37,25 +41,25 @@ namespace Assets.Scripts.Enemies.Bosses
         [Inject] private readonly IBossHUDPresenter _bossHUDPresenter = null;
         [Inject] private readonly ISwarmFreezer _swarmFreezer = null;
         [Inject] private readonly IPlayerManager _playerManager = null;
+        [Inject] private readonly IRunSessionService _runSessionService = null;
+        [Inject] private readonly Reflex.Core.Container _container = null;
 
         [Header("Prefabs & Configuration")]
-        [Tooltip("Prefab for the stage-culmination Ancient Golem boss.")]
+        [Tooltip("Default prefab for the stage-culmination Ancient Golem boss.")]
         [SerializeField] private GolemBoss _golemBossPrefab;
         [Tooltip("Prefab for the stage progression portal spawned upon Golem defeat.")]
         [SerializeField] private GameObject _nextStagePortalPrefab;
-        [Tooltip("Display name shown on the Boss HUD health bar.")]
+        [Tooltip("Default display name shown on the Boss HUD health bar.")]
         [SerializeField] private string _golemDisplayName = BossEncounterConstants.DEFAULT_GOLEM_DISPLAY_NAME;
         [Tooltip("Forward spawn distance ahead of player when no explicit spawn position is provided.")]
         [SerializeField] private float _spawnOffsetDistance = BossEncounterConstants.DEFAULT_SPAWN_OFFSET_DISTANCE;
-        [Tooltip("Configured number of towers that must be defeated before GolemBoss spawns.")]
+        [Tooltip("Configured number of towers that must be defeated before GolemStatue unlocks.")]
         [SerializeField] private int _requiredTowersForGolemSpawn = BossEncounterConstants.DEFAULT_REQUIRED_TOWERS;
-        [Tooltip("Breathing delay in seconds between final tower defeat and GolemBoss spawn.")]
-        [SerializeField] private float _delayBeforeGolemSpawn = BossEncounterConstants.DEFAULT_DELAY_BEFORE_GOLEM_SPAWN;
 
         private readonly HashSet<IEncounterArenaController> _registeredTowers = new();
         private readonly HashSet<IEncounterArenaController> _defeatedTowers = new();
+        private IGolemStatue _registeredStatue;
         private GolemBoss _activeGolemInstance;
-        private Coroutine _golemSpawnCoroutine;
         private bool _isEncounterEngaged;
 
         public bool IsAnyBossActive => _isEncounterEngaged || IsGolemActive;
@@ -69,17 +73,9 @@ namespace Assets.Scripts.Enemies.Bosses
         public int RemainingTowersCount => Mathf.Max(0, RequiredTowersCount - DefeatedTowersCount);
 
         public event Action<int, int> OnTowerDefeated;
-        public event Action<IGolemBoss> OnGolemSpawned;
-        public event Action<IGolemBoss> OnGolemDefeated;
 
         private void OnDisable()
         {
-            if (_golemSpawnCoroutine != null)
-            {
-                StopCoroutine(_golemSpawnCoroutine);
-                _golemSpawnCoroutine = null;
-            }
-
             if (_activeGolemInstance != null)
             {
                 _activeGolemInstance.OnBossDefeated -= Golem_OnBossDefeated;
@@ -103,12 +99,6 @@ namespace Assets.Scripts.Enemies.Bosses
 
         private void OnDestroy()
         {
-            if (_golemSpawnCoroutine != null)
-            {
-                StopCoroutine(_golemSpawnCoroutine);
-                _golemSpawnCoroutine = null;
-            }
-
             if (_activeGolemInstance != null)
             {
                 _activeGolemInstance.OnBossDefeated -= Golem_OnBossDefeated;
@@ -141,6 +131,19 @@ namespace Assets.Scripts.Enemies.Bosses
             _registeredTowers.Remove(towerArena);
         }
 
+        public void RegisterGolemStatue(IGolemStatue statue)
+        {
+            _registeredStatue = statue;
+        }
+
+        public void UnregisterGolemStatue(IGolemStatue statue)
+        {
+            if (_registeredStatue == statue)
+            {
+                _registeredStatue = null;
+            }
+        }
+
         public void NotifyEncounterEngaged(IBossHUDSource source, string displayName)
         {
             _isEncounterEngaged = true;
@@ -167,7 +170,7 @@ namespace Assets.Scripts.Enemies.Bosses
 
         public void NotifyTowerDefeated(IEncounterArenaController towerArena)
         {
-            if (towerArena != null && !_defeatedTowers.Add(towerArena))
+            if (towerArena == null || !_defeatedTowers.Add(towerArena))
             {
                 return;
             }
@@ -175,16 +178,6 @@ namespace Assets.Scripts.Enemies.Bosses
             NotifyEncounterDisengaged();
 
             OnTowerDefeated?.Invoke(DefeatedTowersCount, RequiredTowersCount);
-
-            if (DefeatedTowersCount >= RequiredTowersCount)
-            {
-                if (_golemSpawnCoroutine != null)
-                {
-                    StopCoroutine(_golemSpawnCoroutine);
-                }
-
-                _golemSpawnCoroutine = StartCoroutine(DelayedSpawnGolemRoutine());
-            }
         }
 
         public bool IsPositionWithinAnyTowerArena(Vector3 worldPosition, float extraBuffer = 0f)
@@ -213,13 +206,17 @@ namespace Assets.Scripts.Enemies.Bosses
 
         public void SpawnGolemBoss(Vector3? spawnPosition = null)
         {
-            if (_golemSpawnCoroutine != null)
+            if (_registeredStatue != null)
             {
-                StopCoroutine(_golemSpawnCoroutine);
-                _golemSpawnCoroutine = null;
+                _registeredStatue.DismissForExternalSpawn();
             }
 
-            if (IsGolemActive || _golemBossPrefab == null)
+            TierBossConfig tierBossConfig = _runSessionService?.ActiveTierConfig?.BossConfig;
+            GolemBoss golemPrefab = tierBossConfig != null && tierBossConfig.GolemPrefabOverride != null
+                ? tierBossConfig.GolemPrefabOverride
+                : _golemBossPrefab;
+
+            if (IsGolemActive || golemPrefab == null)
             {
                 return;
             }
@@ -246,12 +243,22 @@ namespace Assets.Scripts.Enemies.Bosses
                 finalSpawnPos = transform.position + Vector3.forward * _spawnOffsetDistance;
             }
 
-            _activeGolemInstance = Instantiate(_golemBossPrefab, finalSpawnPos, Quaternion.identity);
+            _activeGolemInstance = ReflexPrefabInstantiator.InstantiateInjectedObject(
+                golemPrefab,
+                finalSpawnPos,
+                Quaternion.identity,
+                null,
+                _container);
+
+            GolemBossConfigSO configOverride = tierBossConfig != null ? tierBossConfig.GolemConfigOverride : null;
+            _activeGolemInstance.ApplyTierOverride(configOverride, tierBossConfig);
             _activeGolemInstance.OnBossDefeated += Golem_OnBossDefeated;
 
-            NotifyEncounterEngaged(_activeGolemInstance, _golemDisplayName);
+            string displayName = tierBossConfig != null && !string.IsNullOrEmpty(tierBossConfig.GolemDisplayNameOverride)
+                ? tierBossConfig.GolemDisplayNameOverride
+                : _golemDisplayName;
 
-            OnGolemSpawned?.Invoke(_activeGolemInstance);
+            NotifyEncounterEngaged(_activeGolemInstance, displayName);
         }
 
         public int CollectEngagedBosses(List<IBossCombatTarget> buffer)
@@ -283,13 +290,6 @@ namespace Assets.Scripts.Enemies.Bosses
             return buffer.Count;
         }
 
-        private IEnumerator DelayedSpawnGolemRoutine()
-        {
-            yield return new WaitForSeconds(_delayBeforeGolemSpawn);
-            _golemSpawnCoroutine = null;
-            SpawnGolemBoss();
-        }
-
         private void UpdateSwarmSuppression()
         {
             if (_swarmFreezer != null)
@@ -304,7 +304,18 @@ namespace Assets.Scripts.Enemies.Bosses
 
             if (_nextStagePortalPrefab != null && boss != null && boss.Transform != null)
             {
-                Instantiate(_nextStagePortalPrefab, boss.Transform.position, Quaternion.identity);
+                Vector3 spawnPos = boss.Transform.position;
+                if (GroundSupportQuery.TryGetSupportedPosition(spawnPos, out Vector3 supportedPos))
+                {
+                    spawnPos.y = supportedPos.y;
+                }
+
+                ReflexPrefabInstantiator.InstantiateInjectedObject(
+                    _nextStagePortalPrefab,
+                    spawnPos,
+                    Quaternion.identity,
+                    null,
+                    _container);
             }
 
             if (_activeGolemInstance != null)
@@ -312,8 +323,6 @@ namespace Assets.Scripts.Enemies.Bosses
                 _activeGolemInstance.OnBossDefeated -= Golem_OnBossDefeated;
                 _activeGolemInstance = null;
             }
-
-            OnGolemDefeated?.Invoke(boss);
         }
     }
 }

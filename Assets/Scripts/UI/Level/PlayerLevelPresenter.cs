@@ -54,8 +54,9 @@ namespace Assets.Scripts.UI.Level
             _playerLevelController = _playerManager.LevelController;
 
             _currentlyVisibleLevelData = _playerLevelController.LevelData;
-            _expSlider.value = _currentlyVisibleLevelData.Exp;
             _expSlider.maxValue = _currentlyVisibleLevelData.MaxExp;
+            _expSlider.value = _currentlyVisibleLevelData.Exp;
+            UpdateLevelText();
 
             _playerLevelController.OnExpChange += LevelController_OnExpChange;
             _playerLevelController.OnLvlUp += LevelController_OnLvlChange;

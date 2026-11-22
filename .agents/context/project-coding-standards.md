@@ -162,9 +162,9 @@ Then keep methods in lifecycle and behavior order that reads clearly:
      2. Genuinely optional visual polish elements (e.g. secondary visual indicators).
      3. DI dependencies with optional inspector overrides (e.g., `if (_inspectorOverride != null) _service = _inspectorOverride;`).
    - Unassigned configuration masks (such as `_groundLayerMask` in `CarController`) must validate in `Awake()` and throw an explicit `System.InvalidOperationException` if unassigned (`value == 0`).
-5. Do not use `FormerlySerializedAs` when renaming serialized fields. Before changing serialized field names:
-   - Always notify the user in advance that they will need to manually re-assign the serialized values in the Unity Editor.
-   - Exception: If the serialized change is small and straightforward to update directly in a text-formatted prefab or asset file, the agent may apply this exception to edit the prefab/asset directly, but MUST still explicitly inform the user that this action was performed.
+5. Do not use `FormerlySerializedAs` when renaming serialized fields. Before changing or deleting serialized fields:
+   - Verify all affected scripts, prefabs, ScriptableObjects, and scene overrides across the repository.
+   - Agents are authorized to edit `.prefab` or `.asset` files directly (for example, to remove confirmed-unused serialized fields or apply small text-reviewable migrations) per ADR-004, provided the full scope of the prefab/asset edits is presented to the user and approved beforehand. Always report applied edits and verify serialized values/references afterward; otherwise notify the user that manual reassignment in the Unity Editor is required.
 
 ## 6) Events and Gameplay-Flow Safety
 

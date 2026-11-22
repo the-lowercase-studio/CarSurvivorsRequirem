@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Testability"
+  short_description: "Advise on pure C# seams and Unity testability boundaries"
+  default_prompt: "Use $unity-testability to separate pure C# rules from MonoBehaviour state and identify clean test seams."

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The UI system presents runtime game state, HUD elements (timer, level bar, active skill slots, boss health bars, arena leash warnings, screen overlays), menu actions, settings options, pause/death screens, and skill initialization or upgrade choices. It is mostly scene-wired Unity UI backed by presenter components under Assets/Scripts/UI/.
+The UI system presents runtime game state, HUD elements (timer, level bar, active skill slots, boss health bars, arena leash warnings, screen overlays), persistent loading curtains across scene transitions, menu actions, settings options, pause/death/end-of-run completion screens, and skill initialization or upgrade choices. It is mostly scene-wired Unity UI backed by presenter components under Assets/Scripts/UI/.
 
 The UI system is not responsible for owning gameplay state, scoring rules, settings storage, scene loading, audio modes, skill selection algorithms, or player lifecycle. Those behaviors live in their owning gameplay, settings, audio, score, and scene-loading systems; UI components consume them through inspector references, events, or Reflex-injected interfaces.
 
@@ -10,6 +10,8 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
 
 - Primary code locations:
   - Assets/Scripts/UI/
+  - Assets/Scripts/UI/Loading/LoadingOverlayPresenter.cs
+  - Assets/Scripts/UI/EndOfRun/DemoThankYouPresenter.cs
   - Assets/Scripts/UI/HUD/PlayerSkillsHUDPresenter.cs
   - Assets/Scripts/UI/HUD/BossHUDPresenter.cs
   - Assets/Scripts/UI/HUD/BossHealthBarView.cs
@@ -25,6 +27,7 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Assets/Scripts/UI/Skills/SkillStatRowView.cs
   - Assets/Scripts/UI/Skills/SkillStatValueFormatter.cs
   - Assets/Scripts/UI/Constants/SkillsStatsConstants.cs
+  - Assets/Scripts/UI/Common/MenuButtonsFunctionality.cs
   - Assets/Scripts/UI/Common/ResponsiveUniformRectScaler.cs
   - Assets/Scripts/UI/Pause/PausePresenter.cs
   - Assets/Scripts/UI/Death/PlayerDeathPresenter.cs
@@ -42,6 +45,7 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Assets/Prefabs/UI/PlayerDeathPresenter.prefab
   - Assets/Prefabs/UI/SkillStatsPresenter/SkillStatRow.prefab
   - Assets/Imported/Images/UI/Skills/SkillStats/
+  - Assets/Scenes/Boot.unity
   - Assets/Scenes/RuinedBloodCity.unity
 - Related runtime code:
   - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
@@ -71,27 +75,30 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
 ## Architecture and Data Flow
 
 - Core components:
-  - TimerPresenter increments a scene timer once per second with InvokeRepeating, updates a TMP label, and exposes TimerValue through ITimerPresenter.
-  - PlayerLevelPresenter reads IPlayerManager.LevelController, subscribes to exp and level-up events, animates the exp slider, updates the level label, and raises OnExpSliderVisualEndValueReached when a level-up visual reaches the transition point.
+  - LoadingOverlayPresenter (Assets/Scripts/UI/Loading/LoadingOverlayPresenter.cs) implements ILoadingOverlayPresenter under ====PersistingObjects==== in Assets/Scenes/Boot.unity and is bound into every scene container by BootLoader.InstallExtra. Validates _visualRoot, _overlayCanvas, _canvasGroup, and _loadingTitleText fail-fast in Awake(), sets _overlayCanvas.sortingOrder = ProgressionConstants.LOADING_OVERLAY_SORTING_ORDER (1000), and subscribes to IGameSceneLoader.OnStartLoadingScene and OnSceneLoaded. On OnStartLoadingScene, calls ShowImmediate(title) ("Loading" for MainMenu or "Loading Tier {N}" for gameplay tiers), blocks raycasts, and starts an unscaled AnimateDotsCoroutine (WaitForSecondsRealtime(_dotsAnimationInterval), default 0.4s) cycling ".", "..", "..." on left-aligned bottom-left _loadingTitleText. On OnSceneLoaded, yields one frame (FadeOutNextFrameCoroutine) so scene Awake/Start complete behind the curtain, then fades _canvasGroup.alpha to 0 over _fadeOutDuration (0.35s) using unscaled DOTween (.SetUpdate(true)) before calling HideImmediate.
+  - TimerPresenter increments a scene timer once per second with InvokeRepeating, seeds TimerValue from IRunSessionService.AccumulatedRunSeconds in Start() so cumulative run time carries over across non-final tier transitions, supports SetPaused(bool isPaused) to freeze timer ticks during portal vortex transitions, updates a TMP label, and exposes TimerValue and SetPaused through ITimerPresenter.
+  - PlayerLevelPresenter reads IPlayerManager.LevelController, initializes _expSlider and calls UpdateLevelText() immediately in Start() so restored player levels display on frame 0, subscribes to exp and level-up events (unsubscribing in OnDestroy()), animates the exp slider, updates the level label, supports FastForward() for Dev Console exp --auto, and raises OnExpSliderVisualEndValueReached when a level-up visual reaches the transition point.
   - PlayerSkillsHUDPresenter (Assets/Scripts/UI/HUD/PlayerSkillsHUDPresenter.cs) implements IPlayerSkillsHUDPresenter and displays the horizontal active skill slots at the top-left of the HUD. Subscribes to IPlayerManager.SkillsRegistry.OnSkillInitialized. Separates each slot into two graphical layers: (1) a persistent slot background Image (_skillIconHolders[i]) that always remains active with sprite = null and _emptySlotColor (default Color(0.12f, 0.12f, 0.12f, 0.45f)) whether the slot is empty or filled, and (2) a foreground icon Image resolved via GetOrResolveIconImage(index, slotBackground) (checking optional _iconImages[index], existing child Image components, or dynamically instantiating a child "Icon" Image with full stretch anchors anchorMin = 0, anchorMax = 1, offsetMin = 0, offsetMax = 0, preserveAspect = true, and raycastTarget = false). While empty, the foreground icon Image is disabled; when a skill is assigned via AssignSkillToSlot, the foreground icon Image is enabled with skill.SkillInfo.Icon and _filledSlotColor (Color.white) on top of the dark translucent background quad, and optional DOPunchScale (0.2f, 0.3s) animates the slot transform so background and icon punch together.
-  - SkillUpgradePresenter reacts to collectible release events and IPlayerLevelPresenter.OnExpSliderVisualEndValueReached, acquires an InputContextScopeKind.LiveReward scope while active (keeping driving live without pausing GameTime), queues upgrade rewards for crates, queues level rewards with a new-skill interval fallback to upgrades, renders the current queued request, passes option rarity and InputActionId prompts into buttons/skill cards, handles clickable dual-card buttons and IInputCommands UpgradeSelectChoice commands (slots 0..2), and clears consumed active controls on selection.
+  - SkillUpgradePresenter reacts to collectible release events and IPlayerLevelPresenter.OnExpSliderVisualEndValueReached, acquires an InputContextScopeKind.LiveReward scope while active (keeping driving live without pausing IGameTimeService), queues upgrade rewards for crates, queues level rewards with a new-skill interval fallback to upgrades, renders the current queued request, passes option rarity and InputActionId prompts into buttons/skill cards, handles clickable dual-card buttons and IInputCommands UpgradeSelectChoice commands (slots 0..2), clears consumed active controls on selection, and exposes HideForStageTransition() to dismiss active modals, hide 3D previews, and release _rewardScopeToken when entering NextStagePortal, opening DemoThankYouPresenter, or running loadtier.
   - SkillUpgradeButton initializes generated upgrade buttons, resolves missing button/text/icon/background references from children, binds its required InputPromptView through IInputPromptProvider and InputActionId, applies rarity background visuals through SkillUpgradeRaritySpriteMapping, and can add optional hover callbacks through PointerEnterHandler.
   - SkillsVisualPresenter maps SkillInfoSO.Name to scene visual objects by matching GameObject names, can hide all registered visuals, and logs a warning when a visual is missing.
-  - PlayerDeathPresenter saves the current timer score, acquires an InputContextScopeKind.Death scope via IInputContexts, displays final level and time alive, switches background audio to death mode, enables the death screen, and pauses GameTime.
-  - PausePresenter subscribes to IInputCommands (InputCommandKind.Pause and UiCancel), acquires InputContextScopeKind.Pause while paused, respects PauseChildPanel and UiInputScope.TryHandleWidgetCancel before closing pause, toggles its visual/time for a living player before forwarding visibility to ISkillsStatsPresenter, and releases its pause scope on ClosePause or HideForDeath. Dead-player toggles are ignored; the serialized ToogleActivation Continue callback remains supported.
+  - PlayerDeathPresenter saves the current timer score as a died record (Save(TimerValue, hasSurvived: false)), checks TryGetBestTime(hasSurvived: false, ...) for "(New Best!)", acquires an InputContextScopeKind.Death scope via IInputContexts, displays final level and time alive, switches background audio to death mode, enables the death screen, pauses time via IGameTimeService.Pause(), and freezes SkillsStatsPresenter via ShowDeathStats().
+  - DemoThankYouPresenter (Assets/Scripts/UI/EndOfRun/DemoThankYouPresenter.cs) implements IDemoThankYouPresenter and is bound in DefaultGameplaySceneInstaller. Opened by NextStagePortal upon completing the final tier. Calls ISkillUpgradePresenter.HideForStageTransition(), saves the final run time as a survived record (Save(TimerValue, hasSurvived: true)), checks TryGetBestTime(hasSurvived: true, ...) for "(New Best!)" on the "Completion Time:" label, hides pause via IPausePresenter.HideForDeath(), enables its two-column LeftSafeViewport visual alongside ISkillsStatsPresenter.ShowDeathStats(), acquires InputContextScopeKind.Death, and calls IGameTimeService.Pause() while preserving default gameplay audio pitch.
+  - PausePresenter subscribes to IInputCommands (InputCommandKind.Pause and UiCancel), acquires InputContextScopeKind.Pause while paused, respects PauseChildPanel and UiInputScope.TryHandleWidgetCancel before closing pause, toggles its visual and calls IGameTimeService.Pause() / IGameTimeService.Resume() for a living player before forwarding visibility to ISkillsStatsPresenter, and releases its pause scope on ClosePause or HideForDeath. Dead-player toggles are ignored; the serialized ToogleActivation Continue callback remains supported.
   - UiInputScope, MenuInputCoordinator, GameplayInputCoordinator, and InputPromptView coordinate InputSystemUIInputModule setup (with cancel = null and deselectOnBackgroundClick = false), modal child-panel stacking, focus restoration across mouse/gamepad transitions, dynamic TMP_Dropdown explicit navigation + ScrollRect scrolling + immediate cancel teardown without focus bounce (_closingDropdown / PrepareDropdownListForImmediateCancel), and live device-aware glyph/text prompts.
-  - MenuButtonsFunctionality backs menu button actions for scene loading, current-scene retry, application exit, and mutually exclusive panel toggling.
+  - MenuButtonsFunctionality backs menu button actions for scene loading, current-scene retry, application exit, and mutually exclusive panel toggling, and calls IRunSessionService.ResetSession() before OnSceneLoadClicked and OnTryAgainClicked so run progression, snapshots, timer, and god mode reset cleanly.
   - ResponsiveUniformRectScaler (Assets/Scripts/UI/Common/ResponsiveUniformRectScaler.cs) requires a RectTransform, validates _targetRoot, positive _referenceSize, and positive _maxScale fail-fast in Awake(), and uniformly scales _targetRoot in Awake(), OnEnable(), and OnRectTransformDimensionsChange() (clamped to [0, _maxScale]) to fit canonical UI hierarchies across 16:9, 16:10, 4:3, and 21:9 aspect ratios.
   - SelectableOutlineHighlight (Assets/Scripts/Effects/SelectableOutlineHighlight.cs) and UISpriteSilhouetteOutline (Assets/Scripts/Effects/UISpriteSilhouetteOutline.cs backed by Assets/Shaders/UI/UISpriteOutline.shader and Assets/Scripts/Effects/Constants/UiOutlineConstants.cs) provide selection/hover outline and fill highlights for Main Menu subpanel controls (DropDown, VolumeOption/Slider, and top-left icon-only BackButtons with adjacent BackPromptBadge). SelectableOutlineHighlight syncs _isSelected in OnEnable(), while UISpriteSilhouetteOutline dilates radial silhouette outlines on skewed/irregular sprites without diagonal mesh gaps; CheckBox controls retain SpriteSwap without SelectableOutlineHighlight, and expanded dropdown item rows use opaque backgrounds to prevent bleed-through.
   - IOptionComponent<T> standardizes settings UI components with LoadComponent and PerformValueChange.
   - AudioVolumeOption, DamageNumbersOption, FullScreenOption, GraphicOption, and ResolutionOption load current setting values into Unity UI controls and save/load settings when controls change. AudioVolumeOption configures an integer 0..100 slider (wholeNumbers = true), injects IInputActionSource and UiInputScope for 1% discrete steps and tiered hold acceleration (SettingsConstants), and clamps linear volume to 0.0001f before Mathf.Log10 decibel conversion. GraphicOption also rebuilds its dropdown options from its hard-coded quality map in Awake.
-  - ButtonsAudioClipPlayer is intended to play button click and hover sounds through an AudioClipPlayer component.
 - Key interfaces:
-  - ITimerPresenter is bound by DefaultGameplaySceneInstaller and consumed by PlayerDeathPresenter.
+  - ILoadingOverlayPresenter is bound by BootLoader.InstallExtra into every scene container.
+  - ITimerPresenter is bound by DefaultGameplaySceneInstaller and consumed by PlayerDeathPresenter, DemoThankYouPresenter, NextStagePortal, and GameplayDevCommandsRegistrar.
   - IPlayerLevelPresenter is bound by DefaultGameplaySceneInstaller and consumed by SkillUpgradePresenter and GameplayDevCommandsRegistrar.
   - IPlayerSkillsHUDPresenter is bound by DefaultGameplaySceneInstaller to PlayerSkillsHUDPresenter.
   - IPlayerDeathPresenter is bound by DefaultGameplaySceneInstaller and consumed by PlayerDeathHandler.
-  - ISkillsStatsPresenter and IPausePresenter are bound to required scene instances by DefaultGameplaySceneInstaller and consumed by pause/death UI.
+  - IDemoThankYouPresenter is bound by DefaultGameplaySceneInstaller and consumed by NextStagePortal.
+  - ISkillsStatsPresenter and IPausePresenter are bound to required scene instances by DefaultGameplaySceneInstaller and consumed by pause, death, and end-of-run completion UI.
   - ISkillsVisualPresenter is bound by DefaultGameplaySceneInstaller and consumed by SkillUpgradePresenter.
   - IOptionComponent<T> is a local UI option contract, not currently bound in DI.
   - ISetting<TSelf, TRepresentedBy> implementations are bound in MainMenuInstaller and injected into settings option components.
@@ -133,7 +140,9 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - PlayerLevelPresenter.OnExpSliderVisualEndValueReached is raised with the reached LevelData after level text and slider max/value are transitioned for a level-up.
   - SkillUpgradePresenter hides all skill visuals before checking the next queued request, then shows either the new-skill section or the upgrade-button section when a request exists.
   - PlayerDeathPresenter.EnableDeathScreen saves the score before comparing the timer against the best score text.
-  - PausePresenter toggles both visual state and GameTime state in the same action path.
+  - DemoThankYouPresenter.Show saves the survived score (hasSurvived: true) before comparing the timer against the survived best score text, hides pause and skill-upgrade overlays, pauses time via IGameTimeService, and displays frozen skill stats via ISkillsStatsPresenter.ShowDeathStats().
+  - PausePresenter toggles both visual state and IGameTimeService pause state in the same action path.
+  - LoadingOverlayPresenter subscribes to IGameSceneLoader.OnStartLoadingScene and OnSceneLoaded to display the animated "Loading..." screen across scene loads.
 - Constraints contributors must preserve:
   - Do not use broad scene searches or singleton access for dependencies that are already available through Reflex.
   - Do not edit scene, prefab, asset, or meta files directly unless the user explicitly requests it and the text change is safe to review.
@@ -154,11 +163,11 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
 - Required dependencies and contracts:
   - UI contracts consumed outside UI should be explicit interfaces and registered in the appropriate Reflex installer.
   - Settings options require an ISetting<TSelf, TRepresentedBy> implementation that can save, load, and return a stored/default value.
-  - Death UI requires IPlayerManager, IBackgroundAudioManager, scoreboard services, and ITimerPresenter.
+  - Death and Demo victory UI require IPlayerManager, IBackgroundAudioManager, scoreboard services, IGameTimeService, ISkillsStatsPresenter, IPausePresenter, and ITimerPresenter (plus ISkillUpgradePresenter and IRunSessionService on DemoThankYouPresenter).
   - Skill upgrade UI requires IPlayerManager, IPlayerLevelPresenter, ISkillUpgradeFlow, ISkillsVisualPresenter, IInputCommands, IInputContexts, IInputPromptProvider, the collectible spawner release event, and scene/prefab wiring for InputPromptView and rarity sprite mappings.
 - Testing implications:
-  - Compile after C# UI changes with dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false.
-  - Play-mode validation is required for pause input, scene button wiring, settings controls, death VFX-to-screen timing, score text, audio mode changes, skill upgrade panel timing, skill upgrade rarity backgrounds, HUD skill slot backgrounds behind equipped icons, Pause-to-Death transition precedence, live stat refresh while paused, and responsive layout sweeps across 16:9, 16:10, 4:3, and 21:9.
+  - Compile after C# UI changes with dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false.
+  - Play-mode validation is required for pause input, scene button wiring, settings controls, death VFX-to-screen timing, demo victory overlay and MainMenu return, loading overlay animated dots, score text, audio mode changes, skill upgrade panel timing, skill upgrade rarity backgrounds, HUD skill slot backgrounds behind equipped icons, Pause-to-Death/DemoThankYou transition precedence, live stat refresh while paused, and responsive layout sweeps across 16:9, 16:10, 4:3, and 21:9.
   - Manual UI checks should include repeated enable/disable cycles for settings panels to catch duplicate listeners.
 
 ## Integration Notes
@@ -169,32 +178,31 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Skill reward triggers depend on ICollectibleDropNotifier.OnSkillUpgradeCollectibleCollected.
   - Skill reward request queueing depends on SkillUpgradePresenter; queued request storage, skill initialization, and upgrade option creation depend on ISkillUpgradeFlow.
   - Skill upgrade button background visuals depend on SkillUpgradeOption.Rarity, ClickableButtonData.Rarity, and SkillUpgradeRaritySpriteMapping.
-  - Death UI activation depends on PlayerDeathHandler and the death VFX finished event.
+  - Death UI activation depends on PlayerDeathHandler and the death VFX finished event; Demo victory UI activation depends on NextStagePortal completing the final tier (DemoCompletion).
   - Settings UI depends on setting classes under Assets/Scripts/Settings/.
-  - Scene/menu buttons depend on IGameSceneLoader.
-  - Pause and death panels manipulate GameTime.
+  - Scene/menu buttons and LoadingOverlayPresenter depend on IGameSceneLoader.
+  - Pause, death, and demo victory panels manipulate pause state through IGameTimeService.
 - Downstream consumers:
   - PlayerDeathHandler consumes IPlayerDeathPresenter.
-  - PlayerDeathPresenter consumes ITimerPresenter for score and time-alive display.
+  - NextStagePortal consumes IDemoThankYouPresenter, ILoadingOverlayPresenter, and ISkillUpgradePresenter.
+  - PlayerDeathPresenter and DemoThankYouPresenter consume ITimerPresenter for score and time-alive display.
   - SkillUpgradePresenter consumes IPlayerLevelPresenter to delay level-up reward UI until the exp slider finishes the level-up transition and to read the reached level for new-skill interval checks.
   - SkillUpgradePresenter consumes ISkillUpgradeFlow for request queueing and ISkillsVisualPresenter for skill preview visuals.
   - Settings classes and storage are updated from the option components.
 - Cross-system coupling risks:
   - Changing level slider animation or event timing can change when reward UI is shown.
   - Changing collectible release timing can change skill initialization or upgrade prompts.
-  - Changing GameTime pause/resume behavior can affect pause and death panels.
+  - Changing IGameTimeService pause/resume behavior can affect pause, death, demo victory, and dev-console overlays.
   - Renaming skill visual GameObjects or SkillInfoSO.Name values can break SkillsVisualPresenter lookup.
-  - Changing timer behavior can affect scoreboard save values, persisted score meaning, and death-screen text.
+  - Changing timer behavior can affect scoreboard save values, persisted score meaning, and death/victory-screen text.
 
 ## Known Risks and Open Questions
 
 - Known limitations:
-  - PlayerLevelPresenter subscribes to level controller events in Start and does not currently unsubscribe; this is low risk for scene-lifetime presenters but should be reviewed before supporting presenter disable/re-enable or additive scene lifetimes.
-  - SkillUpgradePresenter subscribes to collectible and level-presenter events in Start and unsubscribes in OnDestroy; this is scene-lifetime safe but should be reviewed before supporting disable/re-enable lifetimes.
+  - PlayerLevelPresenter and SkillUpgradePresenter subscribe to gameplay events in Start and unsubscribe in OnDestroy; this is scene-lifetime safe across multi-tier scene reloads but should be reviewed before supporting presenter disable/re-enable lifetimes without scene teardown.
   - SkillsVisualPresenter uses GameObject name matching, so a missing or renamed visual logs a warning and leaves the requested visual hidden.
   - SkillUpgradeButton requires _inputPromptView and hides prompt icon images when unavailable, displaying fallback text via InputPromptView instead.
   - SkillUpgradeButton leaves the current background untouched when the rarity background image, rarity sprite mapping, or mapped sprite is missing.
-  - ButtonsAudioClipPlayer declares RequireComponent(typeof(AudioClipPlayer)) but does not initialize its _audioClipPlayer field before playback.
   - GraphicOption assumes the stored/default quality string exists in its hard-coded quality-level dictionary.
 - Open design questions:
   - Should skill visual lookup stop using GameObject name matching and move to explicit serialized entries keyed by skill info?
@@ -202,10 +210,8 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Should timer ownership move out of UI if wave UI, analytics, or non-UI scoring need the same clock?
   - Should settings option components share a base helper for load-without-notify and listener wiring, or is the current duplication acceptable for the small option set?
 - Suggested follow-up tasks:
-  - Fix ButtonsAudioClipPlayer initialization before relying on it for shared button audio.
   - Add disable/re-enable-safe listener handling to PlayerLevelPresenter and SkillUpgradePresenter if UI objects can be disabled without scene teardown.
   - Add a small validation checklist for scene/prefab UI references when UI prefabs or canvases are edited in the Unity Editor.
-  - Confirm with designers whether unused legacy Assets/Prefabs/UI/SkillStatsPresenter/SkillStatsGroup.prefab (unreferenced after switching to pre-wired ColumnBody_0..2 slots) can be deleted or archived.
 
 ## Pause and Death Skill Stats
 

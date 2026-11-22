@@ -10,8 +10,6 @@ namespace Assets.Scripts.Enemies.Base
 
         public bool IsOnGround();
 
-        public void ResetVerticalVelocity();
-
         void MoveToPositionInTimeIgnoringSpeed(Vector3 pos, float time);
         void SetMovementSpeedMultiplier(float multiplier);
     }

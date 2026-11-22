@@ -250,13 +250,13 @@ GameObject:
   - component: {fileID: 7365376145196358188}
   - component: {fileID: 4553092052822895671}
   - component: {fileID: 5255879300078742699}
-  - component: {fileID: 2927953644384903919}
   - component: {fileID: 429488209797592883}
   - component: {fileID: 1414268721293195484}
   - component: {fileID: 5245334152509930262}
   - component: {fileID: 5915538505661171806}
   - component: {fileID: 4316171598685801488}
   - component: {fileID: 1678692367944014757}
+  - component: {fileID: 8410247367049537700}
   m_Layer: 7
   m_Name: BarrelEnemy
   m_TagString: Untagged
@@ -299,6 +299,7 @@ MonoBehaviour:
   <Config>k__BackingField: {fileID: 11400000, guid: 678b012135f028845a52145de015496e, type: 2}
   _bloodVfxPlayer: {fileID: 5405333118841821186}
   _visual: {fileID: 4548404238055667864}
+  _tierShineController: {fileID: 8410247367049537700}
 --- !u!114 &586171913675559370
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -352,19 +353,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _separationRadius: 1.2
   _separationStrength: 0.5
---- !u!114 &2927953644384903919
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5309360271108026028}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 20620ae30fdd0164c9bb5bdc717d3ada, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _injectionStrategy: 1
 --- !u!114 &429488209797592883
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -503,6 +491,22 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 80
   m_CollisionDetection: 0
+--- !u!114 &8410247367049537700
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5309360271108026028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1567c86dd305de94184d93d59f92fac5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Enemies.Base.EnemyTierShineController
+  _isShineEnabled: 0
+  _targetRenderers:
+  - {fileID: 9119865667011057821}
+  _fallbackMaterializeHeight: 1.6
 --- !u!1001 &1408904166958615943
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -640,6 +644,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -2335955134870216827, guid: d858d2a46ef24ea408d7c3213d2c88ef, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: f04713aa4201b6b4f8412b26a20f7f91, type: 2}
+    - target: {fileID: -2335955134870216827, guid: d858d2a46ef24ea408d7c3213d2c88ef, type: 3}
+      propertyPath: 'm_Materials.Array.data[4]'
+      value: 
+      objectReference: {fileID: 2100000, guid: a502c35fdb9f85d4f9b0b94ce1b5d2f4, type: 2}
     - target: {fileID: 919132149155446097, guid: d858d2a46ef24ea408d7c3213d2c88ef, type: 3}
       propertyPath: m_Name
       value: BarrelEnemy

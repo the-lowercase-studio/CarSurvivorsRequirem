@@ -4,6 +4,7 @@ using Assets.Scripts.Enemies.Bosses.Towers.MortarTower.Constants;
 using Assets.Scripts.Enemies.Bosses.Towers.MortarTower.Projectiles;
 using Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine;
 using Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States;
+using Assets.Scripts.GameFlow.Config;
 using Assets.Scripts.Navigation.GridSystem;
 using UnityEngine;
 using Grid = Assets.Scripts.Navigation.GridSystem.Grid;
@@ -117,6 +118,14 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower
         public void PlayFireRecoil()
         {
             base.PlayFireRecoil(MortarTowerConstants.SFX_MORTAR_FIRE);
+        }
+
+        protected override void ApplyTierConfigOverride(TierBossConfig tierBossConfig)
+        {
+            if (tierBossConfig != null && tierBossConfig.MortarTowerConfigOverride != null)
+            {
+                _config = tierBossConfig.MortarTowerConfigOverride;
+            }
         }
 
         protected override void InitializeTower()

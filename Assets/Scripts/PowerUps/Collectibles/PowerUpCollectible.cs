@@ -16,6 +16,8 @@ namespace Assets.Scripts.PowerUps.Collectibles
     {
         [SerializeField] private PowerUpType _type;
 
+        private bool _isCollected;
+
         public GameObject GameObject { get; private set; }
         public PowerUpType Type => _type;
 
@@ -29,6 +31,7 @@ namespace Assets.Scripts.PowerUps.Collectibles
 
         public void OnGet()
         {
+            _isCollected = false;
         }
 
         public void OnRelease()
@@ -43,11 +46,14 @@ namespace Assets.Scripts.PowerUps.Collectibles
 
         private void OnTriggerEnter(Collider other)
         {
-            if ((1 << other.gameObject.layer) == EntityLayers.Player)
+            if (_isCollected || (1 << other.gameObject.layer) != EntityLayers.Player)
             {
-                OnCollected?.Invoke(this, EventArgs.Empty);
-                ReturnToPool();
+                return;
             }
+
+            _isCollected = true;
+            OnCollected?.Invoke(this, EventArgs.Empty);
+            ReturnToPool();
         }
     }
 }

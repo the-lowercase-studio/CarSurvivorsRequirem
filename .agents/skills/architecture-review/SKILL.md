@@ -69,7 +69,7 @@ Check changed files against the following breaking dimensions:
 ## Review Workflow
 
 1. Identify impacted domains and dependency direction.
-2. For implemented C# changes, run compilation verification: `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`. For a proposed design, list it as a future check. Report executed checks, baseline diagnostics, and unavailable checks separately.
+2. For implemented C# changes, run compilation verification: `dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false` (and affected `CarSurvivors.Editor*.csproj` / `CarSurvivors.PlayMode.Tests.csproj`). For a proposed design, list it as a future check. Report executed checks, baseline diagnostics, and unavailable checks separately.
 3. Check Reflex DI registration, field order, and interface colocation.
 4. Check Unity lifecycle, event unsubscriptions, and DOTween cleanup.
 5. Apply the Breaking Change Matrix.

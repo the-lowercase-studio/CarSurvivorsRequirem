@@ -1,11 +1,13 @@
-﻿using Assets.Scripts.Audio;
+﻿using System;
+using System.Collections;
+using Assets.Scripts.Audio;
 using Assets.Scripts.DamageNumbers;
 using Assets.Scripts.GameFlow;
 using Assets.Scripts.ObjectLifecycle.Actions;
 using Assets.Scripts.Spawners.WorldSpace;
+using Assets.Scripts.UI.Loading;
 using Reflex.Attributes;
 using Reflex.Core;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -18,9 +20,15 @@ namespace Assets.Scripts.ReflexDI
         [SerializeField] private AudioMixersManager _audioMixersManager;
         [SerializeField] private BackgroundAudioManager _backgroundAudioManager;
         [SerializeField] private DamageNumbersSpawner _damageNumbersSpawner;
+        [SerializeField] private LoadingOverlayPresenter _loadingOverlayPresenter;
 
         private void Start()
         {
+            if (_loadingOverlayPresenter == null)
+            {
+                throw new InvalidOperationException($"[{nameof(BootLoader)}] _loadingOverlayPresenter is unassigned.");
+            }
+
             SceneScope.OnSceneContainerBuilding += InstallExtra;
 
             StartCoroutine(LoadNewSceneAsyncWithOneFrameDelay());
@@ -37,6 +45,7 @@ namespace Assets.Scripts.ReflexDI
 
             builder.AddSingleton(_audioMixersManager, typeof(IAudioMixersManager));
             builder.AddSingleton(_backgroundAudioManager, typeof(IBackgroundAudioManager));
+            builder.AddSingleton(_loadingOverlayPresenter, typeof(ILoadingOverlayPresenter));
             builder.AddSingleton(
                 _damageNumbersSpawner,
                 typeof(IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig>),

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Git PR (Automated Cycle)"
+  short_description: "Push CSR branch, open PR, wait for checks, approve and squash-merge, pull main, and start next CSR branch."
+  default_prompt: "Use $git-pr to open a GitHub PR from the current committed CSR branch, wait for PR checks, approve and squash-merge without deleting the branch, pull main, and create the next numbered CSR branch."
+policy:
+  allow_implicit_invocation: false

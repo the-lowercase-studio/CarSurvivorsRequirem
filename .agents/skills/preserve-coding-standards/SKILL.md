@@ -51,7 +51,7 @@ Preserve serialized identities wherever possible. Do not use FormerlySerializedA
 3. Compile implemented C# changes:
 
 ```powershell
-dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
+dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false
 ```
 
 4. Require exit code 0 with zero errors and warnings. In authorized fix mode, repair diagnostics introduced by these edits within the owned scope and re-run the check. Do not repair unrelated baseline failures or expand scope. Stop an unproductive correction loop, record evidence and the blocker, and continue independent work.

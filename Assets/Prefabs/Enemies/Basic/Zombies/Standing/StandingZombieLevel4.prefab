@@ -203,7 +203,7 @@ PrefabInstance:
     - target: {fileID: 4909408010617150076, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
-      objectReference: {fileID: 2100000, guid: 4e8b1a02391449a448426a1f5f179709, type: 2}
+      objectReference: {fileID: 2100000, guid: 8f5e6d567636c6b4c9be106bdd172a17, type: 2}
     - target: {fileID: 5137694293864681286, guid: 04e28f7e31f150146acd7ba9f4db9b56, type: 3}
       propertyPath: _deathVfxPlayer
       value: 

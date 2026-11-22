@@ -1,0 +1,175 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c479a7a88595ce8409440b9b6ea4474b, type: 3}
+  m_Name: GameLoopProgressionConfig
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.GameFlow.Config.GameLoopProgressionConfigSO
+  _tiers:
+  - _tierId: Tier1
+    _displayName: Tier 1
+    _statueProgressFormat: Towers destroyed ({0}/{1})
+    _statueChallengePrompt: Challenge first Titan
+    _overrideScene: 0
+    _sceneOverride: 2
+    _enemySpawning:
+      _enemySpawnInfos:
+      - EnemyPrefab: {fileID: 8544650596686725407, guid: 08b441f56ebe2754ab1e7d5eefb63ac5, type: 3}
+        MaxAmount: 180
+        SpawnChanceInfo:
+          SpawnChance: 100
+          TresholdToStartAddingSpawnChanceToOtherInfos: 0
+          SpawnChanceWillNotChange: 0
+          HasEverReachedThreshold: 0
+        _configOverride: {fileID: 0}
+      - EnemyPrefab: {fileID: 6539511401407038030, guid: ad4b105b525d63e48b2389383719ba24, type: 3}
+        MaxAmount: 140
+        SpawnChanceInfo:
+          SpawnChance: 0
+          TresholdToStartAddingSpawnChanceToOtherInfos: 30
+          SpawnChanceWillNotChange: 0
+          HasEverReachedThreshold: 0
+        _configOverride: {fileID: 0}
+      - EnemyPrefab: {fileID: 2460934273244476936, guid: 1f7f36cb9467b6b4b84a4ad278f05987, type: 3}
+        MaxAmount: 30
+        SpawnChanceInfo:
+          SpawnChance: 0
+          TresholdToStartAddingSpawnChanceToOtherInfos: 36
+          SpawnChanceWillNotChange: 0
+          HasEverReachedThreshold: 0
+        _configOverride: {fileID: 0}
+      - EnemyPrefab: {fileID: 8544650596686725407, guid: d5bb0f9692c21d340823d0058bfb4042, type: 3}
+        MaxAmount: 100
+        SpawnChanceInfo:
+          SpawnChance: 0
+          TresholdToStartAddingSpawnChanceToOtherInfos: 30
+          SpawnChanceWillNotChange: 0
+          HasEverReachedThreshold: 0
+        _configOverride: {fileID: 0}
+      - EnemyPrefab: {fileID: 7936440336419562411, guid: 846aec665bedb4c41930147cc80be84e, type: 3}
+        MaxAmount: 80
+        SpawnChanceInfo:
+          SpawnChance: 0
+          TresholdToStartAddingSpawnChanceToOtherInfos: 26
+          SpawnChanceWillNotChange: 0
+          HasEverReachedThreshold: 0
+        _configOverride: {fileID: 0}
+      - EnemyPrefab: {fileID: 8544650596686725407, guid: 1c9bc84443d90504a814661fde7ad2df, type: 3}
+        MaxAmount: 80
+        SpawnChanceInfo:
+          SpawnChance: 0
+          TresholdToStartAddingSpawnChanceToOtherInfos: 20
+          SpawnChanceWillNotChange: 0
+          HasEverReachedThreshold: 0
+        _configOverride: {fileID: 0}
+      - EnemyPrefab: {fileID: 8544650596686725407, guid: ae3b807fbe809ea4c8c6fe09bd085225, type: 3}
+        MaxAmount: 70
+        SpawnChanceInfo:
+          SpawnChance: 0
+          TresholdToStartAddingSpawnChanceToOtherInfos: 0
+          SpawnChanceWillNotChange: 0
+          HasEverReachedThreshold: 0
+        _configOverride: {fileID: 0}
+      _spawnChanceDecreaseFactor:
+        <Min>k__BackingField: 1.5
+        <Max>k__BackingField: 2.5
+      _waveInitialCountMultiplier: 1
+      _waveDelayMultiplier: 1
+      _waveGrowthMultiplier: 1
+      _maxEnemiesInWaveCap: 45
+      _swarmIntervalMultiplier: 1
+      _swarmSizeMultiplier: 1
+    _bossConfig:
+      _golemPrefabOverride: {fileID: 201348459030761865, guid: 94e3b315613f41a498163a9b7f48510f, type: 3}
+      _golemConfigOverride: {fileID: 11400000, guid: 79e4efccfba760f4f9f1d0de2de54842, type: 2}
+      _golemDisplayNameOverride: ANCIENT GOLEM
+      _mortarTowerConfigOverride: {fileID: 11400000, guid: 9e01ceddb0d62a64e9dd009e15ea7cdd, type: 2}
+      _railgunTowerConfigOverride: {fileID: 11400000, guid: 944eb476d8c1fb94eb2711d4ca8ca478, type: 2}
+      _applyBaselineBossTint: 0
+      _baselineBossColor: {r: 1, g: 1, b: 1, a: 1}
+      _baselineBossEmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    _visualTheme:
+      _postProcessProfile: {fileID: 11400000, guid: ab09877e2e707104187f6f83e2f62510, type: 2}
+      _skyboxMaterial: {fileID: 2100000, guid: 2441c79940171dc43b33badf9fe97828, type: 2}
+      _overrideDirectionalLight: 1
+      _directionalLightColor: {r: 1, g: 1, b: 1, a: 1}
+      _directionalLightIntensity: 1.32
+      _directionalLightEulerAngles: {x: 50, y: 330, z: 0}
+      _waterLargeMaterial: {fileID: 2100000, guid: c15ed64a364a6c24cb85e8b82ea56be6, type: 2}
+      _waterSmallMaterial: {fileID: 2100000, guid: fb659c98d6ac4db41b88596ff2c4e2e1, type: 2}
+  - _tierId: Tier2
+    _displayName: Tier 2
+    _statueProgressFormat: Towers destroyed ({0}/{1})
+    _statueChallengePrompt: Challenge ascended Titan
+    _overrideScene: 0
+    _sceneOverride: 2
+    _enemySpawning:
+      _enemySpawnInfos:
+      - EnemyPrefab: {fileID: 7936440336419562411, guid: 846aec665bedb4c41930147cc80be84e, type: 3}
+        MaxAmount: 150
+        SpawnChanceInfo:
+          SpawnChance: 65
+          TresholdToStartAddingSpawnChanceToOtherInfos: 0
+          SpawnChanceWillNotChange: 0
+          HasEverReachedThreshold: 0
+        _configOverride: {fileID: 11400000, guid: 0dac295e328fab14ba1eb6a408ecf8a9, type: 2}
+      - EnemyPrefab: {fileID: 8544650596686725407, guid: 1c9bc84443d90504a814661fde7ad2df, type: 3}
+        MaxAmount: 150
+        SpawnChanceInfo:
+          SpawnChance: 35
+          TresholdToStartAddingSpawnChanceToOtherInfos: 25
+          SpawnChanceWillNotChange: 0
+          HasEverReachedThreshold: 0
+        _configOverride: {fileID: 11400000, guid: 94972aa143485c24ca9f7db699e1ed59, type: 2}
+      - EnemyPrefab: {fileID: 2460934273244476936, guid: 1f7f36cb9467b6b4b84a4ad278f05987, type: 3}
+        MaxAmount: 40
+        SpawnChanceInfo:
+          SpawnChance: 0
+          TresholdToStartAddingSpawnChanceToOtherInfos: 22
+          SpawnChanceWillNotChange: 0
+          HasEverReachedThreshold: 0
+        _configOverride: {fileID: 11400000, guid: 2e4cea73ca119dc43aaac0ea353fed50, type: 2}
+      - EnemyPrefab: {fileID: 8544650596686725407, guid: ae3b807fbe809ea4c8c6fe09bd085225, type: 3}
+        MaxAmount: 130
+        SpawnChanceInfo:
+          SpawnChance: 0
+          TresholdToStartAddingSpawnChanceToOtherInfos: 0
+          SpawnChanceWillNotChange: 0
+          HasEverReachedThreshold: 0
+        _configOverride: {fileID: 11400000, guid: e36d40309ec37ef4daaea22e9fdd476e, type: 2}
+      _spawnChanceDecreaseFactor:
+        <Min>k__BackingField: 2
+        <Max>k__BackingField: 3.2
+      _waveInitialCountMultiplier: 2.5
+      _waveDelayMultiplier: 0.85
+      _waveGrowthMultiplier: 1
+      _maxEnemiesInWaveCap: 36
+      _swarmIntervalMultiplier: 0.85
+      _swarmSizeMultiplier: 1.25
+    _bossConfig:
+      _golemPrefabOverride: {fileID: 201348459030761865, guid: 94e3b315613f41a498163a9b7f48510f, type: 3}
+      _golemConfigOverride: {fileID: 11400000, guid: ad4f2ed8b5cc5a8428e2a5e5754923fc, type: 2}
+      _golemDisplayNameOverride: ASCENDED ANCIENT GOLEM
+      _mortarTowerConfigOverride: {fileID: 11400000, guid: bc2813caef610b648b64829a5925449e, type: 2}
+      _railgunTowerConfigOverride: {fileID: 11400000, guid: e30f5c9b6a690f9409b9792ba081243a, type: 2}
+      _applyBaselineBossTint: 0
+      _baselineBossColor: {r: 1, g: 1, b: 1, a: 1}
+      _baselineBossEmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    _visualTheme:
+      _postProcessProfile: {fileID: 11400000, guid: df33a20a804e94043a1bbb00d0706275, type: 2}
+      _skyboxMaterial: {fileID: 2100000, guid: 5718f822c7ba6aa4a8b4443d3ead03c6, type: 2}
+      _overrideDirectionalLight: 1
+      _directionalLightColor: {r: 1, g: 0.82, b: 0.68, a: 1}
+      _directionalLightIntensity: 1.42
+      _directionalLightEulerAngles: {x: 38, y: 310, z: 0}
+      _waterLargeMaterial: {fileID: 2100000, guid: 6b90220617856f44a88d99d19a2a5269, type: 2}
+      _waterSmallMaterial: {fileID: 2100000, guid: eff8a62850621d3498715439ca047198, type: 2}
+  _portalVortexDuration: 1.2
+  _portalVortexSpins: 2

@@ -1,6 +1,6 @@
 ---
 name: document-system
-description: "Use when: creating or updating agent-facing technical documentation for a specific Car Survivors gameplay system under .agents/context/game-systems/, such as Car Controller, FlowField Navigation, Waves/Spawners, Skills, Health, or UI flow. Route explicit human-facing deliverables through create-user-doc."
+description: "Use when: creating or updating agent-facing technical documentation for a specific Car Survivors gameplay system under .agents/context/game-systems/, such as Car Controller, FlowField Navigation, Waves/Spawners, Skills, Health, or UI flow. Route explicit human-facing deliverables through create-user-doc, and human-facing architecture diagrams through system-architecture-diagram."
 ---
 
 # Document System Skill

@@ -2,9 +2,9 @@
 .SYNOPSIS
     Architecture & Coding Standard Linter for Unity C# codebase (Car Survivors).
 .DESCRIPTION
-    Scans Assets/Scripts/ (or a scoped diff/file list) for architectural anti-patterns,
-    forbidden runtime scene lookups, singleton leaks, public mutable fields, LINQ usage,
-    arrow-method syntax, and unsafe attributes.
+    Scans Assets/Scripts/, Assets/ScriptableObjects/, and Assets/Tests/ (or a scoped diff/file list)
+    for architectural anti-patterns, forbidden runtime scene lookups, singleton leaks,
+    public mutable fields, LINQ usage, arrow-method syntax, and unsafe attributes.
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File .agents/scripts/check-architecture.ps1
     powershell -ExecutionPolicy Bypass -File .agents/scripts/check-architecture.ps1 -ChangedOnly -StrictWarnings
@@ -21,13 +21,26 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-if (-not (Test-Path $ScriptsPath)) {
+$hasExplicitRoot = $PSBoundParameters.ContainsKey("ScriptsPath")
+if ($hasExplicitRoot -and -not (Test-Path $ScriptsPath)) {
     Write-Error "Scripts path '$ScriptsPath' not found."
     exit 1
 }
 
 $repoRoot = (Get-Location).Path
-$normalizedScriptsRoot = $ScriptsPath.Replace("\", "/").TrimEnd("/") + "/"
+$defaultRoots = @("Assets/Scripts", "Assets/ScriptableObjects", "Assets/Tests")
+$scanRoots = if ($hasExplicitRoot) {
+    @($ScriptsPath)
+} else {
+    @($defaultRoots | Where-Object { Test-Path (Join-Path $repoRoot $_) })
+}
+
+if ($scanRoots.Count -eq 0) {
+    Write-Error "No script roots found to scan."
+    exit 1
+}
+
+$allowedPrefixes = @($scanRoots | ForEach-Object { $_.Replace("\", "/").TrimEnd("/") + "/" })
 
 function Invoke-GitLines {
     param([string[]]$GitArgs)
@@ -47,8 +60,8 @@ function Invoke-GitLines {
 
 function Resolve-ScopedCSharpFiles {
     param(
-        [string]$RootPath,
-        [string]$NormalizedPrefix,
+        [string[]]$Roots,
+        [string[]]$AllowedPrefixes,
         [switch]$UseStaged,
         [switch]$UseChanged,
         [string[]]$ExplicitFiles
@@ -91,7 +104,13 @@ function Resolve-ScopedCSharpFiles {
         }
     }
     else {
-        return @(Get-ChildItem -Path $RootPath -Recurse -Filter "*.cs")
+        $allFiles = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
+        foreach ($root in $Roots) {
+            foreach ($item in (Get-ChildItem -Path (Join-Path $repoRoot $root) -Recurse -Filter "*.cs")) {
+                $allFiles.Add($item)
+            }
+        }
+        return @($allFiles)
     }
 
     $seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
@@ -101,7 +120,14 @@ function Resolve-ScopedCSharpFiles {
         if (-not $rel.EndsWith(".cs", [System.StringComparison]::OrdinalIgnoreCase)) {
             continue
         }
-        if (-not $rel.StartsWith($NormalizedPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+        $matchesRoot = $false
+        foreach ($prefix in $AllowedPrefixes) {
+            if ($rel.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+                $matchesRoot = $true
+                break
+            }
+        }
+        if (-not $matchesRoot) {
             continue
         }
         $fullPath = Join-Path $repoRoot ($rel.Replace("/", "\"))
@@ -120,7 +146,7 @@ $scopeLabel = if ($Files.Count -gt 0) {
 } elseif ($ChangedOnly) {
     "Changed/Untracked C# Files"
 } else {
-    "Full Scan ($ScriptsPath)"
+    "Full Scan ($($scanRoots -join ', '))"
 }
 
 Write-Host "==================================================" -ForegroundColor Cyan
@@ -128,7 +154,7 @@ Write-Host " Running Unity C# Architecture & Standards Linter" -ForegroundColor 
 Write-Host " Scope: $scopeLabel" -ForegroundColor Cyan
 Write-Host "==================================================" -ForegroundColor Cyan
 
-$csFiles = Resolve-ScopedCSharpFiles -RootPath $ScriptsPath -NormalizedPrefix $normalizedScriptsRoot -UseStaged:$StagedOnly -UseChanged:$ChangedOnly -ExplicitFiles:$Files
+$csFiles = Resolve-ScopedCSharpFiles -Roots $scanRoots -AllowedPrefixes $allowedPrefixes -UseStaged:$StagedOnly -UseChanged:$ChangedOnly -ExplicitFiles:$Files
 $totalFiles = $csFiles.Count
 $violationCount = 0
 $warningCount = 0

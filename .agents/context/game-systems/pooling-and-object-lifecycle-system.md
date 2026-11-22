@@ -26,12 +26,14 @@ It is not responsible for:
   - Assets/Scripts/ObjectLifecycle/DontDestroyOnSceneLoad.cs
   - Assets/Scripts/ObjectLifecycle/Actions/INeedToCompleteBeforeDisable.cs
   - Assets/Scripts/ObjectLifecycle/Actions/IEnableDisableFunctionalityTrigger.cs
+  - Assets/Scripts/ReflexDI/ReflexPrefabInstantiator.cs
 - Concrete implementations and consumers:
   - Assets/Scripts/Enemies/Base/Enemy.cs (IPoolable, waits for INeedToCompleteBeforeDisable)
-  - Assets/Scripts/Enemies/Base/EnemyDeathHandler.cs (INeedToCompleteBeforeDisable)
+  - Assets/Scripts/Enemies/Base/EnemyDeathHandler.cs (INeedToCompleteBeforeDisable, with 5.0s _presentationTimeout watchdog)
+  - Assets/Scripts/Enemies/Barrel/BarrelEnemyDeathHandler.cs (INeedToCompleteBeforeDisable, with 5.0s _presentationTimeout watchdog)
   - Assets/Scripts/LevelSystem/Exp/ExpParticle.cs (IPoolable)
-  - Assets/Scripts/Projectiles/Projectile.cs (IPoolable)
   - Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/SkillCrate.cs (IPoolable)
+  - Assets/Scripts/PowerUps/Collectibles/PowerUpCollectible.cs (IPoolable)
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs (ObjectPool<Enemy>, IObjectReleaseNotifier via spawner interfaces)
   - Assets/Scripts/LevelSystem/Exp/ExpParticleSpawner.cs (IObjectPool<ExpParticle>, IObjectReleaseNotifier via spawner interfaces)
   - MinigunTurret reuses authored lane/beam children and preallocated resolver storage, without a projectile pool or per-shot GameObjects. Death/disable clear captured targets and hide visuals.
@@ -52,15 +54,16 @@ It is not responsible for:
 
 - Core contracts:
   - IPoolable requires OnGet(), OnRelease(), ReturnToPool(), and OnCanBeReleased event handler.
-  - IObjectReleaseNotifier exposes OnSpawnedEntityReleased event (inherited by IInWorldSpaceSpawner, IOnRandomGridPosSpawner, and IInGridSpaceSpawner interfaces).
-  - INeedToCompleteBeforeDisable exposes OnCompleted event for components requiring async/presentation completion (such as EnemyDeathHandler visual sequence) before object release.
+  - IObjectReleaseNotifier exposes OnSpawnedEntityReleased event (inherited by IInWorldSpaceSpawner and IOnRandomGridPosSpawner interfaces).
+  - INeedToCompleteBeforeDisable exposes OnCompleted event for components requiring async/presentation completion (such as EnemyDeathHandler and BarrelEnemyDeathHandler visual/audio sequences) before object release.
   - IEnableDisableFunctionalityTrigger<T> exposes EnableFunctionality() and DisableFunctionality() for feature toggles driven by settings.
   - DontDestroyOnSceneLoad calls DontDestroyOnLoad(gameObject) in Awake.
+  - ReflexPrefabInstantiator creates an inactive staging parent (CreateInactiveStagingParent) and instantiates injected pooled/runtime prefabs via InstantiateInjectedObject<T>(prefab, parent, container, keepActive, beforeActivate), running GameObjectInjector.InjectObject before activation and before the optional beforeActivate callback so Awake() and OnEnable() see all [Inject] dependencies without using GameObjectSelfInjector.
 - Runtime flow:
-  - Spawners create Unity ObjectPool<T> or IObjectPool<T> instances with creation, get, release, and destroy callbacks.
+  - Spawners create Unity ObjectPool<T> or IObjectPool<T> instances with creation, get, release, and destroy callbacks. Pooled prefabs with Reflex dependencies (such as Enemy and ExpParticle) are created through ReflexPrefabInstantiator.InstantiateInjectedObject under an inactive staging parent.
   - When spawning/getting, the spawner invokes OnGet(), subscribes to object release/death signals, activates the GameObject, and increments active entity counts.
   - During active play, the object raises OnCanBeReleased, OnCompleted, or a domain event when its life ends.
-  - When releasing, the spawner invokes OnRelease(), unsubscribes event handlers, deactivates the GameObject, emits OnSpawnedEntityReleased, and decrements active counts.
+  - When releasing, the spawner invokes OnRelease() (which on Enemy also restores _baseConfig if a temporary runtime config override was applied), unsubscribes event handlers, deactivates the GameObject, emits OnSpawnedEntityReleased, and decrements active counts.
   - DeathVolume applies full HP damage to IDamageable targets, or calls IPoolable.ReturnToPool() directly for non-damageable pooled entities.
 
 ## Rules and Invariants
@@ -89,7 +92,7 @@ It is not responsible for:
   - Pooled objects must raise OnCanBeReleased or expose direct completion events to their owning spawner.
   - Components implementing INeedToCompleteBeforeDisable MUST fire OnCompleted; failing to do so will freeze the object in active state indefinitely.
 - Testing implications:
-  - C# compile check: dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false.
+  - C# compile check: dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false.
   - Play Mode testing: verify active object counts, pool reuse without leftover state, clean unsubscriptions, and death volume cleanup.
 
 ## Integration Notes
@@ -98,18 +101,15 @@ It is not responsible for:
   - UnityEngine.Pool (ObjectPool<T>, IObjectPool<T>).
   - Reflex DI for binding lifecycle-enabled services (e.g. DamageNumbersSpawner as IEnableDisableFunctionalityTrigger<DamageNumbersSpawner>).
 - Downstream consumers:
-  - Wave system monitors active enemy counts via spawner release events.
+  - Wave system monitors active enemy counts via spawner counter and release events (EnemiesSpawner suppresses OnSpawnedEntityReleased during Start() pool pre-warming).
   - CollectibleDropNotifier monitors IPoolable.OnCanBeReleased on spawned drop objects.
   - Settings (DamageNumbersSetting) trigger EnableFunctionality() / DisableFunctionality().
 - Cross-system coupling risks:
-  - Double release calls return an already pooled object to the pool, triggering Unity ObjectPool exceptions.
+  - Double release calls return an already pooled object to the pool, triggering Unity ObjectPool exceptions (SkillCrate and PowerUpCollectible guard against duplicate OnTriggerEnter releases via _isCollected).
   - Unsubscribing failures cause memory leaks and stale event handlers across reuse cycles.
 
 ## Known Risks and Open Questions
 
 - Known limitations:
-  - INeedToCompleteBeforeDisable lacks a timeout mechanism; broken animation states could permanently block pooling.
   - DontDestroyOnSceneLoad does not guard against duplicate instances if multiple scenes contain the component.
-- Suggested follow-up tasks:
-  - Add timeout safety to INeedToCompleteBeforeDisable implementations.
 

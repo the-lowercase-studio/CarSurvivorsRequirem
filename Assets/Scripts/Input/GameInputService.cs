@@ -72,7 +72,6 @@ namespace Assets.Scripts.Input
         InputActionAsset ActionAsset { get; }
 
         bool TryGetAction(InputActionId actionId, out InputAction action);
-        InputAction GetRequiredAction(InputActionId actionId);
     }
 
     public interface IInputRuntime
@@ -591,16 +590,6 @@ namespace Assets.Scripts.Input
         public bool TryGetAction(InputActionId actionId, out InputAction action)
         {
             return _actionsById.TryGetValue(actionId, out action);
-        }
-
-        public InputAction GetRequiredAction(InputActionId actionId)
-        {
-            if (!_actionsById.TryGetValue(actionId, out InputAction action) || action == null)
-            {
-                throw new InvalidOperationException($"[{nameof(GameInputService)}] Required action '{actionId}' is not resolved.");
-            }
-
-            return action;
         }
 
         public void DispatchPendingCommands()

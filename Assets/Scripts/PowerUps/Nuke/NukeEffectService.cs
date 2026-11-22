@@ -121,7 +121,7 @@ namespace Assets.Scripts.PowerUps.Nuke
                     for (int i = 0; i < _activeEnemiesBuffer.Count; i++)
                     {
                         Enemy enemy = _activeEnemiesBuffer[i];
-                        if (enemy == null || enemy.Health == null || !enemy.Health.IsAlive())
+                        if (enemy == null || enemy.IsMaterializing || enemy.Health == null || !enemy.Health.IsAlive())
                         {
                             continue;
                         }

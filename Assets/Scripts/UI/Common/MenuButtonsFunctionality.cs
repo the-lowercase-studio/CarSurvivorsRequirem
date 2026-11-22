@@ -8,6 +8,7 @@ namespace Assets.Scripts.UI.Common
     public class MenuButtonsFunctionality : MonoBehaviour
     {
         [Inject] private readonly IGameSceneLoader _gameSceneLoader = null;
+        [Inject] private readonly IRunSessionService _runSessionService = null;
 
         [SerializeField] private GameObject[] _enabledDisabledObjects;
 
@@ -15,6 +16,7 @@ namespace Assets.Scripts.UI.Common
         {
             if (Enum.TryParse(scene, true, out GameScene gameScene))
             {
+                _runSessionService?.ResetSession();
                 _gameSceneLoader.LoadNewSceneAsync(gameScene);
             }
             else
@@ -112,20 +114,9 @@ namespace Assets.Scripts.UI.Common
             ToggleActivityOfObject((UnityEngine.Object)gameObject);
         }
 
-        [Obsolete("Use ToggleActivityOfObject instead")]
-        public void ToogleActivityOfObject(UnityEngine.Object targetObject)
-        {
-            ToggleActivityOfObject(targetObject);
-        }
-
-        [Obsolete("Use ToggleActivityOfObject instead")]
-        public void ToogleActivityOfObject(GameObject gameObject)
-        {
-            ToggleActivityOfObject(gameObject);
-        }
-
         public void OnTryAgainClicked()
         {
+            _runSessionService?.ResetSession();
             _gameSceneLoader.ReloadCurrentSceneAsync();
         }
 

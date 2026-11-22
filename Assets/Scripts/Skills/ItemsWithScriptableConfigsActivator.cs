@@ -14,8 +14,6 @@ namespace Assets.Scripts.Skills
 
         public void InitializeUntilCount(TScriptableConfig config, int count);
 
-        public IEnumerable<TItem> GetUninitialized();
-
         public IEnumerable<TItem> GetInitialized();
     }
 
@@ -88,17 +86,6 @@ namespace Assets.Scripts.Skills
                 }
 
                 initializedCount++;
-            }
-        }
-
-        public IEnumerable<TItem> GetUninitialized()
-        {
-            foreach (TItem item in _items)
-            {
-                if (!item.IsInitialized())
-                {
-                    yield return item;
-                }
             }
         }
 

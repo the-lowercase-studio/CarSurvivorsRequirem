@@ -21,6 +21,9 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.RailgunTower.StateMachine.States
         private Phase _phase;
         private Vector3 _chaseCenter;
         private float _radius;
+        private float _chaseDuration;
+        private float _tickInterval;
+        private float _tickDamage;
         private float _lockOnTimer;
         private float _chaseElapsed;
         private float _tickTimer;
@@ -38,7 +41,17 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.RailgunTower.StateMachine.States
             _isTransitioningToCooldown = false;
             _isHoldingOnPlayerCenter = false;
             _phase = Phase.LockOn;
-            _radius = _boss.IsEnraged ? _boss.Config.Attack2EnrageRadius : _boss.Config.Attack2NormalRadius;
+            bool isEnraged = _boss.IsEnraged;
+            _radius = isEnraged ? _boss.Config.Attack2EnrageRadius : _boss.Config.Attack2NormalRadius;
+            _chaseDuration = isEnraged && _boss.Config.Attack2EnrageChaseDuration > 0f
+                ? _boss.Config.Attack2EnrageChaseDuration
+                : _boss.Config.Attack2ChaseDuration;
+            _tickInterval = isEnraged && _boss.Config.Attack2EnrageDamageTickInterval > 0f
+                ? _boss.Config.Attack2EnrageDamageTickInterval
+                : _boss.Config.Attack2DamageTickInterval;
+            _tickDamage = isEnraged && _boss.Config.Attack2EnrageTickDamage > 0f
+                ? _boss.Config.Attack2EnrageTickDamage
+                : _boss.Config.Attack2TickDamage;
             _lockOnTimer = _boss.Config.Attack2LockOnDelay;
             _chaseElapsed = 0f;
             _tickTimer = 0f;
@@ -112,11 +125,11 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.RailgunTower.StateMachine.States
             _tickTimer -= Time.deltaTime;
             if (_tickTimer <= 0f)
             {
-                _tickTimer = _boss.Config.Attack2DamageTickInterval;
+                _tickTimer = _tickInterval;
                 ApplyTickDamage();
             }
 
-            if (_chaseElapsed >= _boss.Config.Attack2ChaseDuration)
+            if (_chaseElapsed >= _chaseDuration)
             {
                 _isTransitioningToCooldown = true;
                 _boss.ChaseBeamLine.enabled = false;
@@ -174,7 +187,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.RailgunTower.StateMachine.States
                 {
                     if (_tickHitTargets.Add(damageable))
                     {
-                        damageable.TakeDamage(_boss.Config.Attack2TickDamage);
+                        damageable.TakeDamage(_tickDamage);
                     }
                 }
             }

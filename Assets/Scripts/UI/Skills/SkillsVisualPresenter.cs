@@ -13,7 +13,6 @@ namespace Assets.Scripts.UI.Skills
     {
         void SetContext(SkillVisualContext context);
         void ShowSkillVisual(SkillInfoSO skillInfoSO, int slotIndex = 0);
-        void ShowSkillVisualBasedOnSkillInfo(SkillInfoSO skillInfoSO);
         void HideAll();
     }
 
@@ -73,11 +72,6 @@ namespace Assets.Scripts.UI.Skills
             }
 
             skillVisual.SetActive(true);
-        }
-
-        public void ShowSkillVisualBasedOnSkillInfo(SkillInfoSO skillInfoSO)
-        {
-            ShowSkillVisual(skillInfoSO, 0);
         }
 
         public void HideAll()

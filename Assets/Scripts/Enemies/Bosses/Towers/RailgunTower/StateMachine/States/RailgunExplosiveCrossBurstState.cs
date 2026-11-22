@@ -86,9 +86,12 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.RailgunTower.StateMachine.States
                 yield break;
             }
 
-            float flightDuration = _boss.IsEnraged ? _boss.Config.Attack3EnrageFlightDuration : _boss.Config.Attack3NormalFlightDuration;
+            bool isEnraged = _boss.IsEnraged;
+            float flightDuration = isEnraged ? _boss.Config.Attack3EnrageFlightDuration : _boss.Config.Attack3NormalFlightDuration;
             float stagger = _boss.Config.Attack3LaunchStagger;
-            float centerRadius = _boss.Config.Attack3CenterImpactRadius;
+            float centerRadius = isEnraged && _boss.Config.Attack3EnrageCenterImpactRadius > 0f
+                ? _boss.Config.Attack3EnrageCenterImpactRadius
+                : _boss.Config.Attack3CenterImpactRadius;
             float jitterRange = _boss.Config.Attack3AngleJitterDegrees;
             float baseAngle = Random.Range(0f, 360f);
             float angleStep = 180f / Mathf.Max(orbCount, 1);
@@ -432,9 +435,29 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.RailgunTower.StateMachine.States
 
             _centerHitTargets.Clear();
 
+            bool isEnraged = _boss.IsEnraged;
+            float centerRadius = isEnraged && _boss.Config.Attack3EnrageCenterImpactRadius > 0f
+                ? _boss.Config.Attack3EnrageCenterImpactRadius
+                : _boss.Config.Attack3CenterImpactRadius;
+            float centerDamage = isEnraged && _boss.Config.Attack3EnrageCenterImpactDamage > 0f
+                ? _boss.Config.Attack3EnrageCenterImpactDamage
+                : _boss.Config.Attack3CenterImpactDamage;
+            float waveHalfLength = isEnraged && _boss.Config.Attack3EnrageWaveHalfLength > 0f
+                ? _boss.Config.Attack3EnrageWaveHalfLength
+                : _boss.Config.Attack3WaveHalfLength;
+            float waveWidth = isEnraged && _boss.Config.Attack3EnrageWaveWidth > 0f
+                ? _boss.Config.Attack3EnrageWaveWidth
+                : _boss.Config.Attack3WaveWidth;
+            float waveSpeed = isEnraged && _boss.Config.Attack3EnrageWaveSpeed > 0f
+                ? _boss.Config.Attack3EnrageWaveSpeed
+                : _boss.Config.Attack3WaveSpeed;
+            float waveDamage = isEnraged && _boss.Config.Attack3EnrageWaveDamage > 0f
+                ? _boss.Config.Attack3EnrageWaveDamage
+                : _boss.Config.Attack3WaveDamage;
+
             int hitCount = Physics.OverlapSphereNonAlloc(
                 impactPos,
-                _boss.Config.Attack3CenterImpactRadius,
+                centerRadius,
                 _overlapBuffer,
                 EntityLayers.Player,
                 QueryTriggerInteraction.Collide
@@ -461,7 +484,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.RailgunTower.StateMachine.States
                 // Center impact hit the player: deal highest center damage and suppress bidirectional wave split.
                 foreach (IDamageable target in _centerHitTargets)
                 {
-                    target.TakeDamage(_boss.Config.Attack3CenterImpactDamage);
+                    target.TakeDamage(centerDamage);
                 }
 
                 if (orb != null)
@@ -491,10 +514,10 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.RailgunTower.StateMachine.States
                 wavePair.LaunchBidirectional(
                     impactPos,
                     lineDirection,
-                    _boss.Config.Attack3WaveHalfLength,
-                    _boss.Config.Attack3WaveWidth,
-                    _boss.Config.Attack3WaveSpeed,
-                    _boss.Config.Attack3WaveDamage,
+                    waveHalfLength,
+                    waveWidth,
+                    waveSpeed,
+                    waveDamage,
                     DecrementPendingCompletion
                 );
             }

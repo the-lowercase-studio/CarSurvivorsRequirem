@@ -19,11 +19,6 @@ namespace Assets.Scripts.Utils
             return center + (randomSpherePos * radius);
         }
 
-        public static Vector3 GetRandomPointInHemisphere(Vector3 center, float radius)
-        {
-            return OffsetPositionForHemisphere(center, radius, Random.insideUnitSphere);
-        }
-
         public static Vector3 GetRandomPointOnHemisphereSurface(Vector3 center, float radius)
         {
             return OffsetPositionForHemisphere(center, radius, Random.onUnitSphere);

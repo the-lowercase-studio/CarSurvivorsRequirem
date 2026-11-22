@@ -32,29 +32,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
 
         private void LateUpdate()
         {
-            float delta = Time.deltaTime;
-            if (!_isRunning || !_playerHealth.IsAlive() || delta <= 0f) { return; }
-            foreach (MinigunTurret turret in _turrets)
-            {
-                if (turret.IsInitialized() && turret.isActiveAndEnabled)
-                {
-                    turret.UpdatePresentation(Time.time, delta);
-                }
-            }
-            float delay = _config.ShotDelay.Value;
-            if (!MinigunShotResolver.IsFinite(delay) || delay <= 0f)
-            {
-                throw new InvalidOperationException("Minigun shot delay must be finite and positive.");
-            }
-            _elapsed += delta;
-            if (!_isInitialShotPending && _elapsed < delay) { return; }
-            _elapsed = 0f;
-            _isInitialShotPending = false;
-            foreach (MinigunTurret turret in _turrets)
-            {
-                if (!_isRunning || !isActiveAndEnabled || !_playerHealth.IsAlive()) { break; }
-                if (turret.IsInitialized() && turret.isActiveAndEnabled) { turret.Shoot(); }
-            }
+            AdvanceVolleyTimer(Time.time, Time.deltaTime);
         }
 
         private void OnDisable()
@@ -97,6 +75,53 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
             base.Initialize();
             InitializeTurretsToConfiguredCount();
             if (_playerHealth.IsAlive()) { Attach(); }
+        }
+
+        public bool AdvanceVolleyTimer(float scaledTime, float deltaTime)
+        {
+            if (!_isRunning || !_playerHealth.IsAlive() || deltaTime <= 0f)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < _turrets.Length; i++)
+            {
+                MinigunTurret turret = _turrets[i];
+                if (turret.IsInitialized() && turret.isActiveAndEnabled)
+                {
+                    turret.UpdatePresentation(scaledTime, deltaTime);
+                }
+            }
+
+            float delay = _config.ShotDelay.Value;
+            if (!MinigunShotResolver.IsFinite(delay) || delay <= 0f)
+            {
+                throw new InvalidOperationException("Minigun shot delay must be finite and positive.");
+            }
+
+            _elapsed += deltaTime;
+            if (!_isInitialShotPending && _elapsed < delay)
+            {
+                return false;
+            }
+
+            _elapsed = 0f;
+            _isInitialShotPending = false;
+            for (int i = 0; i < _turrets.Length; i++)
+            {
+                MinigunTurret turret = _turrets[i];
+                if (!_isRunning || !isActiveAndEnabled || !_playerHealth.IsAlive())
+                {
+                    break;
+                }
+
+                if (turret.IsInitialized() && turret.isActiveAndEnabled)
+                {
+                    turret.Shoot();
+                }
+            }
+
+            return true;
         }
 
         private void Attach()

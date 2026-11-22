@@ -31,6 +31,9 @@ namespace Assets.Scripts.Enemies.Bosses.Golem
         float CurrentCooldownMultiplier { get; }
         float CurrentSpeedMultiplier { get; }
         float CurrentArmSpeedMultiplier { get; }
+        float CurrentDamageMultiplier { get; }
+        float CurrentAttackSizeMultiplier { get; }
+        float CurrentWarningDurationMultiplier { get; }
         Grid WorldGrid { get; }
 
         bool IsOperational { get; }

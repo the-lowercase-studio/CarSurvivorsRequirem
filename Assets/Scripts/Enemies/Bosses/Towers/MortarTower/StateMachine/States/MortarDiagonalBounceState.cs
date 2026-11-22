@@ -55,7 +55,9 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
 
         private IEnumerator RunSalvosRoutine()
         {
-            int salvoCount = _boss.IsEnraged ? _boss.Config.Attack2EnrageSalvoCount : 1;
+            int salvoCount = _boss.IsEnraged
+                ? Mathf.Max(1, _boss.Config.Attack2EnrageSalvoCount)
+                : Mathf.Max(1, _boss.Config.Attack2NormalSalvoCount);
 
             for (int s = 0; s < salvoCount; s++)
             {
@@ -87,8 +89,14 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
             Vector3 offset = Quaternion.Euler(0f, randomAngle, 0f) * Vector3.forward * randomDist;
             Vector3 targetCenter = playerPos + offset;
 
+            bool isEnraged = _boss.IsEnraged;
+            float explosionRadius = isEnraged && _boss.Config.Attack2EnrageBounceExplosionRadius > 0f
+                ? _boss.Config.Attack2EnrageBounceExplosionRadius
+                : _boss.Config.Attack2BounceExplosionRadius;
+            float damage = _boss.Config.Attack2BounceDamage * (isEnraged ? _boss.Config.Attack2EnrageDamageMultiplier : 1f);
+
             float warning = _boss.Config.Attack2InitialWarning;
-            var telegraph = _boss.ShowCircularTelegraph(targetCenter, _boss.Config.Attack2BounceExplosionRadius * 1.2f, warning);
+            var telegraph = _boss.ShowCircularTelegraph(targetCenter, explosionRadius * 1.2f, warning);
             Vector3 snappedCenter = telegraph != null ? telegraph.SnappedPosition : targetCenter;
 
             _boss.SnapTurretAim(snappedCenter);
@@ -107,7 +115,7 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
                     () =>
                     {
                         centerLanded = true;
-                        centerShell.Detonate(_boss.Config.Attack2BounceExplosionRadius, _boss.Config.Attack2BounceDamage);
+                        centerShell.Detonate(explosionRadius, damage);
                     }
                 );
             }
@@ -148,12 +156,19 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.MortarTower.StateMachine.States
 
         private IEnumerator RunRayBounces(Vector3 centerOrigin, Vector3 rayDir, System.Action onRayCompleted)
         {
-            int stepCount = _boss.Config.Attack2BounceStepCount;
+            bool isEnraged = _boss.IsEnraged;
+            int stepCount = isEnraged && _boss.Config.Attack2EnrageBounceStepCount > 0
+                ? _boss.Config.Attack2EnrageBounceStepCount
+                : _boss.Config.Attack2BounceStepCount;
             float stepDistance = _boss.Config.Attack2BounceStepDistance;
             float jumpPower = _boss.Config.Attack2BounceJumpPower;
-            float duration = _boss.Config.Attack2BounceDurationPerStep;
-            float explosionRadius = _boss.Config.Attack2BounceExplosionRadius;
-            float damage = _boss.Config.Attack2BounceDamage;
+            float duration = isEnraged && _boss.Config.Attack2EnrageBounceDurationPerStep > 0f
+                ? _boss.Config.Attack2EnrageBounceDurationPerStep
+                : _boss.Config.Attack2BounceDurationPerStep;
+            float explosionRadius = isEnraged && _boss.Config.Attack2EnrageBounceExplosionRadius > 0f
+                ? _boss.Config.Attack2EnrageBounceExplosionRadius
+                : _boss.Config.Attack2BounceExplosionRadius;
+            float damage = _boss.Config.Attack2BounceDamage * (isEnraged ? _boss.Config.Attack2EnrageDamageMultiplier : 1f);
 
             Vector3 previousLanding = centerOrigin;
 

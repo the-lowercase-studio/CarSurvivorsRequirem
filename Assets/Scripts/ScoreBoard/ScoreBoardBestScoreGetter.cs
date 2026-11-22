@@ -4,7 +4,7 @@ namespace Assets.Scripts.ScoreBoard
 {
     public interface IScoreBoardBestScoreGetter
     {
-        uint GetBestScore();
+        bool TryGetBestTime(bool hasSurvived, out uint bestTime);
     }
 
     public class ScoreBoardBestScoreGetter : IScoreBoardBestScoreGetter
@@ -16,26 +16,45 @@ namespace Assets.Scripts.ScoreBoard
             _storedScoreBoard = storedScoreBoard;
         }
 
-        public uint GetBestScore()
+        public bool TryGetBestTime(bool hasSurvived, out uint bestTime)
         {
-            List<uint> scoreBoardValues = _storedScoreBoard.GetValueOrStoredDefault();
+            List<ScoreBoardRecord> records = _storedScoreBoard.GetValueOrStoredDefault();
+            return TryGetBestTime(records, hasSurvived, out bestTime);
+        }
 
-            if (scoreBoardValues == null || scoreBoardValues.Count == 0)
+        public static bool TryGetBestTime(IReadOnlyList<ScoreBoardRecord> records, bool hasSurvived, out uint bestTime)
+        {
+            bestTime = 0;
+            if (records == null || records.Count == 0)
             {
-                return 0;
+                return false;
             }
 
-            uint maxScore = scoreBoardValues[0];
-            for (int i = 1; i < scoreBoardValues.Count; i++)
+            bool found = false;
+            for (int i = 0; i < records.Count; i++)
             {
-                if (scoreBoardValues[i] > maxScore)
+                ScoreBoardRecord record = records[i];
+                if (record.HasSurvived != hasSurvived)
                 {
-                    maxScore = scoreBoardValues[i];
+                    continue;
+                }
+
+                if (!found)
+                {
+                    bestTime = record.TimeSeconds;
+                    found = true;
+                }
+                else if (hasSurvived && record.TimeSeconds < bestTime)
+                {
+                    bestTime = record.TimeSeconds;
+                }
+                else if (!hasSurvived && record.TimeSeconds > bestTime)
+                {
+                    bestTime = record.TimeSeconds;
                 }
             }
 
-            return maxScore;
+            return found;
         }
     }
 }
-

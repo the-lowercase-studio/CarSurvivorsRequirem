@@ -16,10 +16,10 @@ GameObject:
   - component: {fileID: 2035910355702977201}
   - component: {fileID: 4599289953647572422}
   - component: {fileID: 4891577199527744142}
-  - component: {fileID: 4741833597274308545}
   - component: {fileID: 6489595091208934302}
   - component: {fileID: 4176904749440768749}
   - component: {fileID: 7128695265574407790}
+  - component: {fileID: 4758309361940729536}
   m_Layer: 7
   m_Name: CrawlingZombie
   m_TagString: Untagged
@@ -61,6 +61,7 @@ MonoBehaviour:
   <Config>k__BackingField: {fileID: 0}
   _bloodVfxPlayer: {fileID: 3654453002534123791}
   _visual: {fileID: 8598757608740303722}
+  _tierShineController: {fileID: 4758309361940729536}
 --- !u!114 &1025450493727768952
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -142,19 +143,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _visual: {fileID: 8598757608740303722}
   _deathVfxPlayer: {fileID: 4703585134151044536}
---- !u!114 &4741833597274308545
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3261852426992956232}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 20620ae30fdd0164c9bb5bdc717d3ada, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _injectionStrategy: 1
+  _presentationTimeout: 5
 --- !u!114 &6489595091208934302
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -231,6 +220,22 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 80
   m_CollisionDetection: 0
+--- !u!114 &4758309361940729536
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3261852426992956232}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1567c86dd305de94184d93d59f92fac5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Enemies.Base.EnemyTierShineController
+  _isShineEnabled: 0
+  _targetRenderers:
+  - {fileID: 6756397437299039757}
+  _fallbackMaterializeHeight: 1.6
 --- !u!1 &8598757608740303722
 GameObject:
   m_ObjectHideFlags: 0
@@ -818,6 +823,14 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 7
       objectReference: {fileID: 0}
+    - target: {fileID: -5928395085533954453, guid: b391274d088176440a16866fa8aab180, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: a65248eafaf67f24f9f345911a00f32d, type: 2}
+    - target: {fileID: -5928395085533954453, guid: b391274d088176440a16866fa8aab180, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: f63e1463188dd5b41803ca97d9e242fe, type: 2}
     - target: {fileID: -5561550452697079657, guid: b391274d088176440a16866fa8aab180, type: 3}
       propertyPath: m_Layer
       value: 7
@@ -1769,6 +1782,11 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 2391140120619121468}
   m_SourcePrefab: {fileID: 100100000, guid: b391274d088176440a16866fa8aab180, type: 3}
+--- !u!137 &6756397437299039757 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -5928395085533954453, guid: b391274d088176440a16866fa8aab180, type: 3}
+  m_PrefabInstance: {fileID: 8104675823056986214}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &8643303533560416141 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: b391274d088176440a16866fa8aab180, type: 3}

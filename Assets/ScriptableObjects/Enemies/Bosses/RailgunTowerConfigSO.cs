@@ -10,7 +10,9 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
         [SerializeField] private float _attack1PreSweepWarningDuration = 1.5f;
         [Tooltip("Stationary telegraph duration in seconds before sweep pass 1 begins when enraged.")]
         [SerializeField] private float _attack1EnragePreSweepWarningDuration = 0.75f;
-        [Tooltip("Short re-aim warning duration in seconds before enrage sweep pass 2.")]
+        [Tooltip("Short re-aim warning duration in seconds before subsequent passes in normal phase.")]
+        [SerializeField] private float _attack1NormalReaimWarningDuration = 0.45f;
+        [Tooltip("Short re-aim warning duration in seconds before enrage sweep passes.")]
         [SerializeField] private float _attack1EnrageReaimWarningDuration = 0.45f;
         [Tooltip("Total angular arc in degrees covered by a normal-phase sweep pass.")]
         [SerializeField] private float _attack1SweepAngleDegrees = 90f;
@@ -20,22 +22,30 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
         [SerializeField] private float _attack1EnrageSweepAngleDegrees = 110f;
         [Tooltip("Active sweep duration in seconds per pass when enraged.")]
         [SerializeField] private float _attack1EnrageSweepDuration = 1.7f;
+        [Tooltip("Number of sweep passes executed in normal phase.")]
+        [SerializeField] private int _attack1NormalPassCount = 1;
         [Tooltip("Number of sweep passes executed during enrage.")]
         [SerializeField] private int _attack1EnragePassCount = 2;
         [Tooltip("Maximum forward reach of the sweeping laser lane in meters.")]
         [SerializeField] private float _attack1LaneLength = 22f;
         [Tooltip("Width of the sweeping laser lane hitbox and telegraph in meters.")]
         [SerializeField] private float _attack1LaneWidth = 2.6f;
+        [Tooltip("Optional enrage override width (0 = use _attack1LaneWidth).")]
+        [SerializeField] private float _attack1EnrageLaneWidth = 0f;
         [Tooltip("Forward propagation speed of the laser wavefront in meters per second.")]
         [SerializeField] private float _attack1WavefrontSpeed = 36f;
         [Tooltip("Damage dealt to the player once per sweep pass.")]
         [SerializeField] private float _attack1Damage = 28f;
+        [Tooltip("Optional enrage override damage (0 = use _attack1Damage).")]
+        [SerializeField] private float _attack1EnrageDamage = 0f;
 
         [Header("Attack 2: Chasing Laser Circle")]
         [Tooltip("Initial stationary lock-on warning delay in seconds before chase and tick damage start.")]
         [SerializeField] private float _attack2LockOnDelay = 0.6f;
-        [Tooltip("Duration in seconds of active pursuit in both normal and enraged phases.")]
+        [Tooltip("Duration in seconds of active pursuit in normal phase.")]
         [SerializeField] private float _attack2ChaseDuration = 4.0f;
+        [Tooltip("Optional enrage override duration (0 = use _attack2ChaseDuration).")]
+        [SerializeField] private float _attack2EnrageChaseDuration = 0f;
         [Tooltip("Radius in meters of the chasing laser zone in normal phase.")]
         [SerializeField] private float _attack2NormalRadius = 2.24f;
         [Tooltip("Radius in meters of the chasing laser zone when enraged.")]
@@ -46,8 +56,12 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
         [SerializeField] private float _attack2EnrageSpeedRatio = 1.15f;
         [Tooltip("Interval in seconds between damage pulses while the player is inside the laser circle.")]
         [SerializeField] private float _attack2DamageTickInterval = 0.35f;
+        [Tooltip("Optional enrage override tick interval (0 = use _attack2DamageTickInterval).")]
+        [SerializeField] private float _attack2EnrageDamageTickInterval = 0f;
         [Tooltip("Damage dealt per tick inside the chasing laser circle.")]
         [SerializeField] private float _attack2TickDamage = 14f;
+        [Tooltip("Optional enrage override tick damage (0 = use _attack2TickDamage).")]
+        [SerializeField] private float _attack2EnrageTickDamage = 0f;
 
         [Header("Attack 3: Explosive Cross Burst")]
         [Tooltip("Number of energy orbs launched per volley in normal phase.")]
@@ -62,16 +76,28 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
         [SerializeField] private float _attack3EnrageFlightDuration = 0.75f;
         [Tooltip("Radius in meters of each orb's direct center impact check.")]
         [SerializeField] private float _attack3CenterImpactRadius = 2.4f;
+        [Tooltip("Optional enrage override center impact radius (0 = use _attack3CenterImpactRadius).")]
+        [SerializeField] private float _attack3EnrageCenterImpactRadius = 0f;
         [Tooltip("Damage dealt on direct center impact (suppresses bidirectional wave split for that orb).")]
         [SerializeField] private float _attack3CenterImpactDamage = 38f;
+        [Tooltip("Optional enrage override center impact damage (0 = use _attack3CenterImpactDamage).")]
+        [SerializeField] private float _attack3EnrageCenterImpactDamage = 0f;
         [Tooltip("Travel distance in meters for each opposing wave half from the impact center.")]
         [SerializeField] private float _attack3WaveHalfLength = 12f;
+        [Tooltip("Optional enrage override wave half-length (0 = use _attack3WaveHalfLength).")]
+        [SerializeField] private float _attack3EnrageWaveHalfLength = 0f;
         [Tooltip("Width in meters of each split energy wave corridor.")]
         [SerializeField] private float _attack3WaveWidth = 2.2f;
+        [Tooltip("Optional enrage override wave width (0 = use _attack3WaveWidth).")]
+        [SerializeField] private float _attack3EnrageWaveWidth = 0f;
         [Tooltip("Forward propagation speed in meters per second of each split energy wave.")]
         [SerializeField] private float _attack3WaveSpeed = 26f;
+        [Tooltip("Optional enrage override wave speed (0 = use _attack3WaveSpeed).")]
+        [SerializeField] private float _attack3EnrageWaveSpeed = 0f;
         [Tooltip("Damage dealt once per detonation by the bidirectional split waves.")]
         [SerializeField] private float _attack3WaveDamage = 24f;
+        [Tooltip("Optional enrage override wave damage (0 = use _attack3WaveDamage).")]
+        [SerializeField] private float _attack3EnrageWaveDamage = 0f;
         [Tooltip("Random angular jitter in degrees applied to each orb's split axis.")]
         [SerializeField] private float _attack3AngleJitterDegrees = 10f;
         [Tooltip("Minimum offset distance in meters from the scatter zone center for orb landing targets.")]
@@ -89,6 +115,11 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
         public float Attack1EnragePreSweepWarningDuration
         {
             get { return _attack1EnragePreSweepWarningDuration; }
+        }
+
+        public float Attack1NormalReaimWarningDuration
+        {
+            get { return _attack1NormalReaimWarningDuration; }
         }
 
         public float Attack1EnrageReaimWarningDuration
@@ -116,6 +147,11 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
             get { return _attack1EnrageSweepDuration; }
         }
 
+        public int Attack1NormalPassCount
+        {
+            get { return _attack1NormalPassCount; }
+        }
+
         public int Attack1EnragePassCount
         {
             get { return _attack1EnragePassCount; }
@@ -131,6 +167,11 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
             get { return _attack1LaneWidth; }
         }
 
+        public float Attack1EnrageLaneWidth
+        {
+            get { return _attack1EnrageLaneWidth; }
+        }
+
         public float Attack1WavefrontSpeed
         {
             get { return _attack1WavefrontSpeed; }
@@ -141,6 +182,11 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
             get { return _attack1Damage; }
         }
 
+        public float Attack1EnrageDamage
+        {
+            get { return _attack1EnrageDamage; }
+        }
+
         public float Attack2LockOnDelay
         {
             get { return _attack2LockOnDelay; }
@@ -149,6 +195,11 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
         public float Attack2ChaseDuration
         {
             get { return _attack2ChaseDuration; }
+        }
+
+        public float Attack2EnrageChaseDuration
+        {
+            get { return _attack2EnrageChaseDuration; }
         }
 
         public float Attack2NormalRadius
@@ -176,9 +227,19 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
             get { return _attack2DamageTickInterval; }
         }
 
+        public float Attack2EnrageDamageTickInterval
+        {
+            get { return _attack2EnrageDamageTickInterval; }
+        }
+
         public float Attack2TickDamage
         {
             get { return _attack2TickDamage; }
+        }
+
+        public float Attack2EnrageTickDamage
+        {
+            get { return _attack2EnrageTickDamage; }
         }
 
         public int Attack3NormalProjectileCount
@@ -211,9 +272,19 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
             get { return _attack3CenterImpactRadius; }
         }
 
+        public float Attack3EnrageCenterImpactRadius
+        {
+            get { return _attack3EnrageCenterImpactRadius; }
+        }
+
         public float Attack3CenterImpactDamage
         {
             get { return _attack3CenterImpactDamage; }
+        }
+
+        public float Attack3EnrageCenterImpactDamage
+        {
+            get { return _attack3EnrageCenterImpactDamage; }
         }
 
         public float Attack3WaveHalfLength
@@ -221,9 +292,19 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
             get { return _attack3WaveHalfLength; }
         }
 
+        public float Attack3EnrageWaveHalfLength
+        {
+            get { return _attack3EnrageWaveHalfLength; }
+        }
+
         public float Attack3WaveWidth
         {
             get { return _attack3WaveWidth; }
+        }
+
+        public float Attack3EnrageWaveWidth
+        {
+            get { return _attack3EnrageWaveWidth; }
         }
 
         public float Attack3WaveSpeed
@@ -231,9 +312,19 @@ namespace Assets.ScriptableObjects.Enemies.Bosses
             get { return _attack3WaveSpeed; }
         }
 
+        public float Attack3EnrageWaveSpeed
+        {
+            get { return _attack3EnrageWaveSpeed; }
+        }
+
         public float Attack3WaveDamage
         {
             get { return _attack3WaveDamage; }
+        }
+
+        public float Attack3EnrageWaveDamage
+        {
+            get { return _attack3EnrageWaveDamage; }
         }
 
         public float Attack3AngleJitterDegrees

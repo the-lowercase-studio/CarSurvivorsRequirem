@@ -41,8 +41,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
 
         private void Update()
         {
-            UpdateRotationSpeedMultiplier();
-            UpdateHitCooldownPurge();
+            StepFrame(Time.time, Time.deltaTime);
         }
 
         private void OnDisable()
@@ -66,12 +65,12 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
 
         private void OnTriggerEnter(Collider other)
         {
-            ProcessEnemyCollision(other);
+            ProcessEnemyCollisionAtTime(other, Time.time);
         }
 
         private void OnTriggerStay(Collider other)
         {
-            ProcessEnemyCollision(other);
+            ProcessEnemyCollisionAtTime(other, Time.time);
         }
 
         public void Initialize(SawSkillUpgradeableConfigSO config)
@@ -88,14 +87,19 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
             return _isInitialized;
         }
 
-        private void ProcessEnemyCollision(Collider other)
+        public void StepFrame(float currentTime, float deltaTime)
+        {
+            UpdateRotationSpeedMultiplier(deltaTime);
+            UpdateHitCooldownPurge(currentTime, deltaTime);
+        }
+
+        public void ProcessEnemyCollisionAtTime(Collider other, float currentTime)
         {
             if (other == null || !EntityLayers.Enemies.ContainsLayer(other.gameObject.layer))
             {
                 return;
             }
 
-            float currentTime = Time.time;
             if (_lastHitTimesByCollider.TryGetValue(other, out float lastHitTime))
             {
                 float cooldown = _config != null ? _config.AttackCooldown : 0.14f;
@@ -109,24 +113,23 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
             AttackCollidingEnemy(other);
         }
 
-        private void UpdateHitCooldownPurge()
+        private void UpdateHitCooldownPurge(float currentTime, float deltaTime)
         {
-            _timeSinceLastPurge += Time.deltaTime;
+            _timeSinceLastPurge += deltaTime;
             if (_timeSinceLastPurge >= SkillConstants.SAW_COOLDOWN_PURGE_INTERVAL)
             {
                 _timeSinceLastPurge = 0f;
-                PurgeStaleHitRecords();
+                PurgeStaleHitRecords(currentTime);
             }
         }
 
-        private void PurgeStaleHitRecords()
+        private void PurgeStaleHitRecords(float currentTime)
         {
             if (_lastHitTimesByCollider.Count == 0)
             {
                 return;
             }
 
-            float currentTime = Time.time;
             _staleCollidersCache.Clear();
 
             foreach (KeyValuePair<Collider, float> kvp in _lastHitTimesByCollider)
@@ -156,7 +159,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
             return carController;
         }
 
-        private void UpdateRotationSpeedMultiplier()
+        private void UpdateRotationSpeedMultiplier(float deltaTime)
         {
             if (_rotationLoops == null || _rotationLoops.Length == 0)
             {
@@ -181,7 +184,7 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
             _currentSpeedMultiplier = Mathf.MoveTowards(
                 _currentSpeedMultiplier,
                 targetMultiplier,
-                _spinRampSpeed * Time.deltaTime
+                _spinRampSpeed * deltaTime
             );
 
             for (int i = 0; i < _rotationLoops.Length; i++)
@@ -200,11 +203,8 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
                 _audioClipPlayer.Play("Attack");
             }
 
-            if (other.TryGetComponent(out IDamageable damageable) || (damageable = other.GetComponentInParent<IDamageable>()) != null)
-            {
-                int damage = _config != null && _config.Damage != null ? _config.Damage.Value : 0;
-                damageable.TakeDamage(damage);
-            }
+            int damage = _config != null && _config.Damage != null ? _config.Damage.Value : 0;
+            EntityManipulationHelper.Damage(other, damage, other.ClosestPoint(transform.position));
 
             if (other.TryGetComponent(out IKnockable knockable) || (knockable = other.GetComponentInParent<IKnockable>()) != null)
             {
@@ -223,10 +223,15 @@ namespace Assets.Scripts.Skills.PlayerSkills.Saw
                     SkillConstants.SAW_MIN_KNOCKBACK_DISTANCE,
                     SkillConstants.SAW_MAX_KNOCKBACK_DISTANCE
                 );
-                float arrivalDuration = Mathf.Clamp(
-                    knockbackDistance * SkillConstants.TIME_TO_ARRIVE_AT_LOCATION_MULTIPLIER,
+                float normalizedDistance = Mathf.InverseLerp(
+                    SkillConstants.SAW_MIN_KNOCKBACK_DISTANCE,
+                    SkillConstants.SAW_MAX_KNOCKBACK_DISTANCE,
+                    knockbackDistance
+                );
+                float arrivalDuration = Mathf.Lerp(
                     SkillConstants.SAW_MIN_KNOCKBACK_DURATION,
-                    SkillConstants.SAW_MAX_KNOCKBACK_DURATION
+                    SkillConstants.SAW_MAX_KNOCKBACK_DURATION,
+                    normalizedDistance
                 );
 
                 Vector3 knockbackDirection = transform.forward;

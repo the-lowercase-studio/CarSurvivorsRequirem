@@ -12,6 +12,8 @@ namespace Assets.Scripts.Skills.ObjectsImpactingSkills.Crate
 
     public class SkillCrate : MonoBehaviour, ISkillUpgradeCollectible, IPoolable
     {
+        private bool _isCollected;
+
         public GameObject GameObject { get; private set; }
 
         public event EventHandler OnCollected;
@@ -24,6 +26,7 @@ namespace Assets.Scripts.Skills.ObjectsImpactingSkills.Crate
 
         public void OnGet()
         {
+            _isCollected = false;
         }
 
         public void OnRelease()
@@ -38,11 +41,14 @@ namespace Assets.Scripts.Skills.ObjectsImpactingSkills.Crate
 
         private void OnTriggerEnter(Collider other)
         {
-            if (1 << other.gameObject.layer == EntityLayers.Player)
+            if (_isCollected || (1 << other.gameObject.layer) != EntityLayers.Player)
             {
-                OnCollected?.Invoke(this, EventArgs.Empty);
-                ReturnToPool();
+                return;
             }
+
+            _isCollected = true;
+            OnCollected?.Invoke(this, EventArgs.Empty);
+            ReturnToPool();
         }
     }
 }

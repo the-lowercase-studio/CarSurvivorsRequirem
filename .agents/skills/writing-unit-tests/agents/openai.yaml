@@ -1,0 +1,4 @@
+interface:
+  display_name: "Writing Unit Tests"
+  short_description: "Enforce contract-first, deterministic, single-behavior unit tests"
+  default_prompt: "Use $writing-unit-tests to craft deterministic, contract-focused unit tests with independent expected values."

@@ -15,9 +15,10 @@ namespace Assets.Scripts.Player
         ICarVfxEffectsController CarVfxEffectsController { get; }
         ILevelController LevelController { get; }
         ISkillsRegistry SkillsRegistry { get; }
+        IPlayerDamagedHandler DamagedHandler { get; }
     }
 
-    [RequireComponent(typeof(RegenativeHealth), typeof(LevelController))]
+    [RequireComponent(typeof(RegenativeHealth), typeof(LevelController), typeof(PlayerDamagedHandler))]
     public class PlayerManager : MonoBehaviour, IPlayerManager
     {
         [SerializeField] private AudioClipPlayer _audioClipPlayer;
@@ -28,6 +29,7 @@ namespace Assets.Scripts.Player
         public ICarController CarController { get; private set; }
         public ICarVfxEffectsController CarVfxEffectsController { get; private set; }
         public IAudioClipPlayer AudioClipPlayer { get; private set; }
+        public IPlayerDamagedHandler DamagedHandler { get; private set; }
 
         public GameObject GameObject
         {
@@ -44,6 +46,7 @@ namespace Assets.Scripts.Player
             SkillsRegistry = GetComponentInChildren<ISkillsRegistry>();
             CarController = GetComponent<ICarController>();
             CarVfxEffectsController = GetComponent<ICarVfxEffectsController>();
+            DamagedHandler = GetComponent<IPlayerDamagedHandler>();
             AudioClipPlayer = _audioClipPlayer;
         }
     }

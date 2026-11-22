@@ -29,11 +29,15 @@ It is not responsible for:
   - Assets/Scripts/Navigation/FlowFieldSystem/FlowField.cs
   - Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldMovementController.cs
   - Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldDebug.cs
+- Automated tests:
+  - Assets/Scripts/Editor/Tests/FlowFieldTests.cs
+  - Assets/Scripts/Editor/Tests/FlowFieldMovementControllerTests.cs
 - Related systems:
   - Assets/Scripts/Navigation/GridSystem/GridManager.cs
   - Assets/Scripts/Navigation/GridSystem/Grid.cs
   - Assets/Scripts/Navigation/GridSystem/Cell.cs
   - Assets/Scripts/Navigation/GridSystem/GridDirection.cs
+  - Assets/Scripts/Navigation/GridSystem/GroundSupportQuery.cs
   - Assets/Scripts/Navigation/GridSystem/WorldPosToCellConverter.cs
   - Assets/Scripts/Enemies/Base/EnemyMovementController.cs
   - Assets/Scripts/LevelSystem/Exp/ExpParticle.cs
@@ -73,12 +77,12 @@ Runtime flow:
    - If colliders hit `TerrainLayers.Impassable` or if the 16-collider buffer is saturated, cost is increased by `IMPASSABLE_COST` (255).
    - If colliders hit `TerrainLayers.Rough` and no impassable layer is present, cost is increased by `ROUGH_TERRAIN_COST` (3).
    - GroundSupportQuery probes exact center support with triggers ignored. Missing support or an embedded probe origin blocks the cell even if ground overlaps another part of the cell. The supported collider and conservative overlaps retain rough-terrain classification.
-5. FlowField.CreateIntegrationField rejects blocked destinations, sets only BestCost to zero, preserves terrain Cost, and propagates path costs across cardinal neighbors:
+5. FlowField.CreateIntegrationField rejects blocked destinations, resets BestCost = ushort.MaxValue across all valid grid cells, sets destinationCell.BestCost to zero while preserving terrain Cost, and propagates path costs across cardinal neighbors:
    - Neighbor candidate cost: `currentNeighbour.Cost + currentCell.BestCost`.
    - If candidate cost is strictly less than `currentNeighbour.BestCost`, `BestCost` is updated and the neighbor is enqueued in `_cellsToCheck`.
 6. `FlowField.CreateFlowField` iterates all cells in the grid, inspects all 8 neighbors (`GridDirection.AllDirections`), finds the neighbor with the minimum `BestCost`, and sets `currentCell.BestDirection` to point toward that neighbor via `GridDirection.GetDirectionFromV2I(bestCostCell.WorldGridPos - currentCell.WorldGridPos)`. If no neighbor has a lower cost, `BestDirection` is set to `GridDirection.None`.
 7. Dynamic entity movement:
-   - In `FixedUpdate`, `FlowFieldMovementController` runs `PreventEntitiesFromStackingOnEachOther` using `Physics.OverlapSphereNonAlloc` (radius `1.2f`, buffer 32) against `EntityLayers.Enemies` to calculate `_separationVector`.
+   - In `FixedUpdate`, `FlowFieldMovementController` calls public `StepSeparation()` (which runs `PreventEntitiesFromStackingOnEachOther` using `Physics.OverlapSphereNonAlloc`, radius `1.2f`, buffer 32, against `EntityLayers.Enemies`) to calculate `_separationVector`.
    - `EnemyMovementController.MovementHandler` or `ExpParticle.FixedUpdate` calls `IFlowFieldMovementController.MoveOnFlowFieldGrid(speed)`.
    - `MoveOnFlowFieldGrid` looks up the entity's current cell in `IGridManager.WorldGrid`, reads `BestDirection`, blends the normalized grid vector with `_separationVector`, updates `transform.position`, and returns the frame displacement.
 
@@ -118,7 +122,8 @@ Preserve these constraints when editing:
 
 Testing implications:
 
-- Compile C# changes with `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`.
+- Compile C# changes with `dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false` and `dotnet build CarSurvivors.Editor.Tests.csproj -p:BuildProjectReferences=false`.
+- Run EditMode tests in Assets/Scripts/Editor/Tests/FlowFieldTests.cs and Assets/Scripts/Editor/Tests/FlowFieldMovementControllerTests.cs.
 - In Unity, verify entity navigation across terrain boundaries (open ground, rough terrain, impassable walls, and grid corners).
 - Test enemy navigation and EXP particle collection separately to ensure separation dynamics do not adversely affect particle convergence.
 - Validate flow field behavior when the player car drives along world grid boundaries and reverses direction rapidly.

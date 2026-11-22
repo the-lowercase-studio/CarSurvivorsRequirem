@@ -1,0 +1,4 @@
+interface:
+  display_name: "Code Testing"
+  short_description: "Build requirement-coverage test matrices and mutation-relevant cases"
+  default_prompt: "Use $code-testing to map requirements, edge cases, and boundary invariants into thorough unit tests."

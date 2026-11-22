@@ -6,6 +6,7 @@ using Assets.Scripts.Enemies.Bosses.Towers.RailgunTower.Constants;
 using Assets.Scripts.Enemies.Bosses.Towers.RailgunTower.Projectiles;
 using Assets.Scripts.Enemies.Bosses.Towers.RailgunTower.StateMachine;
 using Assets.Scripts.Enemies.Bosses.Towers.RailgunTower.StateMachine.States;
+using Assets.Scripts.GameFlow.Config;
 using Assets.Scripts.Indicators;
 using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.Player.Car;
@@ -287,6 +288,14 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.RailgunTower
             }
         }
 
+        protected override void ApplyTierConfigOverride(TierBossConfig tierBossConfig)
+        {
+            if (tierBossConfig != null && tierBossConfig.RailgunTowerConfigOverride != null)
+            {
+                _config = tierBossConfig.RailgunTowerConfigOverride;
+            }
+        }
+
         protected override void InitializeTower()
         {
             ValidateRequiredDependencies();
@@ -398,6 +407,22 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.RailgunTower
             {
                 _playerCarController = PlayerManager.GameObject.GetComponent<ICarController>();
             }
+        }
+
+        protected override Vector3 GetDamageNumberSpawnPosition(Vector3? hitWorldPosition)
+        {
+            Vector3 referencePosition = hitWorldPosition ?? PlayerPosition;
+            BoxCollider attackedLeg = GetClosestLegCollider(referencePosition, out Vector3 closestPointOnLeg);
+            if (attackedLeg == null)
+            {
+                return base.GetDamageNumberSpawnPosition(hitWorldPosition);
+            }
+
+            Vector3 anchorPoint = hitWorldPosition.HasValue
+                ? closestPointOnLeg
+                : attackedLeg.transform.TransformPoint(attackedLeg.center);
+
+            return new Vector3(anchorPoint.x, transform.position.y + DamageNumberYOffset, anchorPoint.z);
         }
 
         protected override void MarkFootprintImpassable()
@@ -546,6 +571,54 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.RailgunTower
             {
                 throw new InvalidOperationException($"[{nameof(RailgunTowerBoss)}] _arcLaserBeam is unassigned.");
             }
+        }
+
+        private BoxCollider GetClosestLegCollider(Vector3 worldPosition, out Vector3 closestWorldPoint)
+        {
+            BoxCollider closestLeg = null;
+            closestWorldPoint = worldPosition;
+            float bestSqrDistance = float.PositiveInfinity;
+
+            if (_legColliders == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < _legColliders.Length; i++)
+            {
+                BoxCollider legCollider = _legColliders[i];
+                if (legCollider == null)
+                {
+                    continue;
+                }
+
+                Vector3 candidateClosest = GetClosestPointOnBoxCollider(legCollider, worldPosition);
+                float sqrDistance = (worldPosition - candidateClosest).sqrMagnitude;
+                if (sqrDistance < bestSqrDistance)
+                {
+                    bestSqrDistance = sqrDistance;
+                    closestLeg = legCollider;
+                    closestWorldPoint = candidateClosest;
+                }
+            }
+
+            return closestLeg;
+        }
+
+        private static Vector3 GetClosestPointOnBoxCollider(BoxCollider boxCollider, Vector3 worldPosition)
+        {
+            Transform boxTransform = boxCollider.transform;
+            Vector3 localCenter = boxCollider.center;
+            Vector3 localHalf = boxCollider.size * 0.5f;
+            Vector3 localOffset = boxTransform.InverseTransformPoint(worldPosition) - localCenter;
+
+            Vector3 clampedOffset = new Vector3(
+                Mathf.Clamp(localOffset.x, -localHalf.x, localHalf.x),
+                Mathf.Clamp(localOffset.y, -localHalf.y, localHalf.y),
+                Mathf.Clamp(localOffset.z, -localHalf.z, localHalf.z)
+            );
+
+            return boxTransform.TransformPoint(localCenter + clampedOffset);
         }
     }
 }

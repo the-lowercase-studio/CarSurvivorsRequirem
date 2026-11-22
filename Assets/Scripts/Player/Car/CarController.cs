@@ -13,11 +13,7 @@ namespace Assets.Scripts.Player.Car
 
         event EventHandler OnBrakeRelease;
 
-        event EventHandler OnDriftStart;
-
         event EventHandler OnDriftStop;
-
-        event EventHandler<int> OnDriftDirectionChanged;
 
         float GetMovementSpeed();
 
@@ -239,9 +235,7 @@ namespace Assets.Scripts.Player.Car
 
         public event EventHandler OnBrakePress;
         public event EventHandler OnBrakeRelease;
-        public event EventHandler OnDriftStart;
         public event EventHandler OnDriftStop;
-        public event EventHandler<int> OnDriftDirectionChanged;
 
         public float MaxForwardSpeed
         {
@@ -336,7 +330,6 @@ namespace Assets.Scripts.Player.Car
                 _currentDriftYawAngle = 0f;
                 _lastAppliedDriftYaw = 0f;
                 OnDriftStop?.Invoke(this, EventArgs.Empty);
-                OnDriftDirectionChanged?.Invoke(this, 0);
             }
         }
 
@@ -351,6 +344,11 @@ namespace Assets.Scripts.Player.Car
 
         private void FixedUpdate()
         {
+            if (_rb.isKinematic)
+            {
+                return;
+            }
+
             _rb.angularVelocity = Vector3.zero;
 
             HandleRaycastGrounding();
@@ -844,21 +842,12 @@ namespace Assets.Scripts.Player.Car
 
             _currentDriftYawAngle = Mathf.MoveTowards(_currentDriftYawAngle, targetAngle, _driftYawResponseSpeed * 10f * Time.fixedDeltaTime);
 
-            if (!wasDrifting && _isDrifting)
-            {
-                OnDriftStart?.Invoke(this, EventArgs.Empty);
-            }
-            else if (wasDrifting && !_isDrifting)
+            if (wasDrifting && !_isDrifting)
             {
                 _currentDriftDuration = 0f;
                 _currentDriftYawAngle = 0f;
                 _lastAppliedDriftYaw = 0f;
                 OnDriftStop?.Invoke(this, EventArgs.Empty);
-            }
-
-            if (oldDirection != _driftDirection)
-            {
-                OnDriftDirectionChanged?.Invoke(this, _driftDirection);
             }
         }
 

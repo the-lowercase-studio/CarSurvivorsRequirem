@@ -1,6 +1,7 @@
 using System;
 using Assets.ScriptableObjects.Input;
 using Assets.Scripts.GameFlow;
+using Assets.Scripts.GameFlow.Config;
 using Assets.Scripts.Input;
 using Assets.Scripts.ScoreBoard;
 using Reflex.Core;
@@ -15,6 +16,7 @@ namespace Assets.Scripts.ReflexDI
         [SerializeField] private InputActionAsset _inputActions;
         [SerializeField] private InputGlyphCatalog _inputGlyphCatalog;
         [SerializeField] private InputRuntimeConfig _inputRuntimeConfig;
+        [SerializeField] private GameLoopProgressionConfigSO _progressionConfig;
 
         public void InstallBindings(ContainerBuilder builder)
         {
@@ -33,6 +35,13 @@ namespace Assets.Scripts.ReflexDI
                 throw new InvalidOperationException($"[{nameof(ProjectInstaller)}] _inputRuntimeConfig is unassigned.");
             }
 
+            if (_progressionConfig == null)
+            {
+                throw new InvalidOperationException($"[{nameof(ProjectInstaller)}] _progressionConfig is unassigned.");
+            }
+
+            _progressionConfig.ValidateConfiguration();
+
             //Input
             builder.AddSingleton(_inputActions);
             builder.AddSingleton(_inputGlyphCatalog);
@@ -48,8 +57,11 @@ namespace Assets.Scripts.ReflexDI
             builder.AddSingleton(typeof(InputPromptService), typeof(IInputPromptProvider));
             builder.OnContainerBuilt += SpawnInputRuntimeDriver;
 
-            //Scenes Loading
+            //Scenes Loading & Progression
+            builder.AddSingleton(typeof(GameTimeService), typeof(IGameTimeService));
             builder.AddSingleton(typeof(GameSceneLoader), typeof(IGameSceneLoader));
+            builder.AddSingleton(_progressionConfig);
+            builder.AddSingleton(typeof(RunSessionService), typeof(IRunSessionService));
 
             //ScoreBoard
             builder.AddSingleton(typeof(StoredScoreBoard));

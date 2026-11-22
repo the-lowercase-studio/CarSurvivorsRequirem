@@ -1,0 +1,4 @@
+interface:
+  display_name: "Test Anti-Patterns"
+  short_description: "Audit test suites for false confidence, tautologies, and flakiness"
+  default_prompt: "Use $test-anti-patterns to audit these test files for missing assertions, tautologies, flakiness, and isolation flaws."

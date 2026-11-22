@@ -69,7 +69,7 @@ Classify all performance findings into four severity tiers:
 5. Validation
    - For implemented C# changes, run project compilation:
      ```powershell
-     dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
+     dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false
      ```
    - For review-only proposals, list compilation as a proposed future check. Distinguish executed results, baseline failures, unavailable checks, and pending Unity Profiler comparison. Claim measured gains only with comparable before/after captures.
 

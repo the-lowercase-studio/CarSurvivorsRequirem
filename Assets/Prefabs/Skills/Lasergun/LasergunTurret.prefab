@@ -48,8 +48,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <_config>k__BackingField: {fileID: 11400000, guid: 9d39e915a695cd04eb9bcafa43aa53b4, type: 2}
   _gunTip: {fileID: 3522167964729353356}
-  _visual: {fileID: 3222132805866273574}
-  _turretsProejctile: {fileID: 0}
   _laserLineRenderer: {fileID: 4430527635744969526}
   _startShowLaserShootDuration: 0.1
   _laserCumulatingVFX: {fileID: 7172205868254466309}

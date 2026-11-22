@@ -56,8 +56,6 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
         private readonly Contact[] _selected = new Contact[MinigunConstants.MAX_TARGETS];
         private int _contactCount;
         private int _selectedCount;
-        private int _applyingCount;
-        private uint _resolutionVersion;
 
         public MinigunShotResult ResolveShot(Vector3 origin, Vector3 direction, float range, float width, int piercing)
         {
@@ -115,37 +113,6 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
             return new MinigunTargetHit(contact.Target, contact.Health, contact.Distance);
         }
 
-        public void ApplyResolvedDamage(int damage)
-        {
-            if (damage < 0)
-            {
-                Clear();
-                throw new InvalidOperationException("Minigun damage cannot be negative.");
-            }
-            int count = _selectedCount;
-            uint version = _resolutionVersion;
-            _applyingCount = count;
-            _selectedCount = 0;
-            try
-            {
-                for (int i = 0; i < count; i++)
-                {
-                    if (version != _resolutionVersion) { break; }
-                    Contact contact = _selected[i];
-                    _selected[i] = default;
-                    if (IsAlive(contact))
-                    {
-                        contact.Target.TakeDamage(damage);
-                    }
-                }
-            }
-            finally
-            {
-                Array.Clear(_selected, 0, count);
-                _applyingCount = 0;
-            }
-        }
-
         public float GetTerrainLimitedLength(Vector3 origin, Vector3 direction, float range, float width)
         {
             ValidateGeometry(origin, direction, range, width);
@@ -155,10 +122,9 @@ namespace Assets.Scripts.Skills.PlayerSkills.Minigun
         public void Clear()
         {
             Array.Clear(_contacts, 0, _contactCount);
-            Array.Clear(_selected, 0, Mathf.Max(_selectedCount, _applyingCount));
+            Array.Clear(_selected, 0, _selectedCount);
             _contactCount = 0;
             _selectedCount = 0;
-            _resolutionVersion++;
         }
 
         public static void ValidateGeometry(Vector3 origin, Vector3 direction, float range, float width)

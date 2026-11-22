@@ -53,7 +53,10 @@ namespace Assets.Scripts.Navigation.GridSystem
             _flowField = new FlowField();
 
 #if DEBUG
-            _flowFieldDebugConfiguration.Grid = WorldGrid;
+            if (_flowFieldDebugConfiguration != null)
+            {
+                _flowFieldDebugConfiguration.Grid = WorldGrid;
+            }
 #endif
         }
 
@@ -83,7 +86,10 @@ namespace Assets.Scripts.Navigation.GridSystem
         }
 #endif
 
-        private void UpdateFlowFieldWithNewPlayerChunkGrid()
+        /// <summary>
+        /// Recenters the player chunk grid around the player car and recomputes the chunk flow field.
+        /// </summary>
+        public void StepPlayerChunkFlowField()
         {
             UpdatePlayerChunkBasedOnPlayerPositionInWorldGrid();
 
@@ -99,6 +105,11 @@ namespace Assets.Scripts.Navigation.GridSystem
             }
 
             UpdateFlowField(GridPlayerChunk, destination);
+        }
+
+        private void UpdateFlowFieldWithNewPlayerChunkGrid()
+        {
+            StepPlayerChunkFlowField();
         }
 
         private void UpdatePlayerChunkBasedOnPlayerPositionInWorldGrid()
@@ -169,6 +180,7 @@ namespace Assets.Scripts.Navigation.GridSystem
                         if (newChunkX < 0 || newChunkX >= chunkWidth || newChunkY < 0 || newChunkY >= chunkHeight)
                         {
                             oldCell.ChunkGridPos = Assets.Scripts.Navigation.Constants.GridConstants.INVALID_CHUNK_GRID_POS;
+                            oldCell.BestCost = ushort.MaxValue;
                             oldCell.BestDirection = GridDirection.None;
                             _playerChunkCells[x, y] = null;
                         }

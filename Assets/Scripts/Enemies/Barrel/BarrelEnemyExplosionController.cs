@@ -177,7 +177,7 @@ namespace Assets.Scripts.Enemies.Barrel
 
         private void OnPlayerContact(object sender, CollisionEventArgs e)
         {
-            if ((_enemy != null && _enemy.IsFrozen)
+            if ((_enemy != null && (_enemy.IsFrozen || _enemy.IsMaterializing))
                 || _state != ExplosionState.Approaching || !_health.IsAlive()
                 || e.Collider != _playerBody || !IsPlayerEligible(_config.ActivationRange))
             {
@@ -196,7 +196,8 @@ namespace Assets.Scripts.Enemies.Barrel
 
         private void OnAttackHitFrame(object sender, EventArgs e)
         {
-            if (_state != ExplosionState.Priming || !_health.IsAlive() || HasDetonated)
+            if ((_enemy != null && _enemy.IsMaterializing)
+                || _state != ExplosionState.Priming || !_health.IsAlive() || HasDetonated)
             {
                 return;
             }

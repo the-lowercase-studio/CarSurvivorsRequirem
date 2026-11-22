@@ -24,6 +24,7 @@ namespace Assets.Scripts.UI.Skills
     {
         bool IsAutoUpgradeEnabled { get; set; }
         void AutoResolvePendingUpgrades();
+        void HideForStageTransition();
     }
 
     public class SkillUpgradePresenter : MonoBehaviour, ISkillUpgradePresenter
@@ -136,21 +137,7 @@ namespace Assets.Scripts.UI.Skills
 
         public void AutoResolvePendingUpgrades()
         {
-            if (_newSkillSection != null)
-            {
-                _newSkillSection.SetActive(false);
-            }
-            if (_upgradeSkillSection != null)
-            {
-                _upgradeSkillSection.SetActive(false);
-            }
-            if (_skillsVisualPresenter != null)
-            {
-                _skillsVisualPresenter.HideAll();
-            }
-            _isShowingAnySection = false;
-            _currentSkillChoices = null;
-            ReleaseRewardScope();
+            HideForStageTransition();
 
             while (_skillUpgradeFlow.TryGetNextRequest(_playerManager.SkillsRegistry, out SkillUpgradeRequest request))
             {
@@ -169,6 +156,25 @@ namespace Assets.Scripts.UI.Skills
                     }
                 }
             }
+        }
+
+        public void HideForStageTransition()
+        {
+            if (_newSkillSection != null)
+            {
+                _newSkillSection.SetActive(false);
+            }
+            if (_upgradeSkillSection != null)
+            {
+                _upgradeSkillSection.SetActive(false);
+            }
+            if (_skillsVisualPresenter != null)
+            {
+                _skillsVisualPresenter.HideAll();
+            }
+            _isShowingAnySection = false;
+            _currentSkillChoices = null;
+            ReleaseRewardScope();
         }
 
         private void HandleRequestQueued(object sender, System.EventArgs e)
@@ -344,9 +350,17 @@ namespace Assets.Scripts.UI.Skills
         {
             _upgradeButtons.Clear();
 
-            foreach (Transform child in _buttonsHolder)
+            for (int i = _buttonsHolder.childCount - 1; i >= 0; i--)
             {
-                Destroy(child.gameObject);
+                GameObject childGo = _buttonsHolder.GetChild(i).gameObject;
+                if (Application.isPlaying)
+                {
+                    Destroy(childGo);
+                }
+                else
+                {
+                    DestroyImmediate(childGo);
+                }
             }
         }
 

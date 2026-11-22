@@ -16,7 +16,6 @@ The audio system is not responsible for gameplay decisions, UI flow, settings pe
 - Common consumers:
   - Assets/Scripts/UI/Death/PlayerDeathPresenter.cs
   - Assets/Scripts/UI/Skills/SkillUpgradePresenter.cs
-  - Assets/Scripts/UI/Common/ButtonsAudioClipPlayer.cs
   - Assets/Scripts/Player/PlayerManager.cs
   - Assets/Scripts/Player/PlayerDamagedHandler.cs
   - Assets/Scripts/Enemies/Base/Enemy.cs
@@ -86,7 +85,7 @@ The audio system is not responsible for gameplay decisions, UI flow, settings pe
   - Local clip playback requires a child or same-object `AudioClipPlayer` with an assigned `AudioSource` and matching serialized clip-name config.
   - Audio settings require `AudioVolumeSetting` to be bound in `MainMenuInstaller` as `ISetting<AudioVolumeSetting, float>`.
 - Testing implications:
-  - Compile documentation-adjacent C# changes with `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`.
+  - Compile documentation-adjacent C# changes with `dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false`.
   - Unity Editor validation is required for mixer exposed parameter names, `AudioSource` setup, clip assignments, clip-name config strings, prefab child references, and scene background music mappings.
   - Manual play-mode checks should cover scene transitions, death-screen pitch change, settings slider behavior, enemy death completion, exp collection release timing, and rapid repeated local sound playback.
 
@@ -119,7 +118,6 @@ The audio system is not responsible for gameplay decisions, UI flow, settings pe
   - `AudioMixersManager.SetMixerVolume` accepts a `mixerName` parameter but currently always sets the `"Volume"` exposed parameter on the main mixer.
   - `BackgroundAudioManager` uses a non-serialized `_deathAudioPitch` value of `0.6f`, so designers cannot tune death pitch in the inspector.
   - `AudioVolumeOption` uses `Mathf.Log10(_slider.value)`; the slider must not allow zero.
-  - `ButtonsAudioClipPlayer` declares `RequireComponent(typeof(AudioClipPlayer))` but does not initialize `_audioClipPlayer` before use.
   - Several gameplay components find local audio through `GetComponentInChildren<IAudioClipPlayer>()`; missing child setup will fail at runtime.
 - Open design questions:
   - Should local audio clip keys become constants or typed IDs to reduce string mismatch risk?
@@ -128,6 +126,5 @@ The audio system is not responsible for gameplay decisions, UI flow, settings pe
   - Should death pitch be designer-configurable per scene, globally configured, or intentionally fixed?
 - Suggested follow-up tasks:
   - Fix `AudioClipPlayer` missing-config handling and add guard behavior for empty variant arrays.
-  - Fix `ButtonsAudioClipPlayer` initialization before relying on it as shared UI button audio.
   - Review `AudioClipPlayer.OnAudioClipFinished` semantics for one-shots, pitch, and looped clips before adding more systems that wait on audio completion.
   - Add a Unity Editor checklist for audio prefab setup: `AudioSource`, `AudioClipPlayer`, named configs, mixer routing, and expected clip lengths.

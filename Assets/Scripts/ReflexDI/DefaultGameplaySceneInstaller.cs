@@ -1,5 +1,6 @@
 using Assets.Scripts.Enemies;
 using Assets.Scripts.Enemies.Bosses;
+using Assets.Scripts.GameFlow;
 using Assets.Scripts.Navigation.GridSystem;
 using Assets.Scripts.LevelSystem.Exp;
 using Assets.Scripts.Player;
@@ -15,6 +16,7 @@ using Assets.Scripts.Spawners.Swarm;
 using Assets.Scripts.Spawners.WorldSpace;
 using Assets.Scripts.UI.Death;
 using Assets.Scripts.UI.DevConsole;
+using Assets.Scripts.UI.EndOfRun;
 using Assets.Scripts.UI.HUD;
 using Assets.Scripts.UI.Input;
 using Assets.Scripts.UI.Level;
@@ -62,6 +64,8 @@ namespace Assets.Scripts.ReflexDI
         [SerializeField] private ArmorService _armorService;
         [SerializeField] private FireTailsService _fireTailsService;
         [SerializeField] private UiInputScope _uiInputScope;
+        [SerializeField] private TierVisualThemeController _tierVisualThemeController;
+        [SerializeField] private DemoThankYouPresenter _demoThankYouPresenter;
 
         public Camera MainCamera => _mainCamera;
 
@@ -99,6 +103,10 @@ namespace Assets.Scripts.ReflexDI
             builder.AddSingleton(_skillsStatsPresenter, typeof(ISkillsStatsPresenter));
             builder.AddSingleton(_pausePresenter, typeof(IPausePresenter));
             builder.AddSingleton(_playerDeathPresenter, typeof(IPlayerDeathPresenter));
+            if (_demoThankYouPresenter != null)
+            {
+                builder.AddSingleton(_demoThankYouPresenter, typeof(IDemoThankYouPresenter));
+            }
             builder.AddSingleton(_playerLevelPresenter, typeof(IPlayerLevelPresenter));
             builder.AddSingleton(_skillsVisualPresenter, typeof(ISkillsVisualPresenter));
             builder.AddSingleton(_timerPresenter, typeof(ITimerPresenter));
@@ -158,8 +166,12 @@ namespace Assets.Scripts.ReflexDI
             //Swarm UI
             builder.AddSingleton(_swarmNotificationPresenter, typeof(ISwarmNotificationPresenter));
 
-            //Post Processing
+            //Post Processing & Tier Visuals
             builder.AddSingleton(_postProcessVolume);
+            if (_tierVisualThemeController != null)
+            {
+                builder.AddSingleton(_tierVisualThemeController, typeof(ITierVisualThemeController));
+            }
 
             if (_explosionVfxPool == null)
             {

@@ -12,7 +12,6 @@ namespace Assets.Scripts.Input
     {
         event Action OnPromptsChanged;
 
-        InputPromptDescriptor GetPrompt(InputActionId actionId);
         InputPromptDescriptor GetPrompt(InputPromptRequest request);
     }
 
@@ -48,11 +47,6 @@ namespace Assets.Scripts.Input
 
             _glyphCatalog.Initialize();
             _deviceContext.OnDeviceChanged += HandleDeviceChanged;
-        }
-
-        public InputPromptDescriptor GetPrompt(InputActionId actionId)
-        {
-            return GetPrompt(new InputPromptRequest(actionId));
         }
 
         public InputPromptDescriptor GetPrompt(InputPromptRequest request)

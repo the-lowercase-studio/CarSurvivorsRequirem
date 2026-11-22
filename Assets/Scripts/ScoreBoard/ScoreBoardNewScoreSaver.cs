@@ -5,7 +5,7 @@ namespace Assets.Scripts.ScoreBoard
 {
     public interface IScoreBoardNewScoreSaver
     {
-        void Save(uint score);
+        void Save(uint timeSeconds, bool hasSurvived = false);
     }
 
     public class ScoreBoardNewScoreSaver : IScoreBoardNewScoreSaver
@@ -17,39 +17,83 @@ namespace Assets.Scripts.ScoreBoard
             _storedScoreBoard = storedScoreBoard;
         }
 
-        public void Save(uint score)
+        public void Save(uint timeSeconds, bool hasSurvived = false)
         {
-            List<uint> scores = _storedScoreBoard.GetValueOrStoredDefault();
+            List<ScoreBoardRecord> scores = _storedScoreBoard.GetValueOrStoredDefault();
             if (scores == null)
             {
-                scores = new List<uint>();
+                scores = new List<ScoreBoardRecord>();
             }
 
-            scores.Sort((a, b) => b.CompareTo(a));
-
-            if (scores.Count >= ScoreBoardConstants.MAX_SAVED_SCORES_COUNT && scores.Count > 0)
+            var newRecord = new ScoreBoardRecord(timeSeconds, hasSurvived);
+            if (!InsertAndSort(scores, newRecord, ScoreBoardConstants.MAX_SAVED_SCORES_COUNT))
             {
-                uint lowestScore = scores[scores.Count - 1];
-                if (score <= lowestScore)
-                {
-                    return;
-                }
-            }
-
-            if (!scores.Contains(score))
-            {
-                scores.Add(score);
-            }
-
-            scores.Sort((a, b) => b.CompareTo(a));
-
-            while (scores.Count > ScoreBoardConstants.MAX_SAVED_SCORES_COUNT)
-            {
-                scores.RemoveAt(scores.Count - 1);
+                return;
             }
 
             _storedScoreBoard.SaveValue(scores);
         }
+
+        public static bool InsertAndSort(List<ScoreBoardRecord> records, ScoreBoardRecord newRecord, int maxEntries = ScoreBoardConstants.MAX_SAVED_SCORES_COUNT)
+        {
+            if (records == null || maxEntries <= 0)
+            {
+                return false;
+            }
+
+            records.Sort(CompareRecords);
+
+            bool alreadyPresent = ContainsRecord(records, newRecord);
+            if (!alreadyPresent && records.Count >= maxEntries && records.Count > 0)
+            {
+                ScoreBoardRecord worstKept = records[records.Count - 1];
+                if (CompareRecords(newRecord, worstKept) >= 0)
+                {
+                    return false;
+                }
+            }
+
+            if (!alreadyPresent)
+            {
+                records.Add(newRecord);
+            }
+
+            records.Sort(CompareRecords);
+
+            while (records.Count > maxEntries)
+            {
+                records.RemoveAt(records.Count - 1);
+            }
+
+            return true;
+        }
+
+        public static int CompareRecords(ScoreBoardRecord a, ScoreBoardRecord b)
+        {
+            if (a.HasSurvived != b.HasSurvived)
+            {
+                return a.HasSurvived ? -1 : 1;
+            }
+
+            if (a.HasSurvived)
+            {
+                return a.TimeSeconds.CompareTo(b.TimeSeconds);
+            }
+
+            return b.TimeSeconds.CompareTo(a.TimeSeconds);
+        }
+
+        private static bool ContainsRecord(List<ScoreBoardRecord> records, ScoreBoardRecord target)
+        {
+            for (int i = 0; i < records.Count; i++)
+            {
+                if (records[i].Equals(target))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }
-

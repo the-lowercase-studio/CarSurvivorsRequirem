@@ -6,5 +6,7 @@ namespace Assets.Scripts.DamageNumbers.Constants
         public const int DEFAULT_POOL_CAPACITY = 20;
         public const int MAX_POOL_SIZE = 100;
         public const float DEFAULT_POPUPS_MOVEMENT_RANGE = 1f;
+        public const float DEFAULT_SCALE_MULTIPLIER = 1f;
+        public const float BOSS_SCALE_MULTIPLIER = 1.5f;
     }
 }

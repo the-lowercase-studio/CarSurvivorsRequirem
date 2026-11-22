@@ -23,6 +23,7 @@ namespace Assets.Scripts.Stats
 
         void SetIcon(Sprite icon);
         void Upgrade(float upgradeValue);
+        void RestoreRuntimeState(double value, bool canBeUpgraded);
         float GetUpgradeValueBasedOnUpdateRange();
         float GetWhatPercentOfValueIsUpgradeValue(float upgradeValue);
 
@@ -114,6 +115,21 @@ namespace Assets.Scripts.Stats
             Value = FromFloatToType(newValue);
 
             OnUpgrade?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void RestoreRuntimeState(double value, bool canBeUpgraded)
+        {
+            if (typeof(T) == typeof(int))
+            {
+                int roundedValue = Mathf.RoundToInt((float)value);
+                Value = (T)Convert.ChangeType(roundedValue, typeof(T));
+            }
+            else
+            {
+                Value = (T)Convert.ChangeType(value, typeof(T));
+            }
+
+            CanBeUpgraded = canBeUpgraded;
         }
 
         protected void CopyBasePropertiesTo(UpgradeableStat<T> destination)

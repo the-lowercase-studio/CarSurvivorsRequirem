@@ -56,7 +56,7 @@ namespace Assets.Scripts.HealthSystem
 
         public void DecreaseHealth(float value)
         {
-            if (!_isAlive)
+            if (!_isAlive || !IsValidDelta(value))
             {
                 return;
             }
@@ -76,25 +76,29 @@ namespace Assets.Scripts.HealthSystem
 
         public void IncreaseHealth(float value)
         {
-            if (!_isAlive)
+            if (!_isAlive || !IsValidDelta(value) || CurrentHealth >= MaxHealth)
             {
                 return;
             }
 
-            if (CurrentHealth + value < MaxHealth)
+            float nextHealth = Mathf.Min(CurrentHealth + value, MaxHealth);
+            if (nextHealth <= CurrentHealth)
             {
-                CurrentHealth += value;
-                OnHealthIncreased?.Invoke(this, EventArgs.Empty);
+                return;
             }
-            else
-            {
-                CurrentHealth = MaxHealth;
-            }
+
+            CurrentHealth = nextHealth;
+            OnHealthIncreased?.Invoke(this, EventArgs.Empty);
         }
 
         public bool IsAlive()
         {
             return _isAlive;
+        }
+
+        private static bool IsValidDelta(float value)
+        {
+            return !float.IsNaN(value) && !float.IsInfinity(value) && value > 0f;
         }
 
         private void InvokeOnHealthChanged(object sender, EventArgs e)

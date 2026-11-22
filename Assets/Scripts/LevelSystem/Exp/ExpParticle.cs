@@ -89,6 +89,7 @@ namespace Assets.Scripts.LevelSystem.Exp
 
         private void Awake()
         {
+            _startScale = transform.localScale;
             _flowFieldMovementController = GetComponent<IFlowFieldMovementController>();
             _audioClipPlayer = GetComponentInChildren<IAudioClipPlayer>();
         }
@@ -100,19 +101,29 @@ namespace Assets.Scripts.LevelSystem.Exp
 
         private void Update()
         {
-            if (_isCollecting)
-            {
-                _collectElapsed += Time.deltaTime;
-                float duration = Mathf.Max(0.0001f, _disapearingDuration);
-                float t = Mathf.Clamp01(_collectElapsed / duration);
-                transform.localScale = Vector3.Lerp(_collectStartScale, Vector3.zero, t);
+            AdvanceCollection(Time.deltaTime);
+        }
 
-                if (t >= 1f)
-                {
-                    _isCollecting = false;
-                    transform.localScale = Vector3.zero;
-                    HandleCollectShrinkComplete();
-                }
+        /// <summary>
+        /// Steps collection shrink progress by the supplied positive delta time.
+        /// </summary>
+        public void AdvanceCollection(float deltaTime)
+        {
+            if (!_isCollecting || deltaTime <= 0f || float.IsNaN(deltaTime) || float.IsInfinity(deltaTime))
+            {
+                return;
+            }
+
+            _collectElapsed += deltaTime;
+            float duration = Mathf.Max(0.0001f, _disapearingDuration);
+            float t = Mathf.Clamp01(_collectElapsed / duration);
+            transform.localScale = Vector3.Lerp(_collectStartScale, Vector3.zero, t);
+
+            if (t >= 1f)
+            {
+                _isCollecting = false;
+                transform.localScale = Vector3.zero;
+                HandleCollectShrinkComplete();
             }
         }
 
@@ -158,12 +169,13 @@ namespace Assets.Scripts.LevelSystem.Exp
 
         public void SetSizeAndMaterialBasedOnExpAmount(float exp)
         {
-            if (_particleApearanceByTreshold.Length == 0)
+            _expAmount = exp;
+
+            if (_particleApearanceByTreshold == null || _particleApearanceByTreshold.Length == 0)
             {
                 Debug.LogError("Particle apearance by treshold is not set set for: " + transform.name);
+                return;
             }
-
-            _expAmount = exp;
 
             for (int i = _particleApearanceByTreshold.Length - 1; i >= 0; i--)
             {

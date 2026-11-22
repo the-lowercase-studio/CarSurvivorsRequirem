@@ -2,7 +2,6 @@
 using Assets.Scripts.Skills.UpgradeFlow;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -27,27 +26,36 @@ namespace Assets.ScriptableObjects.Player.Skills
 
     public interface ISkillUpgradeableStatsConfig
     {
-        public void ResetRuntimeState();
+        void ResetRuntimeState();
+        void SyncDerivedRuntimeState();
         void AppendStatsForDisplay(List<NameUpgradableStatPair> destination);
 
-        public IEnumerable<NameUpgradableStatPair> GetUpgradeableStatsThatCanBeUpgraded();
+        IEnumerable<NameUpgradableStatPair> GetUpgradeableStatsThatCanBeUpgraded();
     }
 
     public abstract class SkillUpgradeableStatsConfig : ScriptableObject, ISkillUpgradeableStatsConfig
     {
         public abstract void ResetRuntimeState();
+
+        public virtual void SyncDerivedRuntimeState()
+        {
+        }
+
         public abstract void AppendStatsForDisplay(List<NameUpgradableStatPair> destination);
 
         public IEnumerable<NameUpgradableStatPair> GetUpgradeableStatsThatCanBeUpgraded()
         {
             List<NameUpgradableStatPair> upgradeableStats = new();
 
-            PropertyInfo[] upgradeableStatsPropertyInfos = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                                          .Where(f => typeof(IUpgradeableStat).IsAssignableFrom(f.PropertyType))
-                                          .ToArray();
-
-            foreach (PropertyInfo propertyInfo in upgradeableStatsPropertyInfos)
+            PropertyInfo[] allProperties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            for (int i = 0; i < allProperties.Length; i++)
             {
+                PropertyInfo propertyInfo = allProperties[i];
+                if (!typeof(IUpgradeableStat).IsAssignableFrom(propertyInfo.PropertyType))
+                {
+                    continue;
+                }
+
                 if (propertyInfo.GetValue(this) is IUpgradeableStat upgradeableStat
                     && upgradeableStat.CanBeUpgraded)
                 {
