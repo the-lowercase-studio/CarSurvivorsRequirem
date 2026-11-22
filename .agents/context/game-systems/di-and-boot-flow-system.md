@@ -33,6 +33,16 @@ It is not responsible for:
   - Assets/Scripts/GameFlow/Config/GameLoopProgressionConfigSO.cs
   - Assets/Scripts/UI/Loading/LoadingOverlayPresenter.cs
   - Assets/Scripts/UI/EndOfRun/DemoThankYouPresenter.cs
+  - Assets/Scripts/CarSurvivors.Runtime.asmdef
+  - Assets/Scripts/AssemblyInfo.cs
+  - Assets/ScriptableObjects/CarSurvivors.ScriptableObjects.asmref
+  - Assets/Scripts/Editor/CarSurvivors.Editor.asmdef
+  - Assets/Scripts/Editor/Tests/CarSurvivors.Editor.Tests.asmdef
+  - Assets/Tests/PlayMode/CarSurvivors.PlayMode.Tests.asmdef
+  - Assets/Plugins/Demigiant/DOTween/Modules/DOTween.Modules.asmdef
+- Automated tests:
+  - Assets/Tests/PlayMode/PlayModeTestHarness.cs
+  - Assets/Tests/PlayMode/BootMainMenuGameplaySmokeTests.cs
 - Authoritative prefabs and scenes:
   - Assets/Resources/ProjectScope.prefab
   - Assets/Scenes/Boot.unity
@@ -106,8 +116,8 @@ It is not responsible for:
   - New Reflex bindings should prefer narrow colocated interfaces.
   - New scenes added to GameScene enum must match Unity Build Settings indices.
 - Testing implications:
-  - C# compile verification: dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false and dotnet build Assembly-CSharp-Editor.csproj -p:BuildProjectReferences=false.
-  - EditMode DI test harness patterns: see .agents/skills/unity-write-tests/references/car-survivors-test-harness.md and Assets/Scripts/Editor/Tests/TierConfigDrivenEnemySpawningTests.cs.
+  - C# compile verification: dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false, dotnet build CarSurvivors.Editor.csproj -p:BuildProjectReferences=false, dotnet build CarSurvivors.Editor.Tests.csproj -p:BuildProjectReferences=false, and dotnet build CarSurvivors.PlayMode.Tests.csproj -p:BuildProjectReferences=false.
+  - EditMode & PlayMode DI test harness patterns: see .agents/skills/unity-write-tests/references/car-survivors-test-harness.md, Assets/Scripts/Editor/Tests/TierConfigDrivenEnemySpawningTests.cs, Assets/Tests/PlayMode/PlayModeTestHarness.cs, and Assets/Tests/PlayMode/BootMainMenuGameplaySmokeTests.cs.
   - Unity Play Mode verification: test flow from Boot -> Main Menu -> Gameplay (Tier 1 -> Tier 2) -> Death/ThankYou/Pause reload to confirm container resolution and service injection.
 
 ## Integration Notes

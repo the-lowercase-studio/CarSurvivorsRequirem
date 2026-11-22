@@ -50,7 +50,7 @@ powershell -ExecutionPolicy Bypass -File .agents/scripts/verify-change.ps1 -File
 ```
 
 Wait for all six automated harness gates to pass or report permitted `PENDING`/`N/A`:
-1. **Compilation**: `Assembly-CSharp.csproj` and `Assembly-CSharp-Editor.csproj` build with 0 errors and 0 warnings.
+1. **Compilation**: active `.asmdef`-generated `.csproj` files (`DOTween.Modules.csproj`, `CarSurvivors.Runtime.csproj`, `CarSurvivors.Editor.csproj`, `CarSurvivors.Editor.Tests.csproj`, `CarSurvivors.PlayMode.Tests.csproj`) build with 0 errors and 0 warnings.
 2. **Standards & Architecture**: diff-aware .agents/scripts/check-architecture.ps1 and .agents/ documentation naming rules pass.
 3. **Conditional Tests**: if tests exist under Assets/ or `unity command test list` reports registered tests for the touched area, execute them and require 100% pass; otherwise record `N/A`.
 4. **Assets, .meta, Hygiene & Design-Doc Scope Guard**: all added/modified Assets/ files have valid `.meta` pairing, no orphaned `.meta` files exist, no forbidden/generated/scratch files are in scope, and no brainstorm or unimplemented plan `.md` files leaked into the commit scope.

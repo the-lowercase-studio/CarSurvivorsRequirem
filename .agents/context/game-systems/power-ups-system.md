@@ -139,9 +139,9 @@ It is not responsible for:
 - Core components:
   - PowerUpType: Enum defining Nuke = 0, FreezeTimer = 1, BubbleShield = 2, Armor = 3, and FireTails = 4. Values are append-only to keep serialized prefab data stable.
   - PowerUpTimer: Plain C# countdown helper tracking Duration, Remaining, and IsRunning in scaled time. Exposes Start(duration), Stop(), Tick(deltaTime) (returning true strictly on the frame the timer reaches zero), and IsInWindow(window).
-  - PowerUpCollectible: MonoBehaviour implementing IPowerUpCollectible and IPoolable. Serializes PowerUpType. On trigger contact with EntityLayers.Player, invokes OnCollected and ReturnToPool (raising OnCanBeReleased), and kills active transform tweens in OnRelease.
+  - PowerUpCollectible: MonoBehaviour implementing IPowerUpCollectible and IPoolable. Serializes PowerUpType and tracks _isCollected (reset in OnGet()). On trigger contact with EntityLayers.Player, invokes OnCollected and ReturnToPool (raising OnCanBeReleased) at most once per checkout, and kills active transform tweens in OnRelease.
   - NukeConfigSO: ScriptableObject configuring BossDamagePercent (default 15%), EnemyVisibilityPadding (1m), BossVisibilityPadding (4m), SnapshotCapacity (512), FlashInDuration (0.1s), BlastTotalDuration (3.0s), and DirtOverlayPeakAlpha (1.0). Validates finite bounds in ValidateConfiguration().
-  - NukeEffectService: Scene service that listens to ICollectibleDropNotifier.OnPowerUpCollected for PowerUpType.Nuke. Defers execution to the next Update frame via _isPendingExecution, computes camera frustum planes, suppresses enemy collectible drops via ICollectibleDropSuppressor, kills visible active enemies with TakeFullHpDamage(), deals percentage max-health damage to visible engaged bosses via IBossEncounterService.CollectEngagedBosses, and runs blast Volume and dirt overlay DOTween sequences.
+  - NukeEffectService: Scene service that listens to ICollectibleDropNotifier.OnPowerUpCollected for PowerUpType.Nuke. Defers execution to the next Update frame via _isPendingExecution, computes camera frustum planes, suppresses enemy collectible drops via ICollectibleDropSuppressor, kills visible active non-materializing enemies (!enemy.IsMaterializing) with TakeFullHpDamage(), deals percentage max-health damage to visible engaged bosses via IBossEncounterService.CollectEngagedBosses, and runs blast Volume and dirt overlay DOTween sequences.
   - FreezeTimerConfigSO: ScriptableObject configuring DurationSeconds (default 5s), FadeInDuration (0.25s), FadeOutDuration (0.5s), TweenBufferCapacity (256), and FrostOverlayPeakAlpha (1.0). Validates that FadeInDuration + FadeOutDuration <= DurationSeconds.
   - TimeFreezeService: Scene service implementing ITimeFreezeState. Listens for PowerUpType.FreezeTimer, manages freeze countdown via PowerUpTimer, tracks UnfrozenTime (Time.time minus accumulated and current frozen durations), pauses/resumes active DOTween tweens carrying TimeFreezeConstants.FREEZABLE_TWEEN_ID, raises OnFrozenChanged(bool), and drives cold post-processing Volume and frost ScreenOverlayPresenter fade-in/fade-out sequences.
   - TimeFreezeExtensions: Fluent DOTween extension AsFreezable<T>(this T tween) that assigns TimeFreezeConstants.FREEZABLE_TWEEN_ID (0x46525A31) via tween.SetId.
@@ -297,7 +297,8 @@ It is not responsible for:
   - PowerUpCollectible prefabs require a trigger Collider, a PowerUpCollectible component with _type set, and registration in EnemyDropHandler._dropEntries.
 - Testing implications:
   - Verify C# compilation:
-    dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
+    dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false
+    dotnet build CarSurvivors.Editor.Tests.csproj -p:BuildProjectReferences=false
   - In-game Dev Console commands for spawning power-ups ahead of the player:
     powerup <nuke|freeze|shield|armor|firetails|crate>
   - Play Mode verification checklist (editor-dependent checks; record as unverified unless run in Unity Editor):

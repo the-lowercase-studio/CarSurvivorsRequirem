@@ -28,6 +28,9 @@ It does not own grid coordinate generation or cell walkability logic (owned by G
   - Assets/Prefabs/Interactables/IncreaseDifficultyTotem.prefab
   - Assets/Prefabs/Interactables/GolemStatue.prefab
   - Assets/Prefabs/NextStagePortal.prefab
+- Automated tests:
+  - Assets/Scripts/Editor/Tests/IncreaseDifficultyTotemTests.cs
+  - Assets/Tests/PlayMode/BootMainMenuGameplaySmokeTests.cs
 - Related code:
   - Assets/Scripts/Navigation/GridSystem/GridManager.cs
   - Assets/Scripts/Spawners/Enemies/EnemiesSpawner.cs

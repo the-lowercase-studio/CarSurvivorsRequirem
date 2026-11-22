@@ -26,6 +26,12 @@ It is not responsible for enemy balance, choosing skill upgrades, score saving, 
   - Assets/Scripts/ReflexDI/ReflexPrefabInstantiator.cs
 - Editor tooling:
   - Assets/Scripts/Editor/GUI/LevelControllerEditor.cs
+- Automated tests:
+  - Assets/Scripts/Editor/Tests/LevelControllerTests.cs
+  - Assets/Scripts/Editor/Tests/ExpParticleTests.cs
+  - Assets/Scripts/Editor/Tests/ExpParticleSpawnerTests.cs
+  - Assets/Scripts/Editor/Tests/PlayerLevelPresenterTests.cs
+  - Assets/Tests/PlayMode/LevelAndExpPlayModeTests.cs
 - Related docs:
   - .agents/context/game-systems/game-flow-system.md
   - .agents/context/game-systems/skills-system.md
@@ -43,12 +49,12 @@ It is not responsible for enemy balance, choosing skill upgrades, score saving, 
 ## Architecture and Data Flow
 
 - Core components:
-  - LevelData is an immutable value struct containing Lvl, Exp, and MaxExp.
+  - LevelData is an immutable value struct containing Lvl (default 1 in constructor), Exp, and MaxExp.
   - ILevelController exposes current LevelData, OnExpChange, OnLvlUp, and AddExp(float value).
-  - LevelController is a player-attached MonoBehaviour that owns level state, injects IRunSessionService to restore saved (Lvl, Exp) on multi-tier scene loads, and reads max exp from _expCurve.
-  - ExpParticleSpawner queues world-space exp spawns, splits them by configured threshold/divider data, and uses a Unity ObjectPool<ExpParticle> whose createFunc instantiates and injects particles before Awake()/OnEnable() via ReflexPrefabInstantiator.InstantiateInjectedObject (using a reusable inactive staging parent created in Awake() and destroyed in OnDestroy()).
-  - ExpParticle moves along the flow field, detects the player trigger layer, plays collection audio and shrink tween, then awards exp through IPlayerManager.LevelController.
-  - PlayerLevelPresenter initializes slider values and level text in Start(), animates exp slider and level text changes, unsubscribes from LevelController events in OnDestroy(), and raises OnExpSliderVisualEndValueReached with the reached LevelData.
+  - LevelController is a player-attached MonoBehaviour that owns level state (initializing LevelData with lvl: 1), injects IRunSessionService to restore saved (Lvl, Exp) on multi-tier scene loads, reads max exp from _expCurve, and ignores non-positive, NaN, or infinite values in AddExp(float value).
+  - ExpParticleSpawner queues world-space exp spawns, splits total exp across spawned particles via expPart = exp / expTresholdDevider.Divider, exposes public DrainQueuedSpawns() (invoking SpawnParticlesBasedOnExpAmount()), and uses a Unity ObjectPool<ExpParticle> whose createFunc instantiates and injects particles before Awake()/OnEnable() via ReflexPrefabInstantiator.InstantiateInjectedObject (using a reusable inactive staging parent created in Awake() and destroyed in OnDestroy() via DestroyImmediate in EditMode / Destroy in Play Mode).
+  - ExpParticle captures initial _startScale in Awake() (for pre-Start() OnRelease() safety) and again in Start(), moves along the flow field when not collecting, detects the player trigger layer, plays collection audio and shrinks linearly toward Vector3.zero via public AdvanceCollection(float deltaTime) (called by Update(Time.deltaTime)), then awards _expAmount through IPlayerManager.LevelController.
+  - PlayerLevelPresenter initializes slider values (setting _expSlider.maxValue before _expSlider.value so restored mid-run EXP is not clamped to 1 on frame 0) and level text in Start(), animates exp slider and level text changes, supports FastForward() to drain queued transitions, unsubscribes from LevelController events in OnDestroy(), and raises OnExpSliderVisualEndValueReached with the reached LevelData.
 - Key interfaces:
   - ILevelController is owned by LevelController and reached through IPlayerManager.
   - IInWorldSpaceSpawner<ExpParticleSpawner, float> is bound in DefaultGameplaySceneInstaller for enemy and boss death exp spawning.
@@ -56,7 +62,7 @@ It is not responsible for enemy balance, choosing skill upgrades, score saving, 
 - Runtime flow:
   1. PlayerManager.Awake gets the player ILevelController from the same GameObject.
   2. LevelController.Awake checks IRunSessionService.TryGetRestoredLevel(out byte restoredLevel, out float restoredExp); if a tier transition snapshot exists, it restores Lvl = Mathf.Max(1, restoredLevel), Exp = Mathf.Max(0f, restoredExp), and MaxExp = _expCurve.Evaluate(safeLevel); otherwise it initializes Lvl = 1, Exp = 0, and MaxExp = _expCurve.Evaluate(1).
-  3. PlayerLevelPresenter.Start reads _playerLevelController.LevelData, sets _expSlider.value and _expSlider.maxValue, and immediately calls UpdateLevelText() so restored levels display on frame 0.
+  3. PlayerLevelPresenter.Start reads _playerLevelController.LevelData, sets _expSlider.maxValue and then _expSlider.value, and immediately calls UpdateLevelText() so restored levels display on frame 0 without clamping.
   4. EnemyDeathHandler, BarrelEnemyDeathHandler, GolemBoss, and TowerBossBase receive Health.OnNoHealth, play death feedback, and call _expParticleSpawner.Spawn(transform.position, expForKill).
   5. ExpParticleSpawner periodically drains queued spawns and gets particles from its pool (instantiated and injected via ReflexPrefabInstantiator).
   6. Each spawned ExpParticle moves on the flow-field grid until it enters the player layer trigger.
@@ -97,8 +103,9 @@ It is not responsible for enemy balance, choosing skill upgrades, score saving, 
   - ExpParticleSpawner requires an injected Reflex Container, an exp particle prefab, parent transform, threshold divider data, and world-space spawn configuration.
   - DefaultGameplaySceneInstaller binds ExpParticleSpawner as IInWorldSpaceSpawner<ExpParticleSpawner, float> and PlayerLevelPresenter as IPlayerLevelPresenter.
 - Testing implications:
-  - Unit or edit-mode tests around LevelController.AddExp and tier restoration should cover exact-threshold exp, multiple level-ups in one call, exp carryover, final OnExpChange, byte.MaxValue cap, and IRunSessionService level/exp restoration.
-  - Play-mode validation is needed for particle trigger collection, flow-field movement, audio/tween release timing, pooled object reuse, and UI skill-upgrade timing.
+  - Compile after C# edits with `dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false`, `dotnet build CarSurvivors.Editor.Tests.csproj -p:BuildProjectReferences=false`, and `dotnet build CarSurvivors.PlayMode.Tests.csproj -p:BuildProjectReferences=false`.
+  - Automated EditMode tests in Assets/Scripts/Editor/Tests/LevelControllerTests.cs, ExpParticleTests.cs, ExpParticleSpawnerTests.cs, and PlayerLevelPresenterTests.cs cover exact-threshold exp, multiple level-ups in one call, exp carryover, final OnExpChange, byte.MaxValue cap, invalid AddExp input guards, IRunSessionService level/exp restoration, divided expPart conservation, AdvanceCollection shrink progression, and PlayerLevelPresenter frame-0 slider initialization and FastForward queueing.
+  - Automated PlayMode tests in Assets/Tests/PlayMode/LevelAndExpPlayModeTests.cs cover live InvokeRepeating queue draining, flow-field attraction, trigger collection shrink-to-payout, and coroutine multi-level-up UI transitions.
 
 ## Integration Notes
 
@@ -107,7 +114,7 @@ It is not responsible for enemy balance, choosing skill upgrades, score saving, 
   - Enemy and boss exp values come from EnemyConfigSO.ExpForKill, GolemBossConfigSO.ExpForKill, and TowerBossConfigSO.ExpReward.
   - Exp particle movement depends on the flow-field movement controller and grid target behavior.
   - Player detection depends on EntityLayers.Player.
-  - Collection uses TransformTweenExtensions.LifeEndingShrinkToZeroTween and IAudioClipPlayer.
+  - Collection uses linear scale interpolation in ExpParticle.AdvanceCollection and IAudioClipPlayer.
 - Downstream consumers:
   - PlayerLevelPresenter consumes level events for slider and level text animation.
   - SkillUpgradePresenter consumes IPlayerLevelPresenter.OnExpSliderVisualEndValueReached to trigger level-based skill reward queueing through ISkillUpgradeFlow.
@@ -122,12 +129,8 @@ It is not responsible for enemy balance, choosing skill upgrades, score saving, 
 ## Known Risks and Open Questions
 
 - Known limitations:
-  - ExpParticleSpawner.SpawnParticlesBasedOnExpAmount calculates expPart = exp / expTresholdDevider.Divider but passes the original exp value into each spawned particle. If the divider is intended to split total exp across multiple particles, current behavior multiplies awarded exp.
-  - Threshold/divider arrays are assumed to contain at least one usable entry. Empty arrays log an error in Awake().
-  - ExpParticle.CollectExp subscribes anonymous handlers to OnAudioClipFinished; repeated collection/reuse should be reviewed if audio callback behavior changes.
+  - Threshold/divider arrays are assumed to contain at least one usable entry. Empty arrays log an error in Awake() or SetSizeAndMaterialBasedOnExpAmount and return early.
 - Open design questions:
-  - Should exp particle divider data split a kill's exp across particles, or should every particle intentionally carry the full enemy exp value?
   - Should skill-upgrade selection remain tied to the slider animation endpoint and _newSkillLevelInterval, or should a separate level-up gameplay event drive rewards?
 - Suggested follow-up tasks:
-  - Add focused EditMode tests for LevelController.AddExp event ordering, multi-level carryover, and IRunSessionService restoration.
-  - Review ExpParticleSpawner divider behavior with the designer before changing runtime exp awards.
+  - Monitor high-count EXP particle bursts during late-tier swarms to ensure threshold dividers keep active particle counts well below pool ceilings.

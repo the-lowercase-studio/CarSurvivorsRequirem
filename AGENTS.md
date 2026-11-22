@@ -180,10 +180,10 @@ For every non-trivial task, feature, or refactor, follow this two-phase reposito
 
 ## Validation
 
-For C# changes, prefer a targeted project compile:
+For C# changes, compile the affected `.asmdef`-generated projects (`CarSurvivors.Runtime.csproj`, `CarSurvivors.Editor.csproj`, `CarSurvivors.Editor.Tests.csproj`, `CarSurvivors.PlayMode.Tests.csproj`):
 
 ```powershell
-dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
+dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false
 ```
 
 For full automated pre-commit harness validation (compilation, diff-aware architecture checks, conditional tests, `.meta`/`.gitignore` hygiene, live Unity Editor checks, and `CSR-<number>` branch/prefix validation):

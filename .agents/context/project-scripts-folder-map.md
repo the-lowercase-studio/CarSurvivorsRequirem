@@ -326,7 +326,7 @@ Extract here when code controls enemy wave schedules, wave transitions, or wave-
 3. Check Reflex installers in Assets/Scripts/ReflexDI/ for bound concrete types and interfaces.
 4. Preserve serialized field names and public API compatibility unless the user approves a breaking change.
 5. Move files through Unity Editor when `.meta` GUID preservation matters.
-6. Run `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false` after C# moves or namespace changes.
+6. Run `dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false` (and affected `CarSurvivors.Editor*.csproj` / `CarSurvivors.PlayMode.Tests.csproj`) after C# moves or namespace changes.
 7. Perform Unity Editor checks for prefab, scene, inspector, audio, VFX, and UI wiring after any physical file move.
 
 ## When To Ask The User

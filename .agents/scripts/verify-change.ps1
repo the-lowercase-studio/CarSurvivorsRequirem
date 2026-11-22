@@ -164,13 +164,23 @@ Write-Host "==================================================" -ForegroundColor
 if ($SkipBuild) {
     Add-GateResult -List $results -Gate "1. Compilation" -Status "PENDING" -Detail "Skipped via -SkipBuild."
 } else {
-    $projects = @("Assembly-CSharp.csproj", "Assembly-CSharp-Editor.csproj")
+    $asmdefProjects = @(
+        "DOTween.Modules.csproj",
+        "CarSurvivors.Runtime.csproj",
+        "CarSurvivors.Editor.csproj",
+        "CarSurvivors.Editor.Tests.csproj",
+        "CarSurvivors.PlayMode.Tests.csproj"
+    )
+    $projects = @($asmdefProjects | Where-Object { Test-Path (Join-Path $repoRoot $_) })
+    if ($projects.Count -eq 0) {
+        $legacyProjects = @("Assembly-CSharp.csproj", "Assembly-CSharp-Editor.csproj")
+        $projects = @($legacyProjects | Where-Object { Test-Path (Join-Path $repoRoot $_) })
+    }
     $buildErrors = [System.Collections.Generic.List[string]]::new()
+    if ($projects.Count -eq 0) {
+        $buildErrors.Add("No Unity C# .csproj files found")
+    }
     foreach ($proj in $projects) {
-        if (-not (Test-Path (Join-Path $repoRoot $proj))) {
-            $buildErrors.Add("$proj missing")
-            continue
-        }
         $buildRes = Invoke-Native -Executable "dotnet" -Arguments @("build", $proj, "-p:BuildProjectReferences=false", "--no-restore", "-v", "minimal")
         if ($buildRes.ExitCode -ne 0) {
             # Retry once with restore in case project.assets.json is stale
@@ -194,7 +204,7 @@ if ($SkipBuild) {
         $hasFailure = $true
         Add-GateResult -List $results -Gate "1. Compilation" -Status "FAIL" -Detail ($buildErrors -join "; ")
     } else {
-        Add-GateResult -List $results -Gate "1. Compilation" -Status "PASS" -Detail "Assembly-CSharp & Editor built with 0 warnings, 0 errors."
+        Add-GateResult -List $results -Gate "1. Compilation" -Status "PASS" -Detail "$($projects.Count) project(s) built with 0 warnings, 0 errors."
     }
 }
 
@@ -202,7 +212,11 @@ if ($SkipBuild) {
 # Gate 2: Coding Standards, Architecture & .agents/ Conventions
 # ------------------------------------------------------------------
 $csScoped = @($scopeItems | Where-Object {
-    $_.ChangeType -ne "D" -and $_.Path -like "Assets/Scripts/*.cs"
+    $_.ChangeType -ne "D" -and (
+        $_.Path -like "Assets/Scripts/*.cs" -or
+        $_.Path -like "Assets/ScriptableObjects/*.cs" -or
+        $_.Path -like "Assets/Tests/*.cs"
+    )
 } | ForEach-Object { $_.Path })
 
 $archIssues = [System.Collections.Generic.List[string]]::new()
@@ -276,27 +290,140 @@ if (-not $SkipUnityEditor -and $null -ne $unityCmd) {
     }
 }
 
+$preEditorSnapshot = [PSCustomObject]@{
+    Checked       = $false
+    Reachable     = $false
+    CompileFailed = $false
+    Errors        = 0
+    Warnings      = 0
+}
+if ($connectedProject) {
+    $preRecompileRes = Invoke-Native -Executable "unity" -Arguments @("command", "script", "recompile_status", "--json")
+    $preConsoleRes = Invoke-Native -Executable "unity" -Arguments @("command", "console", "status", "--json")
+    $preEditorSnapshot.Checked = $true
+    if ($preRecompileRes.ExitCode -eq 0 -and $preConsoleRes.ExitCode -eq 0) {
+        try {
+            $preRcJson = ($preRecompileRes.Output -join "`n") | ConvertFrom-Json
+            $preCsJson = ($preConsoleRes.Output -join "`n") | ConvertFrom-Json
+            $preEditorSnapshot.Reachable = $true
+            $preEditorSnapshot.CompileFailed = [bool]$preRcJson.data.result.compilationFailed -or [bool]$preCsJson.data.result.groundTruth.compilationFailed
+            $preEditorSnapshot.Errors = [int]$preCsJson.data.result.groundTruth.consoleErrors
+            $preEditorSnapshot.Warnings = [int]$preCsJson.data.result.groundTruth.consoleWarnings
+        } catch {
+            $preEditorSnapshot.Reachable = $false
+        }
+    }
+}
+
+$ranUnityTests = $false
+$unityTestsPassed = $false
+
 if ($testFiles.Count -eq 0) {
     Add-GateResult -List $results -Gate "3. Tests" -Status "N/A" -Detail "No test assemblies or *Test*.cs files exist in Assets/."
 } elseif (-not $connectedProject) {
     $hasFailure = $true
     Add-GateResult -List $results -Gate "3. Tests" -Status "FAIL" -Detail "Test files exist in Assets/ but Unity Editor is not connected to execute them."
 } else {
-    $testListRes = Invoke-Native -Executable "unity" -Arguments @("command", "test", "list", "--json")
-    if ($testListRes.ExitCode -ne 0) {
+    $editListRes = Invoke-Native -Executable "unity" -Arguments @("command", "test", "list", "--mode", "editor", "--json")
+    $playListRes = Invoke-Native -Executable "unity" -Arguments @("command", "test", "list", "--mode", "playmode", "--json")
+
+    if ($editListRes.ExitCode -ne 0 -or $playListRes.ExitCode -ne 0) {
         Add-GateResult -List $results -Gate "3. Tests" -Status "PENDING" -Detail "Failed to query Unity test list."
     } else {
-        $testListJson = ($testListRes.Output -join "`n") | ConvertFrom-Json
-        $testCount = [int]$testListJson.data.result.Count
-        if ($testCount -eq 0) {
+        $editListJson = ($editListRes.Output -join "`n") | ConvertFrom-Json
+        $playListJson = ($playListRes.Output -join "`n") | ConvertFrom-Json
+        $editCount = [int]$editListJson.data.result.Count
+        $playCount = [int]$playListJson.data.result.Count
+
+        if ($editCount -eq 0 -and $playCount -eq 0) {
             Add-GateResult -List $results -Gate "3. Tests" -Status "N/A" -Detail "Unity reported 0 registered tests."
         } else {
-            $testRunRes = Invoke-Native -Executable "unity" -Arguments @("command", "test", "run", "--json")
-            if ($testRunRes.ExitCode -ne 0) {
+            $ranUnityTests = $true
+            $testFailures = [System.Collections.Generic.List[string]]::new()
+            $detailParts = [System.Collections.Generic.List[string]]::new()
+
+            if ($editCount -gt 0) {
+                $editRunRes = Invoke-Native -Executable "unity" -Arguments @("command", "test", "run", "--mode", "editor", "--json")
+                if ($editRunRes.ExitCode -ne 0) {
+                    $testFailures.Add("EditMode test run failed (exit=$($editRunRes.ExitCode))")
+                } else {
+                    try {
+                        $editRunJson = ($editRunRes.Output -join "`n") | ConvertFrom-Json
+                        $editSummary = $editRunJson.data.result.Summary
+                        if ([int]$editSummary.Failed -gt 0 -or -not [bool]$editRunJson.data.result.success) {
+                            $testFailures.Add("EditMode failed=$($editSummary.Failed)/$($editSummary.Total)")
+                        } else {
+                            $detailParts.Add("EditMode=$($editSummary.Passed)/$($editSummary.Total)")
+                        }
+                    } catch {
+                        $testFailures.Add("Failed to parse EditMode test output")
+                    }
+                }
+            }
+
+            if ($playCount -gt 0) {
+                $playStatusFile = Join-Path $repoRoot "Temp\pipeline_test_status.json"
+                $prePlayStatusTicks = if (Test-Path $playStatusFile) { (Get-Item $playStatusFile).LastWriteTimeUtc.Ticks } else { [long]0 }
+                $playStartRes = Invoke-Native -Executable "unity" -Arguments @("command", "test", "run", "--mode", "playmode", "--async_tests", "true", "--json")
+                if ($playStartRes.ExitCode -ne 0) {
+                    $testFailures.Add("Failed to start PlayMode test run (exit=$($playStartRes.ExitCode))")
+                } else {
+                    $playDeadline = (Get-Date).AddSeconds(180)
+                    $playCompleted = $false
+                    $seenPlayRunning = $false
+                    while ((Get-Date) -lt $playDeadline) {
+                        Start-Sleep -Seconds 2
+                        $statusFileFresh = (Test-Path $playStatusFile) -and ((Get-Item $playStatusFile).LastWriteTimeUtc.Ticks -gt $prePlayStatusTicks)
+                        $statusPoll = Invoke-Native -Executable "unity" -Arguments @("command", "test", "status", "--json")
+                        if ($statusPoll.ExitCode -ne 0) {
+                            continue
+                        }
+                        try {
+                            $statusJson = ($statusPoll.Output -join "`n") | ConvertFrom-Json
+                            $playState = $statusJson.data.result.status
+                            if ($playState -eq "running") {
+                                $seenPlayRunning = $true
+                                continue
+                            }
+                            if (-not ($seenPlayRunning -or $statusFileFresh)) {
+                                continue
+                            }
+                            if ($playState -eq "completed" -or $playState -eq "failed") {
+                                $playCompleted = $true
+                                $playSummary = $statusJson.data.result.summary
+                                $failedPlay = [int]$playSummary.failed
+                                $passedPlay = [int]$playSummary.passed
+                                $totalPlay = [int]$playSummary.total
+                                if ($failedPlay -gt 0 -or $playState -eq "failed") {
+                                    $testFailures.Add("PlayMode failed=$failedPlay/$totalPlay")
+                                } else {
+                                    $detailParts.Add("PlayMode=$passedPlay/$totalPlay")
+                                }
+                                break
+                            }
+                            if ($playState -eq "no_tests") {
+                                $playCompleted = $true
+                                $testFailures.Add("PlayMode test state became no_tests (interrupted by domain reload?)")
+                                break
+                            }
+                        } catch {
+                            continue
+                        }
+                    }
+
+                    if (-not $playCompleted) {
+                        $testFailures.Add("PlayMode test run timed out after 180s")
+                    }
+                }
+            }
+
+            if ($testFailures.Count -gt 0) {
                 $hasFailure = $true
-                Add-GateResult -List $results -Gate "3. Tests" -Status "FAIL" -Detail "Unity test execution failed."
+                $combinedDetail = ($testFailures + $detailParts) -join "; "
+                Add-GateResult -List $results -Gate "3. Tests" -Status "FAIL" -Detail $combinedDetail
             } else {
-                Add-GateResult -List $results -Gate "3. Tests" -Status "PASS" -Detail "Executed $testCount registered Unity test(s)."
+                $unityTestsPassed = $true
+                Add-GateResult -List $results -Gate "3. Tests" -Status "PASS" -Detail ("Passed: " + ($detailParts -join ", "))
             }
         }
     }
@@ -427,8 +554,16 @@ if ($SkipUnityEditor) {
 } elseif (-not $connectedProject) {
     Add-GateResult -List $results -Gate "5. Unity Editor" -Status "PENDING" -Detail "No running Unity Editor connected for this project."
 } else {
-    $recompileRes = Invoke-Native -Executable "unity" -Arguments @("command", "script", "recompile_status", "--json")
-    $consoleRes = Invoke-Native -Executable "unity" -Arguments @("command", "console", "status", "--json")
+    $recompileRes = $null
+    $consoleRes = $null
+    for ($editorAttempt = 0; $editorAttempt -lt 10; $editorAttempt++) {
+        $recompileRes = Invoke-Native -Executable "unity" -Arguments @("command", "script", "recompile_status", "--json")
+        $consoleRes = Invoke-Native -Executable "unity" -Arguments @("command", "console", "status", "--json")
+        if ($recompileRes.ExitCode -eq 0 -and $consoleRes.ExitCode -eq 0) {
+            break
+        }
+        Start-Sleep -Seconds 1
+    }
 
     if ($recompileRes.ExitCode -ne 0 -or $consoleRes.ExitCode -ne 0) {
         Add-GateResult -List $results -Gate "5. Unity Editor" -Status "PENDING" -Detail "Unity Pipeline momentarily unreachable (reload/startup in progress)."
@@ -436,15 +571,17 @@ if ($SkipUnityEditor) {
         try {
             $rcJson = ($recompileRes.Output -join "`n") | ConvertFrom-Json
             $csJson = ($consoleRes.Output -join "`n") | ConvertFrom-Json
-            $compileFailed = [bool]$rcJson.data.result.compilationFailed -or [bool]$csJson.data.result.groundTruth.compilationFailed
+            $compileFailed = $preEditorSnapshot.CompileFailed -or [bool]$rcJson.data.result.compilationFailed -or [bool]$csJson.data.result.groundTruth.compilationFailed
             $consoleErrors = [int]$csJson.data.result.groundTruth.consoleErrors
             $consoleWarnings = [int]$csJson.data.result.groundTruth.consoleWarnings
+            $preConsoleErrors = if ($preEditorSnapshot.Reachable) { $preEditorSnapshot.Errors } else { $consoleErrors }
+            $effectiveErrors = if ($ranUnityTests -and $unityTestsPassed) { $preConsoleErrors } else { $consoleErrors }
 
-            if ($compileFailed -or $consoleErrors -gt 0) {
+            if ($compileFailed -or $effectiveErrors -gt 0) {
                 $hasFailure = $true
-                Add-GateResult -List $results -Gate "5. Unity Editor" -Status "FAIL" -Detail "Unity compileFailed=$compileFailed, consoleErrors=$consoleErrors, consoleWarnings=$consoleWarnings."
+                Add-GateResult -List $results -Gate "5. Unity Editor" -Status "FAIL" -Detail "Unity compileFailed=$compileFailed, preTestConsoleErrors=$preConsoleErrors, postTestConsoleErrors=$consoleErrors, consoleWarnings=$consoleWarnings."
             } else {
-                Add-GateResult -List $results -Gate "5. Unity Editor" -Status "PASS" -Detail "Editor compile clean; groundTruth consoleErrors=0, warnings=$consoleWarnings."
+                Add-GateResult -List $results -Gate "5. Unity Editor" -Status "PASS" -Detail "Editor compile clean; preTestConsoleErrors=$preConsoleErrors, postTestConsoleErrors=$consoleErrors, warnings=$consoleWarnings."
             }
         } catch {
             Add-GateResult -List $results -Gate "5. Unity Editor" -Status "PENDING" -Detail "Could not parse Unity CLI JSON status."

@@ -68,7 +68,7 @@ It does not own enemy AI, wave pacing, scoreboard persistence, power-up timers/h
 - Key interfaces:
   - IPlayerManager: Aggregate contract exposing IHealth Health, GameObject GameObject, ICarController CarController, ICarVfxEffectsController CarVfxEffectsController, ILevelController LevelController, ISkillsRegistry SkillsRegistry, IAudioClipPlayer AudioClipPlayer, and IPlayerDamagedHandler DamagedHandler. Colocated in Assets/Scripts/Player/PlayerManager.cs.
   - IPlayerDamagedHandler: Colocated in Assets/Scripts/Player/PlayerDamagedHandler.cs. Exposes SetPortalTransitionInvulnerable(bool isInvulnerable).
-  - ICarController: Colocated in Assets/Scripts/Player/Car/CarController.cs. Exposes OnBrakePress, OnBrakeRelease, OnDriftStart, OnDriftStop, OnDriftDirectionChanged, GetMovementSpeed(), GetMovementVelocity(), MaxForwardSpeed, MaxOverallSpeed, IsDrifting, DriftDirection (-1 Left, 1 Right, 0 None), DriftYawAngle, IsGrounded, CurrentSteerInput, and TryGetTireGroundContact(Vector3 worldCandidate, out RaycastHit groundHit).
+  - ICarController: Colocated in Assets/Scripts/Player/Car/CarController.cs. Exposes OnBrakePress, OnBrakeRelease, OnDriftStop, GetMovementSpeed(), GetMovementVelocity(), MaxForwardSpeed, MaxOverallSpeed, IsDrifting, DriftDirection (-1 Left, 1 Right, 0 None), DriftYawAngle, IsGrounded, CurrentSteerInput, and TryGetTireGroundContact(Vector3 worldCandidate, out RaycastHit groundHit).
   - ICarVfxEffectsController: Colocated in Assets/Scripts/Player/Car/CarVfxEffectsController.cs. Exposes RearDriftEmitterCount, TryGetRearDriftEmitterWorldCandidate(int emitterIndex, out Vector3 worldCandidate), ConfigureFireTailsTimings(float trailLifetime, float trailFadeTime), SetFireTailsActive(bool isActive), and SetFireTailsFrozen(bool isFrozen).
 - Centralized constants:
   - CarControlConstants (Assets/Scripts/Player/Constants/CarControlConstants.cs):
@@ -135,7 +135,7 @@ It does not own enemy AI, wave pacing, scoreboard persistence, power-up timers/h
 
 - Safe extension areas:
   - Expose additional player stats or vehicle controllers by expanding IPlayerManager and caching in PlayerManager.Awake.
-  - Add visual cues or overlays by subscribing to OnHealthChanged, OnLvlUp, OnBrakePress, or OnDriftDirectionChanged.
+  - Add visual cues or overlays by subscribing to OnHealthChanged, OnLvlUp, OnBrakePress, or OnDriftStop.
   - Tune max speed, acceleration, braking, turn rate, grip values, drift thresholds, and raycast suspension via serialized Inspector fields on CarController.
   - Tune tire skid mark darkness in Assets/Materials/TireTrack.mat (_BaseColor, _DarknessIntensity, _MinDarkness) or Fire Tails ribbon glow and noise flow in Assets/Materials/FireTailsTrail.mat (_CoreColor, _OuterColor, _FlowSpeed, _NoiseTiling, _EmissionBoost, _DissolveSoftness).
   - Re-wire Fire Tails trail renderers and particle systems on Assets/Prefabs/Player/Player.prefab via Tools/Fire Tails/Wire All Fire Tails in Assets/Scripts/Editor/Tools/FireTailsWiringTool.cs.
@@ -144,7 +144,7 @@ It does not own enemy AI, wave pacing, scoreboard persistence, power-up timers/h
   - CarController requires a Rigidbody component and an assigned _groundLayerMask.
   - DOTween is used for visual effects like scale shake on damage.
 - Testing implications:
-  - Compile after C# changes via dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false.
+  - Compile after C# changes via dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false.
   - EditMode tests in Assets/Scripts/Editor/Tests/ArmorPowerUpAndDamagePipelineTests.cs and Assets/Scripts/Editor/Tests/HealthAssetsIntegrityTests.cs verify the PlayerDamagedHandler priority pipeline (portal invulnerability -> Bubble Shield -> Armor -> godmode 1 HP floor -> Health).
   - Play-test driving feel, ground snapping, drift entry/exit, multiply-blended skid marks on asphalt, Fire Tails ribbon/particle switching during drift, damage absorption (Bubble Shield -> Armor -> Health), scale shake, and death UI transitions in the Unity Editor.
 

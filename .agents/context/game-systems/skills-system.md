@@ -54,6 +54,13 @@ It is not responsible for:
   - Assets/Scripts/Editor/Tests/SkillConfigRuntimeTests.cs
   - Assets/Scripts/Editor/Tests/SkillUpgradeFlowTests.cs
   - Assets/Scripts/Editor/Tests/SkillsTierCarryoverTests.cs
+  - Assets/Scripts/Editor/Tests/SkillsCoreInfrastructureTests.cs
+  - Assets/Scripts/Editor/Tests/MinigunCombatTests.cs
+  - Assets/Scripts/Editor/Tests/SawAndLandmineCombatTests.cs
+  - Assets/Scripts/Editor/Tests/LasergunTurretTests.cs
+  - Assets/Scripts/Editor/Tests/SkillsUITests.cs
+  - Assets/Scripts/Editor/Tests/SkillAssetsIntegrityTests.cs
+  - Assets/Tests/PlayMode/EnemiesAndCombatPlayModeTests.cs
   - Assets/Scripts/Indicators/RectangularTelegraphIndicator.cs
   - Assets/Shaders/HolographicIndicator.shader
 - Related docs:
@@ -134,19 +141,19 @@ It is not responsible for:
 - Concrete player skills:
   - SawSkill / SawBlade:
     - SawSkill initializes child SawBlade components using ItemsWithScriptableConfigsActivator. The authored blade is active immediately; saw count is fixed at 1 (blade count stat retired). Supported runtime stats are KnockbackRange and Damage.
-    - SawBlade rotates around the car using XYZRotationLoop. In UpdateRotationSpeedMultiplier, it queries ICarController to dynamically ramp spin speed during steering or drifting (steer intensity floor of 0.85 when drifting, smooth interpolation via _spinRampSpeed).
-    - Handles both OnTriggerEnter and OnTriggerStay via unified ProcessEnemyCollision logic, forwarding other.ClosestPoint(transform.position) to EntityManipulationHelper.Damage so multi-collider bosses (such as RailgunTowerBoss legs) anchor damage numbers at the struck point.
+    - SawBlade rotates around the car using XYZRotationLoop. Update() delegates to public StepFrame(float currentTime, float deltaTime), which queries ICarController in UpdateRotationSpeedMultiplier to dynamically ramp spin speed during steering or drifting (steer intensity floor of 0.85 when drifting, smooth interpolation via _spinRampSpeed) and purges stale hit cooldowns.
+    - Handles both OnTriggerEnter and OnTriggerStay via public ProcessEnemyCollisionAtTime(Collider other, float currentTime), forwarding other.ClosestPoint(transform.position) to EntityManipulationHelper.Damage so multi-collider bosses (such as RailgunTowerBoss legs) anchor damage numbers at the struck point.
     - Employs zero-allocation per-enemy attack cooldown tracking via _lastHitTimesByCollider dictionary against _config.AttackCooldown (default 0.14f fallback), purged every 3.0 seconds (SkillConstants.SAW_COOLDOWN_PURGE_INTERVAL) for entries older than 2.0 seconds using _staleCollidersCache.
     - Applies bounded knockback: base distance equals SkillConstants.DEFAULT_COLLISION_KNOCKBACK * knockbackStat, multiplied by 1.0 + (SkillConstants.SAW_KNOCKBACK_SPEED_FACTOR * speedRatio), clamped strictly between SkillConstants.SAW_MIN_KNOCKBACK_DISTANCE (1.2m) and SkillConstants.SAW_MAX_KNOCKBACK_DISTANCE (3.5m).
-    - Snappy dynamic arrival duration clamped between SkillConstants.SAW_MIN_KNOCKBACK_DURATION (0.12s) and SkillConstants.SAW_MAX_KNOCKBACK_DURATION (0.22s).
+    - Maps arrival duration linearly across SkillConstants.SAW_MIN_KNOCKBACK_DURATION (0.12s) and SkillConstants.SAW_MAX_KNOCKBACK_DURATION (0.22s) using Mathf.InverseLerp(SAW_MIN_KNOCKBACK_DISTANCE, SAW_MAX_KNOCKBACK_DISTANCE, knockbackDistance) and Mathf.Lerp.
     - Knockback impulse vector is normalized strictly on the XZ plane (transform.forward with y = 0f, falling back to Vector3.forward).
   - MinigunSkill / MinigunTurret:
-    - MinigunSkill initializes typed turrets up to NumberOfTurrets. One LateUpdate applies all lane poses before firing at most one instant volley per scaled frame interval. Acquisition marks the first shot pending until the first unpaused presentation update.
+    - MinigunSkill initializes typed turrets up to NumberOfTurrets. LateUpdate() delegates to public AdvanceVolleyTimer(float scaledTime, float deltaTime), which applies all lane poses before firing at most one instant volley per scaled frame interval while player IHealth is alive. Acquisition marks the first shot pending until the first unpaused presentation update.
     - MinigunTurret oscillates its visual horizontally using a mathematical cosine wave (Mathf.Cos(Time.time * Mathf.PI / _config.RotationDuration), with _inverseRotation support) to eliminate runtime tween allocations.
     - Firing presentation uses a persistent ground telegraph lane indicator (RectangularTelegraphIndicator with glowing border-only shader, transparent interior discarding fragments to prevent ground obscuration or shimmering).
     - Shot resolution uses MinigunShotResolver with thin oriented box overlap/sweep queries, orders and deduplicates living damageable owners, and captures at most 1 + Piercing targets. Impassable terrain (TerrainLayers.Impassable) always stops the corridor immediately. Full 64-entry buffers retry preallocated 2048-entry storage; saturated overflow rejects damage.
     - Visual bullet presentation uses a ballistic tracer particle stream (_tracerParticleSystem) traveling at _tracerSpeed (default 70 m/s). Tracers terminate precisely at the obstacle or enemy that exhausts the shot budget.
-    - Impact delivery uses a zero-allocation circular buffer of PendingHit structures (capacity 64, MinigunConstants.MAX_PENDING_HITS). Point-blank hits (<0.2m) apply damage (forwarding impactPosition to EntityManipulationHelper.Damage for positional damageable targets) and impact sparks immediately; distant hits and terrain endpoints are scheduled with delay distance / _tracerSpeed and executed during UpdatePresentation. Target liveness is re-verified defensively before applying delayed damage.
+    - Impact delivery uses a zero-allocation circular buffer of PendingHit structures (capacity 64, MinigunConstants.MAX_PENDING_HITS). In ScheduleOrApplyShotHits, point-blank evaluation (hit.Distance < MinigunConstants.MIN_TRACER_SPAWN_DISTANCE, 0.2m) is checked per MinigunTargetHit rather than against total result.Distance, so point-blank targets receive damage (forwarding impactPosition to EntityManipulationHelper.Damage for positional damageable targets) and impact sparks immediately even when Piercing > 0 extends the corridor; distant hits and terrain endpoints are scheduled with delay hit.Distance / _tracerSpeed and executed during UpdatePresentation. Target liveness is re-verified defensively before applying delayed damage.
     - Legacy binary LineRenderer shot beam was completely removed to eliminate rapid screen strobe clutter during high fire-rate shooting.
   - LasergunSkill / LasergunTurret:
     - LasergunSkill initializes LasergunTurret instances up to NumberOfTurrets, propagates NumberOfTargets updates event-driven to all turrets, and drives firing via a scaled-time elapsed timer in Update() (AdvanceFireTimer(float deltaTime)) that reads live _config.DelayBetweenShoots.Value every frame so fire-rate upgrades take effect immediately without restarting a coroutine. LasergunSkillSO.SyncDerivedRuntimeState() synchronizes both _turretConfig.Range and _projectileConfig.Range (plus _projectileConfig.Damage) on initial setup, Range.OnUpgrade, and Tier 2 restoration.
@@ -155,8 +162,8 @@ It is not responsible for:
     - Tracks closest targets up to NumberOfTargets, rotates toward the primary target in FixedUpdate, guards Shoot() with _isChargingLaser so a faster DelayBetweenShoots cannot restart _laserCumulatingVFX mid-charge, scales _laserCumulatingVFX by shoot frequency (VFXPlayer scales each particle system duration by simulationSpeed), renders LineRenderer beams to all hit targets, plays Shoot audio, forwards _hitTargetClosestPoints[i] to EntityManipulationHelper.Damage, and calls _laserCumulatingVFX.StopPlayback() and clears _primaryTarget in OnDisable().
   - LandmineSkill / Landmine:
     - LandmineSkill validates _config, _config.SpawnCooldown, and _landminePrefab fail-fast in Initialize(), and drives placement via a scaled-time elapsed timer in Update() (AdvanceSpawnTimer(float deltaTime)) reading live _config.SpawnCooldown.Value every frame, performing a downward raycast checking for TerrainLayers.Ground within CAN_PLACE_MINE_RAY_DISTANCE (5m) and instantiating a Landmine prefab when valid ground is detected.
-    - Landmine scales to Size.Value and activates. When an enemy enters its trigger, it queries an overlap sphere against EntityLayers.Enemies with QueryTriggerInteraction.Collide.
-    - Plays explosion VFX via _deathVfxPlayer scaled to ExplosionRadius.Value, plays Explosion audio, applies damage, and calculates radial knockback directed away from the mine center. The mine visual is disabled immediately and the object is destroyed upon VFX completion.
+    - Landmine scales X and Z to Size.Value (preserving Y scale) and activates. When an enemy enters its trigger, it queries an overlap sphere against EntityLayers.Enemies with QueryTriggerInteraction.Collide.
+    - Plays explosion VFX via _deathVfxPlayer scaled to ExplosionRadius.Value, plays Explosion audio, applies damage, and calculates radial knockback directed away from the mine center. The mine visual is disabled immediately and the object is destroyed upon VFX completion (or immediately after damage/visual hiding when _deathVfxPlayer is null, using DestroyImmediate when !Application.isPlaying and Destroy in Play Mode).
 
 - Runtime flow:
   1. Reflex DI Boot: DefaultGameplaySceneInstaller binds PlayerManager as IPlayerManager, SkillsVisualPresenter as ISkillsVisualPresenter, SkillUpgradeFlow as ISkillUpgradeFlow, PlayerSkillsHUDPresenter as IPlayerSkillsHUDPresenter, and CollectibleDropNotifier as ICollectibleDropNotifier.
@@ -246,14 +253,21 @@ It is not responsible for:
 
 - Testing implications:
   - Targeted compilation check:
-    dotnet build Assembly-CSharp-firstpass.csproj -p:BuildProjectReferences=false
-    dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
-    dotnet build Assembly-CSharp-Editor.csproj -p:BuildProjectReferences=false
-  - Unit tests:
+    dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false
+    dotnet build CarSurvivors.Editor.Tests.csproj -p:BuildProjectReferences=false
+    dotnet build CarSurvivors.PlayMode.Tests.csproj -p:BuildProjectReferences=false
+  - Unit & integration tests:
     - Assets/Scripts/Editor/Tests/UpgradeableStatTests.cs validates UpgradeableStat<T> cloning, clamping, subtract mode, unlimited max, and RestoreRuntimeState carryover.
     - Assets/Scripts/Editor/Tests/SkillConfigRuntimeTests.cs validates DeepCopyUtility stat cloning, AppendStatsForDisplay, SyncDerivedRuntimeState (including Lasergun range sync), VFXPlayer simulationSpeed duration scaling, and scaled-time cadence timers in LasergunSkill and LandmineSkill.
     - Assets/Scripts/Editor/Tests/SkillUpgradeFlowTests.cs validates JIT reward queueing, pending slot reservation, fallback to stat upgrades, AlwaysUseMinValueForUpgrade consistency, and SkillUpgradeRarityCalculator boundaries.
     - Assets/Scripts/Editor/Tests/SkillsTierCarryoverTests.cs validates multi-tier skill and stat snapshot/restore across RunSessionService and SkillsRegistry.
+    - Assets/Scripts/Editor/Tests/SkillsCoreInfrastructureTests.cs validates SkillsRegistry child discovery, startup reset/fallback, InitializeSkill counts/events, ItemsWithScriptableConfigsActivator, UpgradeableSkill null-config warnings, SkillCrate single-collection trigger guard, and StatsUnitsExtensions.
+    - Assets/Scripts/Editor/Tests/MinigunCombatTests.cs validates MinigunShotResolver geometry/terrain/piercing/deduplication rules, MinigunTurret reference validation, cosine sweep, per-hit immediate (<0.2m) vs delayed tracer impact delivery, and MinigunSkill AdvanceVolleyTimer cadence.
+    - Assets/Scripts/Editor/Tests/SawAndLandmineCombatTests.cs validates SawSkill/SawBlade ProcessEnemyCollisionAtTime cooldowns, positional damage forwarding, linear knockback duration/distance mapping, StepFrame spin ramping and stale-hit purging, and Landmine trigger filtering, AoE damage/knockback, and EditMode/PlayMode destruction.
+    - Assets/Scripts/Editor/Tests/LasergunTurretTests.cs validates LasergunTurret target capacity clamping, LineRenderer scaling, distance sorting, TerrainLayers.All line-of-sight filtering, rotation threshold gating, and OnDisable cleanup.
+    - Assets/Scripts/Editor/Tests/SkillsUITests.cs validates SkillStatValueFormatter, PlayerSkillsHUDPresenter, SkillsVisualPresenter, SkillStatRowView, SkillStatsGroupView, SkillsStatsPresenter pause live-refresh vs death freeze, SkillUpgradeButton, and SkillUpgradePresenter modal flows.
+    - Assets/Scripts/Editor/Tests/SkillAssetsIntegrityTests.cs validates Player.prefab SkillsRegistry hierarchy and authored skill/UI prefabs.
+    - Assets/Tests/PlayMode/EnemiesAndCombatPlayModeTests.cs validates live PlayMode physics/frame integration for SawBlade enter/stay cooldowns, Landmine OverlapSphere detonation and VFX completion, and MinigunSkill volley and piercing tracer flight.
   - Play-mode verification:
     - Verify initial starting skill activates and displays in HUD slot 1 with punch animation.
     - Collect skill crates and verify stat upgrade popup displays 3 options with correct stat icons and rarity borders.
@@ -273,7 +287,6 @@ It is not responsible for:
   - PlayerManager provides access to ISkillsRegistry and ICarController.
   - DeepCopyUtility provides in-memory cloning for all upgradeable stats.
   - EntityLayers and TerrainLayers gate collision detection, targeting queries, minigun sweeps, and landmine placement.
-  - ProjectileConstants provides default pooling sizes for projectile-based turrets.
 
 - Downstream consumers:
   - SkillUpgradePresenter consumes ISkillUpgradeFlow, ISkillsRegistry, and ISkillsVisualPresenter.

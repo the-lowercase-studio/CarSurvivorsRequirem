@@ -91,7 +91,6 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - SelectableOutlineHighlight (Assets/Scripts/Effects/SelectableOutlineHighlight.cs) and UISpriteSilhouetteOutline (Assets/Scripts/Effects/UISpriteSilhouetteOutline.cs backed by Assets/Shaders/UI/UISpriteOutline.shader and Assets/Scripts/Effects/Constants/UiOutlineConstants.cs) provide selection/hover outline and fill highlights for Main Menu subpanel controls (DropDown, VolumeOption/Slider, and top-left icon-only BackButtons with adjacent BackPromptBadge). SelectableOutlineHighlight syncs _isSelected in OnEnable(), while UISpriteSilhouetteOutline dilates radial silhouette outlines on skewed/irregular sprites without diagonal mesh gaps; CheckBox controls retain SpriteSwap without SelectableOutlineHighlight, and expanded dropdown item rows use opaque backgrounds to prevent bleed-through.
   - IOptionComponent<T> standardizes settings UI components with LoadComponent and PerformValueChange.
   - AudioVolumeOption, DamageNumbersOption, FullScreenOption, GraphicOption, and ResolutionOption load current setting values into Unity UI controls and save/load settings when controls change. AudioVolumeOption configures an integer 0..100 slider (wholeNumbers = true), injects IInputActionSource and UiInputScope for 1% discrete steps and tiered hold acceleration (SettingsConstants), and clamps linear volume to 0.0001f before Mathf.Log10 decibel conversion. GraphicOption also rebuilds its dropdown options from its hard-coded quality map in Awake.
-  - ButtonsAudioClipPlayer is intended to play button click and hover sounds through an AudioClipPlayer component.
 - Key interfaces:
   - ILoadingOverlayPresenter is bound by BootLoader.InstallExtra into every scene container.
   - ITimerPresenter is bound by DefaultGameplaySceneInstaller and consumed by PlayerDeathPresenter, DemoThankYouPresenter, NextStagePortal, and GameplayDevCommandsRegistrar.
@@ -167,7 +166,7 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Death and Demo victory UI require IPlayerManager, IBackgroundAudioManager, scoreboard services, IGameTimeService, ISkillsStatsPresenter, IPausePresenter, and ITimerPresenter (plus ISkillUpgradePresenter and IRunSessionService on DemoThankYouPresenter).
   - Skill upgrade UI requires IPlayerManager, IPlayerLevelPresenter, ISkillUpgradeFlow, ISkillsVisualPresenter, IInputCommands, IInputContexts, IInputPromptProvider, the collectible spawner release event, and scene/prefab wiring for InputPromptView and rarity sprite mappings.
 - Testing implications:
-  - Compile after C# UI changes with dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false.
+  - Compile after C# UI changes with dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false.
   - Play-mode validation is required for pause input, scene button wiring, settings controls, death VFX-to-screen timing, demo victory overlay and MainMenu return, loading overlay animated dots, score text, audio mode changes, skill upgrade panel timing, skill upgrade rarity backgrounds, HUD skill slot backgrounds behind equipped icons, Pause-to-Death/DemoThankYou transition precedence, live stat refresh while paused, and responsive layout sweeps across 16:9, 16:10, 4:3, and 21:9.
   - Manual UI checks should include repeated enable/disable cycles for settings panels to catch duplicate listeners.
 
@@ -204,7 +203,6 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - SkillsVisualPresenter uses GameObject name matching, so a missing or renamed visual logs a warning and leaves the requested visual hidden.
   - SkillUpgradeButton requires _inputPromptView and hides prompt icon images when unavailable, displaying fallback text via InputPromptView instead.
   - SkillUpgradeButton leaves the current background untouched when the rarity background image, rarity sprite mapping, or mapped sprite is missing.
-  - ButtonsAudioClipPlayer declares RequireComponent(typeof(AudioClipPlayer)) but does not initialize its _audioClipPlayer field before playback.
   - GraphicOption assumes the stored/default quality string exists in its hard-coded quality-level dictionary.
 - Open design questions:
   - Should skill visual lookup stop using GameObject name matching and move to explicit serialized entries keyed by skill info?
@@ -212,10 +210,8 @@ The UI system is not responsible for owning gameplay state, scoring rules, setti
   - Should timer ownership move out of UI if wave UI, analytics, or non-UI scoring need the same clock?
   - Should settings option components share a base helper for load-without-notify and listener wiring, or is the current duplication acceptable for the small option set?
 - Suggested follow-up tasks:
-  - Fix ButtonsAudioClipPlayer initialization before relying on it for shared button audio.
   - Add disable/re-enable-safe listener handling to PlayerLevelPresenter and SkillUpgradePresenter if UI objects can be disabled without scene teardown.
   - Add a small validation checklist for scene/prefab UI references when UI prefabs or canvases are edited in the Unity Editor.
-  - Confirm with designers whether unused legacy Assets/Prefabs/UI/SkillStatsPresenter/SkillStatsGroup.prefab (unreferenced after switching to pre-wired ColumnBody_0..2 slots) can be deleted or archived.
 
 ## Pause and Death Skill Stats
 

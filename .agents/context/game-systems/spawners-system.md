@@ -13,7 +13,6 @@ Collectible drops from enemies are triggered directly by death events via `Enemy
 - Primary code locations:
   - Assets/Scripts/Spawners/
   - Assets/Scripts/Spawners/GridSpace/IOnRandomGridPosSpawner.cs
-  - Assets/Scripts/Spawners/GridSpace/IInGridSpaceSpawner.cs
   - Assets/Scripts/Spawners/WorldSpace/IInWorldSpaceSpawner.cs
   - Assets/Scripts/Spawners/ISpawnedObjectsCounter.cs
   - Assets/Scripts/Spawners/SpawnChanceInfo.cs
@@ -50,14 +49,12 @@ Collectible drops from enemies are triggered directly by death events via `Enemy
   - `ISpawnedObjectsCounter`: Exposes `uint CurrentlySpawnedObjectsCount { get; }` for systems that track active entity counts.
   - `IObjectReleaseNotifier`: Exposes `event EventHandler OnSpawnedEntityReleased;` for release-driven consumers.
   - `IOnRandomGridPosSpawner<TSelf>`: Contract for spawners that select random walkable grid cells before spawning. Inherits `ISpawnedObjectsCounter` and `IObjectReleaseNotifier`.
-  - `IInGridSpaceSpawner<TSelf, TSpecificConfig>`: Contract for spawners that receive an explicit `Cell` plus config. Inherits `ISpawnedObjectsCounter` and `IObjectReleaseNotifier`.
   - `IInWorldSpaceSpawner<TSelf, TSpecificConfig>`: Contract for spawners that receive a world-space `Vector3` plus config. Inherits `ISpawnedObjectsCounter` and `IObjectReleaseNotifier`.
   - `SpawnChanceInfo`: Serializable chance payload used by enemy spawn entries and updated by spawn chance redistribution.
   - `MapInteractablesSpawner`: Scene component that places interactive map objects (e.g. difficulty totems) onto walkable grid cells in `Start()` before standard gameplay waves begin, excluding the initial player chunk, registered tower encounter arenas plus `_towerArenaExclusionBuffer` (`MapInteractablesSpawnerConstants.DEFAULT_TOWER_ARENA_EXCLUSION_BUFFER = 5f`), and configured distance margins.
 - Key interfaces:
   - `IOnRandomGridPosSpawner<TSelf>`: Method: `void SpawnAtRandomGridPos(int count = 1);`
   - `IInWorldSpaceSpawner<TSelf, TSpecificConfig>`: Method: `void Spawn(Vector3 pos, TSpecificConfig specificConfig, int count = 1);`
-  - `IInGridSpaceSpawner<TSelf, TSpecificConfig>`: Method: `void Spawn(Cell cell, TSpecificConfig specificConfig, int count = 1);`
   - All generic spawner contracts enforce `TSelf` constraints to bind DI uniquely per concrete spawner type.
 - Concrete Implementations Inventory:
   - `EnemiesSpawner`: Implements `IOnRandomGridPosSpawner<EnemiesSpawner>`, `ISwarmEnemySpawner`, `IEnemySpawnDifficultyController`.
@@ -80,7 +77,7 @@ Collectible drops from enemies are triggered directly by death events via `Enemy
   - Systems consuming spawners must depend on generic spawner interfaces rather than direct scene lookups or singletons.
   - Scene-scoped spawners are bound via Reflex in `DefaultGameplaySceneInstaller`.
   - Increment `CurrentlySpawnedObjectsCount` only on successful object activation; decrement exactly once per completed release.
-  - `OnSpawnedEntityReleased` signifies pool/world release, not initial spawn completion.
+  - `OnSpawnedEntityReleased` signifies active gameplay pool/world release, not initial spawn completion or startup pool pre-warming (`EnemiesSpawner.PreWarmPools()` suppresses `OnSpawnedEntityReleased` during `Start()`).
   - `MapInteractablesSpawner` runs in `Start()` (not `Awake()` or `OnEnable()`) to guarantee `IGridManager` grid cost fields are fully computed, `EncounterArenaController.OnEnable()` has registered tower arenas with `IBossEncounterService`, and the DI container is available for recursive injection.
   - Map interactables are excluded from spawning inside the initial player chunk, inside any tower encounter arena (`ArenaRadius` + negative-clamped `_towerArenaExclusionBuffer`), or close to impassable walls/other interactables.
 - Ordering or sequencing guarantees:
@@ -102,8 +99,8 @@ Collectible drops from enemies are triggered directly by death events via `Enemy
   - `MapInteractablesSpawner` requires `_gridManager` (with initialized `WorldGrid`), `_playerManager` (with spawned player `GameObject`), and Reflex container injection (`_container`) for recursive dependency resolution on spawned prefabs; `IBossEncounterService` is resolved optionally so test scenes without tower arenas remain supported.
   - DI bindings must be registered in `DefaultGameplaySceneInstaller`.
 - Testing implications:
-  - Compile after spawner interface or DI changes using `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`.
-  - Validate pool capacities, active entity count tracking, and off-camera placement in Unity Play Mode.
+  - Compile after spawner interface or DI changes using `dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false`.
+  - Validate pool capacities, active entity count tracking, and off-camera placement in Unity EditMode and PlayMode tests.
 
 ## Integration Notes
 
@@ -122,6 +119,5 @@ Collectible drops from enemies are triggered directly by death events via `Enemy
 ## Known Risks and Open Questions
 
 - Known limitations:
-  - `IInGridSpaceSpawner<TSelf, TSpecificConfig>` is currently a defined interface without an active runtime implementation in Assets/Scripts/.
   - Misspelled fields in `SpawnChanceInfo` (e.g. `TresholdToStartAddingSpawnChanceToOtherInfos`) are preserved to prevent serialized asset data loss.
 

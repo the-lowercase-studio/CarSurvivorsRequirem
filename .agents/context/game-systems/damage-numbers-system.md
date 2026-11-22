@@ -44,7 +44,7 @@ It does not calculate damage, change health values, choose combat targets, play 
 
 - Core components:
   - DamageNumbersSpawner is a persistent Boot-scene MonoBehaviour registered through Reflex (BootLoader.InstallExtra) as both IInWorldSpaceSpawner<DamageNumbersSpawner, DamageNubmersSpawnerConfig> and IEnableDisableFunctionalityTrigger<DamageNumbersSpawner>.
-  - DamageNubmersSpawnerConfig (note the preserved spelling typo DamageNubmersSpawnerConfig) carries the float Damage value, ShapeModes SpawnShapeMode, and optional bool IsBoss (default false, supporting both 2-argument and 3-argument Deconstruct).
+  - DamageNubmersSpawnerConfig (note the preserved spelling typo DamageNubmersSpawnerConfig) carries the float Damage value, ShapeModes SpawnShapeMode, and optional bool IsBoss (default false, supporting 3-argument Deconstruct(out float damage, out ShapeModes spawnShapeMode, out bool isBoss)).
   - DamageNumber is the pooled popup instance. It receives DamageNumberConfig, writes TextMeshPro text/color/font size, computes TargetScale = Vector3.one * growScaleMultiplier, interpolates world position and sine-curve localScale over _duration in Update(), and raises OnLifeEnd upon completion.
   - DamageNumberApearance (note the preserved spelling typo DamageNumberApearance) stores the visual values used by a popup: font size, grow scale multiplier (GrowFontSizeAnimationScaleMultiplier), and color.
   - FaceMainCameraDirection rotates popup child text toward the active Camera in LateUpdate(), and exposes Initialize(Camera) and SnapToTargetRotation() so newly spawned popups align immediately on frame 0 without starting 180 degrees mirrored.
@@ -101,7 +101,7 @@ It does not calculate damage, change health values, choose combat targets, play 
   - The popup prefab must contain a DamageNumber component with a valid TextMeshPro reference and child FaceMainCameraDirection component.
   - Settings UI requires ISetting<DamageNumbersSetting, bool> and the spawner's enable/disable interface to be bound in the active container.
 - Testing implications:
-  - Compile after C# edits with dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false and dotnet build Assembly-CSharp-Editor.csproj -p:BuildProjectReferences=false.
+  - Compile after C# edits with dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false and dotnet build CarSurvivors.Editor.Tests.csproj -p:BuildProjectReferences=false.
   - Run EditMode unit tests in Assets/Scripts/Editor/Tests/BossDamageNumbersTests.cs covering normal vs 1.5x boss scaling, pooled popup reuse across normal and boss hits, RailgunTowerBoss left/right leg hit positioning (including rotated tower transforms and PlayerPosition fallback), MortarTowerBoss and GolemBoss boss flag propagation, immediate camera-facing orientation on spawn without mirroring, and pooled camera reference updates across scene reloads.
 
 ## Integration Notes

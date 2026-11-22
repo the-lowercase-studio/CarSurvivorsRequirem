@@ -60,7 +60,7 @@ It is not responsible for:
     - IInputCommands: exposes OnCommand ordered dispatch.
     - IInputContexts: manages scene epoch, context generation, modal scope tokens (AcquireScope, ReleaseScope), live-reward slot count (SetLiveRewardEligibleSlots, IsSlotEligible), eligibility queries (IsUiNavigationEligible, IsRewardChoiceEligible, IsBackEligible, IsGameplayEligible, IsInteractEligible), ConsumeActiveControlsUntilRelease, RegisterSceneReady, and ReapplyPolicy.
     - IInputDeviceContext: exposes ActiveScheme (KeyboardMouse or Gamepad), EffectiveFamily (KeyboardMouse, Xbox, PlayStation, Switch, GenericGamepad, Unavailable), KeyboardTheme (Light or Dark), availability flags, ActiveGamepad, and ActiveKeyboard.
-    - IInputActionSource: exposes ActionAsset, TryGetAction, and GetRequiredAction for UI modules, settings controls, and prompt resolution.
+    - IInputActionSource: exposes ActionAsset and TryGetAction for UI modules, settings controls, and prompt resolution.
     - IInputRuntime: TryAcquireDriver, Initialize, SampleDeviceActivity, DispatchPendingCommands, SetApplicationFocus, and Suspend.
   - InputPromptService (Assets/Scripts/Input/InputPromptService.cs) implements IInputPromptProvider and raises OnPromptsChanged whenever device family, keyboard theme, or active bindings change. Resolves InputPromptDescriptor (IsValid, IsBound, IsAvailable, Family, PrimarySprite, PrimaryLabel, ControlPath, Parts, Alternatives) with descriptor caching.
   - InputRuntimeDriver (Assets/Scripts/Input/InputRuntimeDriver.cs, DefaultExecutionOrder(-500)) is spawned and injected by ProjectInstaller.OnContainerBuilt (DontDestroyOnLoad) so direct non-Boot scene launches initialize IInputRuntime before scene Awake; Boot.unity's scene-placed InputRuntimeDriver checks TryAcquireDriver() in Awake and destroys itself if a driver is already active. Calls Initialize on Awake, runs SampleDeviceActivity and DispatchPendingCommands each Update, forwards OnApplicationFocus, and calls Suspend on OnDestroy.
@@ -100,8 +100,8 @@ It is not responsible for:
 
 - Run Editor configuration validation via Tools -> Input -> Validate Input Configuration (Assets/Scripts/Editor/Tools/InputConfigurationValidator.cs) whenever modifying action maps, glyphs, runtime config, DI installers, or UI prompt bindings (verifies Player/Reverse Axis control type, rightTrigger catalog entry, matching icon/fallback layers, and scene/prefab wiring).
 - Compile check:
-  - dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
-  - dotnet build Assembly-CSharp-Editor.csproj -p:BuildProjectReferences=false
+  - dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false
+  - dotnet build CarSurvivors.Editor.csproj -p:BuildProjectReferences=false
 
 ## Known Risks and Open Questions
 

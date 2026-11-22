@@ -34,9 +34,12 @@ It is not responsible for:
   - Assets/Scripts/Navigation/GridSystem/GridCellsNotVisibleByMainCamera.cs
   - Assets/Scripts/Navigation/GridSystem/CellCameraVisibilityChecker.cs
   - Assets/Scripts/Navigation/GridSystem/CellStatusDescriber.cs
-  - Assets/Scripts/Navigation/GridSystem/GridEdgeHelper.cs
+  - Assets/Scripts/Navigation/GridSystem/GroundSupportQuery.cs
   - Assets/Scripts/Navigation/GridSystem/GridDebug.cs
-  - Assets/Scripts/Navigation/GridSystem/RandomWalkableCellsFinder.cs
+- Automated tests:
+  - Assets/Scripts/Editor/Tests/GridPrimitivesAndQueriesTests.cs
+  - Assets/Scripts/Editor/Tests/GridCellsNotVisibleByMainCameraTests.cs
+  - Assets/Scripts/Editor/Tests/GridManagerTests.cs
 - Related systems:
   - Assets/Scripts/Navigation/FlowFieldSystem/FlowField.cs
   - Assets/Scripts/Navigation/FlowFieldSystem/FlowFieldMovementController.cs
@@ -79,18 +82,18 @@ Runtime flow:
    - Allocates `WorldGrid = new Grid(_worldGridConfiguration)`.
    - Allocates `_playerChunkCells = new Cell[width, height]`.
    - Allocates `GridPlayerChunk = new Grid(_playerGridConfiguration, _playerChunkCells)`.
-   - Instantiates `FlowField`.
+   - Instantiates `FlowField` (and under `#if DEBUG`, guards `_flowFieldDebugConfiguration != null` before initializing `FlowFieldDebug`).
 2. `GridManager.OnEnable`:
    - Runs initial flow-field pass over `WorldGrid` targeting the center cell.
    - Schedules `UpdateFlowFieldWithNewPlayerChunkGrid` repeating every `_delayBetweenPlayerChunkGridUpdate` (default `0.32s`).
-3. `UpdateFlowFieldWithNewPlayerChunkGrid`:
-   - `ClearPlayerChunkCells`: sets all previous chunk cells' `ChunkGridPos` to `(-1, -1)`, `BestDirection` to `GridDirection.None`, and nulls the array entries.
+3. `UpdateFlowFieldWithNewPlayerChunkGrid` / `StepPlayerChunkFlowField`:
+   - `ClearDepartingChunkCells`: sets departing chunk cells' `ChunkGridPos` to `(-1, -1)`, `BestCost` to `ushort.MaxValue`, and `BestDirection` to `GridDirection.None`, and nulls the array entries.
    - `UpdatePlayerChunkBasedOnPlayerPositionInWorldGrid`: finds the closest world cell to the player car, computes `minGridX` / `minGridY` clamped within `[0, WorldGrid.Width - chunkWidth]` and `[0, WorldGrid.Height - chunkHeight]`, and populates `_playerChunkCells` by referencing the corresponding `WorldGrid.Cells`.
    - Velocity prediction: gets car velocity from `_playerManager.CarController.GetMovementVelocity()`; if `speed > 0.1f`, offsets destination by `Mathf.Clamp(speed * _flowFieldTargetPredictionTime, 0f, _maxFlowFieldTargetOffset)`.
    - Creates terrain costs before resolving the destination. GetSupportedDestination prefers a supported predicted cell in the active chunk, then selects the nearest supported chunk cell by squared XZ distance with stable grid-index ties.
    - Sets DestinationCell to null when no supported cell exists; integration and directions remain empty. Creates integration and flow fields after destination resolution.
 4. Downstream spatial queries:
-   - `EnemiesSpawner`: queries `GridCellsNotVisibleByMainCamera.GetRandomWalkableCellsOutsidePlayerChunk` to select off-camera spawn points outside the player chunk with enemy density limits.
+   - `EnemiesSpawner`: queries `GridCellsNotVisibleByMainCamera.GetRandomWalkableCellsOutsidePlayerChunk` (which computes exact inclusive chunk bounds `chunkMinX..chunkMaxX` and `chunkMinY..chunkMaxY` so even-dimension chunks do not over-exclude adjacent rows/columns) to select off-camera spawn points outside the player chunk with enemy density limits, and queries `GetRandomWalkableCells(..., requireHiddenFromCamera: false)` / `TryGetPlacement(..., requireHiddenFromCamera: false)` for Swarm placement inside `GridPlayerChunk`.
    - `EnemiesOutsidePlayerChunkTeleporter`: checks enemies outside exact `GridPlayerChunk` XZ bounds (computed from `Cells[0, 0]` and `Cells[Width - 1, Height - 1]` expanded by `CellSize * 0.5f`, guarding null corner cells) whose `MovementController.CanBeTeleported` permits relocation (respecting `EnemyMovementConstants.POST_RELOCATION_TELEPORT_GRACE_SECONDS = 3.0f` in unfrozen time), and teleports them to hidden walkable cells within `GridPlayerChunk`, calling `ResetAfterRelocation()`.
    - `EnemyDropHandler`: calculates walkable landing spots for collectible scatter.
    - `MapInteractablesSpawner`: computes deterministic initial player chunk bounds (matching `GridManager` clamping with `playerInitialCell` fallback), queries walkable world cells outside that chunk and outside every registered tower arena (`IBossEncounterService.IsPositionWithinAnyTowerArena` with `_towerArenaExclusionBuffer`, default 5f), and enforces distance rules from impassable cells and other interactables.
@@ -124,7 +127,8 @@ Preserve these constraints when editing:
 
 Testing implications:
 
-- Compile C# changes with `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`.
+- Compile C# changes with `dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false` and `dotnet build CarSurvivors.Editor.Tests.csproj -p:BuildProjectReferences=false`.
+- Run EditMode tests in Assets/Scripts/Editor/Tests/GridPrimitivesAndQueriesTests.cs, GridCellsNotVisibleByMainCameraTests.cs, and GridManagerTests.cs.
 - In Unity, verify chunk alignment when driving the car to all four extreme world borders (North, South, East, West corners).
 - Verify off-camera enemy spawning near screen edges at multiple camera zoom levels and aspect ratios.
 - Verify enemy recycling (`EnemiesOutsidePlayerChunkTeleporter`) does not spawn enemies within the player's view cone.
@@ -150,7 +154,7 @@ Downstream consumers:
 
 Cross-system coupling risks:
 
-- Player chunk clearing sets `cell.ChunkGridPos` to `INVALID_CHUNK_GRID_POS` and `cell.BestDirection` to `GridDirection.None` on departing cells; code reading outside the active chunk must handle `GridDirection.None`.
+- Player chunk clearing sets `cell.ChunkGridPos` to `INVALID_CHUNK_GRID_POS`, `cell.BestCost` to `ushort.MaxValue`, and `cell.BestDirection` to `GridDirection.None` on departing cells; code reading outside the active chunk must handle `GridDirection.None`.
 - Off-screen spawning queries perform multiple `Physics.OverlapBoxNonAlloc` tests per candidate cell when `maxEnemiesPerCell > 0`. Large candidate sets or high spawn counts will scale physics query overhead.
 - Spatial converters assume a flat Y plane at Y = 0 for 2D cell indexing.
 
@@ -159,16 +163,13 @@ Cross-system coupling risks:
 Known limitations:
 
 - `WorldPosToCellConverter` clamps positions outside grid boundaries to edge cells rather than returning null or out-of-bounds indicators.
-- `GridCellsNotVisibleByMainCamera.Shuffle` uses `UnityEngine.Random` rather than a seeded generator, resulting in non-deterministic cell selection order.
-- `RandomWalkableCellsFinder.cs` is currently an empty placeholder class in the repository.
+- `GridCellsNotVisibleByMainCamera` shuffling uses `UnityEngine.Random` rather than an instance-isolated generator, requiring seeded `UnityEngine.Random.InitState` in deterministic tests.
 
 Open design questions:
 
-- Should `RandomWalkableCellsFinder` be removed or refactored into a consolidated spatial query utility?
 - Should `IGridManager` expose a read-only interface or snapshot view for consumer safety?
 - Should camera visibility checks be backed by an injected `ICameraProvider` rather than requiring `Camera` parameters in static helpers?
 
 Suggested follow-up tasks:
 
-- Clean up unused `RandomWalkableCellsFinder.cs` placeholder if no longer needed.
 - Profile memory allocations and physics overlap overhead during heavy wave spawning phases.

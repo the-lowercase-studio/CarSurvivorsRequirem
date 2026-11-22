@@ -56,7 +56,7 @@ If only a subset of the next-commit scope is visually provable, explicitly state
 ### Step 3: Unity Editor Pre-Flight Check
 
 Verify that the running Editor is connected and running compiled code matching the current working tree:
-1. Run targeted build check (`dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`) or check `.agents/scripts/verify-change.ps1` compilation status so stale assemblies are not mistaken for new behavior.
+1. Run targeted build check (`dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false` or check `.agents/scripts/verify-change.ps1` compilation status) so stale assemblies are not mistaken for new behavior.
 2. Check Unity CLI connectivity and state:
    ```powershell
    unity status --format json

@@ -33,6 +33,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
   - Assets/Scripts/Interactables/NextStagePortal.cs
   - Assets/Scripts/ReflexDI/ReflexPrefabInstantiator.cs
   - Assets/Scripts/Editor/Tests/BossDamageNumbersTests.cs
+  - Assets/Scripts/Editor/Tests/BossEncounterServiceTests.cs
 - Designer-authored data and prefabs:
   - Assets/ScriptableObjects/Enemy/Bosses/Golem/GolemBossConfigSO.cs
   - Assets/ScriptableObjects/Enemy/Bosses/Golem/GolemBossConfig.asset
@@ -157,7 +158,7 @@ It is not responsible for standard enemy wave timers and pooling, flow-field vec
 - Testing implications:
   - Debug spawning can be triggered using the developer console (`golem` or `spawn golem`) in gameplay scenes.
   - Compile changes via:
-    dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
+    dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false
 
 ## Integration Notes
 

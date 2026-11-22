@@ -6,9 +6,9 @@ Concise, copy-ready EditMode test harness patterns and override checklist for ag
 
 | Generic Skill Rule | Car Survivors Override |
 | --- | --- |
-| Create `.asmdef` for test assemblies (`unity-testing`) | Do NOT create `.asmdef` for EditMode tests; place scripts in Assets/Scripts/Editor/Tests/ (`Assembly-CSharp-Editor`). |
+| Create `.asmdef` for test assemblies (`unity-testing`) | Use the established repository assemblies: EditMode tests go in Assets/Scripts/Editor/Tests/ (`CarSurvivors.Editor.Tests.asmdef`), and PlayMode tests go in Assets/Tests/PlayMode/ (`CarSurvivors.PlayMode.Tests.asmdef`). Do not introduce extra `.asmdef` files without approval. |
 | Use UTF 2.0 attributes `[PreservedValues]`, `[RequirePlatformSupport]` (`unity-testing`) | Do NOT use UTF 2.0-only attributes; repository baseline is `com.unity.test-framework` `1.6.0` (NUnit 3.5). |
-| Edit `.csproj` `<Compile Include>` or run `dotnet test` (`code-testing`) | Do NOT edit `.csproj` or run `dotnet test`; compile with `dotnet build` and execute via `unity command test run --json`. |
+| Edit `.csproj` `<Compile Include>` or run `dotnet test` (`code-testing`) | Do NOT edit `.csproj` or run `dotnet test`; compile with `dotnet build` on generated `.csproj` files and execute via `unity command test run --json`. |
 | Create `<TESTAGENT_DIR>/research.md`, `plan.md`, `status.md` (`code-testing`) | Do NOT use `<TESTAGENT_DIR>` or `.git/testagent`; use .agents/context/implementations/plans/ and .agents/context/implementations/summaries/ (and .agents/context/tmp/ for scratch files). |
 | Invoke external `test-engineer` or extension catalogs (`code-testing`, `test-anti-patterns`) | Execute all 5 phases inline; ignore external custom agent and extension catalog names. |
 | Use `Moq`, `NSubstitute`, or `FluentAssertions` | Use private hand-written interface fakes, `ScriptableObject.CreateInstance<T>()`, and NUnit `Assert.*`. |

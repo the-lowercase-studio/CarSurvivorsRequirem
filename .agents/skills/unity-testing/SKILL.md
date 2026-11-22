@@ -5,7 +5,7 @@ description: "Use when: referencing Unity Test Framework and NUnit patterns for 
 
 # Unity Test Framework
 
-> **Car Survivors Baseline Note:** Car Survivors uses `com.unity.test-framework` `1.6.0` (NUnit 3.5) and places EditMode tests directly in Assets/Scripts/Editor/Tests/ (`Assembly-CSharp-Editor`) without custom `.asmdef` files. Ignore UTF 2.0-only attributes (`[PreservedValues]`, `[RequirePlatformSupport]`) and follow the overrides in .agents/skills/unity-write-tests/SKILL.md.
+> **Car Survivors Baseline Note:** Car Survivors uses `com.unity.test-framework` `1.6.0` (NUnit 3.5), places EditMode tests in Assets/Scripts/Editor/Tests/ (`CarSurvivors.Editor.Tests.asmdef`), and places PlayMode tests in Assets/Tests/PlayMode/ (`CarSurvivors.PlayMode.Tests.asmdef`). Ignore UTF 2.0-only attributes (`[PreservedValues]`, `[RequirePlatformSupport]`) and follow the overrides in .agents/skills/unity-write-tests/SKILL.md.
 
 ## Test Framework Overview
 

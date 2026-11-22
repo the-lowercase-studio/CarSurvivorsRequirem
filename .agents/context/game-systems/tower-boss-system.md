@@ -67,7 +67,7 @@ It is not responsible for mobile pathfinding or pursuit steering (handled by mob
   - Assets/Materials/Laser/Laser.mat
 - Related systems:
   - Boss progression & Golem boss: Assets/Scripts/Enemies/Bosses/BossEncounterService.cs, Assets/Scripts/Interactables/GolemStatue.cs
-  - EditMode tests: Assets/Scripts/Editor/Tests/BossDamageNumbersTests.cs
+  - EditMode tests: Assets/Scripts/Editor/Tests/BossDamageNumbersTests.cs, Assets/Scripts/Editor/Tests/BossEncounterServiceTests.cs
   - UI HUD & Leash warning: Assets/Scripts/UI/HUD/BossHUDPresenter.cs, Assets/Scripts/UI/HUD/ArenaLeashWarningPresenter.cs
   - Combat camera: Assets/Scripts/Camera/CinemachineCombatFollowOffsetController.cs
   - Swarm suppression: Assets/Scripts/Spawners/Swarm/SwarmSpawner.cs (ISwarmFreezer)

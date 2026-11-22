@@ -66,7 +66,7 @@ The coordinator owns shared compilation. Serialize dotnet builds in a shared che
 For an implemented C# scope, capture a baseline when feasible and run the checkpoint after authorized edits:
 
 ```powershell
-dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
+dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false
 ```
 
 In audit mode, report diagnostics without fixes. In fix mode, correct introduced diagnostics only within authorized ownership, then re-run the affected check. Report unrelated baseline warnings/errors, missing generated projects, and unavailable tools with evidence. Do not extend repairs or loop indefinitely without progress; finish independent batches and record the precise unresolved dependency. Required zero-warning verification is FAIL or PENDING until demonstrated.

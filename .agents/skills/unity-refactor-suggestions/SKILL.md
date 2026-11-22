@@ -64,7 +64,7 @@ Classify all suggestions using the 4-tier scale:
      - Finding severity (Blocker / Major / Minor / Nit).
      - Rationale and expected benefit.
      - Exact code diff / replacement snippet.
-     - Verification command: `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`.
+     - Verification command: `dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false`.
 
 4. Completion Criteria
    - Stays strictly within the selected scope.

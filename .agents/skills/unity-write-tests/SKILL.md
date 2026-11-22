@@ -74,7 +74,7 @@ Follow .agents/skills/code-testing/SKILL.md and .agents/skills/code-testing/unit
    - Multi-axis property intersections and event firing order invariants.
 3. Apply mutation thinking from unit-test-generation.prompt.md: ensure every assertion would fail under plausible defects (`>` vs `>=`, missing clamp, inverted condition, skipped cleanup).
 4. **Car Survivors Override:**
-   - Ignore `.csproj` `<Compile Include>`, `.sln`, or `dotnet test` instructions in code-testing — Unity automatically generates Assembly-CSharp-Editor.csproj for scripts under Assets/Scripts/Editor/Tests/.
+   - Ignore `.csproj` `<Compile Include>`, `.sln`, or `dotnet test` instructions in code-testing — Unity automatically generates `CarSurvivors.Editor.Tests.csproj` (Assets/Scripts/Editor/Tests/) and `CarSurvivors.PlayMode.Tests.csproj` (Assets/Tests/PlayMode/).
    - Ignore `<TESTAGENT_DIR>/research.md`, `plan.md`, and `status.md` state-file instructions (and `.git/testagent` paths) in code-testing — use the repository lifecycle under .agents/context/implementations/plans/ and .agents/context/implementations/summaries/ (and .agents/context/tmp/ only when temporary scratch files are needed).
 
 ### Step 3: Test Implementation (writing-unit-tests + unity-testing + Car Survivors Standards)
@@ -82,8 +82,9 @@ Follow .agents/skills/code-testing/SKILL.md and .agents/skills/code-testing/unit
 Combine test-craft rules from .agents/skills/writing-unit-tests/SKILL.md with Unity Test Framework guidance from .agents/skills/unity-testing/SKILL.md and .agents/skills/unity-testing/references/test-framework.md (and boilerplate templates in .agents/skills/unity-write-tests/references/car-survivors-test-harness.md) under these mandatory Car Survivors overrides:
 
 1. **Test Location & Assemblies:**
-   - Place EditMode unit and integration tests in Assets/Scripts/Editor/Tests/ (compiled in Assembly-CSharp-Editor).
-   - Do NOT create custom `.asmdef` files unless the user explicitly approves creating a PlayMode test assembly.
+   - Place EditMode unit and integration tests in Assets/Scripts/Editor/Tests/ (`CarSurvivors.Editor.Tests.asmdef`).
+   - Place PlayMode tests in Assets/Tests/PlayMode/ (`CarSurvivors.PlayMode.Tests.asmdef`).
+   - Do NOT create additional `.asmdef` files unless the user explicitly approves.
    - Keep Unity `.meta` pairing consistent for all created C# files (verify via .agents/scripts/verify-change.ps1 or Unity Editor refresh).
 2. **Framework Baseline (UTF 1.6) & Test Doubles (No Moq / NSubstitute / FluentAssertions):**
    - Target Unity Test Framework `com.unity.test-framework` `1.6.0` (NUnit 3.5): use `NUnit.Framework` (`[Test]`, `[TestCase]`, `[TestCaseSource]`, `[SetUp]`, `[TearDown]`, `Assert.*`, `LogAssert`). Ignore UTF 2.0-only attributes referenced in unity-testing (`[PreservedValues]`, `[RequirePlatformSupport]`).
@@ -120,10 +121,12 @@ Apply .agents/skills/test-anti-patterns/SKILL.md Steps 3–4 inline to every new
 
 Follow .agents/skills/verification-before-completion/SKILL.md alongside .agents/skills/unity-cli/SKILL.md and .agents/skills/unity-pre-commit-gate/SKILL.md:
 
-1. **Compile both assemblies with zero errors and zero warnings:**
+1. **Compile affected assemblies with zero errors and zero warnings:**
    ```powershell
-   dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false
-   dotnet build Assembly-CSharp-Editor.csproj -p:BuildProjectReferences=false
+   dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false
+   dotnet build CarSurvivors.Editor.csproj -p:BuildProjectReferences=false
+   dotnet build CarSurvivors.Editor.Tests.csproj -p:BuildProjectReferences=false
+   dotnet build CarSurvivors.PlayMode.Tests.csproj -p:BuildProjectReferences=false
    ```
 2. **Run architecture and coding-standards linter on touched C# files:**
    ```powershell

@@ -27,10 +27,10 @@ It is not responsible for:
   - Assets/Scripts/LayerMasks/EntityLayers.cs
   - Assets/Scripts/LayerMasks/TerrainLayers.cs
   - Assets/Scripts/Volumes/DeathVolume.cs
-  - Assets/Scripts/Projectiles/Projectile.cs
   - Assets/Scripts/Skills/PlayerSkills/Saw/SawBlade.cs
   - Assets/Scripts/Skills/PlayerSkills/LandmineTrap/Landmine.cs
   - Assets/Scripts/Skills/ObjectsImpactingSkills/Crate/SkillCrate.cs
+  - Assets/Scripts/PowerUps/Collectibles/PowerUpCollectible.cs
   - Assets/Scripts/LevelSystem/Exp/ExpParticle.cs
 - Designer-authored data:
   - Physics collision matrix settings in Unity Project Settings (`Physics.matrix`).
@@ -51,16 +51,15 @@ It is not responsible for:
 - Core components:
   - `EntityLayers`: Static helper caching `LayerMask` instances for "Enemy", "Player", and `All` ("Enemy" + "Player") via `LayerMask.GetMask(...)`.
   - `TerrainLayers`: Static helper caching `LayerMask` instances for "Impassable", "RoughTerrain", "Ground", and `All` ("Impassable" + "RoughTerrain" + "Ground").
-  - `ICollisionsController`: Interface defining events for `OnCollisionWithOtherEnemy` and `OnCollisionWithPlayer`.
-  - `EnemyCollisionsController`: Attached to enemy prefabs (`[RequireComponent(typeof(Enemy))]`). On `Awake`, collects all child trigger colliders into `_colliders`. On `OnEnable`, starts `InvokeRepeating` for `HandleCollisionsCheck` every `_collisionCheckDelay` (default 0.05s). On `OnDisable`, cancels the invocation. Performs `Physics.SphereCastAll` using `_collisionRadius` against `EntityLayers.All`. Ignores colliders in `_colliders`, evaluates target layer via `1 << layer`, and invokes `OnCollisionWithOtherEnemy` or `OnCollisionWithPlayer`.
-  - `DeathVolume`: `MonoBehaviour` with `[RequireComponent(typeof(BoxCollider))]`. On `OnTriggerEnter`, checks if entering object implements `IDamageable` to call `TakeFullHpDamage()`, or `IPoolable` to call `ReturnToPool()`.
+  - `ICollisionsController`: Interface defining the `OnCollisionWithPlayer` event.
+  - `EnemyCollisionsController`: Attached to enemy prefabs (`[RequireComponent(typeof(Enemy))]`). On `Awake`, caches `_enemy` and collects all child trigger colliders into `_colliders`. On `OnEnable`, starts `InvokeRepeating` for `HandleCollisionsCheck` every `_collisionCheckDelay` (default 0.05s). On `OnDisable`, cancels the invocation. Skips checks while `_enemy.IsMaterializing` is true; otherwise performs `Physics.SphereCastAll` using `_collisionRadius` against `EntityLayers.Player`, ignores colliders in `_colliders`, and invokes `OnCollisionWithPlayer`.
+  - `DeathVolume`: `MonoBehaviour` with `[RequireComponent(typeof(BoxCollider))]`. On `OnTriggerEnter`, checks if entering object implements `IDeathVolumeRecoverable` (for bosses), `IDamageable` to call `TakeFullHpDamage()`, or `IPoolable` to call `ReturnToPool()`.
   - Contact & Trigger Mechanics:
-    - `Projectile`: Uses `OnTriggerEnter` to detect target colliders matching enemy/player layers, applies damage via `IDamageable`, and returns to pool (`IPoolable`).
-    - `SawBlade`: Rotating skill collider triggering `IDamageable.TakeDamage` on contact with enemy entities.
+    - `SawBlade`: Rotating skill collider triggering `IDamageable.TakeDamage` (and `IPositionalDamageable`) on contact with enemy entities.
     - `Landmine`: Trap trigger invoking explosion damage on nearby entities when stepped on.
-    - `SkillCrate` & `ExpParticle`: Detect player contact via `OnTriggerEnter` to award skill upgrades or EXP.
+    - `SkillCrate`, `PowerUpCollectible`, & `ExpParticle`: Detect player contact via `OnTriggerEnter` to award skill upgrades, power-ups, or EXP.
 - Key interfaces:
-  - `ICollisionsController`: Exposes `OnCollisionWithOtherEnemy` and `OnCollisionWithPlayer` events.
+  - `ICollisionsController`: Exposes `OnCollisionWithPlayer` event.
   - `IDamageable`: Consumed by collision volume triggers (`DeathVolume`, weapons, projectiles) to apply damage.
   - `IPoolable`: Consumed by volume triggers to return objects to pools upon out-of-bounds contact.
 
@@ -86,8 +85,8 @@ It is not responsible for:
 - Required dependencies and contracts:
   - New physics layers must be created in Unity Project Settings before referencing in `LayerMask.GetMask()`.
 - Testing implications:
-  - C# compile check: `dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false`.
-  - Unity Play Mode testing: Verify enemy player-attack triggers, enemy-enemy separation/collision events, projectile hit detection, crate/EXP collection on contact, and death volume out-of-bounds recycling.
+  - C# compile check: `dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false`.
+  - Unity Play Mode testing: Verify enemy player-attack triggers, weapon hit detection, crate/power-up/EXP collection on contact, and death volume out-of-bounds recycling.
 
 ## Integration Notes
 

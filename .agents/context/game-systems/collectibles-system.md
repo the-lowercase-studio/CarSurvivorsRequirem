@@ -35,6 +35,13 @@ It is not responsible for:
   - Assets/Prefabs/Collectibles/BubbleShield.prefab
   - Assets/Prefabs/Collectibles/Armor.prefab
   - Assets/Prefabs/Collectibles/FireTails.prefab
+- Automated tests:
+  - Assets/Scripts/Editor/Tests/CollectiblePickupsTests.cs
+  - Assets/Scripts/Editor/Tests/CollectibleDropNotifierTests.cs
+  - Assets/Scripts/Editor/Tests/EnemyDropHandlerTests.cs
+  - Assets/Scripts/Editor/Tests/CollectiblesAssetsIntegrityTests.cs
+  - Assets/Scripts/Editor/Tests/EnemyDropsAndCollectibleNotifierTests.cs
+  - Assets/Tests/PlayMode/CollectiblesPlayModeTests.cs
 - Related runtime integration:
   - Assets/Scripts/Enemies/Base/Enemy.cs
   - Assets/Scripts/ReflexDI/DefaultGameplaySceneInstaller.cs
@@ -67,11 +74,11 @@ It is not responsible for:
   - ICollectible is the base interface for pickup objects exposing OnCollected and IGameObjectProvider.
   - ISkillUpgradeCollectible is a narrow tag interface extending ICollectible for skill reward drops.
   - IPowerUpCollectible extends ICollectible with PowerUpType Type { get; }.
-  - SkillCrate is a MonoBehaviour implementing ISkillUpgradeCollectible and IPoolable. It checks for player trigger collisions (EntityLayers.Player), fires OnCollected, and triggers ReturnToPool.
-  - PowerUpCollectible is a MonoBehaviour implementing IPowerUpCollectible and IPoolable. Serializes PowerUpType (Nuke = 0, FreezeTimer = 1, BubbleShield = 2, Armor = 3, FireTails = 4). On trigger contact with EntityLayers.Player, invokes OnCollected and ReturnToPool, and kills transform tweens in OnRelease.
+  - SkillCrate is a MonoBehaviour implementing ISkillUpgradeCollectible and IPoolable. It tracks _isCollected (reset in OnGet()), checks for player trigger collisions (EntityLayers.Player), fires OnCollected and triggers ReturnToPool at most once per checkout, and kills active transform tweens in OnRelease.
+  - PowerUpCollectible is a MonoBehaviour implementing IPowerUpCollectible and IPoolable. Serializes PowerUpType (Nuke = 0, FreezeTimer = 1, BubbleShield = 2, Armor = 3, FireTails = 4) and tracks _isCollected (reset in OnGet()). On trigger contact with EntityLayers.Player, invokes OnCollected and ReturnToPool at most once per checkout, and kills transform tweens in OnRelease.
   - CollectibleDropEntry is a serializable struct configuring prefab, drop chance percentage (0-100%), and spawn Y-offset per enemy drop table entry.
-  - EnemyDropHandler is attached to enemy prefabs. It subscribes to Health.OnNoHealth, checks ICollectibleDropSuppressor.AreDropsSuppressed (returning early when drops are suppressed), rolls independent percentage chances for configured drop entries, resolves walkable grid landing positions, and calls ICollectibleDropNotifier.SpawnCollectible.
-  - CollectibleDropNotifier is a scene service implementing ICollectibleDropNotifier and ICollectibleDropSuppressor, maintaining per-prefab ObjectPool<GameObject> instances. It handles object instantiation under a parent transform, sets initial zero scale, runs DOTween DOScale and DOJump scatter animations, and routes pickup events to OnSkillUpgradeCollectibleCollected or OnPowerUpCollected.
+  - EnemyDropHandler is attached to enemy prefabs. It subscribes to Health.OnNoHealth, validates required injected _animationConfig and _gridManager fail-fast, checks ICollectibleDropSuppressor.AreDropsSuppressed (returning early when drops are suppressed), skips entries with Prefab == null or DropChancePercent <= 0f, rolls independent percentage chances for configured drop entries, resolves walkable grid landing positions (falling back to startPos if WorldGrid is uninitialized), and calls ICollectibleDropNotifier.SpawnCollectible.
+  - CollectibleDropNotifier is a scene service implementing ICollectibleDropNotifier and ICollectibleDropSuppressor, maintaining per-prefab ObjectPool<GameObject> instances. It validates non-null prefabs (ArgumentNullException), handles object instantiation under a parent transform, kills competing ScaleToAnimationOnEnable tweens via go.transform.DOKill() on retrieval, sets initial zero scale, runs a target-bound DOTween Sequence (.SetTarget(go.transform)) combining DOScale and DOJump scatter animations, removes _instancePoolMap tracking prior to pool.Release(go), and routes pickup events to OnSkillUpgradeCollectibleCollected or OnPowerUpCollected.
   - DropAnimationConfiguration is a ScriptableObject storing scatter radius, scale duration, scatter duration, jump power range, and duration multipliers.
 - Key interfaces:
   - ICollectibleDropNotifier exposes SpawnCollectible and raises OnSkillUpgradeCollectibleCollected and OnPowerUpCollected(PowerUpType).
@@ -116,7 +123,8 @@ It is not responsible for:
   - Enemy drop handling requires Reflex injection of ICollectibleDropNotifier, ICollectibleDropSuppressor, IGridManager, and DropAnimationConfiguration.
   - Collectibles require a Collider configured as a trigger and an attached IPoolable / ICollectible implementation.
 - Testing implications:
-  - Compile C# changes with dotnet build Assembly-CSharp.csproj -p:BuildProjectReferences=false.
+  - Compile C# changes with dotnet build CarSurvivors.Runtime.csproj -p:BuildProjectReferences=false, dotnet build CarSurvivors.Editor.Tests.csproj -p:BuildProjectReferences=false, and dotnet build CarSurvivors.PlayMode.Tests.csproj -p:BuildProjectReferences=false.
+  - Run EditMode tests in Assets/Scripts/Editor/Tests/CollectiblePickupsTests.cs, CollectibleDropNotifierTests.cs, EnemyDropHandlerTests.cs, CollectiblesAssetsIntegrityTests.cs, and EnemyDropsAndCollectibleNotifierTests.cs, plus PlayMode tests in Assets/Tests/PlayMode/CollectiblesPlayModeTests.cs.
   - Verify in Unity play mode (or via Dev Console command powerup <nuke|freeze|shield|armor|firetails|crate>) that drops spread within configured bounds, avoid impassable terrain/walls, properly return to pool on collection, and trigger their respective skill upgrade or power-up services.
 
 ## Integration Notes
