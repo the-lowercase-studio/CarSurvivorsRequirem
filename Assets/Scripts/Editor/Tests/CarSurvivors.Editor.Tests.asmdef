@@ -1,0 +1,38 @@
+{
+    "name": "CarSurvivors.Editor.Tests",
+    "rootNamespace": "",
+    "references": [
+        "CarSurvivors.Runtime",
+        "CarSurvivors.Editor",
+        "DOTween.Modules",
+        "Reflex",
+        "Reflex.Editor",
+        "Unity.Cinemachine",
+        "Unity.InputSystem",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll",
+        "DOTween.dll",
+        "DOTweenEditor.dll",
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}
