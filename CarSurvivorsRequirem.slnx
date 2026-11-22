@@ -1,5 +1,7 @@
 ﻿<Solution>
-  <Project Path="Assembly-CSharp.csproj" />
-  <Project Path="Assembly-CSharp-firstpass.csproj" />
-  <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="CarSurvivors.Editor.Tests.csproj" />
+  <Project Path="CarSurvivors.Runtime.csproj" />
+  <Project Path="DOTween.Modules.csproj" />
+  <Project Path="CarSurvivors.Editor.csproj" />
+  <Project Path="CarSurvivors.PlayMode.Tests.csproj" />
 </Solution>
