@@ -38,7 +38,7 @@ namespace Assets.Scripts.Editor.Tests
         private const string BARREL_PREFAB_PATH = "Assets/Prefabs/Enemies/Basic/BarrelEnemy.prefab";
         private const string BARREL_ANIM_CONTROLLER_PATH = "Assets/Animations/Enemies/Basic/Barrel/BarrelAnimationController.controller";
         private const string BARREL_ATTACK_CLIP_PATH = "Assets/Animations/Enemies/Basic/Barrel/Zombie Attack.anim";
-        private const string TIER2_SHINY_SHADER_NAME = "Custom/Tier2ShinyEnemy";
+        private const string ENEMY_SURFACE_SHADER_NAME = "Custom/EnemySurface";
         private const string URP_LIT_SHADER_NAME = "Universal Render Pipeline/Lit";
         private static readonly Vector3 ISOLATED_ORIGIN = new Vector3(36000f, 1200f, 36000f);
 
@@ -435,9 +435,9 @@ namespace Assets.Scripts.Editor.Tests
         [Test]
         public void BarrelAttackFeedback_SamplesColorAndEmissionTimelinePreservesShineAndRestoresOriginals()
         {
-            // Arrange — MeshRenderer with Tier2Shiny shader + emission enabled, and shine enabled via EnemyTierShineController
-            Shader shinyShader = Shader.Find(TIER2_SHINY_SHADER_NAME);
-            Assert.IsNotNull(shinyShader, $"Missing shader '{TIER2_SHINY_SHADER_NAME}'");
+            // Arrange — MeshRenderer with EnemySurface shader + emission enabled, and shine enabled via EnemyTierShineController
+            Shader shinyShader = Shader.Find(ENEMY_SURFACE_SHADER_NAME);
+            Assert.IsNotNull(shinyShader, $"Missing shader '{ENEMY_SURFACE_SHADER_NAME}'");
             Material mat = new Material(shinyShader);
             mat.EnableKeyword("_EMISSION");
             Color originalBase = new Color(0.2f, 0.4f, 0.8f, 1f);

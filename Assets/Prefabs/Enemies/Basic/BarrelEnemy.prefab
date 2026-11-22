@@ -506,6 +506,7 @@ MonoBehaviour:
   _isShineEnabled: 0
   _targetRenderers:
   - {fileID: 9119865667011057821}
+  _fallbackMaterializeHeight: 1.6
 --- !u!1001 &1408904166958615943
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -643,6 +644,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -2335955134870216827, guid: d858d2a46ef24ea408d7c3213d2c88ef, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: f04713aa4201b6b4f8412b26a20f7f91, type: 2}
+    - target: {fileID: -2335955134870216827, guid: d858d2a46ef24ea408d7c3213d2c88ef, type: 3}
+      propertyPath: 'm_Materials.Array.data[4]'
+      value: 
+      objectReference: {fileID: 2100000, guid: a502c35fdb9f85d4f9b0b94ce1b5d2f4, type: 2}
     - target: {fileID: 919132149155446097, guid: d858d2a46ef24ea408d7c3213d2c88ef, type: 3}
       propertyPath: m_Name
       value: BarrelEnemy

@@ -23,8 +23,14 @@ namespace Assets.Scripts.Editor.Tests
     public class TierConfigDrivenEnemySpawningTests
     {
         private const string PROGRESSION_CONFIG_PATH = "Assets/ScriptableObjects/GameFlow/GameLoopProgressionConfig.asset";
-        private const string TIER2_SHINY_SHADER_NAME = "Custom/Tier2ShinyEnemy";
+        private const string ENEMY_SURFACE_SHADER_NAME = "Custom/EnemySurface";
         private const string STANDARD_LIT_SHADER_NAME = "Universal Render Pipeline/Lit";
+
+        private static readonly string[] BASE_ZOMBIE_PREFAB_PATHS =
+        {
+            "Assets/Prefabs/Enemies/Basic/Zombies/Crawling/CrawlingZombie.prefab",
+            "Assets/Prefabs/Enemies/Basic/Zombies/Standing/StandingZombie.prefab"
+        };
 
         private static readonly string[] TIER1_PREFAB_PATHS =
         {
@@ -113,7 +119,7 @@ namespace Assets.Scripts.Editor.Tests
         [Test]
         public void EnemyTierShineController_WhenNeverEnabled_LeavesRendererWithoutPropertyBlock()
         {
-            Material shinyMaterial = CreateTrackedMaterial(TIER2_SHINY_SHADER_NAME);
+            Material shinyMaterial = CreateTrackedMaterial(ENEMY_SURFACE_SHADER_NAME);
             MeshRenderer renderer = CreateMeshRendererWithMaterials("Tier1Body", shinyMaterial);
             EnemyTierShineController controller = AttachShineController(renderer.gameObject, false, renderer);
 
@@ -127,7 +133,7 @@ namespace Assets.Scripts.Editor.Tests
         [Test]
         public void EnemyTierShineController_SetShineEnabledTrue_SetsPropertyOnCompatibleSlotOnly()
         {
-            Material shinyMaterial = CreateTrackedMaterial(TIER2_SHINY_SHADER_NAME);
+            Material shinyMaterial = CreateTrackedMaterial(ENEMY_SURFACE_SHADER_NAME);
             Material nonShinyMaterial = CreateTrackedMaterial(STANDARD_LIT_SHADER_NAME);
             MeshRenderer renderer = CreateMeshRendererWithMaterials("Tier2Body", shinyMaterial, nonShinyMaterial);
             EnemyTierShineController controller = AttachShineController(renderer.gameObject, false, renderer);
@@ -148,7 +154,7 @@ namespace Assets.Scripts.Editor.Tests
         [Test]
         public void EnemyTierShineController_DisableAfterEnable_ResetsShineToZeroAndPreservesBaseColor()
         {
-            Material shinyMaterial = CreateTrackedMaterial(TIER2_SHINY_SHADER_NAME);
+            Material shinyMaterial = CreateTrackedMaterial(ENEMY_SURFACE_SHADER_NAME);
             MeshRenderer renderer = CreateMeshRendererWithMaterials("BarrelBody", shinyMaterial);
             EnemyTierShineController controller = AttachShineController(renderer.gameObject, false, renderer);
 
@@ -174,7 +180,7 @@ namespace Assets.Scripts.Editor.Tests
         {
             EnemyConfigSO tier1Config = CreateEnemyConfig(maxHealth: 100f, isShiny: false);
             EnemyConfigSO tier2Config = CreateEnemyConfig(maxHealth: 500f, isShiny: true);
-            Material shinyMaterial = CreateTrackedMaterial(TIER2_SHINY_SHADER_NAME);
+            Material shinyMaterial = CreateTrackedMaterial(ENEMY_SURFACE_SHADER_NAME);
             Enemy enemyPrefab = CreateEnemyPrefabHarness("StandingZombiePrefab", tier1Config, shinyMaterial, out _);
 
             GameObject activeParent = TrackGameObject("ActiveParent", active: true);
@@ -206,7 +212,7 @@ namespace Assets.Scripts.Editor.Tests
         {
             EnemyConfigSO tier1Config = CreateEnemyConfig(maxHealth: 100f, isShiny: false);
             EnemyConfigSO rareTier2Config = CreateEnemyConfig(maxHealth: 900f, isShiny: true);
-            Material shinyMaterial = CreateTrackedMaterial(TIER2_SHINY_SHADER_NAME);
+            Material shinyMaterial = CreateTrackedMaterial(ENEMY_SURFACE_SHADER_NAME);
             Enemy enemyPrefab = CreateEnemyPrefabHarness("Tier1ZombiePrefab", tier1Config, shinyMaterial, out _);
 
             GameObject activeParent = TrackGameObject("ActiveParent", active: true);
@@ -239,7 +245,7 @@ namespace Assets.Scripts.Editor.Tests
         {
             EnemyConfigSO tier1Config = CreateEnemyConfig(maxHealth: 100f, isShiny: false);
             EnemyConfigSO rareTier2Config = CreateEnemyConfig(maxHealth: 900f, isShiny: true);
-            Material shinyMaterial = CreateTrackedMaterial(TIER2_SHINY_SHADER_NAME);
+            Material shinyMaterial = CreateTrackedMaterial(ENEMY_SURFACE_SHADER_NAME);
             Enemy enemyPrefab = CreateEnemyPrefabHarness("Tier1ZombiePrefab", tier1Config, shinyMaterial, out _);
 
             GameObject activeParent = TrackGameObject("ActiveParent", active: true);
@@ -273,7 +279,7 @@ namespace Assets.Scripts.Editor.Tests
         {
             EnemyConfigSO tier1Config = CreateEnemyConfig(maxHealth: 100f, isShiny: false);
             EnemyConfigSO tier2Config = CreateEnemyConfig(maxHealth: 500f, isShiny: true);
-            Material shinyMaterial = CreateTrackedMaterial(TIER2_SHINY_SHADER_NAME);
+            Material shinyMaterial = CreateTrackedMaterial(ENEMY_SURFACE_SHADER_NAME);
             Enemy enemyPrefab = CreateEnemyPrefabHarness("Tier2ZombiePrefab", tier1Config, shinyMaterial, out _);
 
             GameObject activeParent = TrackGameObject("ActiveParent", active: true);
@@ -362,6 +368,57 @@ namespace Assets.Scripts.Editor.Tests
             Assert.AreEqual(470, totalPrewarm);
 
             VerifyAllTier1PrefabsShareNonShinyController();
+        }
+
+        [Test]
+        public void AuthoredAssets_AllBasicEnemyPrefabs_TargetRenderersSupportMaterializationWithoutTier1Shine()
+        {
+            VerifyPrefabTargetRenderersSupportMaterialization(TIER1_PREFAB_PATHS);
+            VerifyPrefabTargetRenderersSupportMaterialization(BASE_ZOMBIE_PREFAB_PATHS);
+        }
+
+        private static void VerifyPrefabTargetRenderersSupportMaterialization(string[] prefabPaths)
+        {
+            for (int i = 0; i < prefabPaths.Length; i++)
+            {
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPaths[i]);
+                Assert.IsNotNull(prefab, $"Missing prefab at {prefabPaths[i]}");
+
+                EnemyTierShineController shine = prefab.GetComponent<EnemyTierShineController>();
+                Assert.IsNotNull(shine, $"Missing EnemyTierShineController on {prefab.name}");
+                Assert.IsFalse(shine.IsShineEnabled, $"Default shine state on {prefab.name} must be false.");
+
+                Renderer[] targetRenderers = GetPrivateField<Renderer[]>(typeof(EnemyTierShineController), shine, "_targetRenderers");
+                Assert.IsNotNull(targetRenderers, $"_targetRenderers is null on {prefab.name}");
+                Assert.IsNotEmpty(targetRenderers, $"_targetRenderers is empty on {prefab.name}");
+
+                for (int rIndex = 0; rIndex < targetRenderers.Length; rIndex++)
+                {
+                    Renderer renderer = targetRenderers[rIndex];
+                    Assert.IsNotNull(renderer, $"Target renderer [{rIndex}] is null on {prefab.name}");
+
+                    Material[] materials = renderer.sharedMaterials;
+                    Assert.IsNotEmpty(materials, $"Target renderer {renderer.name} has no materials on {prefab.name}");
+
+                    for (int slot = 0; slot < materials.Length; slot++)
+                    {
+                        Material material = materials[slot];
+                        Assert.IsNotNull(material, $"Material slot [{slot}] on {prefab.name}.{renderer.name} is null.");
+                        Assert.AreEqual(
+                            ENEMY_SURFACE_SHADER_NAME,
+                            material.shader.name,
+                            $"Material '{material.name}' on {prefab.name}.{renderer.name}[{slot}] must use {ENEMY_SURFACE_SHADER_NAME} for swarm materialization.");
+                        Assert.IsTrue(
+                            material.HasProperty(EnemyVisualConstants.MATERIALIZE_ENABLED_PROPERTY_ID),
+                            $"Material '{material.name}' on {prefab.name}.{renderer.name}[{slot}] must expose _MaterializeEnabled.");
+                        Assert.AreEqual(
+                            0f,
+                            material.GetFloat(EnemyVisualConstants.SHINE_ENABLED_PROPERTY_ID),
+                            0.0001f,
+                            $"Shared material '{material.name}' on {prefab.name}.{renderer.name}[{slot}] must keep _ShineEnabled = 0 by default.");
+                    }
+                }
+            }
         }
 
         private void VerifyAllTier1PrefabsShareNonShinyController()
@@ -558,6 +615,13 @@ namespace Assets.Scripts.Editor.Tests
             {
                 method.Invoke(behaviour, null);
             }
+        }
+
+        private static T GetPrivateField<T>(Type ownerType, object target, string fieldName) where T : class
+        {
+            FieldInfo field = ownerType.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(field, $"Missing private field '{fieldName}' on {ownerType.Name}");
+            return field.GetValue(target) as T;
         }
 
         private static void SetPrivateField(Type ownerType, object target, string fieldName, object value)

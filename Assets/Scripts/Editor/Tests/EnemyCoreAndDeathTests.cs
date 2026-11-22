@@ -38,7 +38,7 @@ namespace Assets.Scripts.Editor.Tests
     public class EnemyCoreAndDeathTests
     {
         private const float TOLERANCE = 0.0001f;
-        private const string TIER2_SHINY_SHADER_NAME = "Custom/Tier2ShinyEnemy";
+        private const string ENEMY_SURFACE_SHADER_NAME = "Custom/EnemySurface";
         private const string BARREL_PREFAB_PATH = "Assets/Prefabs/Enemies/Basic/BarrelEnemy.prefab";
         private const string BARREL_EXPLOSION_CONFIG_PATH = "Assets/ScriptableObjects/Enemy/Basic/Barrel/BarrelExplosionConfig.asset";
         private const string DROP_ANIM_CONFIG_PATH = "Assets/ScriptableObjects/Collectibles/DropAnimationConfiguration.asset";
@@ -809,8 +809,8 @@ namespace Assets.Scripts.Editor.Tests
             EnemyTierShineController shineController = null;
             if (withShineController)
             {
-                Shader shinyShader = Shader.Find(TIER2_SHINY_SHADER_NAME);
-                Assert.IsNotNull(shinyShader, $"Shader '{TIER2_SHINY_SHADER_NAME}' not found.");
+                Shader shinyShader = Shader.Find(ENEMY_SURFACE_SHADER_NAME);
+                Assert.IsNotNull(shinyShader, $"Shader '{ENEMY_SURFACE_SHADER_NAME}' not found.");
                 Material shinyMaterial = new Material(shinyShader);
                 _createdObjects.Add(shinyMaterial);
 

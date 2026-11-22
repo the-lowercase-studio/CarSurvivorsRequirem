@@ -1,4 +1,4 @@
-Shader "Custom/Tier2ShinyEnemy"
+Shader "Custom/EnemySurface"
 {
     Properties
     {
@@ -7,7 +7,7 @@ Shader "Custom/Tier2ShinyEnemy"
         _Metallic("Metallic", Range(0.0, 1.0)) = 0.0
         [HDR] _EmissionColor("Emission Color", Color) = (0.0, 0.0, 0.0, 1.0)
 
-        [Header(Tier 2 Shiny Effect)]
+        [Header(Tier Shine Effect)]
         [Toggle] _ShineEnabled("Shine Enabled", Float) = 0.0
         [HDR] _ShineColor("Shine Glint Color", Color) = (2.4, 2.25, 1.75, 1.0)
         _ShineCycleDuration("Shine Cycle Duration", Range(0.5, 10.0)) = 2.8
@@ -15,7 +15,7 @@ Shader "Custom/Tier2ShinyEnemy"
         _ShineWorldSpread("Shine World Spread", Range(0.0, 0.25)) = 0.045
         _ShineHeightSlope("Shine Height Slope", Range(0.0, 1.0)) = 0.22
 
-        [Header(Tier 2 Rim Shimmer)]
+        [Header(Tier Rim Shimmer)]
         [HDR] _RimColor("Rim Shimmer Color", Color) = (0.95, 0.88, 0.65, 1.0)
         _RimPower("Rim Fresnel Power", Range(1.0, 8.0)) = 4.0
         _RimIntensity("Rim Shimmer Intensity", Range(0.0, 2.0)) = 0.14

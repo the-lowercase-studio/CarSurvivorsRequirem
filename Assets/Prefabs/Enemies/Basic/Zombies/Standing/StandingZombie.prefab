@@ -143,6 +143,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _visual: {fileID: 8598757608740303722}
   _deathVfxPlayer: {fileID: 2363358761242140515}
+  _presentationTimeout: 5
 --- !u!114 &229474845590807783
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -234,6 +235,7 @@ MonoBehaviour:
   _isShineEnabled: 0
   _targetRenderers:
   - {fileID: 4909408010617150076}
+  _fallbackMaterializeHeight: 1.6
 --- !u!1 &8598757608740303722
 GameObject:
   m_ObjectHideFlags: 0
@@ -777,6 +779,14 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 7
       objectReference: {fileID: 0}
+    - target: {fileID: -5928395085533954453, guid: b391274d088176440a16866fa8aab180, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: a65248eafaf67f24f9f345911a00f32d, type: 2}
+    - target: {fileID: -5928395085533954453, guid: b391274d088176440a16866fa8aab180, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: f63e1463188dd5b41803ca97d9e242fe, type: 2}
     - target: {fileID: -5561550452697079657, guid: b391274d088176440a16866fa8aab180, type: 3}
       propertyPath: m_Layer
       value: 7
