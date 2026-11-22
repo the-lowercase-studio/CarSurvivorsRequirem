@@ -93,18 +93,24 @@ namespace Assets.Scripts.Enemies
 
         public void SpawnCollectible(GameObject prefab, Vector3 spawnPos, Vector3 targetPos)
         {
+            if (prefab == null)
+            {
+                throw new ArgumentNullException(nameof(prefab));
+            }
+
             var pool = GetOrCreatePool(prefab);
             var go = pool.Get();
             _instancePoolMap[go] = pool;
 
+            go.transform.DOKill();
             go.transform.position = spawnPos;
             go.transform.localScale = Vector3.zero;
 
             float jumpPower = UnityEngine.Random.Range(_animationConfig.MinJumpPower, _animationConfig.MaxJumpPower);
             float duration = _animationConfig.ScatterDuration * UnityEngine.Random.Range(_animationConfig.MinDurationMultiplier, _animationConfig.MaxDurationMultiplier);
 
-            var sequence = DG.Tweening.DOTween.Sequence();
-            sequence.Join(go.transform.DOScale(Vector3.one, _animationConfig.ScaleDuration).SetEase(DG.Tweening.Ease.OutBack));
+            Sequence sequence = DOTween.Sequence().SetTarget(go.transform);
+            sequence.Join(go.transform.DOScale(Vector3.one, _animationConfig.ScaleDuration).SetEase(Ease.OutBack));
             sequence.Join(go.transform.DOJump(targetPos, jumpPower, 1, duration));
         }
 
@@ -130,6 +136,7 @@ namespace Assets.Scripts.Enemies
                 var go = mb.gameObject;
                 if (_instancePoolMap.TryGetValue(go, out var pool))
                 {
+                    _instancePoolMap.Remove(go);
                     pool.Release(go);
                 }
             }

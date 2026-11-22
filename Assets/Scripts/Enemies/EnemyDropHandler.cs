@@ -60,9 +60,15 @@ namespace Assets.Scripts.Enemies
             }
             for (int i = 0; i < _dropEntries.Length; i++)
             {
-                if (UnityEngine.Random.Range(0f, 100f) <= _dropEntries[i].DropChancePercent)
+                CollectibleDropEntry entry = _dropEntries[i];
+                if (entry.Prefab == null || entry.DropChancePercent <= 0f)
                 {
-                    _chosenDrops.Add(_dropEntries[i]);
+                    continue;
+                }
+
+                if (UnityEngine.Random.Range(0f, 100f) <= entry.DropChancePercent)
+                {
+                    _chosenDrops.Add(entry);
                 }
             }
 
@@ -70,6 +76,11 @@ namespace Assets.Scripts.Enemies
             if (totalDrops == 0)
             {
                 return;
+            }
+
+            if (_animationConfig == null)
+            {
+                throw new InvalidOperationException("EnemyDropHandler requires an injected DropAnimationConfiguration.");
             }
 
             Vector3 basePos = transform.position;
@@ -89,8 +100,8 @@ namespace Assets.Scripts.Enemies
                 targetPos.y = spawnPos.y;
 
                 _dropNotifier.SpawnCollectible(
-                    drop.Prefab, 
-                    spawnPos, 
+                    drop.Prefab,
+                    spawnPos,
                     targetPos
                 );
             }
@@ -98,7 +109,16 @@ namespace Assets.Scripts.Enemies
 
         private Vector3 GetWalkablePosition(Vector3 startPos, Vector3 targetPos)
         {
-            var grid = _gridManager.WorldGrid;
+            if (_gridManager == null)
+            {
+                throw new InvalidOperationException("EnemyDropHandler requires an injected IGridManager.");
+            }
+
+            Navigation.GridSystem.Grid grid = _gridManager.WorldGrid;
+            if (grid == null || grid.Cells == null || grid.Width <= 0 || grid.Height <= 0)
+            {
+                return startPos;
+            }
 
             // 1. Try targetPos
             Cell targetCell = WorldPosToCellConverter.GetCellFromGridByWorldPos(grid, targetPos);

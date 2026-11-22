@@ -61,7 +61,7 @@ namespace Assets.Scripts.UI.HUD
                 // Legacy negative offset
                 _targetOffset = _targetGamma;
             }
-            else if (_targetGamma > 0f && _targetGamma <= 2f)
+            else if (_targetGamma >= 0f && _targetGamma <= 2f)
             {
                 // Real Gamma value (0 to 2), map to URP offset (-1 to 1)
                 _targetOffset = _targetGamma - 1f;
@@ -72,7 +72,7 @@ namespace Assets.Scripts.UI.HUD
                 _targetOffset = -_targetGamma;
             }
 
-            if (_postProcessVolume != null && _postProcessVolume.profile.TryGet(out _liftGammaGain))
+            if (_postProcessVolume != null && _postProcessVolume.profile != null && _postProcessVolume.profile.TryGet(out _liftGammaGain))
             {
                 _originalGamma = _liftGammaGain.gamma.value;
                 _hasOriginalGamma = true;

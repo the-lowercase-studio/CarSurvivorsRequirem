@@ -15,9 +15,13 @@ namespace Assets.Scripts.Enemies.Base
 
         [SerializeField] private GameObject _visual;
         [SerializeField] private VFXPlayer _deathVfxPlayer;
+        [SerializeField, Min(0.1f), Tooltip("Maximum scaled seconds to wait for death presentation callbacks.")]
+        private float _presentationTimeout = 5f;
         private Enemy _enemy;
-        private byte _startEffectsToFinish = 2;
         private byte _effectsToFinish;
+        private bool _hasDeathStarted;
+        private bool _hasCompleted;
+        private float _deathStartedAt;
         private Collider _collider;
         private Rigidbody _rb;
 
@@ -28,50 +32,131 @@ namespace Assets.Scripts.Enemies.Base
             _enemy = GetComponent<Enemy>();
             _collider = GetComponent<Collider>();
             _rb = GetComponent<Rigidbody>();
+            if (!(_presentationTimeout > 0f) || float.IsInfinity(_presentationTimeout))
+            {
+                throw new InvalidOperationException("EnemyDeathHandler requires a finite positive presentation timeout.");
+            }
         }
 
         private void OnEnable()
         {
             _rb.isKinematic = true;
             _collider.enabled = true;
-            _effectsToFinish = _startEffectsToFinish;
+            _hasDeathStarted = false;
+            _hasCompleted = false;
+            _deathStartedAt = 0f;
 
-            _deathVfxPlayer.OnVFXFinished += OnDeathEffectFinishedPlaying;
-            _enemy.AudioClipPlayer.OnAudioClipFinished += OnDeathEffectFinishedPlaying;
+            byte pendingEffects = 0;
+            if (_deathVfxPlayer != null)
+            {
+                _deathVfxPlayer.OnVFXFinished += OnDeathEffectFinishedPlaying;
+                pendingEffects++;
+            }
 
+            if (_enemy.AudioClipPlayer != null)
+            {
+                _enemy.AudioClipPlayer.OnAudioClipFinished += OnDeathEffectFinishedPlaying;
+                pendingEffects++;
+            }
+
+            _effectsToFinish = pendingEffects;
             _enemy.Health.OnNoHealth += Health_OnNoHealth;
+        }
+
+        private void LateUpdate()
+        {
+            if (!_hasDeathStarted || _hasCompleted)
+            {
+                return;
+            }
+
+            if (_effectsToFinish == 0)
+            {
+                Complete();
+                return;
+            }
+
+            if (Time.time - _deathStartedAt >= _presentationTimeout)
+            {
+                Debug.LogError("Enemy death presentation exceeded its watchdog; completing release.", this);
+                Complete();
+            }
         }
 
         private void OnDisable()
         {
-            _deathVfxPlayer.OnVFXFinished -= OnDeathEffectFinishedPlaying;
-            _enemy.AudioClipPlayer.OnAudioClipFinished -= OnDeathEffectFinishedPlaying;
+            if (_deathVfxPlayer != null)
+            {
+                _deathVfxPlayer.OnVFXFinished -= OnDeathEffectFinishedPlaying;
+            }
+
+            if (_enemy.AudioClipPlayer != null)
+            {
+                _enemy.AudioClipPlayer.OnAudioClipFinished -= OnDeathEffectFinishedPlaying;
+            }
 
             _enemy.Health.OnNoHealth -= Health_OnNoHealth;
+            _hasDeathStarted = false;
+            _hasCompleted = false;
+            _deathStartedAt = 0f;
         }
 
         private void Health_OnNoHealth(object sender, EventArgs e)
         {
+            if (_hasDeathStarted)
+            {
+                return;
+            }
+
+            _hasDeathStarted = true;
+            _hasCompleted = false;
+            _deathStartedAt = Time.time;
+
             _rb.isKinematic = true;
             _collider.enabled = false;
 
             _visual.SetActive(false);
 
-            _deathVfxPlayer.Play(new VFXPlayConfig());
+            if (_deathVfxPlayer != null)
+            {
+                _deathVfxPlayer.Play(new VFXPlayConfig());
+            }
 
             SpawnExp();
 
-            _enemy.AudioClipPlayer.Play("Death");
+            if (_enemy.AudioClipPlayer != null)
+            {
+                _enemy.AudioClipPlayer.Play("Death");
+            }
         }
 
         private void OnDeathEffectFinishedPlaying(object sender, EventArgs e)
         {
-            _effectsToFinish--;
+            if (!_hasDeathStarted || _hasCompleted)
+            {
+                return;
+            }
+
+            if (_effectsToFinish > 0)
+            {
+                _effectsToFinish--;
+            }
 
             if (_effectsToFinish == 0)
             {
-                OnCompleted?.Invoke(this, EventArgs.Empty);
+                Complete();
             }
+        }
+
+        private void Complete()
+        {
+            if (_hasCompleted || !isActiveAndEnabled)
+            {
+                return;
+            }
+
+            _hasCompleted = true;
+            OnCompleted?.Invoke(this, EventArgs.Empty);
         }
 
         private void SpawnExp()

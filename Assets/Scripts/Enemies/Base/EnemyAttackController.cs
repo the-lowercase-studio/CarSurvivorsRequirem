@@ -39,15 +39,14 @@ namespace Assets.Scripts.Enemies.Base
 
         private void EnemyCollisions_OnCollisionWithPlayer(object sender, CollisionEventArgs e)
         {
-            if (_enemy.IsFrozen || _attackAnimationPlayer.IsPlayingAttackAnimation)
+            if (_enemy.IsFrozen || _enemy.IsMaterializing || _attackAnimationPlayer.IsPlayingAttackAnimation || e.Collider == null)
             {
                 return;
             }
 
-            _currentAttackedTarget = e.Collider;
-
-            if (CanAttackCurrentAttackTarget())
+            if (CanAttackTarget(e.Collider))
             {
+                _currentAttackedTarget = e.Collider;
                 _enemy.EnemyAnimator.PlayAttackAnimation();
             }
         }
@@ -59,7 +58,8 @@ namespace Assets.Scripts.Enemies.Base
 
         private void DamageCurrentlyAttackedTarget()
         {
-            if (CanAttackCurrentAttackTarget()
+            if (!_enemy.IsMaterializing
+                && CanAttackTarget(_currentAttackedTarget)
                 && _currentAttackedTarget.TryGetComponent(out IDamageable damageable))
             {
                 damageable.TakeDamage(_enemy.Config.Damage);
@@ -68,18 +68,18 @@ namespace Assets.Scripts.Enemies.Base
             _currentAttackedTarget = null;
         }
 
-        private bool CanAttackCurrentAttackTarget()
+        private bool CanAttackTarget(Collider target)
         {
-            if (_currentAttackedTarget == null)
+            if (target == null)
             {
                 return false;
             }
 
-            Collider attackedTarget = GetAttackedColliderIfInRange();
+            Collider attackedTarget = GetAttackedColliderIfInRange(target);
 
-            if (attackedTarget == _currentAttackedTarget)
+            if (attackedTarget == target)
             {
-                Vector3 toTarget = _currentAttackedTarget.ClosestPoint(transform.position) - transform.position;
+                Vector3 toTarget = target.ClosestPoint(transform.position) - transform.position;
                 toTarget.y = 0f;
 
                 if (toTarget.sqrMagnitude < 0.001f)
@@ -94,7 +94,7 @@ namespace Assets.Scripts.Enemies.Base
 
                     Ray ray = new Ray(transform.position, toTarget.normalized);
                     if (Physics.Raycast(ray, out RaycastHit rayHit, distanceToTarget, TerrainLayers.All)
-                        && rayHit.collider != _currentAttackedTarget)
+                        && rayHit.collider != target)
                     {
                         return false;
                     }
@@ -106,14 +106,23 @@ namespace Assets.Scripts.Enemies.Base
             return false;
         }
 
-        private Collider GetAttackedColliderIfInRange()
+        private Collider GetAttackedColliderIfInRange(Collider target)
         {
             Collider[] colliders = Physics.OverlapSphere(
                 transform.position,
                 _attackRange,
-                1 << _currentAttackedTarget.gameObject.layer
+                1 << target.gameObject.layer
             );
-            return colliders.Length > 0 ? colliders[0] : null;
+
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                if (colliders[i] == target)
+                {
+                    return target;
+                }
+            }
+
+            return null;
         }
 
         private void OnDrawGizmos()

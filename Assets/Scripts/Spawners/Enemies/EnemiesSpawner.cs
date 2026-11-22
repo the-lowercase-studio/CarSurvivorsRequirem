@@ -63,12 +63,22 @@ namespace Assets.Scripts.Spawners.Enemies
 
         private readonly Dictionary<VFXPlayer, PendingSpawn> _pendingSpawns = new();
         private Transform _injectionStagingParent;
+        private bool _isPreWarming;
 
         private sealed class PendingSpawn
         {
-            public EnemySpawnInfo Info;
-            public Cell Cell;
-            public Vector3 Position;
+            public Enemy Enemy { get; }
+            public uint SpawnToken { get; }
+            public Cell Cell { get; }
+            public Vector3 Position { get; }
+
+            public PendingSpawn(Enemy enemy, uint spawnToken, Cell cell, Vector3 position)
+            {
+                Enemy = enemy;
+                SpawnToken = spawnToken;
+                Cell = cell;
+                Position = position;
+            }
         }
 
         private void OnDisable()
@@ -79,7 +89,18 @@ namespace Assets.Scripts.Spawners.Enemies
                 {
                     pending.Key.OnVFXFinished -= HandleSwarmVfxFinished;
                 }
+
+                PendingSpawn pendingSpawn = pending.Value;
+                if (pendingSpawn != null
+                    && pendingSpawn.Enemy != null
+                    && pendingSpawn.Enemy.isActiveAndEnabled
+                    && pendingSpawn.Enemy.IsMaterializing
+                    && pendingSpawn.Enemy.MaterializationToken == pendingSpawn.SpawnToken)
+                {
+                    pendingSpawn.Enemy.ReturnToPool();
+                }
             }
+
             _pendingSpawns.Clear();
         }
 
@@ -183,22 +204,30 @@ namespace Assets.Scripts.Spawners.Enemies
 
         private void PreWarmPools()
         {
-            foreach (var kvp in _enemyPools)
+            _isPreWarming = true;
+            try
             {
-                EnemySpawnInfo info = kvp.Key;
-                ObjectPool<Enemy> pool = kvp.Value;
+                foreach (var kvp in _enemyPools)
+                {
+                    EnemySpawnInfo info = kvp.Key;
+                    ObjectPool<Enemy> pool = kvp.Value;
 
-                List<Enemy> temp = new List<Enemy>(info.MaxAmount);
-                for (int i = 0; i < info.MaxAmount; i++)
-                {
-                    Enemy enemy = pool.Get();
-                    _instancePoolMap[enemy] = pool;
-                    temp.Add(enemy);
+                    List<Enemy> temp = new List<Enemy>(info.MaxAmount);
+                    for (int i = 0; i < info.MaxAmount; i++)
+                    {
+                        Enemy enemy = pool.Get();
+                        _instancePoolMap[enemy] = pool;
+                        temp.Add(enemy);
+                    }
+                    foreach (Enemy enemy in temp)
+                    {
+                        pool.Release(enemy);
+                    }
                 }
-                foreach (Enemy enemy in temp)
-                {
-                    pool.Release(enemy);
-                }
+            }
+            finally
+            {
+                _isPreWarming = false;
             }
         }
 
@@ -225,7 +254,10 @@ namespace Assets.Scripts.Spawners.Enemies
 
             _instancePoolMap.Remove(enemy);
 
-            OnSpawnedEntityReleased?.Invoke(enemy, EventArgs.Empty);
+            if (!_isPreWarming)
+            {
+                OnSpawnedEntityReleased?.Invoke(enemy, EventArgs.Empty);
+            }
 
             CurrentlySpawnedObjectsCount--;
         }
@@ -287,14 +319,18 @@ namespace Assets.Scripts.Spawners.Enemies
 
         public void SpawnSpecificEnemy(EnemySpawnInfo enemyInfo, int count = 1)
         {
-            if (!_enemyPools.TryGetValue(enemyInfo, out ObjectPool<Enemy> pool)) return;
+            if (enemyInfo == null || !_enemyPools.TryGetValue(enemyInfo, out ObjectPool<Enemy> pool))
+            {
+                return;
+            }
 
             IEnumerable<Cell> cells = GridCellsNotVisibleByMainCamera.GetRandomWalkableCells(
                 _gridManager.GridPlayerChunk,
                 _mainCamera,
                 count,
                 _maxEnemiesPerCell,
-                includeRemainingCandidates: true
+                includeRemainingCandidates: true,
+                requireHiddenFromCamera: false
             );
             using (var enumerator = cells.GetEnumerator())
             {
@@ -306,7 +342,7 @@ namespace Assets.Scripts.Spawners.Enemies
                     }
                     Cell candidate = enumerator.Current;
                     if (!GridCellsNotVisibleByMainCamera.TryGetPlacement(candidate, _gridManager.GridPlayerChunk,
-                        _mainCamera, _maxEnemiesPerCell, out Vector3 spawnPos))
+                        _mainCamera, _maxEnemiesPerCell, requireHiddenFromCamera: false, out Vector3 spawnPos))
                     {
                         i--;
                         continue;
@@ -315,9 +351,18 @@ namespace Assets.Scripts.Spawners.Enemies
                     if (_swarmSpawnVfxPrefab != null)
                     {
                         VFXPlayer vfx = Instantiate(_swarmSpawnVfxPrefab, spawnPos, Quaternion.identity);
-                        _pendingSpawns.Add(vfx, new PendingSpawn { Info = enemyInfo, Cell = candidate, Position = spawnPos });
+                        Quaternion spawnRotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
+                        Enemy enemy = CheckoutEnemyAt(pool, spawnPos, spawnRotation, applyCustomRotation: true);
+                        enemy.BeginMaterialization(0f);
+                        _pendingSpawns.Add(
+                            vfx,
+                            new PendingSpawn(enemy, enemy.MaterializationToken, candidate, spawnPos));
                         vfx.OnVFXFinished += HandleSwarmVfxFinished;
                         vfx.Play(new VFXPlayConfig(scale: 1f, destroyOnEnd: true));
+                        if (enemy.IsMaterializing && _pendingSpawns.ContainsKey(vfx))
+                        {
+                            enemy.SetMaterializationDuration(vfx.LastScheduledDuration);
+                        }
                     }
                     else
                     {
@@ -335,10 +380,7 @@ namespace Assets.Scripts.Spawners.Enemies
                 return false;
             }
 
-            enemy = pool.Get();
-            _instancePoolMap[enemy] = pool;
-            enemy.transform.position = position;
-            enemy.MovementController.ResetAfterRelocation();
+            enemy = CheckoutEnemyAt(pool, position, Quaternion.identity, applyCustomRotation: false);
             return true;
         }
 
@@ -348,37 +390,59 @@ namespace Assets.Scripts.Spawners.Enemies
             {
                 return;
             }
+
             vfx.OnVFXFinished -= HandleSwarmVfxFinished;
             _pendingSpawns.Remove(vfx);
-            if (!isActiveAndEnabled || !GridCellsNotVisibleByMainCamera.TryGetPlacement(pending.Cell,
-                _gridManager.GridPlayerChunk, _mainCamera, _maxEnemiesPerCell, out Vector3 currentPosition)
-                || (currentPosition - pending.Position).sqrMagnitude > Mathf.Epsilon)
+
+            Enemy enemy = pending.Enemy;
+            if (enemy == null
+                || !enemy.isActiveAndEnabled
+                || !enemy.IsMaterializing
+                || enemy.MaterializationToken != pending.SpawnToken)
             {
                 return;
             }
-            if (_enemyPools.TryGetValue(pending.Info, out ObjectPool<Enemy> pool))
+
+            // Spawn into committed circle indicators even if the camera view or player chunk moved during the VFX.
+            if (!isActiveAndEnabled
+                || pending.Cell == null
+                || !CellStatusDescriber.IsWalkable(pending.Cell)
+                || !GroundSupportQuery.TryGetSupportedPosition(pending.Cell.WorldPos, out Vector3 currentPosition)
+                || (currentPosition - pending.Position).sqrMagnitude > 0.01f)
             {
-                SpawnAtSupportedPosition(pool, currentPosition);
+                enemy.ReturnToPool();
+                return;
             }
+
+            enemy.CompleteMaterialization();
         }
 
         private void SpawnAtSupportedPosition(ObjectPool<Enemy> pool, Vector3 position)
         {
+            CheckoutEnemyAt(pool, position, Quaternion.identity, applyCustomRotation: false);
+        }
+
+        private Enemy CheckoutEnemyAt(ObjectPool<Enemy> pool, Vector3 position, Quaternion rotation, bool applyCustomRotation)
+        {
             Enemy enemy = pool.Get();
             _instancePoolMap[enemy] = pool;
-            enemy.transform.position = position;
+            if (applyCustomRotation)
+            {
+                enemy.transform.SetPositionAndRotation(position, rotation);
+            }
+            else
+            {
+                enemy.transform.position = position;
+            }
+
             enemy.MovementController.ResetAfterRelocation();
+            return enemy;
         }
 
         public void IncreaseSpawnChanceRedistributionFactor(float amount)
         {
             _enemiesSpawnChanceRedistributionSystem.IncreaseSpawnChanceRedistributionFactor(amount);
             _currentRedistributionFactorBonus = _enemiesSpawnChanceRedistributionSystem.RedistributionFactorBonus;
-        }
-
-        public void SpawnRandomEnemiesBasedOnSpawnChance(int count)
-        {
-            SpawnAtRandomGridPos(count);
         }
 
         public int CopyActiveEnemies(List<Enemy> buffer)
@@ -399,18 +463,33 @@ namespace Assets.Scripts.Spawners.Enemies
 
         private EnemySpawnInfo RandomEnemyInfoBasedOnSpawnChance()
         {
-            float totalChance = 0;
+            float totalChance = 0f;
             foreach (EnemySpawnInfo enemySpawnInfo in _runtimeEnemiesInfo)
             {
-                totalChance += enemySpawnInfo.SpawnChanceInfo.SpawnChance;
+                float chance = enemySpawnInfo.SpawnChanceInfo.SpawnChance;
+                if (chance > 0f)
+                {
+                    totalChance += chance;
+                }
+            }
+
+            if (totalChance <= 0f)
+            {
+                return null;
             }
 
             float randomPoint = UnityEngine.Random.value * totalChance;
 
-            float currentSum = 0;
+            float currentSum = 0f;
             foreach (EnemySpawnInfo enemySpawnInfo in _runtimeEnemiesInfo)
             {
-                currentSum += enemySpawnInfo.SpawnChanceInfo.SpawnChance;
+                float chance = enemySpawnInfo.SpawnChanceInfo.SpawnChance;
+                if (chance <= 0f)
+                {
+                    continue;
+                }
+
+                currentSum += chance;
                 if (currentSum >= randomPoint)
                 {
                     return enemySpawnInfo;

@@ -14,14 +14,14 @@ namespace Assets.Scripts.Enemies.Base
         [SerializeField] private float _collisionCheckDelay = 0.05f;
         [SerializeField] private float _collisionRadius = 1f;
 
+        private Enemy _enemy;
         private List<Collider> _colliders;
-
-        public event EventHandler<CollisionEventArgs> OnCollisionWithOtherEnemy;
 
         public event EventHandler<CollisionEventArgs> OnCollisionWithPlayer;
 
         private void Awake()
         {
+            _enemy = GetComponent<Enemy>();
             SetAllColliders();
         }
 
@@ -54,20 +54,18 @@ namespace Assets.Scripts.Enemies.Base
 
         private void HandleCollisionsCheck()
         {
-            RaycastHit[] hits = Physics.SphereCastAll(transform.position, _collisionRadius, Vector3.up, Mathf.Infinity, EntityLayers.All);
+            if (_enemy != null && _enemy.IsMaterializing)
+            {
+                return;
+            }
+
+            RaycastHit[] hits = Physics.SphereCastAll(transform.position, _collisionRadius, Vector3.up, Mathf.Infinity, EntityLayers.Player);
             foreach (var hit in hits)
             {
                 Collider collider = hit.collider;
-                if (hit.collider != null && !_colliders.Contains(hit.collider))
+                if (collider != null && !_colliders.Contains(collider))
                 {
-                    if (EntityLayers.Enemies.ContainsLayer(collider.gameObject.layer))
-                    {
-                        OnCollisionWithOtherEnemy?.Invoke(this, new CollisionEventArgs(collider));
-                    }
-                    else if (EntityLayers.Player.ContainsLayer(collider.gameObject.layer))
-                    {
-                        OnCollisionWithPlayer?.Invoke(this, new CollisionEventArgs(collider));
-                    }
+                    OnCollisionWithPlayer?.Invoke(this, new CollisionEventArgs(collider));
                 }
             }
         }

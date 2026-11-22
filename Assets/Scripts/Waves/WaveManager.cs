@@ -48,10 +48,10 @@ namespace Assets.Scripts.Waves
             }
             else
             {
-                _effectiveWaveDelay = baseWaveDelay;
-                _effectiveGrowthMultiplier = baseGrowthMultiplier;
+                _effectiveWaveDelay = Mathf.Max(0.1f, baseWaveDelay);
+                _effectiveGrowthMultiplier = Mathf.Max(0.1f, baseGrowthMultiplier);
                 _maxEnemiesInWaveCap = ushort.MaxValue;
-                _maxEnemiesInWave = baseInitialMax;
+                _maxEnemiesInWave = (ushort)Mathf.Clamp(baseInitialMax, 1, _maxEnemiesInWaveCap);
             }
 
             _currentSpawnWaveDelay = firstWaveDelay;
@@ -59,19 +59,29 @@ namespace Assets.Scripts.Waves
 
         private void Update()
         {
+            AdvanceWaves(Time.deltaTime);
+        }
+
+        public void AdvanceWaves(float deltaTime)
+        {
+            if (deltaTime <= 0f || float.IsNaN(deltaTime) || float.IsInfinity(deltaTime))
+            {
+                return;
+            }
+
             if (IsFrozen || (_timeFreezeState != null && _timeFreezeState.IsFrozen))
             {
                 return;
             }
 
-            WavesProcess();
+            WavesProcess(deltaTime);
         }
 
-        private void WavesProcess()
+        private void WavesProcess(float deltaTime)
         {
             if ((_wave == 1 || _enemiesSpawner.CurrentlySpawnedObjectsCount > 0) && _currentSpawnWaveDelay > 0)
             {
-                _currentSpawnWaveDelay -= Time.deltaTime;
+                _currentSpawnWaveDelay -= deltaTime;
             }
             else
             {
@@ -86,7 +96,7 @@ namespace Assets.Scripts.Waves
             float maxEnemiesInWave = _maxEnemiesInWave * _effectiveGrowthMultiplier;
             if (maxEnemiesInWave < _maxEnemiesInWaveCap)
             {
-                _maxEnemiesInWave = (ushort)Mathf.Max(1, (int)maxEnemiesInWave);
+                _maxEnemiesInWave = (ushort)Mathf.Max(1, Mathf.RoundToInt(maxEnemiesInWave));
             }
             else
             {

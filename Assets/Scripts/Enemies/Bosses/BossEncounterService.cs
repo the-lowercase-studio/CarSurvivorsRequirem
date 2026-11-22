@@ -34,8 +34,6 @@ namespace Assets.Scripts.Enemies.Bosses
         void SpawnGolemBoss(Vector3? spawnPosition = null);
         int CollectEngagedBosses(List<IBossCombatTarget> buffer);
         event Action<int, int> OnTowerDefeated;
-        event Action<IGolemBoss> OnGolemSpawned;
-        event Action<IGolemBoss> OnGolemDefeated;
     }
 
     public class BossEncounterService : MonoBehaviour, IBossEncounterService
@@ -75,8 +73,6 @@ namespace Assets.Scripts.Enemies.Bosses
         public int RemainingTowersCount => Mathf.Max(0, RequiredTowersCount - DefeatedTowersCount);
 
         public event Action<int, int> OnTowerDefeated;
-        public event Action<IGolemBoss> OnGolemSpawned;
-        public event Action<IGolemBoss> OnGolemDefeated;
 
         private void OnDisable()
         {
@@ -174,7 +170,7 @@ namespace Assets.Scripts.Enemies.Bosses
 
         public void NotifyTowerDefeated(IEncounterArenaController towerArena)
         {
-            if (towerArena != null && !_defeatedTowers.Add(towerArena))
+            if (towerArena == null || !_defeatedTowers.Add(towerArena))
             {
                 return;
             }
@@ -263,8 +259,6 @@ namespace Assets.Scripts.Enemies.Bosses
                 : _golemDisplayName;
 
             NotifyEncounterEngaged(_activeGolemInstance, displayName);
-
-            OnGolemSpawned?.Invoke(_activeGolemInstance);
         }
 
         public int CollectEngagedBosses(List<IBossCombatTarget> buffer)
@@ -329,8 +323,6 @@ namespace Assets.Scripts.Enemies.Bosses
                 _activeGolemInstance.OnBossDefeated -= Golem_OnBossDefeated;
                 _activeGolemInstance = null;
             }
-
-            OnGolemDefeated?.Invoke(boss);
         }
     }
 }

@@ -5,7 +5,6 @@ using Assets.Scripts.Spawners.Enemies;
 using Assets.Scripts.UI.HUD;
 using Assets.Scripts.Waves;
 using Reflex.Attributes;
-using System.Collections;
 using UnityEngine;
 
 namespace Assets.Scripts.Spawners.Swarm
@@ -42,42 +41,101 @@ namespace Assets.Scripts.Spawners.Swarm
         private int _effectiveMaxSwarmSize;
         private float _nextSwarmTime;
         private int _currentSwarmIndex;
-        private bool _isSwarmActive;
-        private Coroutine _swarmCoroutine;
+        private SwarmPhase _phase;
+        private EnemySpawnInfo _activeEnemyInfo;
+        private int _activeTotalToSpawn;
+        private float _warningTimer;
+        private int _lastLoggedSecond;
+        private int _ticksTotal;
+        private int _currentTickIndex;
+        private int _spawnedInSwarm;
+        private float _tickWaitTimer;
+        private bool _isSuppressed;
 
-        public bool IsSuppressed { get; set; }
+        private enum SwarmPhase
+        {
+            Idle,
+            Warning,
+            Spawning
+        }
+
+        public bool IsSuppressed
+        {
+            get
+            {
+                return _isSuppressed;
+            }
+            set
+            {
+                _isSuppressed = value;
+                if (_isSuppressed && _phase != SwarmPhase.Idle)
+                {
+                    CancelActiveSwarm();
+                }
+            }
+        }
 
         private void Start()
         {
             ApplyTierScaling();
-            _nextSwarmTime = Random.Range(_effectiveMinSwarmInterval, _effectiveMaxSwarmInterval);
+            _nextSwarmTime = RollNextSwarmInterval();
+            ResetActiveSwarmState();
         }
 
         private void OnDisable()
         {
-            if (_isSwarmActive)
+            if (_phase != SwarmPhase.Idle)
             {
-                if (_waveFreezer != null)
-                {
-                    _waveFreezer.IsFrozen = false;
-                }
-                _isSwarmActive = false;
-            }
-            if (_swarmCoroutine != null)
-            {
-                StopCoroutine(_swarmCoroutine);
-                _swarmCoroutine = null;
+                CancelActiveSwarm();
             }
         }
 
         private void Update()
         {
-            if (_isSwarmActive || IsSuppressed || (_timeFreezeState != null && _timeFreezeState.IsFrozen))
+            AdvanceSwarm(Time.deltaTime);
+        }
+
+        public void AdvanceSwarm(float deltaTime)
+        {
+            if (deltaTime <= 0f || float.IsNaN(deltaTime) || float.IsInfinity(deltaTime))
             {
                 return;
             }
 
-            _nextSwarmTime -= Time.deltaTime;
+            if (_phase == SwarmPhase.Idle)
+            {
+                StepCooldownPhase(deltaTime);
+                return;
+            }
+
+            if (_isSuppressed)
+            {
+                CancelActiveSwarm();
+                return;
+            }
+
+            if (_timeFreezeState != null && _timeFreezeState.IsFrozen)
+            {
+                return;
+            }
+
+            if (_phase == SwarmPhase.Warning)
+            {
+                StepWarningPhase(deltaTime);
+                return;
+            }
+
+            StepSpawningPhase(deltaTime);
+        }
+
+        private void StepCooldownPhase(float deltaTime)
+        {
+            if (_isSuppressed || (_timeFreezeState != null && _timeFreezeState.IsFrozen))
+            {
+                return;
+            }
+
+            _nextSwarmTime -= deltaTime;
 
             if (_nextSwarmTime <= 0f)
             {
@@ -88,9 +146,11 @@ namespace Assets.Scripts.Spawners.Swarm
         private void StartSwarm()
         {
             int configCount = _swarmEnemySpawner.EnemyConfigs.Count;
-            if (configCount == 0) return;
-
-            _isSwarmActive = true;
+            if (configCount == 0)
+            {
+                _nextSwarmTime = RollNextSwarmInterval();
+                return;
+            }
 
             int clampedIndex = Mathf.Min(_currentSwarmIndex, configCount - 1);
             EnemySpawnInfo selectedConfig = _swarmEnemySpawner.EnemyConfigs[clampedIndex];
@@ -99,80 +159,143 @@ namespace Assets.Scripts.Spawners.Swarm
             swarmSize = Mathf.Min(swarmSize, selectedConfig.MaxAmount);
 
             _waveFreezer.IsFrozen = true;
-
-            _swarmCoroutine = StartCoroutine(SwarmCoroutine(selectedConfig, swarmSize));
+            BeginWarningPhase(selectedConfig, swarmSize);
         }
 
-        private IEnumerator SwarmCoroutine(EnemySpawnInfo enemyInfo, int totalToSpawn)
+        private void BeginWarningPhase(EnemySpawnInfo enemyInfo, int totalToSpawn)
         {
-            // Phase 1: Warning Countdown
-            float warningTimer = _swarmWarningDuration;
-            int lastLoggedSecond = Mathf.CeilToInt(warningTimer);
+            _activeEnemyInfo = enemyInfo;
+            _activeTotalToSpawn = totalToSpawn;
+            _warningTimer = _swarmWarningDuration;
+            _lastLoggedSecond = Mathf.CeilToInt(_warningTimer);
 
-            _swarmNotificationPresenter.ShowIncoming(lastLoggedSecond);
+            _swarmNotificationPresenter.ShowIncoming(_lastLoggedSecond);
 
-            while (warningTimer > 0f)
+            if (_warningTimer > 0f)
             {
-                yield return null;
-                if (_timeFreezeState != null && _timeFreezeState.IsFrozen)
-                {
-                    continue;
-                }
-
-                warningTimer -= Time.deltaTime;
-                int currentSecond = Mathf.CeilToInt(warningTimer);
-                if (currentSecond != lastLoggedSecond && currentSecond > 0)
-                {
-                    lastLoggedSecond = currentSecond;
-                    _swarmNotificationPresenter.ShowIncoming(lastLoggedSecond);
-                }
+                _phase = SwarmPhase.Warning;
+                return;
             }
 
-            // Phase 2: Ongoing Spawning
+            BeginSpawningPhase();
+        }
+
+        private void StepWarningPhase(float deltaTime)
+        {
+            _warningTimer -= deltaTime;
+            int currentSecond = Mathf.CeilToInt(_warningTimer);
+            if (currentSecond != _lastLoggedSecond && currentSecond > 0)
+            {
+                _lastLoggedSecond = currentSecond;
+                _swarmNotificationPresenter.ShowIncoming(_lastLoggedSecond);
+            }
+
+            if (_warningTimer <= 0f)
+            {
+                BeginSpawningPhase();
+            }
+        }
+
+        private void BeginSpawningPhase()
+        {
             _swarmNotificationPresenter.ShowOngoing();
 
-            int ticks = Mathf.Max(1, Mathf.RoundToInt(_swarmDuration / _spawnTickInterval));
-            int spawned = 0;
+            _ticksTotal = Mathf.Max(1, Mathf.RoundToInt(_swarmDuration / _spawnTickInterval));
+            _spawnedInSwarm = 0;
+            _currentTickIndex = 0;
+            _phase = SwarmPhase.Spawning;
 
-            for (int i = 0; i < ticks; i++)
+            ExecutePendingTicks();
+        }
+
+        private void StepSpawningPhase(float deltaTime)
+        {
+            _tickWaitTimer -= deltaTime;
+            if (_tickWaitTimer <= 0f)
             {
-                int targetCumulative = Mathf.RoundToInt((float)(i + 1) / ticks * totalToSpawn);
-                int toSpawnThisTick = targetCumulative - spawned;
+                ExecutePendingTicks();
+            }
+        }
+
+        private void ExecutePendingTicks()
+        {
+            while (_currentTickIndex < _ticksTotal)
+            {
+                int targetCumulative = Mathf.RoundToInt((float)(_currentTickIndex + 1) / _ticksTotal * _activeTotalToSpawn);
+                int toSpawnThisTick = targetCumulative - _spawnedInSwarm;
 
                 if (toSpawnThisTick > 0)
                 {
-                    _swarmEnemySpawner.SpawnSpecificEnemy(enemyInfo, toSpawnThisTick);
-                    spawned += toSpawnThisTick;
+                    _swarmEnemySpawner.SpawnSpecificEnemy(_activeEnemyInfo, toSpawnThisTick);
+                    _spawnedInSwarm += toSpawnThisTick;
                 }
 
-                if (i < ticks - 1)
-                {
-                    float waitTimer = _spawnTickInterval;
-                    while (waitTimer > 0f)
-                    {
-                        yield return null;
-                        if (_timeFreezeState != null && _timeFreezeState.IsFrozen)
-                        {
-                            continue;
-                        }
+                _currentTickIndex++;
 
-                        waitTimer -= Time.deltaTime;
-                    }
+                if (_currentTickIndex >= _ticksTotal)
+                {
+                    EndSwarm();
+                    return;
+                }
+
+                if (_spawnTickInterval > 0f)
+                {
+                    _tickWaitTimer = _spawnTickInterval;
+                    return;
                 }
             }
-
-            EndSwarm();
         }
 
         private void EndSwarm()
         {
             _swarmNotificationPresenter.Hide();
             _waveFreezer.IsFrozen = false;
-            _isSwarmActive = false;
-            _swarmCoroutine = null;
+            ResetActiveSwarmState();
 
             _currentSwarmIndex++;
-            _nextSwarmTime = Random.Range(_effectiveMinSwarmInterval, _effectiveMaxSwarmInterval);
+            _nextSwarmTime = RollNextSwarmInterval();
+        }
+
+        private void CancelActiveSwarm()
+        {
+            if (_swarmNotificationPresenter != null)
+            {
+                _swarmNotificationPresenter.Hide();
+            }
+
+            if (_waveFreezer != null)
+            {
+                _waveFreezer.IsFrozen = false;
+            }
+
+            ResetActiveSwarmState();
+            _nextSwarmTime = RollNextSwarmInterval();
+        }
+
+        private float RollNextSwarmInterval()
+        {
+            if (_effectiveMaxSwarmInterval <= _effectiveMinSwarmInterval)
+            {
+                return _effectiveMinSwarmInterval;
+            }
+
+            return Mathf.Clamp(
+                Random.Range(_effectiveMinSwarmInterval, _effectiveMaxSwarmInterval),
+                _effectiveMinSwarmInterval,
+                _effectiveMaxSwarmInterval);
+        }
+
+        private void ResetActiveSwarmState()
+        {
+            _phase = SwarmPhase.Idle;
+            _activeEnemyInfo = null;
+            _activeTotalToSpawn = 0;
+            _warningTimer = 0f;
+            _lastLoggedSecond = 0;
+            _ticksTotal = 0;
+            _currentTickIndex = 0;
+            _spawnedInSwarm = 0;
+            _tickWaitTimer = 0f;
         }
 
         private void ApplyTierScaling()

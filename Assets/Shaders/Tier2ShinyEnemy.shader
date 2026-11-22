@@ -19,6 +19,16 @@ Shader "Custom/Tier2ShinyEnemy"
         [HDR] _RimColor("Rim Shimmer Color", Color) = (0.95, 0.88, 0.65, 1.0)
         _RimPower("Rim Fresnel Power", Range(1.0, 8.0)) = 4.0
         _RimIntensity("Rim Shimmer Intensity", Range(0.0, 2.0)) = 0.14
+
+        [Header(Spawn Materialization Effect)]
+        [Toggle] _MaterializeEnabled("Materialize Enabled", Float) = 0.0
+        _MaterializeProgress("Materialize Progress", Range(0.0, 1.0)) = 1.0
+        _MaterializeMinY("Materialize Min Y", Float) = 0.0
+        _MaterializeHeight("Materialize Height", Float) = 1.8
+        _MaterializeEdgeWidth("Materialize Edge Width", Range(0.01, 0.5)) = 0.14
+        [HDR] _MaterializeEdgeColor("Materialize Edge Color", Color) = (2.6, 0.32, 0.04, 1.0)
+        [HDR] _MaterializeRimColor("Materialize Rim Color", Color) = (1.6, 0.05, 0.02, 1.0)
+        _MaterializeRimPower("Materialize Rim Power", Range(1.0, 8.0)) = 3.0
     }
 
     SubShader
@@ -41,6 +51,8 @@ Shader "Custom/Tier2ShinyEnemy"
             half4 _EmissionColor;
             half4 _ShineColor;
             half4 _RimColor;
+            half4 _MaterializeEdgeColor;
+            half4 _MaterializeRimColor;
             half _Smoothness;
             half _Metallic;
             float _ShineEnabled;
@@ -50,7 +62,26 @@ Shader "Custom/Tier2ShinyEnemy"
             float _ShineHeightSlope;
             float _RimPower;
             float _RimIntensity;
+            float _MaterializeEnabled;
+            float _MaterializeProgress;
+            float _MaterializeMinY;
+            float _MaterializeHeight;
+            float _MaterializeEdgeWidth;
+            float _MaterializeRimPower;
         CBUFFER_END
+
+        inline float ComputeMaterializeCutoffY()
+        {
+            return _MaterializeMinY + max(_MaterializeHeight, 0.01) * saturate(_MaterializeProgress);
+        }
+
+        inline void ClipIfMaterializing(float positionWSY)
+        {
+            if (_MaterializeEnabled > 0.5)
+            {
+                clip(ComputeMaterializeCutoffY() - positionWSY);
+            }
+        }
         ENDHLSL
 
         Pass
@@ -154,6 +185,8 @@ Shader "Custom/Tier2ShinyEnemy"
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
+                ClipIfMaterializing(input.positionWS.y);
+
                 InputData inputData = (InputData)0;
                 inputData.positionWS = input.positionWS;
                 inputData.normalWS = NormalizeNormalPerPixel(input.normalWS);
@@ -207,7 +240,23 @@ Shader "Custom/Tier2ShinyEnemy"
                         + _RimColor.rgb * (fresnel * (half)_RimIntensity);
                 }
 
-                surfaceData.emission = _EmissionColor.rgb + shineEmission;
+                half3 materializeEmission = half3(0.0h, 0.0h, 0.0h);
+                if (_MaterializeEnabled > 0.5)
+                {
+                    float cutoffY = ComputeMaterializeCutoffY();
+                    float distFromEdge = max(0.0, cutoffY - input.positionWS.y);
+                    float edgeMask = 1.0 - smoothstep(0.0, max(_MaterializeEdgeWidth, 0.001), distFromEdge);
+                    edgeMask *= edgeMask;
+
+                    half matNdotv = saturate(dot(inputData.normalWS, inputData.viewDirectionWS));
+                    half matFresnel = pow(1.0h - matNdotv, (half)_MaterializeRimPower);
+                    float rimFade = 1.0 - smoothstep(0.85, 1.0, saturate(_MaterializeProgress));
+
+                    materializeEmission = _MaterializeEdgeColor.rgb * (half)edgeMask
+                        + _MaterializeRimColor.rgb * (matFresnel * (half)rimFade);
+                }
+
+                surfaceData.emission = _EmissionColor.rgb + shineEmission + materializeEmission;
 
                 half4 color = UniversalFragmentPBR(inputData, surfaceData);
                 color.rgb = MixFog(color.rgb, inputData.fogCoord);
@@ -248,6 +297,7 @@ Shader "Custom/Tier2ShinyEnemy"
             struct Varyings
             {
                 float4 positionCS : SV_POSITION;
+                float3 positionWS : TEXCOORD0;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
                 UNITY_VERTEX_OUTPUT_STEREO
             };
@@ -261,6 +311,7 @@ Shader "Custom/Tier2ShinyEnemy"
 
                 float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
                 float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
+                output.positionWS = positionWS;
 
                 #if _CASTING_PUNCTUAL_LIGHT_SHADOW
                 float3 lightDirectionWS = normalize(_LightPosition - positionWS);
@@ -280,6 +331,9 @@ Shader "Custom/Tier2ShinyEnemy"
 
             half4 ShadowPassFragment(Varyings input) : SV_Target
             {
+                UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                ClipIfMaterializing(input.positionWS.y);
                 return 0;
             }
             ENDHLSL
@@ -309,6 +363,7 @@ Shader "Custom/Tier2ShinyEnemy"
             struct Varyings
             {
                 float4 positionCS : SV_POSITION;
+                float3 positionWS : TEXCOORD0;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
                 UNITY_VERTEX_OUTPUT_STEREO
             };
@@ -319,12 +374,17 @@ Shader "Custom/Tier2ShinyEnemy"
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_TRANSFER_INSTANCE_ID(input, output);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
-                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+                float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
+                output.positionWS = positionWS;
+                output.positionCS = TransformWorldToHClip(positionWS);
                 return output;
             }
 
             half4 DepthOnlyFragment(Varyings input) : SV_Target
             {
+                UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                ClipIfMaterializing(input.positionWS.y);
                 return 0;
             }
             ENDHLSL
@@ -355,6 +415,7 @@ Shader "Custom/Tier2ShinyEnemy"
             {
                 float4 positionCS : SV_POSITION;
                 float3 normalWS : TEXCOORD0;
+                float3 positionWS : TEXCOORD1;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
                 UNITY_VERTEX_OUTPUT_STEREO
             };
@@ -365,7 +426,9 @@ Shader "Custom/Tier2ShinyEnemy"
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_TRANSFER_INSTANCE_ID(input, output);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
-                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+                float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
+                output.positionWS = positionWS;
+                output.positionCS = TransformWorldToHClip(positionWS);
                 output.normalWS = TransformObjectToWorldNormal(input.normalOS);
                 return output;
             }
@@ -374,6 +437,7 @@ Shader "Custom/Tier2ShinyEnemy"
             {
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                ClipIfMaterializing(input.positionWS.y);
                 return half4(NormalizeNormalPerPixel(input.normalWS), 0.0h);
             }
             ENDHLSL
