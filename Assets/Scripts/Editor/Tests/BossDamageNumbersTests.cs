@@ -590,18 +590,6 @@ namespace Assets.Scripts.Editor.Tests
                 remove { }
             }
 
-            public event Action<IGolemBoss> OnGolemSpawned
-            {
-                add { }
-                remove { }
-            }
-
-            public event Action<IGolemBoss> OnGolemDefeated
-            {
-                add { }
-                remove { }
-            }
-
             public void RegisterTower(IEncounterArenaController towerArena)
             {
             }

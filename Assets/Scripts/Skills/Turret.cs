@@ -1,5 +1,4 @@
 using Assets.Scripts.Initializers;
-using Assets.Scripts.Projectiles;
 using UnityEngine;
 
 namespace Assets.Scripts.Skills
@@ -9,13 +8,6 @@ namespace Assets.Scripts.Skills
     {
         [SerializeField] protected ConfigSO _config;
         [SerializeField] protected Transform _gunTip;
-        [SerializeField] protected Transform _visual;
-        [SerializeField] protected Projectile _turretsProejctile;
-        [SerializeField] protected Transform _projectilesParent;
-
-        protected virtual void Awake()
-        {
-        }
 
         public abstract void Shoot(float shootPreparingAnimationSpeed = 1f);
 

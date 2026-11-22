@@ -4,7 +4,6 @@ namespace Assets.Scripts.ScoreBoard
 {
     public interface IScoreBoardBestScoreGetter
     {
-        uint GetBestScore();
         bool TryGetBestTime(bool hasSurvived, out uint bestTime);
     }
 
@@ -15,22 +14,6 @@ namespace Assets.Scripts.ScoreBoard
         public ScoreBoardBestScoreGetter(StoredScoreBoard storedScoreBoard)
         {
             _storedScoreBoard = storedScoreBoard;
-        }
-
-        public uint GetBestScore()
-        {
-            List<ScoreBoardRecord> records = _storedScoreBoard.GetValueOrStoredDefault();
-            if (TryGetBestTime(records, hasSurvived: true, out uint bestSurvivedTime))
-            {
-                return bestSurvivedTime;
-            }
-
-            if (TryGetBestTime(records, hasSurvived: false, out uint bestDiedTime))
-            {
-                return bestDiedTime;
-            }
-
-            return 0;
         }
 
         public bool TryGetBestTime(bool hasSurvived, out uint bestTime)

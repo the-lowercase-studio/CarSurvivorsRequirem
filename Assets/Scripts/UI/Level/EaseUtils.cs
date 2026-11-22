@@ -8,10 +8,5 @@ namespace Assets.Scripts.UI.Level
         {
             return 1 - (1 - t) * (1 - t);
         }
-
-        public static float EaseInOutSine(float t)
-        {
-            return -(Mathf.Cos(Mathf.PI * t) - 1f) / 2f;
-        }
     }
 }

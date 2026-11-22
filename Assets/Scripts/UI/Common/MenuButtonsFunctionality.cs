@@ -114,18 +114,6 @@ namespace Assets.Scripts.UI.Common
             ToggleActivityOfObject((UnityEngine.Object)gameObject);
         }
 
-        [Obsolete("Use ToggleActivityOfObject instead")]
-        public void ToogleActivityOfObject(UnityEngine.Object targetObject)
-        {
-            ToggleActivityOfObject(targetObject);
-        }
-
-        [Obsolete("Use ToggleActivityOfObject instead")]
-        public void ToogleActivityOfObject(GameObject gameObject)
-        {
-            ToggleActivityOfObject(gameObject);
-        }
-
         public void OnTryAgainClicked()
         {
             _runSessionService?.ResetSession();

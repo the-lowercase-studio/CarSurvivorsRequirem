@@ -35,18 +35,6 @@ namespace Assets.Scripts.GameFlow.Config
             return _tiers[clampedIndex];
         }
 
-        public bool TryGetTier(int tierIndex, out LoopTierConfig tierConfig)
-        {
-            if (_tiers != null && tierIndex >= 0 && tierIndex < _tiers.Count && _tiers[tierIndex] != null)
-            {
-                tierConfig = _tiers[tierIndex];
-                return true;
-            }
-
-            tierConfig = null;
-            return false;
-        }
-
         public void ValidateConfiguration()
         {
             if (_tiers == null || _tiers.Count == 0)

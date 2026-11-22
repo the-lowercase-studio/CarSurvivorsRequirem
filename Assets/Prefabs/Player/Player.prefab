@@ -22471,10 +22471,6 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 11
       objectReference: {fileID: 0}
-    - target: {fileID: 5866641457349615270, guid: 6ce82ba35aefa0840a07b0c8691b4504, type: 3}
-      propertyPath: _turretsProejctile
-      value: 
-      objectReference: {fileID: 4901841786317894366, guid: 19270b55571e60c4489d44d93aa14239, type: 3}
     - target: {fileID: 6194403852336455636, guid: 6ce82ba35aefa0840a07b0c8691b4504, type: 3}
       propertyPath: m_Layer
       value: 11
@@ -23616,10 +23612,6 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 11
       objectReference: {fileID: 0}
-    - target: {fileID: 5866641457349615270, guid: 6ce82ba35aefa0840a07b0c8691b4504, type: 3}
-      propertyPath: _turretsProejctile
-      value: 
-      objectReference: {fileID: 4901841786317894366, guid: 19270b55571e60c4489d44d93aa14239, type: 3}
     - target: {fileID: 6194403852336455636, guid: 6ce82ba35aefa0840a07b0c8691b4504, type: 3}
       propertyPath: m_Layer
       value: 11
@@ -23749,10 +23741,6 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 11
       objectReference: {fileID: 0}
-    - target: {fileID: 5866641457349615270, guid: 6ce82ba35aefa0840a07b0c8691b4504, type: 3}
-      propertyPath: _turretsProejctile
-      value: 
-      objectReference: {fileID: 4901841786317894366, guid: 19270b55571e60c4489d44d93aa14239, type: 3}
     - target: {fileID: 6194403852336455636, guid: 6ce82ba35aefa0840a07b0c8691b4504, type: 3}
       propertyPath: m_Layer
       value: 11

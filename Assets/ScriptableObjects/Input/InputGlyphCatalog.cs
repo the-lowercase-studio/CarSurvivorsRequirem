@@ -55,22 +55,6 @@ namespace Assets.ScriptableObjects.Input
         {
             get { return _isSpriteOptional; }
         }
-
-        public InputGlyphEntry(
-            InputDeviceFamily family,
-            KeyboardGlyphTheme keyboardTheme,
-            string canonicalControlPath,
-            Sprite sprite,
-            string displayLabel,
-            bool isSpriteOptional = false)
-        {
-            _family = family;
-            _keyboardTheme = keyboardTheme;
-            _canonicalControlPath = canonicalControlPath;
-            _sprite = sprite;
-            _displayLabel = displayLabel;
-            _isSpriteOptional = isSpriteOptional;
-        }
     }
 
     [CreateAssetMenu(fileName = "InputGlyphCatalog", menuName = "Scriptable Objects/Input/Input Glyph Catalog")]

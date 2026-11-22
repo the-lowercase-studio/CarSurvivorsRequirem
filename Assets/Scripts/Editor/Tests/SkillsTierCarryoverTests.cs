@@ -219,7 +219,6 @@ namespace Assets.Scripts.Editor.Tests
 
             LasergunTurret turret = turretGo.AddComponent<LasergunTurret>();
             SetPrivateField(typeof(Turret<TurretConfigSO>), turret, "_gunTip", gunTip.transform);
-            SetPrivateField(typeof(Turret<TurretConfigSO>), turret, "_visual", turretGo.transform);
             SetPrivateField(typeof(LasergunTurret), turret, "_laserLineRenderer", lineRenderer);
             SetPrivateField(typeof(LasergunTurret), turret, "_laserCumulatingVFX", vfxPlayer);
 
@@ -359,7 +358,6 @@ namespace Assets.Scripts.Editor.Tests
 
             LasergunTurret turret = turretGo.AddComponent<LasergunTurret>();
             SetPrivateField(typeof(Turret<TurretConfigSO>), turret, "_gunTip", gunTip.transform);
-            SetPrivateField(typeof(Turret<TurretConfigSO>), turret, "_visual", turretGo.transform);
             SetPrivateField(typeof(LasergunTurret), turret, "_laserLineRenderer", lineRenderer);
             SetPrivateField(typeof(LasergunTurret), turret, "_laserCumulatingVFX", null);
 
@@ -544,7 +542,6 @@ namespace Assets.Scripts.Editor.Tests
 
             LasergunTurret turret = turretGo.AddComponent<LasergunTurret>();
             SetPrivateField(typeof(Turret<TurretConfigSO>), turret, "_gunTip", gunTip.transform);
-            SetPrivateField(typeof(Turret<TurretConfigSO>), turret, "_visual", turretGo.transform);
             SetPrivateField(typeof(LasergunTurret), turret, "_laserLineRenderer", lineRenderer);
             return turret;
         }

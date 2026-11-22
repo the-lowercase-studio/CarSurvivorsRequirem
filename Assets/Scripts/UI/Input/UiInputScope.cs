@@ -58,22 +58,6 @@ namespace Assets.Scripts.UI.Input
             _selectionResolver = selectionResolver;
         }
 
-        public void RegisterDropdown(TMP_Dropdown dropdown)
-        {
-            if (dropdown != null && !_registeredDropdowns.Contains(dropdown))
-            {
-                _registeredDropdowns.Add(dropdown);
-            }
-        }
-
-        public void RegisterInputField(TMP_InputField inputField)
-        {
-            if (inputField != null && !_registeredInputFields.Contains(inputField))
-            {
-                _registeredInputFields.Add(inputField);
-            }
-        }
-
         public void SyncModulePolicy()
         {
             if (!_isInitialized)

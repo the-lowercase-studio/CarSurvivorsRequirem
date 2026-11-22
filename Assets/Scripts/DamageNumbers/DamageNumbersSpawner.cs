@@ -26,12 +26,6 @@ namespace Assets.Scripts.DamageNumbers
             IsBoss = isBoss;
         }
 
-        public void Deconstruct(out float damage, out ShapeModes spawnShapeMode)
-        {
-            damage = Damage;
-            spawnShapeMode = SpawnShapeMode;
-        }
-
         public void Deconstruct(out float damage, out ShapeModes spawnShapeMode, out bool isBoss)
         {
             damage = Damage;
@@ -64,12 +58,6 @@ namespace Assets.Scripts.DamageNumbers
                 {
                     return _damagePopupApearance;
                 }
-            }
-
-            public VisualApearanceByDamageTreshold(float treshold, DamageNumberApearance damagePopupApearance)
-            {
-                _treshold = treshold;
-                _damagePopupApearance = damagePopupApearance;
             }
         }
 

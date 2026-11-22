@@ -26,13 +26,6 @@ namespace Assets.Scripts.Indicators
             }
         }
 
-        public void ShowPersistent(Vector3 origin, Vector3 direction, float length, float width)
-        {
-            KillActiveSequence();
-            _onImpactCallback = null;
-            UpdatePersistent(origin, direction, length, width);
-        }
-
         public void UpdatePersistent(Vector3 origin, Vector3 direction, float length, float width)
         {
             if (_outerBorder == null || _innerFill == null)

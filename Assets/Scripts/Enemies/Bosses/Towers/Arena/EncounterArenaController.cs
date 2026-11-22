@@ -1,4 +1,3 @@
-using System;
 using DG.Tweening;
 using Assets.Scripts.Cameras;
 using Assets.Scripts.Enemies.Bosses;
@@ -21,11 +20,6 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
         float RemainingLeashSeconds { get; }
         float ArenaRadius { get; }
         Vector3 ArenaCenter { get; }
-        event Action OnPlayerEnteredArena;
-        event Action OnPlayerExitedArena;
-        event Action<float> OnLeashCountdownTick;
-        event Action OnEncounterReset;
-        event Action OnEncounterCompleted;
         IBossCombatTarget BossTarget { get; }
         void NotifyDirectCombatEngaged();
     }
@@ -55,12 +49,6 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
         private float _remainingLeashSeconds;
         private Tween _perimeterExpandTween;
         private Tween _perimeterPulseTween;
-
-        public event Action OnPlayerEnteredArena;
-        public event Action OnPlayerExitedArena;
-        public event Action<float> OnLeashCountdownTick;
-        public event Action OnEncounterReset;
-        public event Action OnEncounterCompleted;
 
         public IBossCombatTarget BossTarget => _boss;
 
@@ -248,8 +236,6 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
                     {
                         _leashWarningPresenter.Hide();
                     }
-
-                    OnPlayerEnteredArena?.Invoke();
                 }
             }
             else
@@ -265,8 +251,6 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
                         {
                             _leashWarningPresenter.ShowWarning(_remainingLeashSeconds);
                         }
-
-                        OnPlayerExitedArena?.Invoke();
                     }
                     else
                     {
@@ -276,8 +260,6 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
                         {
                             _leashWarningPresenter.UpdateCountdown(_remainingLeashSeconds);
                         }
-
-                        OnLeashCountdownTick?.Invoke(_remainingLeashSeconds);
 
                         if (_remainingLeashSeconds <= 0f)
                         {
@@ -316,7 +298,6 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
             }
 
             AnimatePerimeterExpansion();
-            OnPlayerEnteredArena?.Invoke();
         }
 
         private void ResetCombatEncounter()
@@ -347,8 +328,6 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
             {
                 _boss.ResetEncounter();
             }
-
-            OnEncounterReset?.Invoke();
         }
 
         private void Boss_OnBossDefeated(ITowerBoss boss)
@@ -374,7 +353,6 @@ namespace Assets.Scripts.Enemies.Bosses.Towers.Arena
             }
 
             AnimatePerimeterCollapse();
-            OnEncounterCompleted?.Invoke();
         }
 
         private void AnimatePerimeterExpansion()
